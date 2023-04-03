@@ -13,7 +13,7 @@
 #ifndef WEBSERV_CONFIGPARSER_H
 #define WEBSERV_CONFIGPARSER_H
 
-
+#include <fstream>
 #include <string>
 #include <map>
 #include <vector>
@@ -31,7 +31,7 @@ public:
 
     ~Config();
 
-private:
+protected:
     typedef struct ConfigNode {
         v_strings main_;
         std::vector<v_strings> derectives_;
@@ -43,13 +43,34 @@ private:
         std::string leftower;
     };
 
+//    Config processing utils
+    void    ThrowSyntaxError(const std::string &msg, std::ifstream &config) const;
+    void    ExcludeComments(std::string &line) const;
+    void    TrimWhitespaces(std::string &line) const;
+//    Check braces
+    void CheckSyntax();
+//    Parse config
+    static v_strings ParseDirective(std::string &line, char endline) ;
+    RawNode ParseNode(std::ifstream &config,
+                      const std::vector<std::string>& main_directive) const;
+    void GetChildNode(RawNode &current,
+                      std::ifstream &config,
+                      std::string &line) const;
+    static void GetDirective(std::string &line,
+                      RawNode &current) ;
+    void FinishNode(std::ifstream &config,
+                    std::string &line,
+                    const std::string &line_leftower,
+                    RawNode &current) const;
+private:
     std::string conf_path_;
     Node conf_root_;
 
-    void CheckSyntax();
-//    void Evaluate(std::ifstream &config);
-    RawNode ParseNode(std::ifstream &config, const std::vector<std::string>& main_directive);
+
     void ParseConfig(std::ifstream &config);
+
+    void
+    PreprocessLine(std::string &line, const std::string &line_leftower) const;
 };
 
 
