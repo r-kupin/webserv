@@ -41,11 +41,12 @@ Config::Config(const std::string &config_path)
         source.open(conf_path_.c_str());
         source.exceptions(std::ifstream::badbit);
         std::cout << "Opening config on " + conf_path_ << std::endl;
-        CheckSyntax();
+        CheckSyntax(); // TODO messy closing of config
         ParseConfig(source);
     } catch (const std::ifstream::failure &e) {
         throw ConfigFileNotFound();
     } catch (const ConfigFileSyntaxError &e) {
+
         throw e;
     }
 }

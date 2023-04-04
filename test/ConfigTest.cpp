@@ -18,6 +18,10 @@ TEST(ConfigTest, ConfigOpensExistentConf) {
     EXPECT_NO_THROW(Config("test_resources/correct_config.conf"));
 }
 
+TEST(ConfigTest, ConfigOpensOneLine) {
+    EXPECT_NO_THROW(Config("test_resources/correct_config_in_one_line.conf"));
+}
+
 //TEST(ConfigTest, ConfigOpensNoSemicolon) {
 //    EXPECT_THROW(Config("test_resources/corrupted_config_no_semicolon.conf"),
 //                 Config::ConfigFileSyntaxError);

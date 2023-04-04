@@ -12,46 +12,64 @@
 
 #include "Config.h"
 
+bool is_min(size_t n, size_t a, size_t b) {
+    if (n < a && n < b)
+        return true;
+    return false;
+}
+
 void Config::ParseConfig(std::ifstream &config) {
     v_strings main;
     main.push_back("main");
 
-    RawNode root = ParseNode(config, main);
+    std::string empty = std::string("");
+    RawNode root = ParseNode(config, main, empty);
     if (!root.leftower.empty()) {
         ThrowSyntaxError("main block isn't closed!", config);
     }
     conf_root_ = root.node;
+    config.close();
 }
 
-Config::RawNode Config::ParseNode(std::ifstream &config,
-                                  const v_strings& main_directive) const {
+Config::RawNode
+Config::ParseNode(std::ifstream &config,
+                  const v_strings &main_directive,
+                  std::string &line_leftower) const {
     std::string line;
-    std::string line_leftower;
     RawNode current;
 
     current.node.main_ = main_directive;
-    while (std::getline(config, line)) {
+    while (std::getline(config, line) || !line_leftower.empty()) {
         PreprocessLine(line, line_leftower);
         while (!line.empty()) {
             size_t op_br_pos = line.find_first_of('{');
             size_t cl_br_pos = line.find_first_of('}');
             size_t sc_pos = line.find_first_of(';');
-            if (op_br_pos != std::string::npos)
+            if (op_br_pos != std::string::npos &&
+                    is_min(op_br_pos, cl_br_pos, sc_pos))
                 GetChildNode(current, config, line);
-            if (sc_pos != std::string::npos)
+            if (sc_pos != std::string::npos &&
+                    is_min(sc_pos, op_br_pos, cl_br_pos))
                 GetDirective(line, current);
-            if (cl_br_pos != std::string::npos) {
-                FinishNode(config, line, line_leftower, current);
+            if (cl_br_pos != std::string::npos &&
+                    is_min( cl_br_pos, sc_pos, op_br_pos)) {
+                FinishNode(line, current);
                 return current;
             }
-            if (line.find_first_of('{')== std::string::npos &&
-                line.find_first_of(';')== std::string::npos) {
-                line_leftower = line;
-                line = "";
-            }
+            HandleLineLeftower(line_leftower, line);
         }
     }
     return current;
+}
+
+void Config::HandleLineLeftower(std::string &line_leftower,
+                                std::string &line) const {
+    if (!line.empty()) {
+        line_leftower = line;
+        line = "";
+    } else {
+        line_leftower = "";
+    }
 }
 
 void Config::PreprocessLine(std::string &line,
@@ -66,7 +84,8 @@ void Config::GetChildNode(Config::RawNode &current,
                           std::string &line) const {
     const RawNode &child = ParseNode(
             config,
-            ParseDirective(line, '{'));
+            ParseDirective(line, '{'),
+            line);
     current.node.child_nodes_.push_back(child.node);
     line = child.leftower;
 }
@@ -76,14 +95,11 @@ void Config::GetDirective(std::string &line,
     current.node.derectives_.push_back(ParseDirective(line, ';'));
 }
 
-void Config::FinishNode(std::ifstream &config,
-                        std::string &line,
-                        const std::string &line_leftower,
-                        Config::RawNode &current) const {
-    if (!line_leftower.empty()) {
-        ThrowSyntaxError("directive must be terminated with \";\" "
-                         "before termination of the block!", config);
-    }
+void Config::FinishNode(std::string &line, Config::RawNode &current) const {
+//    if (!line_leftower.empty()) {
+//        ThrowSyntaxError("directive must be terminated with \";\" "
+//                         "before termination of the block!", config);
+//    }
     if (line.size() > 1) {
         line = line.substr(line.find_first_of('}') + 1);
         current.leftower = line;
@@ -92,11 +108,11 @@ void Config::FinishNode(std::ifstream &config,
     }
 }
 
-v_strings Config::ParseDirective(std::string &line, char endline) {
+v_strings Config::ParseDirective(std::string &line, char c) {
     v_strings params;
     std::string all_separators = " \t";
-    all_separators.push_back(endline);
-    while (line[0] != endline) {
+    all_separators.push_back(c);
+    while (line[0] != c) {
         size_t separator = line.find_first_of(all_separators);
         params.push_back(line.substr(0, separator));
         line = line.substr(separator);
