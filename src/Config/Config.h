@@ -32,15 +32,25 @@ public:
     ~Config();
 
 protected:
+    /**
+     * @brief struct for parsed NGINX block
+     * @param main_ directive preceding the block
+     * @param directives_ vector of directives (vectors of strings)
+     * @param child_nodes_ - nested blocks
+     */
     typedef struct ConfigNode {
         v_strings main_;
         std::vector<v_strings> derectives_;
         std::vector<ConfigNode> child_nodes_;
     } Node;
 
+    /**
+     * @brief struct used only during parsing process - to keep redd
+     * leftovers left after block parsing
+     */
     struct RawNode {
         Node node;
-        std::string leftower;
+        std::string leftover;
     };
 
 //    Config processing utils
@@ -51,27 +61,33 @@ protected:
     void CheckSyntax();
 //    Parse config
     static v_strings
-    ParseDirective(std::string &line, char c);
+    ParseDirective(std::string &line,
+                   char c);
     void
-    FinishNode(std::string &line, Config::RawNode &current) const;
+    FinishNode(std::string &line,
+               Config::RawNode &current) const;
     static void
-    GetDirective(std::string &line, RawNode &current);
+    GetDirective(std::string &line,
+                 RawNode &current);
     void
-    GetChildNode(RawNode &current, std::ifstream &config,
+    GetChildNode(RawNode &current,
+                 std::ifstream &config,
                  std::string &line) const;
     void
-    PreprocessLine(std::string &line, const std::string &line_leftower) const;
+    PreprocessLine(std::string &line,
+                   const std::string &line_leftover) const;
     Config::RawNode
-    ParseNode(std::ifstream &config, const v_strings &main_directive,
-              std::string &line_leftower) const;
+    ParseNode(std::ifstream &config,
+              const v_strings &main_directive,
+              std::string &line_leftover) const;
 private:
     std::string conf_path_;
     Node conf_root_;
 
-    void ParseConfig(std::ifstream &config);
-
     void
-    HandleLineLeftower(std::string &line_leftower, std::string &line) const;
+    ParseConfig(std::ifstream &config);
+    void
+    HandleLineLeftower(std::string &line_leftover, std::string &line) const;
 };
 
 

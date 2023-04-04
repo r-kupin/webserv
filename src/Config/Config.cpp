@@ -43,6 +43,7 @@ Config::Config(const std::string &config_path)
         std::cout << "Opening config on " + conf_path_ << std::endl;
         CheckSyntax(); // TODO messy closing of config
         ParseConfig(source);
+        source.close();
     } catch (const std::ifstream::failure &e) {
         throw ConfigFileNotFound();
     } catch (const ConfigFileSyntaxError &e) {
