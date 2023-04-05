@@ -41,7 +41,6 @@ Config::Config(const std::string &config_path)
         source.open(conf_path_.c_str());
         source.exceptions(std::ifstream::badbit);
         std::cout << "Opening config on " + conf_path_ << std::endl;
-        CheckSyntax(); // TODO messy closing of config
         ParseConfig(source);
         source.close();
     } catch (const std::ifstream::failure &e) {

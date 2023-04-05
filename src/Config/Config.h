@@ -57,18 +57,16 @@ protected:
     void    ThrowSyntaxError(const std::string &msg, std::ifstream &config) const;
     void    ExcludeComments(std::string &line) const;
     void    TrimWhitespaces(std::string &line) const;
-//    Check braces
-    void CheckSyntax();
 //    Parse config
     static v_strings
     ParseDirective(std::string &line,
                    char c);
     void
-    FinishNode(std::string &line,
-               Config::RawNode &current) const;
-    static void
-    GetDirective(std::string &line,
-                 RawNode &current);
+    FinishSubNode(std::string &line, Config::RawNode &current,
+                  std::ifstream &config) const;
+    void
+    GetDirective(std::string &line, Config::RawNode &current,
+                 std::ifstream &config) const;
     void
     GetChildNode(RawNode &current,
                  std::ifstream &config,
@@ -88,6 +86,8 @@ private:
     ParseConfig(std::ifstream &config);
     void
     HandleLineLeftower(std::string &line_leftover, std::string &line) const;
+
+    void FinishMainNode(RawNode &current, std::ifstream &config) const;
 };
 
 

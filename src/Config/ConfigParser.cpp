@@ -81,15 +81,16 @@ Config::ParseNode(std::ifstream &config,
                 GetChildNode(current, config, line);
             if (sc_pos != std::string::npos &&
                     is_min(sc_pos, op_br_pos, cl_br_pos))
-                GetDirective(line, current);
+                GetDirective(line, current, config);
             if (cl_br_pos != std::string::npos &&
                     is_min( cl_br_pos, sc_pos, op_br_pos)) {
-                FinishNode(line, current);
+                FinishSubNode(line, current, config);
                 return current;
             }
             HandleLineLeftower(line_leftover, line);
         }
     }
+    FinishMainNode(current, config);
     return current;
 }
 
@@ -130,8 +131,10 @@ void Config::GetChildNode(Config::RawNode &current,
 /**
  * @brief Assigns directive to current node
  */
-void Config::GetDirective(std::string &line,
-                          Config::RawNode &current) {
+void Config::GetDirective(std::string &line, Config::RawNode &current,
+                          std::ifstream &config) const {
+    if (line[0] == ';')
+        ThrowSyntaxError("found consecutive semicolons!", config);
     current.node.derectives_.push_back(ParseDirective(line, ';'));
 }
 
@@ -139,10 +142,22 @@ void Config::GetDirective(std::string &line,
  * @brief Prepares node to be returned
  * Removes closing brace
  * Saves leftovers if there are any
+ * @throw exception if block is empty, `cause it makes no sense
  */
-void Config::FinishNode(std::string &line, Config::RawNode &current) const {
+void Config::FinishSubNode(std::string &line,
+                           Config::RawNode &current,
+                           std::ifstream &config) const {
+    if (current.node.child_nodes_.empty() && current.node.derectives_.empty())
+        ThrowSyntaxError("found an empty block!", config);
+    if (current.node.main_[0] == "main")
+        ThrowSyntaxError("found unexpected '}' !", config);
+    size_t before_brace = line.find_first_not_of(" \t}");
+    size_t brace = line.find_first_of('}');
+    if (before_brace < brace)
+        ThrowSyntaxError("missing ';' after last directive in the block!",
+                         config);
     if (line.size() > 1) {
-        line = line.substr(line.find_first_of('}') + 1);
+        line = line.substr(brace + 1);
         current.leftover = line;
     } else {
         current.leftover = "";
@@ -189,4 +204,10 @@ void Config::HandleLineLeftower(std::string &line_leftover,
     } else {
         line_leftover = "";
     }
+}
+
+void
+Config::FinishMainNode(Config::RawNode &current, std::ifstream &config) const {
+    if (current.node.main_[0] != "main")
+        ThrowSyntaxError("missing '}' !", config);
 }

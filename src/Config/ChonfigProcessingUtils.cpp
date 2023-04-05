@@ -14,7 +14,8 @@
 #include "Config.h"
 #include "ConfigExceptions.h"
 
-void    Config::ThrowSyntaxError(const std::string &msg, std::ifstream &config) const {
+void    Config::ThrowSyntaxError(const std::string &msg,
+                                 std::ifstream &config) const {
     std::cout << "Syntax error: " + msg << std::endl;
     config.close();
     throw ConfigFileSyntaxError();
