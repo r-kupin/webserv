@@ -1,5 +1,5 @@
 1. The server starts by reading the nginx configuration file, which specifies 
-the port number, server root directory, and any other settings.
+the port number, server root_ directory, and any other settings.
 
 2. The server creates a listener socket and binds it to the port number 
 specified in the configuration file.
@@ -56,4 +56,4 @@ IP blocking, and request filtering.
 configuration file manually, following the syntax and semantics of the nginx configuration file format.
 
 20. The server extracts the relevant settings from the configuration file and 
-uses them to configure the server's behavior, such as the server's root directory, port number, and other settings.
+uses them to configure the server's behavior, such as the server's root_ directory, port number, and other settings.

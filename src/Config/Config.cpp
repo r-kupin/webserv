@@ -16,9 +16,10 @@
 #include "ConfigExceptions.h"
 
 
-Config::Config() : conf_path_("") {}
+Config::Config() : conf_path_(""), servers_(0) {}
 
-Config::Config(const Config &other) : conf_path_(other.conf_path_) {}
+Config::Config(const Config &other)
+: conf_path_(other.conf_path_), servers_(0) {}
 
 /**
  * @brief Creating a config from file
@@ -34,7 +35,7 @@ Config::Config(const Config &other) : conf_path_(other.conf_path_) {}
  * @param config_path to config
  */
 Config::Config(const std::string &config_path)
-: conf_path_(config_path) {
+: conf_path_(config_path), servers_(0) {
     std::ifstream source;
     source.exceptions(std::ifstream::failbit);
     try {
@@ -43,11 +44,10 @@ Config::Config(const std::string &config_path)
         std::cout << "Opening config on " + conf_path_ << std::endl;
         ParseConfig(source);
         source.close();
+        std::cout << "Parsing finished. Checking components.. " << std::endl;
+        CheckComponents(conf_root_);
     } catch (const std::ifstream::failure &e) {
         throw ConfigFileNotFound();
-    } catch (const ConfigFileSyntaxError &e) {
-
-        throw e;
     }
 }
 
@@ -66,3 +66,4 @@ const char *ConfigFileNotFound::what() const throw() {
 const char *ConfigFileSyntaxError::what() const throw() {
     return "Config file contains syntax errors";
 }
+

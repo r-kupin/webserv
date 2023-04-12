@@ -135,8 +135,11 @@ void Config::GetDirective(std::string &line, Config::RawNode &current,
                           std::ifstream &config) const {
     if (line[0] == ';')
         ThrowSyntaxError("found consecutive semicolons!", config);
-    current.node.derectives_.push_back(ParseDirective(line, ';'));
+    current.node.directives_.push_back(ParseDirective(line, ';'));
 }
+
+Config::Config(const Config::Node &confRoot)
+: conf_root_(confRoot), servers_(0) {}
 
 /**
  * @brief Prepares node to be returned
@@ -147,7 +150,7 @@ void Config::GetDirective(std::string &line, Config::RawNode &current,
 void Config::FinishSubNode(std::string &line,
                            Config::RawNode &current,
                            std::ifstream &config) const {
-    if (current.node.child_nodes_.empty() && current.node.derectives_.empty())
+    if (current.node.child_nodes_.empty() && current.node.directives_.empty())
         ThrowSyntaxError("found an empty block!", config);
     if (current.node.main_[0] == "main")
         ThrowSyntaxError("found unexpected '}' !", config);
@@ -211,3 +214,4 @@ Config::FinishMainNode(Config::RawNode &current, std::ifstream &config) const {
     if (current.node.main_[0] != "main")
         ThrowSyntaxError("missing '}' !", config);
 }
+

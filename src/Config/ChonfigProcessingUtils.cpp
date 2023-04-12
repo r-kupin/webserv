@@ -21,6 +21,11 @@ void    Config::ThrowSyntaxError(const std::string &msg,
     throw ConfigFileSyntaxError();
 }
 
+void    Config::ThrowSyntaxError(const std::string &msg) const {
+    std::cout << "Syntax error: " + msg << std::endl;
+    throw ConfigFileSyntaxError();
+}
+
 void    Config::ExcludeComments(std::string &line) const {
     if (!line.empty()) {
         size_t comment_position = line.find('#');
