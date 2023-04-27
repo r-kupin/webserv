@@ -29,7 +29,7 @@ void Config::ParseConfig(std::ifstream &config) {
     main.push_back("main");
 
     std::string empty = std::string("");
-    RawNode root = ParseNode(config, main, empty);
+    RawNode root = ParseNode(config, empty, main);
     if (!root.leftover.empty()) {
         ThrowSyntaxError("main block isn't closed!", config);
     }
@@ -62,10 +62,9 @@ void Config::ParseConfig(std::ifstream &config) {
  * @param line_leftover unparsed leftovers from previous getline() call
  * @return parsed node with saved leftovers
  */
-Config::RawNode
-Config::ParseNode(std::ifstream &config,
-                  const v_strings &main_directive,
-                  std::string &line_leftover) const {
+RawNode
+Config::ParseNode(std::ifstream &config, std::string &line_leftover,
+                  const v_strings &main_directive) const {
     std::string line;
     RawNode current;
 
@@ -117,13 +116,13 @@ void Config::PreprocessLine(std::string &line,
  * @param current supernode
  * @param line needed to save leftovers
  */
-void Config::GetChildNode(Config::RawNode &current,
+void Config::GetChildNode(RawNode &current,
                           std::ifstream &config,
                           std::string &line) const {
     const RawNode &child = ParseNode(
             config,
-            ParseDirective(line, '{'),
-            line);
+            line,
+            ParseDirective(line, '{'));
     current.node.child_nodes_.push_back(child.node);
     line = child.leftover;
 }
@@ -131,15 +130,15 @@ void Config::GetChildNode(Config::RawNode &current,
 /**
  * @brief Assigns directive to current node
  */
-void Config::GetDirective(std::string &line, Config::RawNode &current,
+void Config::GetDirective(std::string &line, RawNode &current,
                           std::ifstream &config) const {
     if (line[0] == ';')
         ThrowSyntaxError("found consecutive semicolons!", config);
     current.node.directives_.push_back(ParseDirective(line, ';'));
 }
 
-Config::Config(const Config::Node &confRoot)
-: conf_root_(confRoot), servers_(0) {}
+Config::Config(const Node &confRoot)
+: conf_root_(confRoot) {}
 
 /**
  * @brief Prepares node to be returned
@@ -148,7 +147,7 @@ Config::Config(const Config::Node &confRoot)
  * @throw exception if block is empty, `cause it makes no sense
  */
 void Config::FinishSubNode(std::string &line,
-                           Config::RawNode &current,
+                           RawNode &current,
                            std::ifstream &config) const {
     if (current.node.child_nodes_.empty() && current.node.directives_.empty())
         ThrowSyntaxError("found an empty block!", config);
@@ -210,8 +209,7 @@ void Config::HandleLineLeftower(std::string &line_leftover,
 }
 
 void
-Config::FinishMainNode(Config::RawNode &current, std::ifstream &config) const {
+Config::FinishMainNode(RawNode &current, std::ifstream &config) const {
     if (current.node.main_[0] != "main")
         ThrowSyntaxError("missing '}' !", config);
 }
-

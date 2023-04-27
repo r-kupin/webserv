@@ -17,11 +17,13 @@
 #include <string>
 #include <map>
 #include <vector>
-
-typedef std::vector<std::string> v_strings;
+#include <set>
+#include <ostream>
+#include "ConfigSubmodules.h"
 
 class Config {
 public:
+//  Exposed to use
     class ConfigException : public std::exception {};
 
     Config();
@@ -31,70 +33,79 @@ public:
 
     ~Config();
 
-protected:
-    /**
-     * @brief struct for parsed NGINX block
-     * @param main_ directive preceding the block
-     * @param directives_ vector of directives (vectors of strings)
-     * @param child_nodes_ - nested blocks
-     */
-    typedef struct ConfigNode {
-        v_strings main_;
-        std::vector<v_strings> directives_;
-        std::vector<ConfigNode> child_nodes_;
-    } Node;
+    const std::string &getConfPath() const;
+    const std::vector<ServerConfiguration> &getServers() const;
 
-    /**
-     * @brief struct used only during parsing process - to keep redd
-     * leftovers left after block parsing
-     */
-    struct RawNode {
-        Node node;
-        std::string leftover;
-    };
-//    Test only
+protected:
+//  Exposed to testing
+//    Test constructor only
     explicit            Config(const Node &confRoot);
 
 //    Config processing utils
     void                ThrowSyntaxError(const std::string &msg,
                                          std::ifstream &config) const;
+    void                ThrowSyntaxError(const std::string &msg) const;
     void                ExcludeComments(std::string &line) const;
     void                TrimWhitespaces(std::string &line) const;
-//    Parse config
-    static v_strings    ParseDirective(std::string &line, char c);
-    void                FinishSubNode(std::string &line,
-                                      Config::RawNode &current,
-                                      std::ifstream &config) const;
-    void                GetDirective(std::string &line,
-                                     Config::RawNode &current,
-                                     std::ifstream &config) const;
-    void                GetChildNode(RawNode &current, std::ifstream &config,
-                                     std::string &line) const;
-    void                PreprocessLine(std::string &line,
-                                       const std::string &line_leftover) const;
-    Config::RawNode     ParseNode(std::ifstream &config,
-                                  const v_strings &main_directive,
-                                  std::string &line_leftover) const;
-    void                CheckComponents(Node& root);
+    bool                MarkDefined(const std::string &key, bool &flag,
+                                    const v_strings &directive) const;
+    bool                IsNumber(const std::string& str) const;
+//      Parsing config file to tree-like structure of nodes
+    void                ParseConfig(std::ifstream &config);
+//      Parsing config file to tree-like structure of nodes
+    std::vector<ServerConfiguration> CheckComponents(Node& root);
 private:
     std::string conf_path_;
     Node conf_root_;
-    int servers_;
+    std::vector<ServerConfiguration> servers_;
 
-    void                ParseConfig(std::ifstream &config);
+//      Parse config
+    RawNode             ParseNode(std::ifstream &config,
+                                  std::string &line_leftover,
+                                  const v_strings &main_directive) const;
+    void                PreprocessLine(std::string &line,
+                                       const std::string &line_leftover) const;
+    void                GetChildNode(RawNode &current, std::ifstream &config,
+                                     std::string &line) const;
+    void                GetDirective(std::string &line, RawNode &current,
+                                     std::ifstream &config) const;
+    void                FinishSubNode(std::string &line, RawNode &current,
+                                      std::ifstream &config) const;
+    static v_strings    ParseDirective(std::string &line, char c);
     void                HandleLineLeftower(std::string &line_leftover,
                                            std::string &line) const;
     void                FinishMainNode(RawNode &current,
                                        std::ifstream &config) const;
-    void                CheckServer(Node &node);
-    void                ThrowSyntaxError(const std::string &msg) const;
-    void                CheckServerDirectives( Node &node,  bool *set) const;
+//      Global server check
+    void                CheckServerDirectives(Node &node, bool *set,
+                                              ServerConfiguration &current) const;
+    ServerConfiguration CheckServer(Node &node);
+//      Location subcontext
+    void                CheckLocation(Node &loc_node, bool &set_root,
+                                      bool &set_index,
+                                      ServerConfiguration &current_s);
+    void                CheckLocationDirectives(const Node &loc_node,
+                                                Location &current_l,
+                                                bool &set_root, bool &set_index,
+                                                bool &ret) const;
+    void                HandleLocationReturn(const Node &node,
+                                             Location &current_l,
+                                             size_t i) const;
+//      Limit_except subcontext
+    void                CheckLimitExceptContext(ConfigNode &node, bool &set_ret,
+                                                Location &location,
+                                                bool &limit) const;
 
-    void CheckLocationContext(Config::Node &node, bool &set_root,
-                              bool &set_index) const;
+    void                HandleServerContext(ConfigNode &srv_node,
+                                            std::vector<ServerConfiguration>
+                                                                    &servers);
 
-    void CheckLimitExceptContext(Config::ConfigNode &node, bool &set_ret) const;
+    void                HandleLocationContext(Node &maybe_loc_context,
+                                              bool &set_root,
+                                              bool &set_index,
+                                              ServerConfiguration &current_srv);
 };
 
+std::ostream &operator<<(std::ostream &os, const Config &config);
 
 #endif //WEBSERV_CONFIGPARSER_H

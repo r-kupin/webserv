@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /*                                                         :::      ::::::::  */
-/*    ServerManager.cpp                                  :+:      :+:    :+:  */
+/*    ServerManager.h                                    :+:      :+:    :+:  */
 /*                                                     +:+ +:+         +:+    */
 /*    By: rokupin <rokupin@student.42.fr>            +#+  +:+       +#+       */
 /*                                                 +#+#+#+#+#+   +#+          */
@@ -10,23 +10,31 @@
 /*                                                                            */
 /******************************************************************************/
 
-#include "ServerManager.h"
+#ifndef WEBSERV_LIB_SERVERMANAGER_H
+#define WEBSERV_LIB_SERVERMANAGER_H
 
 
-ServerManager::ServerManager() {
+#include "../Config/Config.h"
+#include "Server.h"
 
-}
+typedef std::vector<Server> v_servers;
+typedef std::vector<ServerConfiguration> v_sconfigs;
 
-ServerManager::ServerManager(const ServerManager &other) {
+class ServerException;
 
-}
+class ServerManager {
+public:
+    ServerManager();
+    ServerManager(const ServerManager &);
+    ServerManager(const Config &config);
+    ServerManager &operator=(const ServerManager &);
 
-ServerManager &ServerManager::operator=(const ServerManager &other) {
-    if (this == &other)
-        return *this;
-    return *this;
-}
+    ~ServerManager();
 
-ServerManager::~ServerManager() {
+    void RunAll();
+private:
+    v_servers servers_;
+};
 
-}
+
+#endif //WEBSERV_LIB_SERVERMANAGER_H

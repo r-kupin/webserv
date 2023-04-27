@@ -1,32 +1,33 @@
 /******************************************************************************/
 /*                                                                            */
 /*                                                         :::      ::::::::  */
-/*    Server.cpp                                         :+:      :+:    :+:  */
+/*    ConfigSubmodules.cpp                               :+:      :+:    :+:  */
 /*                                                     +:+ +:+         +:+    */
 /*    By: rokupin <rokupin@student.42.fr>            +#+  +:+       +#+       */
 /*                                                 +#+#+#+#+#+   +#+          */
-/*    Created: 2023/03/28 04:02:49 by rokupin           #+#    #+#            */
+/*    Created: 2023/04/22 16:59:53 by rokupin           #+#    #+#            */
 /*                                                     ###   ########.fr      */
 /*                                                                            */
 /******************************************************************************/
 
-#include "Server.h"
+#include "ConfigSubmodules.h"
 
-
-Server::Server() {
-
+bool ErrPage::operator==(const ErrPage &rhs) const {
+    return address_ == rhs.address_ &&
+           code_ == rhs.code_;
 }
 
-Server::Server(const Server &other) {
-
+bool Location::operator==(const Location &rhs) const {
+    return address_ == rhs.address_;
 }
 
-Server &Server::operator=(const Server &other) {
-    if (this == &other)
-        return *this;
-    return *this;
+Location::Location()
+        : return_code_(0) {}
+
+
+bool ServerConfiguration::operator==(const ServerConfiguration &rhs) const {
+    return port_ == rhs.port_;
 }
 
-Server::~Server() {
-
-}
+ServerConfiguration::ServerConfiguration()
+    : port_(8080), client_max_body_size_(0) {}

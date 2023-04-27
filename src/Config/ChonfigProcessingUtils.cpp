@@ -14,16 +14,15 @@
 #include "Config.h"
 #include "ConfigExceptions.h"
 
-void    Config::ThrowSyntaxError(const std::string &msg,
-                                 std::ifstream &config) const {
-    std::cout << "Syntax error: " + msg << std::endl;
-    config.close();
-    throw ConfigFileSyntaxError();
-}
-
 void    Config::ThrowSyntaxError(const std::string &msg) const {
     std::cout << "Syntax error: " + msg << std::endl;
     throw ConfigFileSyntaxError();
+}
+
+void    Config::ThrowSyntaxError(const std::string &msg,
+                                 std::ifstream &config) const {
+    config.close();
+    ThrowSyntaxError(msg);
 }
 
 void    Config::ExcludeComments(std::string &line) const {
@@ -46,4 +45,19 @@ void    Config::TrimWhitespaces(std::string &line) const {
         else
             line = "";
     }
+}
+
+bool Config::MarkDefined(const std::string &key, bool &flag,
+                         const v_strings &directive) const {
+    if (directive[0] == key && directive.size() > 1) {
+        flag = true;
+        return true;
+    }
+    return false;
+}
+
+bool Config::IsNumber(const std::string& str) const {
+    if (str.find_first_not_of("0123456789") == std::string::npos)
+        return true;
+    return false;
 }

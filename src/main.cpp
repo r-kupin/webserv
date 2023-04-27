@@ -12,11 +12,11 @@
 
 #include <iostream>
 #include <cassert>
-#include <csignal>
 #include "Config/Config.h"
 #include "Config/ConfigExceptions.h"
+#include "Server/ServerManager.h"
 
-const std::string kDefaultConfig = "resources/nginx_default.conf";
+const std::string kDefaultConfig = "resources/default/nginx.conf";
 
 Config try_open_default_config() {
     std::cout << "Trying to open default config..." << std::endl;
@@ -57,6 +57,11 @@ int main(int ac, char** av) {
     std::cout <<"Loading config..." << std::endl;
     try {
         Config conf = try_open_configs(ac, av);
+        std::cout << "Config is on path " + conf.getConfPath() +
+                    " is loaded.  Creating servers.." << std::endl;
+        std::cout << conf << std::endl;
+        ServerManager server_manager(conf);
+        server_manager.RunAll();
     } catch (const Config::ConfigException& e) {
         std::cout << "No config is loaded, startup failed!" << std::endl;
         return (1);

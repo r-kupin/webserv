@@ -13,18 +13,22 @@
 #ifndef WEBSERV_LIB_SERVER_H
 #define WEBSERV_LIB_SERVER_H
 
+#include "../Config/Config.h"
 
 class Server {
 public:
     Server();
-
     Server(const Server &);
+    explicit Server(const ServerConfiguration &);
 
     Server &operator=(const Server &);
 
     ~Server();
 
+    void Start();
 private:
+    ServerConfiguration config_;
+    int socket_;
 };
 
 

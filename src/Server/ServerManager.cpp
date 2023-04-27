@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /*                                                         :::      ::::::::  */
-/*    ServerManager.h                                    :+:      :+:    :+:  */
+/*    ServerManager.cpp                                  :+:      :+:    :+:  */
 /*                                                     +:+ +:+         +:+    */
 /*    By: rokupin <rokupin@student.42.fr>            +#+  +:+       +#+       */
 /*                                                 +#+#+#+#+#+   +#+          */
@@ -10,22 +10,33 @@
 /*                                                                            */
 /******************************************************************************/
 
-#ifndef WEBSERV_LIB_SERVERMANAGER_H
-#define WEBSERV_LIB_SERVERMANAGER_H
+#include "ServerManager.h"
 
 
-class ServerManager {
-public:
-    ServerManager();
+ServerManager::ServerManager() {}
 
-    ServerManager(const ServerManager &);
+ServerManager::ServerManager(const ServerManager &other) {
+    (void)other;
+}
 
-    ServerManager &operator=(const ServerManager &);
+ServerManager &ServerManager::operator=(const ServerManager &other) {
+    if (this == &other)
+        return *this;
+    return *this;
+}
 
-    ~ServerManager();
+ServerManager::~ServerManager() {}
 
-private:
-};
+ServerManager::ServerManager(const Config &config) {
+    const v_sconfigs &configs = config.getServers();
 
+    for (size_t i = 0; i < configs.size(); ++i) {
+        servers_.push_back(Server(configs[i]));
+    }
+}
 
-#endif //WEBSERV_LIB_SERVERMANAGER_H
+void ServerManager::RunAll() {
+    for (size_t i = 0; i < servers_.size(); ++i) {
+        servers_[i].Start();
+    }
+}
