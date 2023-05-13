@@ -12,40 +12,37 @@
 
 #include <iostream>
 #include <string>
+#include <algorithm>
 #include <cstdlib>
 #include "Config.h"
 
-const static int kListen = 0;
-const static int kName = 1;
-const static int kRoot = 2;
-const static int kIndex = 3;
-const static int kErrorPage = 4;
-const static int kEssentialDirectivesAmount = 5;
-
-void Config::CheckServerDirectives(Node &node, bool *set,
+void Config::CheckServerDirectives(Node &node, bool &port,
                                    ServerConfiguration &current) const {
+    bool srv_name = false;
+    bool cl_max_bd_size = false;
+    bool err = false;
+    bool index = false;
+    bool root = false;
+
     for (size_t i = 0; i < node.directives_.size(); i++) {
-        if (MarkDefined("server_name", set[kName], node.directives_[i])) {
-            for (size_t j = 1; j < node.directives_[i].size(); ++j) {
-                current.server_name_.push_back(node.directives_[i][j]);
-            }
-        } else if (MarkDefined("listen", set[kListen], node.directives_[i])) {
+        if (MarkDefined("server_name", srv_name, node.directives_[i])) {
+            // TODO server names - hostnames ....
+            for (size_t j = 1; j < node.directives_[i].size(); ++j)
+                current.server_names_.push_back(node.directives_[i][j]);
+        } else if (UMarkDefined("listen", port, node.directives_[i])) {
             current.port_ = atoi(node.directives_[i][1].c_str());
-        } else if (MarkDefined("root", set[kRoot], node.directives_[i])) {
-            current.root_ = node.directives_[i][1];
-        } else if (MarkDefined("index", set[kIndex], node.directives_[i])) {
+            current.port_str_ = node.directives_[i][1];
+        } else if (UMarkDefined("client_max_body_size", cl_max_bd_size,
+                                node.directives_[i])) {
+            current.client_max_body_size_ = atoi(node.directives_[i][1].c_str());
+        } else if (UMarkDefined("root", root, node.directives_[i])) {
+            current.locations_[0].root_ = node.directives_[i][1];
+        } else if (MarkDefined("index", index, node.directives_[i])) {
             for (size_t j = 1; j < node.directives_[i].size(); ++j) {
-                current.index_.push_back(node.directives_[i][j]);
+                current.locations_[0].index_.push_back(node.directives_[i][j]);
             }
-        } else if (MarkDefined("error_page",
-                               set[kErrorPage], node.directives_[i])) {
-            ErrPage errPage;
-            for (size_t j = 1; j < node.directives_[i].size() &&
-                    IsNumber(node.directives_[i][j]); ++j) {
-                errPage.code_.push_back(std::atoi(node.directives_[i][j].c_str()));
-            }
-            errPage.address_ = (*(node.directives_[i].rbegin()));
-            current.error_pages_.push_back(errPage);
+        } else if (MarkDefined("error_page", err, node.directives_[i])) {
+            AddErrorPages(node.directives_[i], current.locations_[0]);
         }
     }
 }
@@ -62,38 +59,19 @@ void Config::CheckServerDirectives(Node &node, bool *set,
  * @param node of the server block we are currently checking
  * @return ready-to-use server configuration
  */
-ServerConfiguration Config::CheckServer(Node &node) {
-    bool set[kEssentialDirectivesAmount] = {false};
+void
+Config::CheckServer(Node &node, std::vector<ServerConfiguration> &servers) {
     ServerConfiguration current;
+    bool port = false;
 
+    CheckServerDirectives(node, port, current);
     for (size_t i = 0; i < node.child_nodes_.size(); i++) {
-        HandleLocationContext(node.child_nodes_[i], set[kRoot],
-                              set[kIndex], current);
+        HandleLocationContext(node.child_nodes_[i], current);
+//        CheckLimitExceptContext();
     }
-    CheckServerDirectives(node, set, current);
-    for (int i = 0; i < kEssentialDirectivesAmount; ++i) {
-        if (!set[i])
-            ThrowSyntaxError("Server context is lacking of some essential "
-                             "directive(s)!");
-    }
-    return current;
-}
-
-void Config::HandleServerContext(ConfigNode &srv_node,
-                                 std::vector<ServerConfiguration> &servers) {
-    int port = -1;
-    for (size_t i = 0; i < srv_node.directives_.size(); ++i) {
-         if (srv_node.directives_[i][0] == "listen") {
-             port = atoi(srv_node.directives_[i][1].c_str());
-         }
-    }
-    if (port != -1) {
-        for (size_t i = 0; i < servers.size(); ++i) {
-            if (servers[i].port_ == port)
-                ThrowSyntaxError("Found multiple servers with the same port");
-        }
-    }
-    servers.push_back(CheckServer(srv_node));
+    if (!port)
+        ThrowSyntaxError("Port needs to be specified explicitly!");
+    servers.push_back(current);
 }
 
 /**
@@ -110,7 +88,7 @@ std::vector<ServerConfiguration> Config::CheckComponents(Node& root) {
     std::vector<ServerConfiguration> servers;
     for (size_t i = 0; i < root.child_nodes_.size(); i++) {
         if (root.child_nodes_[i].main_[0] == "server") {
-            HandleServerContext(root.child_nodes_[i], servers);
+            CheckServer(root.child_nodes_[i], servers);
         } else {
             std::cout << "Found block " + root.child_nodes_[i].main_[0] +
                     " inside main context" << std::endl;

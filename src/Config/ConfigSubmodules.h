@@ -27,11 +27,17 @@ struct ErrPage {
     std::string address_;
     std::vector<int> code_;
 
+
+    ErrPage(const std::string &address, const std::vector<int> &code);
+
+    explicit ErrPage(const std::string &address);
+
     bool operator==(const ErrPage &rhs) const;
 };
 
 struct Location {
     std::set<Methods> limit_except_methods_;
+    std::vector<ErrPage> error_pages_;
     Action limit_except_action_;
     int limit_except_return_code_;
     v_strings index_;
@@ -42,6 +48,8 @@ struct Location {
 
     Location();
 
+    explicit Location(const std::string &address);
+
     bool operator==(const Location &rhs) const;
 };
 
@@ -49,12 +57,14 @@ struct Location {
  * @brief server pre-configuration
  */
 struct ServerConfiguration {
-    v_strings server_name_;
+//    server properties
     int port_;
-    std::string root_;
-    v_strings index_;
+    std::string port_str_;
     size_t client_max_body_size_;
-    std::vector<ErrPage> error_pages_;
+    std::string hostname_;
+    v_strings server_names_;
+    bool explicit_default_location_set_;
+//    secondary locations
     std::vector<Location> locations_;
 
     ServerConfiguration();

@@ -56,6 +56,17 @@ bool Config::MarkDefined(const std::string &key, bool &flag,
     return false;
 }
 
+bool Config::UMarkDefined(const std::string &key, bool &flag,
+                         const v_strings &directive) const {
+    if (directive[0] == key && directive.size() > 1) {
+        if (flag)
+            ThrowSyntaxError("Multiple occurrence of the unique directive!");
+        flag = true;
+        return true;
+    }
+    return false;
+}
+
 bool Config::IsNumber(const std::string& str) const {
     if (str.find_first_not_of("0123456789") == std::string::npos)
         return true;

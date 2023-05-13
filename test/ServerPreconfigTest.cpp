@@ -67,7 +67,7 @@ TEST_F(ServerPreconfigTest, ServerPreconfigTestBasic) {
 //  srv
     expected_srvr.port_ = 8080;
     expected_srvr.index_ = v_strings({"index.html", "index.htm"});
-    expected_srvr.server_name_ = v_strings({"localhost"});
+    expected_srvr.server_names_ = v_strings({"localhost"});
     expected_srvr.client_max_body_size_ = 0;
 
 //  err

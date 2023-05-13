@@ -49,6 +49,8 @@ protected:
     void                TrimWhitespaces(std::string &line) const;
     bool                MarkDefined(const std::string &key, bool &flag,
                                     const v_strings &directive) const;
+    bool                UMarkDefined(const std::string &key, bool &flag,
+                                    const v_strings &directive) const;
     bool                IsNumber(const std::string& str) const;
 //      Parsing config file to tree-like structure of nodes
     void                ParseConfig(std::ifstream &config);
@@ -77,33 +79,31 @@ private:
     void                FinishMainNode(RawNode &current,
                                        std::ifstream &config) const;
 //      Global server check
-    void                CheckServerDirectives(Node &node, bool *set,
+    void                CheckServerDirectives(Node &node, bool &port,
                                               ServerConfiguration &current) const;
-    ServerConfiguration CheckServer(Node &node);
+    void CheckServer(Node &node, std::vector<ServerConfiguration> &servers);
 //      Location subcontext
-    void                CheckLocation(Node &loc_node, bool &set_root,
-                                      bool &set_index,
-                                      ServerConfiguration &current_s);
-    void                CheckLocationDirectives(const Node &loc_node,
-                                                Location &current_l,
-                                                bool &set_root, bool &set_index,
-                                                bool &ret) const;
+    void CheckLocation(Node &loc_node, Location &current_l);
+    void CheckLocationDirectives(const Node &loc_node, Location &current_l,
+                                 bool &set_root, bool &set_index, bool &ret,
+                                 bool &err_pages) const;
     void                HandleLocationReturn(const Node &node,
                                              Location &current_l,
                                              size_t i) const;
 //      Limit_except subcontext
-    void                CheckLimitExceptContext(ConfigNode &node, bool &set_ret,
-                                                Location &location,
-                                                bool &limit) const;
+    void CheckLimitExceptContext(ConfigNode &node, Location &location,
+                                 bool &limit) const;
 
     void                HandleServerContext(ConfigNode &srv_node,
                                             std::vector<ServerConfiguration>
                                                                     &servers);
 
-    void                HandleLocationContext(Node &maybe_loc_context,
-                                              bool &set_root,
-                                              bool &set_index,
-                                              ServerConfiguration &current_srv);
+    void HandleLocationContext(Node &maybe_loc_context,
+                               ServerConfiguration &current_srv);
+
+    void DefaultLocationDirective(ServerConfiguration &current) const;
+
+    void AddErrorPages(const v_strings &directive, Location &location) const;
 };
 
 std::ostream &operator<<(std::ostream &os, const Config &config);

@@ -13,7 +13,6 @@
 #ifndef WEBSERV_LIB_CONFIGEXCEPTIONS_H
 #define WEBSERV_LIB_CONFIGEXCEPTIONS_H
 
-
 #include <exception>
 #include "Config.h"
 

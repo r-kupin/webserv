@@ -14,16 +14,15 @@
 #define WEBSERV_LIB_SERVERMANAGER_H
 
 
-#include "../Config/Config.h"
 #include "Server.h"
 
 typedef std::vector<Server> v_servers;
 typedef std::vector<ServerConfiguration> v_sconfigs;
 
-class ServerException;
-
 class ServerManager {
 public:
+    const std::map<int, std::string> kHttpCodes;
+
     ServerManager();
     ServerManager(const ServerManager &);
     ServerManager(const Config &config);

@@ -67,32 +67,14 @@ std::ostream &operator<<(std::ostream &os, const Config &config) {
         const ServerConfiguration &srv = servers[i];
         
         os << "server " << std::endl;
-        for (size_t j = 0; j < srv.server_name_.size(); ++j) {
-            os << "\tname: " << srv.server_name_[j] << std::endl;
+        os << "\thostname: " << srv.hostname_ << std::endl;
+        for (size_t j = 0; j < srv.server_names_.size(); ++j) {
+            os << "\tname: " << srv.server_names_[j] << std::endl;
         }
         os << "\tport: " << srv.port_ << std::endl;
-        if (!srv.root_.empty())
-            os << "\troot: " << srv.root_ << std::endl;
-        if (!srv.index_.empty()) {
-            os << "\tindex: ";
-            for (size_t j = 0; j < srv.index_.size(); ++j) {
-                os << " " << srv.index_[j];
-            }
-            os << std::endl;
-        }
         if (srv.client_max_body_size_) {
             os << "\tclient_max_body_size_: " << srv.client_max_body_size_ <<
             std::endl;
-        }
-        for (size_t j = 0; j < srv.error_pages_.size(); ++j) {
-            const ErrPage &err_page = srv.error_pages_[j];
-            os << "\terror page " << std::endl;
-            os << "\t\taddress: " << err_page.address_ << std::endl;
-            os << "\t\tfor codes: ";
-            for (size_t k = 0; k < err_page.code_.size(); ++k) {
-                os << err_page.code_[k] << " ";
-            }
-            os << std::endl;
         }
         for (size_t j = 0; j < srv.locations_.size(); ++j) {
             const Location &loc = srv.locations_[j];
@@ -104,6 +86,18 @@ std::ostream &operator<<(std::ostream &os, const Config &config) {
                     os << loc.index_[k] << " " ;
                 }
                 os << std::endl;
+            }
+            if (!loc.error_pages_.empty()) {
+                for (size_t l = 0; l < loc.error_pages_.size(); ++l) {
+                    const ErrPage &err_page = loc.error_pages_[l];
+                    os << "\t\terror page " << std::endl;
+                    os << "\t\t\taddress: " << err_page.address_ << std::endl;
+                    os << "\t\t\tfor codes: ";
+                    for (size_t k = 0; k < err_page.code_.size(); ++k) {
+                        os << err_page.code_[k] << " ";
+                    }
+                    os << std::endl;
+                }
             }
             if (loc.return_code_)
                 os << "\t\treturn code: " << loc.return_code_ << std::endl;
