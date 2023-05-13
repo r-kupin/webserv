@@ -25,19 +25,19 @@ enum Action {DENY};
 
 struct ErrPage {
     std::string address_;
-    std::vector<int> code_;
-
-
-    ErrPage(const std::string &address, const std::vector<int> &code);
-
-    explicit ErrPage(const std::string &address);
+    int code_;
+    ErrPage(const std::string &address, int code);
 
     bool operator==(const ErrPage &rhs) const;
+    bool operator<(const ErrPage &rhs) const;
+    bool operator>(const ErrPage &rhs) const;
+    bool operator<=(const ErrPage &rhs) const;
+    bool operator>=(const ErrPage &rhs) const;
 };
 
 struct Location {
     std::set<Methods> limit_except_methods_;
-    std::vector<ErrPage> error_pages_;
+    std::set<ErrPage> error_pages_;
     Action limit_except_action_;
     int limit_except_return_code_;
     v_strings index_;

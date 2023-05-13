@@ -17,7 +17,7 @@
 #include "Config.h"
 
 void Config::CheckServerDirectives(Node &node, bool &port,
-                                   ServerConfiguration &current) const {
+                                   ServerConfiguration &current) {
     bool srv_name = false;
     bool cl_max_bd_size = false;
     bool err = false;

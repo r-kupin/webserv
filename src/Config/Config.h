@@ -80,13 +80,13 @@ private:
                                        std::ifstream &config) const;
 //      Global server check
     void                CheckServerDirectives(Node &node, bool &port,
-                                              ServerConfiguration &current) const;
+                                              ServerConfiguration &current);
     void CheckServer(Node &node, std::vector<ServerConfiguration> &servers);
 //      Location subcontext
     void CheckLocation(Node &loc_node, Location &current_l);
     void CheckLocationDirectives(const Node &loc_node, Location &current_l,
                                  bool &set_root, bool &set_index, bool &ret,
-                                 bool &err_pages) const;
+                                 bool &err_pages);
     void                HandleLocationReturn(const Node &node,
                                              Location &current_l,
                                              size_t i) const;
@@ -94,16 +94,10 @@ private:
     void CheckLimitExceptContext(ConfigNode &node, Location &location,
                                  bool &limit) const;
 
-    void                HandleServerContext(ConfigNode &srv_node,
-                                            std::vector<ServerConfiguration>
-                                                                    &servers);
-
     void HandleLocationContext(Node &maybe_loc_context,
                                ServerConfiguration &current_srv);
 
-    void DefaultLocationDirective(ServerConfiguration &current) const;
-
-    void AddErrorPages(const v_strings &directive, Location &location) const;
+    void AddErrorPages(const v_strings &directive, Location &location);
 };
 
 std::ostream &operator<<(std::ostream &os, const Config &config);

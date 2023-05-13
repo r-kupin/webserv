@@ -13,23 +13,24 @@
 #include <cstdlib>
 #include "Config.h"
 
-//const static int kRoot = 0;
-//const static int kReturn = 1;
-//const static int kIndex = 2;
-//const static int kLimit = 3;
-//const static int kDirectivesAmount = 4;
-
-
-void Config::AddErrorPages(const v_strings &directive, Location &location) const {
-    std::string address;
-    std::vector<int> code;
-
-    for (size_t j = 1; j < directive.size() &&
-                       IsNumber(directive[j]); ++j) {
-        code.push_back(std::atoi(directive[j].c_str()));
+void Config::AddErrorPages(const v_strings &directive, Location &location) {
+    std::set<ErrPage>   &all_err_pages = location.error_pages_;
+    std::string         address;
+    int                 code;
+    
+    for (size_t j = 1; j < directive.size() && IsNumber(directive[j]); ++j) {
+        address = *(directive.rbegin());
+        code = std::atoi(directive[j].c_str());
+        ErrPage err_page(address, code);
+        const std::set<ErrPage>::iterator & iterator =
+                                                all_err_pages.find(err_page);
+        if (iterator == all_err_pages.end()) {
+            all_err_pages.insert(err_page);
+        } else {
+            ErrPage &old = const_cast<ErrPage &>(*iterator);
+            old.address_ = address;
+        }
     }
-    address = (*(directive.rbegin()));
-    location.error_pages_.push_back(ErrPage(address, code));
 }
 
 void Config::HandleLocationReturn(const Node &node,
@@ -51,7 +52,7 @@ void Config::HandleLocationReturn(const Node &node,
 
 void Config::CheckLocationDirectives(const Node &loc_node, Location &current_l,
                                      bool &set_root, bool &set_index, bool &ret,
-                                     bool &err_pages) const {
+                                     bool &err_pages) {
     for (size_t i = 0; i < loc_node.directives_.size(); ++i) {
         if (UMarkDefined("root", set_root, loc_node.directives_[i]))
             current_l.root_ = loc_node.directives_[i][1];

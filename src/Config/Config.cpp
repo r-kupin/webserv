@@ -88,14 +88,12 @@ std::ostream &operator<<(std::ostream &os, const Config &config) {
                 os << std::endl;
             }
             if (!loc.error_pages_.empty()) {
-                for (size_t l = 0; l < loc.error_pages_.size(); ++l) {
-                    const ErrPage &err_page = loc.error_pages_[l];
+                for (std::_Rb_tree_const_iterator<ErrPage> iterator =
+                                                    loc.error_pages_.begin();
+                     iterator != loc.error_pages_.end(); ++iterator) {
                     os << "\t\terror page " << std::endl;
-                    os << "\t\t\taddress: " << err_page.address_ << std::endl;
-                    os << "\t\t\tfor codes: ";
-                    for (size_t k = 0; k < err_page.code_.size(); ++k) {
-                        os << err_page.code_[k] << " ";
-                    }
+                    os << "\t\t\taddres: " << iterator->address_ << std::endl;
+                    os << "\t\t\tcode: " << iterator->code_;
                     os << std::endl;
                 }
             }

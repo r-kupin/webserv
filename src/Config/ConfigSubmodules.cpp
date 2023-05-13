@@ -13,14 +13,28 @@
 #include "ConfigSubmodules.h"
 
 bool ErrPage::operator==(const ErrPage &rhs) const {
-    return address_ == rhs.address_ &&
-           code_ == rhs.code_;
+    return code_ == rhs.code_;
 }
 
-ErrPage::ErrPage(const std::string &address, const std::vector<int> &code)
+ErrPage::ErrPage(const std::string &address, int code)
         : address_(address), code_(code) {}
 
-ErrPage::ErrPage(const std::string &address) : address_(address) {}
+bool ErrPage::operator<(const ErrPage &rhs) const {
+    return code_ < rhs.code_;
+}
+
+bool ErrPage::operator>(const ErrPage &rhs) const {
+    return rhs < *this;
+}
+
+bool ErrPage::operator<=(const ErrPage &rhs) const {
+    return !(rhs < *this);
+}
+
+bool ErrPage::operator>=(const ErrPage &rhs) const {
+    return !(*this < rhs);
+}
+
 
 bool Location::operator==(const Location &rhs) const {
     return address_ == rhs.address_;
@@ -42,12 +56,8 @@ ServerConfiguration::ServerConfiguration()
     Location def = Location("/");
     def.root_ = "resources/default";
     def.index_.push_back(def.root_ + "/htmls/index.html");
-    def.error_pages_.push_back(ErrPage(def.root_ + "/htmls/404.html",
-                                       std::vector<int>()));
-    def.error_pages_[0].code_.push_back(404);
-    def.error_pages_.push_back(ErrPage(def.root_ + "/htmls/403.html",
-                                       std::vector<int>()));
-    def.error_pages_[1].code_.push_back(403);
+    def.error_pages_.insert(ErrPage(def.root_ + "/htmls/404.html", 404));
+    def.error_pages_.insert(ErrPage(def.root_ + "/htmls/403.html", 403));
     def.return_code_ = -1;
     def.return_address_ = "unspecified";
     locations_.push_back(def);
