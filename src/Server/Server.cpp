@@ -46,9 +46,11 @@ By using epoll, servers can efficiently handle a large number of connections and
 #include <netinet/in.h>
 #include <unistd.h>
 #include <cstring>
+#include <algorithm>
 #include "ServerExceptions.h"
+#include "ClientRequest.h"
 
-const int BUFFER_SIZE = 1024;
+//const int BUFFER_SIZE = 1024;
 //const int MAX_EVENTS = 10;
 
 Server::Server() {}
@@ -245,7 +247,6 @@ void Server::AddEpollInstance() {
 
 /**
  *  TODO MAX_CLIENTS
- *
  */
  void Server::Start() {
      std::cout << "started server at " << config_.port_ << " port" << std::endl;
@@ -261,53 +262,92 @@ void Server::AddEpollInstance() {
          }
          std::cout << "Accepted client connection from " <<
                                     client_addr.sin_addr.s_addr << std::endl;
-
-         HandleClientRequest(client_sock);
+         try {
+             HandleClientRequest(client_sock);
+         } catch (ReadFromSocketFailedException) {
+             std::cout << "Read from socket failed!" << std::endl;
+         }
          close(client_sock);
      }
      close(socket_);
  }
 
- void Server::HandleClientRequest(int client_sock) {
-     char buffer[BUFFER_SIZE];
-     int num_bytes;
+const Location &Server::FindLocation(const std::string &uri,
+                                     const Location &start,
+                                     int &http_code) {
+     if (uri != start.address_) {
+         std::string part_uri = uri.substr(1);
+         std::string::size_type end = part_uri.find('/');
+         if (end == std::string::npos)
+             end = uri.size();
 
-     // Read client request from socket
-     num_bytes = read(client_sock, buffer, BUFFER_SIZE);
-     if (num_bytes < 0) {
-         std::cerr << "Error reading from socket" << std::endl;
-         return;
+         part_uri = ("/" + part_uri).substr(0, end + 1);
+         const std::set<Location>::iterator &it =
+                     start.sublocations_.find(Location(part_uri));
+         if (it != start.sublocations_.end()) {
+             return FindLocation(uri.substr(end + 1), *it, http_code);
+         } else {
+             http_code = 404;
+             return start;
+         }
      }
-     // Add null terminator to buffer
-     buffer[num_bytes] = '\0';
+     http_code = 200;
+     return start;
+}
 
-     // Extract client request method and URI
-     std::string request(buffer);
-     std::cout << request << std::endl;
-     std::string method = request.substr(0, request.find(' '));
-     std::string uri = request.substr(request.find(' ') + 1,
-                                      request.find(' ',
-                                                   request.find(' ') + 1) - request.find(' ') - 1);
-
-     // Open file corresponding to requested URI
-     std::string filepath = "resources/default/htmls" + uri;
-     std::ifstream file(filepath.c_str());
-     if (!file.good()) {
-         // If file doesn't exist, send 404 error response to client
-         std::string response = "HTTP/1.1 404 Not Found\r\n\r\n";
-         send(client_sock, response.c_str(), response.length(), 0);
-         return;
+void Server::HandleClientRequest(int client_sock) {
+     try {
+         ClientRequest request(client_sock);
+         int http_code;
+         const Location &loc = FindLocation(request.uri_, config_.root_loc_,
+                                            http_code);
+         std::cout << loc.address_ << " " <<http_code << std::endl;
+//////         const Location &loc = (request.uri_ == "/") ? config_.root_loc_ :
+//////         *(config_.root_loc_.sublocations_.find(Location(request.uri_)));
+////
+////         if (it == config_.locations_.end()) {
+//////             return 404
+////         } else {
+////             const Location &to_go = *(it);
+////             if (!to_go.limit_except_.except_.empty() &&
+////                    to_go.limit_except_.except_.find(request.method_) ==
+////                            to_go.limit_except_.except_.end()) {
+//////                 return to_go.return_code_;
+////             }
+//         }
+//         std::string filepath;
+//         if ()
+//         = kDefaultResPath +
+     } catch (const ReadFromSocketFailedException &) {
+         std::cout << "Read from client socket failed!" << std::endl;
+     } catch (const UnsupportedClientMethodException &) {
+         std::cout << "Read from client socket failed!" << std::endl;
+     } catch (const HTTPVersionNotSupportedException &) {
+         std::cout << "Read from client socket failed!" << std::endl;
+     } catch (const NotFoundException &) {
+//         return 404
+         std::cout << "Not Found!" << std::endl;
      }
 
-     std::string response = "HTTP/1.1 200 OK\r\n\r\n";
-     while (!file.eof()) {
-         file.read(buffer, BUFFER_SIZE);
-         send(client_sock, buffer, file.gcount(), 0);
-     }
-
-     // Close file and socket
-     file.close();
-     close(client_sock);
+//     // Open file corresponding to requested URI
+//     std::string filepath = "resources/default/htmls";
+//     std::ifstream file(filepath.c_str());
+//     if (!file.good()) {
+//         // If file doesn't exist, send 404 error response to client
+//         std::string response = "HTTP/1.1 404 Not Found\r\n\r\n";
+//         send(client_sock, response.c_str(), response.length(), 0);
+//         return;
+//     }
+//
+//     std::string response = "HTTP/1.1 200 OK\r\n\r\n";
+////     while (!file.eof()) {
+////         file.read(buffer, BUFFER_SIZE);
+////         send(client_sock, buffer, file.gcount(), 0);
+////     }
+//
+//     // Close file and socket
+//     file.close();
+//     close(client_sock);
  }
 
 Server &Server::operator=(const Server &other) {
@@ -343,5 +383,21 @@ const char *EpollCreationFailed::what() const throw() {
 }
 
 const char *EpollAddFailed::what() const throw() {
+    return exception::what();
+}
+
+const char *ReadFromSocketFailedException::what() const throw() {
+    return exception::what();
+}
+
+const char *UnsupportedClientMethodException::what() const throw() {
+    return exception::what();
+}
+
+const char *HTTPVersionNotSupportedException::what() const throw() {
+    return exception::what();
+}
+
+const char *NotFoundException::what() const throw() {
     return exception::what();
 }

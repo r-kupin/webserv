@@ -18,9 +18,10 @@
 #include <sys/epoll.h>
 #include <netdb.h>
 #include "../Config/Config.h"
+#include "ClientRequest.h"
 
 
-class Server {
+ class Server {
 public:
     class ServerException : public std::exception {};
 
@@ -51,7 +52,13 @@ private:
     void HandleClientRequest(int i);
 
     void SetSocket();
-};
+
+     const ClientRequest &GetClientRequestStr(int sock);
+
+     const Location &
+     FindLocation(const std::string &uri, const Location &start,
+                  int &http_code);
+ };
 
 
 #endif //WEBSERV_LIB_SERVER_H

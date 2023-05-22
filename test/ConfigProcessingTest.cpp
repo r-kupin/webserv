@@ -37,19 +37,6 @@ TEST_F(MainContextTest, ComponentsTest1EmptyServerFail) {
     EXPECT_THROW(CheckComponents(root_), ConfigFileSyntaxError);
 }
 
-TEST_F(MainContextTest, ComponentsTest1InsufficientServerFail) {
-    server_.directives_.push_back(
-            v_strings({ "server_name", "localhost" }));
-    server_.directives_.push_back(
-            v_strings({ "listen", "8080" }));
-    server_.directives_.push_back(
-            v_strings({ "root", "/some/where/deep/inside" }));
-    server_.directives_.push_back(
-            v_strings({ "index", "index.html", "index.htm" }));
-    root_.child_nodes_.push_back(server_);
-    EXPECT_THROW(CheckComponents(root_), ConfigFileSyntaxError);
-}
-
 TEST_F(MainContextTest, ComponentsTestAllPresent) {
     server_.main_ = v_strings ({"server"});
     server_.directives_.push_back(
@@ -125,16 +112,6 @@ TEST_F(LocationContextTest, ComponentsTestAllIndexInsideLocation) {
 
     root_.child_nodes_.push_back(server_);
     EXPECT_NO_THROW(CheckComponents(root_));
-}
-
-TEST_F(LocationContextTest, ComponentsTestLocationHasNoMeaningfullDirectives) {
-    location_.main_ = v_strings({"location", "/" });
-    location_.directives_.push_back(
-            v_strings({ "autoindex", "on"}));
-    server_.child_nodes_.push_back(location_);
-
-    root_.child_nodes_.push_back(server_);
-    EXPECT_THROW(CheckComponents(root_), ConfigFileSyntaxError);
 }
 
 class LimitExceptContextTest  : public ::testing::Test, public Config {

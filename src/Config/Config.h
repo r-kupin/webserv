@@ -21,6 +21,9 @@
 #include <ostream>
 #include "ConfigSubmodules.h"
 
+const static std::string kDefaultResPath = "resources/";
+const static std::string kDefaultConfig = "resources/default/nginx.conf";
+
 class Config {
 public:
 //  Exposed to use
@@ -91,13 +94,28 @@ private:
                                              Location &current_l,
                                              size_t i) const;
 //      Limit_except subcontext
-    void CheckLimitExceptContext(ConfigNode &node, Location &location,
-                                 bool &limit) const;
+    void HandleLimitExceptContext(ConfigNode &node, Limit &curr_limit) const;
 
-    void HandleLocationContext(Node &maybe_loc_context,
-                               ServerConfiguration &current_srv);
+    void HandleLocationContext(Node &loc_context,
+                               Location &parent);
 
     void AddErrorPages(const v_strings &directive, Location &location);
+
+    void CheckLocationDirectives(Node &loc_node, Location &current_l);
+
+    static bool IsLocation(const Node &node);
+
+    static bool IsCorrectLocation(const Node &node);
+
+    static bool IsLimitExcept(const Node &node);
+
+    static bool IsCorrectLimit(const Node &node);
+
+    void
+    CheckSieblingsAdresses(const Location &parent,
+                           const Location &maybe_current) const;
+
+    void UpdateIndex(const v_strings &directive, Location &location);
 };
 
 std::ostream &operator<<(std::ostream &os, const Config &config);

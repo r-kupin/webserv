@@ -36,13 +36,11 @@ void Config::CheckServerDirectives(Node &node, bool &port,
                                 node.directives_[i])) {
             current.client_max_body_size_ = atoi(node.directives_[i][1].c_str());
         } else if (UMarkDefined("root", root, node.directives_[i])) {
-            current.locations_[0].root_ = node.directives_[i][1];
+            current.root_loc_.root_ = node.directives_[i][1];
         } else if (MarkDefined("index", index, node.directives_[i])) {
-            for (size_t j = 1; j < node.directives_[i].size(); ++j) {
-                current.locations_[0].index_.push_back(node.directives_[i][j]);
-            }
+            UpdateIndex(node.directives_[i], current.root_loc_);
         } else if (MarkDefined("error_page", err, node.directives_[i])) {
-            AddErrorPages(node.directives_[i], current.locations_[0]);
+            AddErrorPages(node.directives_[i], current.root_loc_);
         }
     }
 }
@@ -66,11 +64,21 @@ Config::CheckServer(Node &node, std::vector<ServerConfiguration> &servers) {
 
     CheckServerDirectives(node, port, current);
     for (size_t i = 0; i < node.child_nodes_.size(); i++) {
-        HandleLocationContext(node.child_nodes_[i], current);
-//        CheckLimitExceptContext();
+        if (IsLocation(node.child_nodes_[i])) {
+            if (!IsCorrectLocation(node.child_nodes_[i]))
+                ThrowSyntaxError("Location path is incorrect or missing");
+            HandleLocationContext(node.child_nodes_[i], current.root_loc_);
+        } else if (node.child_nodes_[i].main_[0] == "limit_except") {
+            ThrowSyntaxError("limit_except block is not allowed here");
+        }
     }
     if (!port)
         ThrowSyntaxError("Port needs to be specified explicitly!");
+    for (std::vector<ServerConfiguration>::iterator it = servers.begin();
+         it != servers.end(); ++it) {
+        if (it->port_ == current.port_)
+            ThrowSyntaxError("Port needs to be unique amongst all servers");
+    }
     servers.push_back(current);
 }
 

@@ -11,7 +11,53 @@
 /******************************************************************************/
 
 #include <cstdlib>
+#include <algorithm>
 #include "Config.h"
+
+bool Config::IsLocation(const Node &node) {
+    if (node.main_[0] == "location")
+        return true;
+    return false;
+}
+
+bool Config::IsLimitExcept(const Node &node) {
+    if (node.main_[0] == "limit_except")
+        return true;
+    return false;
+}
+
+bool Config::IsCorrectLocation(const Node &node) {
+    if (node.main_.size() == 2 &&
+        (!node.directives_.empty() || !node.child_nodes_.empty()))
+        return true;
+    return false;
+}
+
+bool Config::IsCorrectLimit(const Node &node) {
+    if (node.main_.size() < 2 || node.directives_.empty())
+        return false;
+    Limit curr_limit;
+    for (size_t i = 1; i < node.main_.size(); ++i) {
+        if (node.main_[i] != "GET" && node.main_[i] != "POST" &&
+            node.main_[i] != "DELETE") {
+            return false;
+        }
+    }
+    return true;
+//    ThrowSyntaxError("Given HTTP method isn't supported or doesn't exist");
+//    ThrowSyntaxError("HTTP methods needs to be specified");
+//    ThrowSyntaxError("Limit_except context can't be empty !");
+}
+
+void Config::UpdateIndex(const v_strings &directive, Location &location) {
+    if (!location.default_index_) {
+        location.index_.clear();
+        location.default_index_ = true;
+    }
+    for (size_t i = 1; i < directive.size(); ++i) {
+        location.index_.insert(directive[i]);
+    }
+}
 
 void Config::AddErrorPages(const v_strings &directive, Location &location) {
     std::set<ErrPage>   &all_err_pages = location.error_pages_;
@@ -50,109 +96,136 @@ void Config::HandleLocationReturn(const Node &node,
     }
 }
 
-void Config::CheckLocationDirectives(const Node &loc_node, Location &current_l,
-                                     bool &set_root, bool &set_index, bool &ret,
-                                     bool &err_pages) {
+void
+Config::HandleLimitExceptContext(ConfigNode &node, Limit &curr_limit) const {
+    for (std::vector<std::string>::iterator it = node.main_.begin() + 1;
+         it != node.main_.end(); ++it) {
+        if (*it == "GET" &&
+            curr_limit.except_.find(GET) == curr_limit.except_.end()) {
+            curr_limit.except_.insert(GET);
+        } else if (*it == "POST" &&
+            curr_limit.except_.find(POST) == curr_limit.except_.end()) {
+            curr_limit.except_.insert(POST);
+        } else if (*it == "DELETE" &&
+            curr_limit.except_.find(DELETE) == curr_limit.except_.end()) {
+            curr_limit.except_.insert(DELETE);
+        } else {
+            ThrowSyntaxError("Seems like there are repeatable methods in the "
+                             "limit_except block");
+        }
+    }
+    if (node.directives_.size() == 1) {
+        if (node.directives_[0][0] == "deny" &&
+            node.directives_[0][1] == "all") {
+            curr_limit.return_code_ = 403;
+        } else if (node.directives_[0][0] == "return") {
+            curr_limit.return_code_ = std::atoi(
+                                        node.directives_[0][1].c_str());
+        }
+    }
+    if (curr_limit.return_code_ == -1) {
+        ThrowSyntaxError("Limit_except context needs 1 of these "
+                         "directives: return or deny !");
+    }
+//        for (size_t i = 0; i < node.directives_.size(); ++i) {
+//            if (UMarkDefined("deny", deny, node.directives_[i])) {
+//                curr_limit.deny_all_ = true;
+//            } else if (UMarkDefined("return", ret, node.directives_[i])) {
+//                curr_limit.return_code_ = std::atoi(
+//                                            node.directives_[i][1].c_str());
+//            }
+//        }
+//        for (size_t i = 0; i < node.child_nodes_.size(); ++i) {
+//            CheckIfCondition(node.child_nodes_[i], set_ret);
+//        }TODO probably too much
+}
+//
+//void Config::CheckLocation(Node &loc_node, Location &current_l) {
+//    if (loc_node.main_[0] == "location") {
+//        bool        ret = false, limit = false, root = false,
+//                    index = false, err = false;
+//
+//        if (loc_node.main_.size() != 2)
+//            ThrowSyntaxError("Location path is incorrect or missing");
+//        current_l.address_ = loc_node.main_[1];
+//        for (size_t i = 0; i < loc_node.child_nodes_.size(); ++i) {
+//            HandleLimitExceptContext(loc_node.child_nodes_[i],
+//                                     current_l);
+//        }
+//        CheckLocationDirectives(loc_node, current_l, root, index, ret,
+//                                err);
+//        if (!index && !ret && !limit && !root && !err)
+//            ThrowSyntaxError("Location context should contain at least one of "
+//                             "following directives (directly or in "
+//                             "subcontext): root, index, or return!");
+//    }
+//}
+
+void Config::CheckLocationDirectives(Node &loc_node, Location &current_l) {
+    bool    root = false,
+            index = false,
+            ret = false,
+            err = false;
+
     for (size_t i = 0; i < loc_node.directives_.size(); ++i) {
-        if (UMarkDefined("root", set_root, loc_node.directives_[i]))
+        if (UMarkDefined("root", root, loc_node.directives_[i]))
             current_l.root_ = loc_node.directives_[i][1];
-        if (MarkDefined("index", set_index, loc_node.directives_[i])) {
-            for (size_t j = 1; j < loc_node.directives_[i].size(); ++j) {
-                current_l.index_.push_back(loc_node.directives_[i][j]);
-            }
+        if (MarkDefined("index", index, loc_node.directives_[i])) {
+            UpdateIndex(loc_node.directives_[i], current_l);
         }
         if (UMarkDefined("return", ret, loc_node.directives_[i])) {
             HandleLocationReturn(loc_node, current_l, i);
         }
-        if (MarkDefined("error_page", err_pages, loc_node.directives_[i])) {
+        if (MarkDefined("error_page", err, loc_node.directives_[i])) {
             AddErrorPages(loc_node.directives_[i], current_l);
         }
     }
 }
 
-void Config::CheckLimitExceptContext(ConfigNode &node, Location &location,
-                                     bool &limit) const {
-    if (node.main_[0] == "limit_except") {
-        limit = true;
-        bool deny = false;
-        bool ret = false;
+void Config::HandleLocationContext(Node &loc_context, Location &parent) {
+    Location    maybe_current(loc_context.main_[1]);
+    CheckSieblingsAdresses(parent, maybe_current);
+    Location    &current = (maybe_current.HasSameAddress(parent)) ?
+                                                        parent : maybe_current;
 
-        if (node.main_.size() < 2)
-            ThrowSyntaxError("HTTP methods needs to be specified");
-        if (node.directives_.empty())
-            ThrowSyntaxError("Limit_except context can't be empty !");
-        for (size_t i = 1; i < node.main_.size(); ++i) {
-            if (node.main_[i] == "GET") {
-                location.limit_except_methods_.insert(GET);
-            } else if (node.main_[i] == "POST") {
-                location.limit_except_methods_.insert(POST);
-            } else if (node.main_[i] == "DELETE") {
-                location.limit_except_methods_.insert(DELETE);
-            } else {
-                ThrowSyntaxError("Given HTTP method isn't supported or"
-                                 " doesn't exist");
-            }
+    CheckLocationDirectives(loc_context, current);
+    for (std::vector<ConfigNode>::iterator it = loc_context.child_nodes_.begin();
+         it != loc_context.child_nodes_.end(); ++it) {
+        if (IsLocation(*it)) {
+            if (!IsCorrectLocation(*it))
+                ThrowSyntaxError("Location is incorrect");
+            HandleLocationContext(*it, current);
+        } else if (IsLimitExcept(*it)) {
+            if (!IsCorrectLimit(*it))
+                ThrowSyntaxError("Limit except is incorrect");
+            HandleLimitExceptContext(*it, current.limit_except_);
         }
-        for (size_t i = 0; i < node.directives_.size(); ++i) {
-            if (UMarkDefined("deny", deny, node.directives_[i])) {
-                location.limit_except_action_ = DENY;
-            } else if (UMarkDefined("return", ret, node.directives_[i])) {
-                location.limit_except_return_code_ =
-                        std::atoi(node.directives_[i][1].c_str());
-            }
-        }
-//        for (size_t i = 0; i < node.child_nodes_.size(); ++i) {
-//            CheckIfCondition(node.child_nodes_[i], set_ret);
-//        }TODO probably too much
-        if (!ret && !deny)
-            ThrowSyntaxError("Limit_except context needs at least 1 of these "
-                             "directives (directly or in subcontext): return "
-                             "or deny !");
     }
+    if (!(current.HasSameAddress(parent)))
+        parent.sublocations_.insert(current);
+//    for (size_t i = 0; i < loc_context.child_nodes_.size(); ++i) {
+//        if (parent == current && !overriden_parrent_) {
+//            overriden_parrent_ = true;
+//            sublocation = true;
+//            CheckLocation(loc_context, parent);
+//        } else if (parent.sublocations_.find(current) ==
+//                    parent.sublocations_.end()) {
+//            CheckLocation(loc_context, current);
+//            parent.sublocations_.insert(current);
+//        } else {
+//            ThrowSyntaxError("Multiple locations for the same address "
+//                             "inside one server context");
+//        }
+//    }
 }
 
-void Config::CheckLocation(Node &loc_node, Location &current_l) {
-    if (loc_node.main_[0] == "location") {
-        bool        ret = false, limit = false, root = false,
-                    index = false, err = false;
-
-        if (loc_node.main_.size() != 2)
-            ThrowSyntaxError("Location path is incorrect or missing");
-        if (loc_node.directives_.empty())
-            ThrowSyntaxError("Location context can't be empty !");
-        current_l.address_ = loc_node.main_[1];
-        for (size_t i = 0; i < loc_node.child_nodes_.size(); ++i) {
-            CheckLimitExceptContext(loc_node.child_nodes_[i],
-                                    current_l, limit);
-        }
-        CheckLocationDirectives(loc_node, current_l, root, index, ret,
-                                err);
-        if (!index && !ret && !limit && !root && !err)
-            ThrowSyntaxError("Location context should contain at least one of "
-                             "following directives (directly or in "
-                             "subcontext): root, index, or return!");
-    }
-}
-
-void Config::HandleLocationContext(Node &maybe_loc_context,
-                                   ServerConfiguration &current_srv) {
-    if (maybe_loc_context.main_[0] == "location") {
-        std::string &address = maybe_loc_context.main_[1];
-        if (address == "/" && !current_srv.explicit_default_location_set_) {
-            current_srv.explicit_default_location_set_ = true;
-            CheckLocation(maybe_loc_context,
-                          current_srv.locations_[0]);
-        } else {
-            for (size_t i = 0; i < current_srv.locations_.size(); ++i) {
-                if (current_srv.locations_[i].address_ == address) {
-                    ThrowSyntaxError("Multiple locations for the same address "
-                                     "inside one server context");
-                }
-            }
-            Location    current_l;
-            CheckLocation(maybe_loc_context, current_l);
-            current_srv.locations_.push_back(current_l);
-        }
+void Config::CheckSieblingsAdresses(const Location &parent,
+                                    const Location &maybe_current) const {
+    for (std::_Rb_tree_const_iterator<Location> it = parent.sublocations_.begin();
+         it != parent.sublocations_.end(); ++it) {
+        if (it->HasSameAddress(maybe_current))
+            ThrowSyntaxError(
+                    "Each location needs unique address inside each context");
     }
 }
 

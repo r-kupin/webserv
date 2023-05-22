@@ -64,4 +64,33 @@ public:
     const char *what() const throw();
 };
 
+class ReadFromSocketFailedException : public Server::ServerException {
+public:
+    ReadFromSocketFailedException() : Server::ServerException() {}
+
+    const char *what() const throw();
+};
+
+class UnsupportedClientMethodException : public Server::ServerException {
+public:
+    UnsupportedClientMethodException() : Server::ServerException() {}
+
+    const char *what() const throw();
+};
+
+class HTTPVersionNotSupportedException : public Server::ServerException {
+public:
+    HTTPVersionNotSupportedException() : Server::ServerException() {}
+
+    const char *what() const throw();
+};
+
+class NotFoundException : public Server::ServerException {
+public:
+    NotFoundException() : Server::ServerException() {}
+
+    const char *what() const throw();
+};
+
+
 #endif //WEBSERV_LIB_SERVEREXCEPTIONS_H

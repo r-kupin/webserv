@@ -66,44 +66,17 @@ std::ostream &operator<<(std::ostream &os, const Config &config) {
     for (size_t i = 0; i < servers.size(); ++i) {
         const ServerConfiguration &srv = servers[i];
         
-        os << "server " << std::endl;
-        os << "\thostname: " << srv.hostname_ << std::endl;
+        os << "server: " << std::endl;
+        os << "hostname: " << srv.hostname_ << std::endl;
         for (size_t j = 0; j < srv.server_names_.size(); ++j) {
-            os << "\tname: " << srv.server_names_[j] << std::endl;
+            os << "name: " << srv.server_names_[j] << std::endl;
         }
-        os << "\tport: " << srv.port_ << std::endl;
+        os << "port: " << srv.port_ << std::endl;
         if (srv.client_max_body_size_) {
-            os << "\tclient_max_body_size_: " << srv.client_max_body_size_ <<
+            os << "client_max_body_size_: " << srv.client_max_body_size_ <<
             std::endl;
         }
-        for (size_t j = 0; j < srv.locations_.size(); ++j) {
-            const Location &loc = srv.locations_[j];
-            os << "\tlocation " << std::endl;
-            os << "\t\taddress: " << loc.address_ << std::endl;
-            if (!loc.index_.empty()) {
-                os << "\t\tindex: ";
-                for (size_t k = 0; k < loc.index_.size(); ++k) {
-                    os << loc.index_[k] << " " ;
-                }
-                os << std::endl;
-            }
-            if (!loc.error_pages_.empty()) {
-                for (std::_Rb_tree_const_iterator<ErrPage> iterator =
-                                                    loc.error_pages_.begin();
-                     iterator != loc.error_pages_.end(); ++iterator) {
-                    os << "\t\terror page " << std::endl;
-                    os << "\t\t\taddres: " << iterator->address_ << std::endl;
-                    os << "\t\t\tcode: " << iterator->code_;
-                    os << std::endl;
-                }
-            }
-            if (loc.return_code_)
-                os << "\t\treturn code: " << loc.return_code_ << std::endl;
-            if (!loc.return_address_.empty())
-                os << "\t\treturn address: " << loc.return_address_ << std::endl;
-            if (!loc.root_.empty())
-                os << "\t\troot: " << loc.root_ << std::endl;
-        }
+        os << servers[i].root_loc_ << std::endl;
         os << std::endl;
     }
     return os;

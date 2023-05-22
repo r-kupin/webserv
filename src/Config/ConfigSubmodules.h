@@ -17,41 +17,54 @@
 #include <string>
 #include <vector>
 #include <set>
+#include <ostream>
 
 typedef std::vector<std::string> v_strings;
 
 enum Methods {GET, POST, DELETE};
-enum Action {DENY};
 
 struct ErrPage {
     std::string address_;
     int code_;
     ErrPage(const std::string &address, int code);
 
-    bool operator==(const ErrPage &rhs) const;
     bool operator<(const ErrPage &rhs) const;
-    bool operator>(const ErrPage &rhs) const;
-    bool operator<=(const ErrPage &rhs) const;
-    bool operator>=(const ErrPage &rhs) const;
+    bool operator==(const ErrPage &rhs) const;
 };
+std::ostream &operator<<(std::ostream &os, const ErrPage &page);
+
+
+struct Limit {
+    std::set<Methods> except_;
+    int return_code_;
+
+    Limit();
+
+    bool operator==(const Limit &rhs) const;
+};
+std::ostream &operator<<(std::ostream &os, const Limit &limit);
 
 struct Location {
-    std::set<Methods> limit_except_methods_;
     std::set<ErrPage> error_pages_;
-    Action limit_except_action_;
-    int limit_except_return_code_;
-    v_strings index_;
+    std::set<Location> sublocations_;
+    std::set<std::string> index_;
+    Limit limit_except_;
     int return_code_;
+    int default_index_;
+    int autoindex_;
     std::string return_address_;
     std::string root_;
     std::string address_;
 
     Location();
-
     explicit Location(const std::string &address);
-
+    explicit Location(const std::string &address,
+                      const std::string &super_root);
+    bool HasSameAddress(const Location &rhs) const;
+    bool operator<(const Location &rhs) const;
     bool operator==(const Location &rhs) const;
 };
+std::ostream &operator<<(std::ostream &os, const Location &location);
 
 /**
  * @brief server pre-configuration
@@ -63,9 +76,8 @@ struct ServerConfiguration {
     size_t client_max_body_size_;
     std::string hostname_;
     v_strings server_names_;
-    bool explicit_default_location_set_;
 //    secondary locations
-    std::vector<Location> locations_;
+    Location root_loc_;
 
     ServerConfiguration();
 

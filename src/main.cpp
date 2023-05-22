@@ -16,8 +16,6 @@
 #include "Config/ConfigExceptions.h"
 #include "Server/ServerManager.h"
 
-const std::string kDefaultConfig = "resources/default/nginx.conf";
-
 Config try_open_default_config() {
     std::cout << "Trying to open default config..." << std::endl;
     try {
