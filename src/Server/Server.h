@@ -18,46 +18,41 @@
 #include <sys/epoll.h>
 #include <netdb.h>
 #include "../Config/Config.h"
-#include "ClientRequest.h"
+#include "ServerResponse.h"
 
-
- class Server {
+class Server {
 public:
     class ServerException : public std::exception {};
 
     Server();
     Server(const Server &);
-    Server(const ServerConfiguration &config,
-           const std::map<int, std::string> *http_codes);
+    Server(const ServerConfiguration &config);
 
     Server &operator=(const Server &);
 
     ~Server();
 
     void Start();
+protected:
+     void PresetAddress(addrinfo **addr);
+     void CreateSocket(addrinfo *res);
+     void BindSocket(addrinfo *res);
+     void ListenSocket();
+     void SetSocketOptions(addrinfo *res) const;
+     void CreateEpoll();
+     void AddEpollInstance();
+     void HandleClientRequest(int i);
+
+     void SetSocket();
+
+     const Location &
+     FindLocation(const std::string &uri, int &http_code,
+                  const Location &start);
 private:
-    const std::map<int, std::string> *kHttpCodes;
     ServerConfiguration config_;
     int socket_;
     int epoll_fd_;
     epoll_event event_;
-
-    void PresetAddress(addrinfo **addr);
-    void CreateSocket(addrinfo *res);
-    void BindSocket(addrinfo *res);
-    void ListenSocket();
-    void SetSocketOptions(addrinfo *res) const;
-    void CreateEpoll();
-    void AddEpollInstance();
-    void HandleClientRequest(int i);
-
-    void SetSocket();
-
-     const ClientRequest &GetClientRequestStr(int sock);
-
-     const Location &
-     FindLocation(const std::string &uri, const Location &start,
-                  int &http_code);
  };
 
 

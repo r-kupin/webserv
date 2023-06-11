@@ -13,9 +13,7 @@
 #include <fstream>
 #include <iostream>
 #include <algorithm>
-#include "Config.h"
 #include "ConfigExceptions.h"
-
 
 Config::Config() : conf_path_() {}
 
@@ -67,16 +65,17 @@ std::ostream &operator<<(std::ostream &os, const Config &config) {
         const ServerConfiguration &srv = servers[i];
         
         os << "server: " << std::endl;
-        os << "hostname: " << srv.hostname_ << std::endl;
-        for (size_t j = 0; j < srv.server_names_.size(); ++j) {
-            os << "name: " << srv.server_names_[j] << std::endl;
+        os << "hostname: " << srv.server_name_ << std::endl;
+        for (std::set<std::string>::iterator it = srv.server_names_.begin();
+             it != srv.server_names_.end(); ++it) {
+            os << "name: " << *it << std::endl;
         }
         os << "port: " << srv.port_ << std::endl;
         if (srv.client_max_body_size_) {
             os << "client_max_body_size_: " << srv.client_max_body_size_ <<
             std::endl;
         }
-        os << servers[i].root_loc_ << std::endl;
+        servers[i].root_loc_.RecursivePrint(os, servers[i].root_loc_,"");
         os << std::endl;
     }
     return os;

@@ -1,35 +1,38 @@
 /******************************************************************************/
 /*                                                                            */
 /*                                                         :::      ::::::::  */
-/*    ClientMessage.h                                    :+:      :+:    :+:  */
+/*    ErrPage.h                                          :+:      :+:    :+:  */
 /*                                                     +:+ +:+         +:+    */
 /*    By: rokupin <rokupin@student.42.fr>            +#+  +:+       +#+       */
 /*                                                 +#+#+#+#+#+   +#+          */
-/*    Created: 2023/05/14 13:45:54 by rokupin           #+#    #+#            */
+/*    Created: 2023/05/27 14:40:03 by rokupin           #+#    #+#            */
 /*                                                     ###   ########.fr      */
 /*                                                                            */
 /******************************************************************************/
 
-#ifndef WEBSERV_LIB_CLIENTREQUEST_H
-#define WEBSERV_LIB_CLIENTREQUEST_H
-
+#ifndef WEBSERV_LIB_ERRPAGE_H
+#define WEBSERV_LIB_ERRPAGE_H
 
 #include <string>
-#include <netinet/in.h>
 #include <vector>
-#include "../Config/LimitExcept.h"
+#include <set>
+#include <ostream>
+#include <map>
 
-struct ClientRequest {
-    Methods     method_;
-    std::string uri_;
-    std::string host_;
-//    bool        keep_alive_;
-    std::vector<std::string> request_;
-//    sockaddr_in client_addr_;
-    explicit ClientRequest(int client_sock);
+struct ErrPage {
+    static const std::map<int, std::string> kHttpErrCodes;
 
-    void ReadFromSocket(int socket);
+    std::string address_;
+    int code_;
+
+    ErrPage(const std::string &address, int code);
+    ErrPage(int code);
+
+    bool operator<(const ErrPage &rhs) const;
+    bool operator==(const ErrPage &rhs) const;
+
+    static const std::map<int, std::string> initializeHttpErrCodes();
 };
+std::ostream &operator<<(std::ostream &os, const ErrPage &page);
 
-
-#endif //WEBSERV_LIB_CLIENTREQUEST_H
+#endif //WEBSERV_LIB_ERRPAGE_H

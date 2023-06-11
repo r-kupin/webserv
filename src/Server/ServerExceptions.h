@@ -92,5 +92,14 @@ public:
     const char *what() const throw();
 };
 
+class HTTPCodeError : public Server::ServerException {
+public:
+    HTTPCodeError() : Server::ServerException() {}
+
+    const char *what() const throw();
+};
+
+
+
 
 #endif //WEBSERV_LIB_SERVEREXCEPTIONS_H

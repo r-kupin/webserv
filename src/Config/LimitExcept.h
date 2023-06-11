@@ -1,39 +1,34 @@
 /******************************************************************************/
 /*                                                                            */
 /*                                                         :::      ::::::::  */
-/*    ServerManager.h                                    :+:      :+:    :+:  */
+/*    LimitExcept.h                                      :+:      :+:    :+:  */
 /*                                                     +:+ +:+         +:+    */
 /*    By: rokupin <rokupin@student.42.fr>            +#+  +:+       +#+       */
 /*                                                 +#+#+#+#+#+   +#+          */
-/*    Created: 2023/04/11 12:15:17 by rokupin           #+#    #+#            */
+/*    Created: 2023/05/27 14:41:38 by rokupin           #+#    #+#            */
 /*                                                     ###   ########.fr      */
 /*                                                                            */
 /******************************************************************************/
 
-#ifndef WEBSERV_LIB_SERVERMANAGER_H
-#define WEBSERV_LIB_SERVERMANAGER_H
+#ifndef WEBSERV_LIB_LIMITEXCEPT_H
+#define WEBSERV_LIB_LIMITEXCEPT_H
 
+#include <string>
+#include <vector>
+#include <set>
+#include <ostream>
 
-#include "ServerExceptions.h"
+enum Methods {GET, POST, DELETE};
 
-typedef std::vector<Server> v_servers;
-typedef std::vector<ServerConfiguration> v_sconfigs;
+struct Limit {
+    std::set<Methods> except_;
+    int return_code_;
+    std::string return_address_;
 
-class ServerManager {
-public:
-    const std::map<int, std::string> kHttpCodes;
+    Limit();
 
-    ServerManager();
-    ServerManager(const ServerManager &);
-    ServerManager(const Config &config);
-    ServerManager &operator=(const ServerManager &);
-
-    ~ServerManager();
-
-    void RunAll();
-private:
-    v_servers servers_;
+    bool operator==(const Limit &rhs) const;
 };
+std::ostream &operator<<(std::ostream &os, const Limit &limit);
 
-
-#endif //WEBSERV_LIB_SERVERMANAGER_H
+#endif //WEBSERV_LIB_LIMITEXCEPT_H

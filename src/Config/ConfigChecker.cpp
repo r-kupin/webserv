@@ -16,31 +16,57 @@
 #include <cstdlib>
 #include "Config.h"
 
-void Config::CheckServerDirectives(Node &node, bool &port,
-                                   ServerConfiguration &current) {
-    bool srv_name = false;
-    bool cl_max_bd_size = false;
-    bool err = false;
-    bool index = false;
-    bool root = false;
+void Config::HandleLocationContext(Node &loc_context, ServerConfiguration &sc,
+                                   Location &parent) {
+    if (!IsCorrectLocation(loc_context))
+        ThrowSyntaxError("Location is incorrect");
 
-    for (size_t i = 0; i < node.directives_.size(); i++) {
-        if (MarkDefined("server_name", srv_name, node.directives_[i])) {
-            // TODO server names - hostnames ....
-            for (size_t j = 1; j < node.directives_[i].size(); ++j)
-                current.server_names_.push_back(node.directives_[i][j]);
-        } else if (UMarkDefined("listen", port, node.directives_[i])) {
-            current.port_ = atoi(node.directives_[i][1].c_str());
-            current.port_str_ = node.directives_[i][1];
-        } else if (UMarkDefined("client_max_body_size", cl_max_bd_size,
-                                node.directives_[i])) {
-            current.client_max_body_size_ = atoi(node.directives_[i][1].c_str());
-        } else if (UMarkDefined("root", root, node.directives_[i])) {
-            current.root_loc_.root_ = node.directives_[i][1];
-        } else if (MarkDefined("index", index, node.directives_[i])) {
-            UpdateIndex(node.directives_[i], current.root_loc_);
-        } else if (MarkDefined("error_page", err, node.directives_[i])) {
-            AddErrorPages(node.directives_[i], current.root_loc_);
+    Location    maybe_current(loc_context.main_[1]);
+
+    if (!maybe_current.HasSameAddressAsOneOfSublocationsOf(parent)) {
+        Location &current =
+            (maybe_current.HasSameAddressAs(parent)) ? parent : maybe_current;
+
+        current.CheckLocationDirectives(loc_context.directives_, sc);
+        for (std::vector<Node>::iterator it = loc_context.child_nodes_.begin();
+             it != loc_context.child_nodes_.end(); ++it) {
+            if (IsLocation(*it)) {
+                if (!IsCorrectLocation(*it))
+                    ThrowSyntaxError("Location is incorrect");
+                HandleLocationContext(*it, sc, current);
+            } else if (IsLimitExcept(*it)) {
+                if (LimExIsDefined(maybe_current))
+                    ThrowSyntaxError("Limit except is incorrect");
+                HandleLimitExceptContext(*it, current.limit_except_);
+            }
+        }
+        if (!(current.HasSameAddressAs(parent)))
+            parent.sublocations_.insert(current);
+    } else {
+        ThrowSyntaxError("Each location needs unique address inside each "
+                         "context");
+    }
+}
+
+bool Config::LimExIsDefined(const Location &location) {
+    if (location.limit_except_.return_code_ != -1)
+        return true;
+    return false;
+}
+
+void    Config::CheckServerSubnodes(Node &node, ServerConfiguration &current) {
+    for (size_t i = 0; i < node.child_nodes_.size(); i++) {
+        if (IsLocation(node.child_nodes_[i])) {
+            if (!IsCorrectLocation(node.child_nodes_[i]))
+                ThrowSyntaxError("Location path is incorrect or missing");
+            try {
+                HandleLocationContext(node.child_nodes_[i], current,
+                                      current.root_loc_);
+            } catch (const std::exception &) {
+                ThrowSyntaxError("Location block is corrupted");
+            }
+        } else if (node.child_nodes_[i].main_[0] == "limit_except") {
+            ThrowSyntaxError("limit_except block is not allowed here");
         }
     }
 }
@@ -57,23 +83,13 @@ void Config::CheckServerDirectives(Node &node, bool &port,
  * @param node of the server block we are currently checking
  * @return ready-to-use server configuration
  */
-void
-Config::CheckServer(Node &node, std::vector<ServerConfiguration> &servers) {
+void    Config::CheckServer(std::vector<ServerConfiguration> &servers,
+                            Node &node) {
     ServerConfiguration current;
-    bool port = false;
 
-    CheckServerDirectives(node, port, current);
-    for (size_t i = 0; i < node.child_nodes_.size(); i++) {
-        if (IsLocation(node.child_nodes_[i])) {
-            if (!IsCorrectLocation(node.child_nodes_[i]))
-                ThrowSyntaxError("Location path is incorrect or missing");
-            HandleLocationContext(node.child_nodes_[i], current.root_loc_);
-        } else if (node.child_nodes_[i].main_[0] == "limit_except") {
-            ThrowSyntaxError("limit_except block is not allowed here");
-        }
-    }
-    if (!port)
-        ThrowSyntaxError("Port needs to be specified explicitly!");
+    current.CheckServerDirectives(node.directives_);
+    CheckServerSubnodes(node, current);
+
     for (std::vector<ServerConfiguration>::iterator it = servers.begin();
          it != servers.end(); ++it) {
         if (it->port_ == current.port_)
@@ -96,13 +112,12 @@ std::vector<ServerConfiguration> Config::CheckComponents(Node& root) {
     std::vector<ServerConfiguration> servers;
     for (size_t i = 0; i < root.child_nodes_.size(); i++) {
         if (root.child_nodes_[i].main_[0] == "server") {
-            CheckServer(root.child_nodes_[i], servers);
+            CheckServer(servers, root.child_nodes_[i]);
         } else {
-            std::cout << "Found block " + root.child_nodes_[i].main_[0] +
-                    " inside main context" << std::endl;
+            std::cout << "Found block " + root.child_nodes_[i].main_[0] + " " +
+                         "inside main context" << std::endl;
             std::cout << "Only \"server\" blocks are allowed inside a main "
-                         "context, everything else will be ignored" <<
-                         std::endl;
+                         "context, else will be ignored" << std::endl;
         }
     }
     if (servers.empty()) {

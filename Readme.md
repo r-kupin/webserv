@@ -8,12 +8,12 @@ specified in the configuration file.
 poll().
 
 4. When a client connects to the server, the server accepts the connection and 
-creates a new thread or worker process to handle the request.
+creates a new thread or worker process to handle the request_.
 
-5. The server reads the incoming request from the client and parses it to 
+5. The server reads the incoming request_ from the client and parses it to 
 determine the requested resource and any additional information, such as headers or query parameters.
 
-6. If the request includes a cookie, the server extracts the session ID from 
+6. If the request_ includes a cookie, the server extracts the session ID from 
 the cookie and checks if it corresponds to an existing session. If a session exists, the server retrieves the session data from a storage medium such as a file or database. Otherwise, the server generates a new session ID and creates a new session.
 
 7. The server checks if the requested resource is a static file or a dynamic 
@@ -47,7 +47,7 @@ different resources or to implement clean URLs.
 reduce server load.
 
 17. The server can implement advanced security features such as rate limiting, 
-IP blocking, and request filtering.
+IP blocking, and request_ filtering.
 
 18. The server can log requests and responses for debugging and analysis 
     purposes.

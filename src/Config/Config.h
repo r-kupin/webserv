@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /*                                                         :::      ::::::::  */
-/*    Config.h                                     :+:      :+:    :+:  */
+/*    Config.h                                           :+:      :+:    :+:  */
 /*                                                     +:+ +:+         +:+    */
 /*    By: rokupin <rokupin@student.42.fr>            +#+  +:+       +#+       */
 /*                                                 +#+#+#+#+#+   +#+          */
@@ -31,40 +31,42 @@ public:
 
     Config();
     Config(const Config &);
-    Config(const std::string &config_path);
+    Config(const std::string &);
     Config &operator=(const Config &);
 
     ~Config();
 
-    const std::string &getConfPath() const;
-    const std::vector<ServerConfiguration> &getServers() const;
+    const std::string                       &getConfPath() const;
+    const std::vector<ServerConfiguration>  &getServers() const;
 
 protected:
 //  Exposed to testing
-//    Test constructor only
-    explicit            Config(const Node &confRoot);
-
-//    Config processing utils
-    void                ThrowSyntaxError(const std::string &msg,
-                                         std::ifstream &config) const;
-    void                ThrowSyntaxError(const std::string &msg) const;
-    void                ExcludeComments(std::string &line) const;
-    void                TrimWhitespaces(std::string &line) const;
-    bool                MarkDefined(const std::string &key, bool &flag,
-                                    const v_strings &directive) const;
-    bool                UMarkDefined(const std::string &key, bool &flag,
-                                    const v_strings &directive) const;
-    bool                IsNumber(const std::string& str) const;
-//      Parsing config file to tree-like structure of nodes
-    void                ParseConfig(std::ifstream &config);
-//      Parsing config file to tree-like structure of nodes
-    std::vector<ServerConfiguration> CheckComponents(Node& root);
+//  Test constructor only
+    explicit                            Config(const Node &confRoot);
+//  Config processing utils
+    void                                ExcludeComments(std::string &line) const;
+    void                                TrimWhitespaces(std::string &line) const;
+//  Parsing config file to tree-like structure of nodes
+    void                                ParseConfig(std::ifstream &config);
+//  Parsing config file to tree-like structure of nodes
+    std::vector<ServerConfiguration>    CheckComponents(Node& root);
+    //      Location subcontext
+    void                                HandleLocationContext(Node &loc_context,
+                                              ServerConfiguration &sc,
+                                              Location &parent);
+    //  Limit_except subcontext
+    void                                HandleLimitExceptContext(Node &node,
+                                                                 Limit &curr_limit) const;
+    void                                CheckServerSubnodes(Node &node,
+                                                  ServerConfiguration &current);
+    void                                CheckServer(std::vector<ServerConfiguration> &servers,
+                                                    Node &node);
 private:
     std::string conf_path_;
     Node conf_root_;
     std::vector<ServerConfiguration> servers_;
 
-//      Parse config
+//  Parse config
     RawNode             ParseNode(std::ifstream &config,
                                   std::string &line_leftover,
                                   const v_strings &main_directive) const;
@@ -81,41 +83,16 @@ private:
                                            std::string &line) const;
     void                FinishMainNode(RawNode &current,
                                        std::ifstream &config) const;
-//      Global server check
-    void                CheckServerDirectives(Node &node, bool &port,
-                                              ServerConfiguration &current);
-    void CheckServer(Node &node, std::vector<ServerConfiguration> &servers);
-//      Location subcontext
-    void CheckLocation(Node &loc_node, Location &current_l);
-    void CheckLocationDirectives(const Node &loc_node, Location &current_l,
-                                 bool &set_root, bool &set_index, bool &ret,
-                                 bool &err_pages);
-    void                HandleLocationReturn(const Node &node,
-                                             Location &current_l,
-                                             size_t i) const;
-//      Limit_except subcontext
-    void HandleLimitExceptContext(ConfigNode &node, Limit &curr_limit) const;
+//  Global server check
 
-    void HandleLocationContext(Node &loc_context,
-                               Location &parent);
-
-    void AddErrorPages(const v_strings &directive, Location &location);
-
-    void CheckLocationDirectives(Node &loc_node, Location &current_l);
-
-    static bool IsLocation(const Node &node);
-
-    static bool IsCorrectLocation(const Node &node);
-
-    static bool IsLimitExcept(const Node &node);
-
-    static bool IsCorrectLimit(const Node &node);
-
-    void
-    CheckSieblingsAdresses(const Location &parent,
-                           const Location &maybe_current) const;
-
-    void UpdateIndex(const v_strings &directive, Location &location);
+    static bool         IsLocation(const Node &node);
+    static bool         IsCorrectLocation(const Node &node);
+    static bool         IsLimitExcept(const Node &node);
+    static bool         IsCorrectLimit(const Node &node);
+    void                ThrowSyntaxError(const std::string &msg,
+                                         std::ifstream &config) const;
+    void                ThrowSyntaxError(const std::string &msg) const;
+    bool                LimExIsDefined(const Location &location);
 };
 
 std::ostream &operator<<(std::ostream &os, const Config &config);

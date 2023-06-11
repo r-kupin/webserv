@@ -41,14 +41,13 @@ The epoll interface provides three main functions:
 By using epoll, servers can efficiently handle a large number of connections and effectively manage I/O events, resulting in high-performance and scalable network applications.
  */
 #include <iostream>
-#include "Server.h"
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
 #include <cstring>
 #include <algorithm>
+#include <sstream>
 #include "ServerExceptions.h"
-#include "ClientRequest.h"
 
 //const int BUFFER_SIZE = 1024;
 //const int MAX_EVENTS = 10;
@@ -59,9 +58,8 @@ Server::Server(const Server &other)
 : config_(other.config_), socket_(other.socket_), epoll_fd_(other.epoll_fd_),
   event_(other.event_) {}
 
- Server::Server(const ServerConfiguration &config,
-                const std::map<int, std::string> *http_codes)
-: kHttpCodes(http_codes), config_(config), socket_(0), epoll_fd_(0) {
+ Server::Server(const ServerConfiguration &config)
+: config_(config), socket_(0), epoll_fd_(0) {
     try {
         struct addrinfo *addr = NULL;
 
@@ -100,18 +98,19 @@ Server::Server(const Server &other)
  *  The getaddrinfo() function takes as input a hostname or IP address, a
  * service name or port number, and a set of hints that specify the desired
  * address family, socket type, and protocol. It then returns a linked list
- * of struct addrinfo structures that contain the socket addresses that can
+ * of `struct addrinfo` structures that contain the socket addresses that can
  * be used to establish a network connection.
  */
 void Server::PresetAddress(addrinfo **addr) {
     struct addrinfo hints;
 
     std::memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_INET; // IPv4
-    hints.ai_socktype = SOCK_STREAM; // TCP
+    hints.ai_family = AF_INET; // address family - Internet (IPv4)
+    hints.ai_socktype = SOCK_STREAM; // Stream socket (Not Datagram) TCP (not UDP)
     hints.ai_flags = AI_PASSIVE; // Use the local IP
 
-    if (getaddrinfo(config_.hostname_.c_str(),config_.port_str_.c_str(),
+    if (getaddrinfo(config_.server_name_.c_str(),
+                    config_.port_str_.c_str(),
                     &hints, addr)) {
         throw AddrinfoCreationFailed();
     }
@@ -272,21 +271,18 @@ void Server::AddEpollInstance() {
      close(socket_);
  }
 
-const Location &Server::FindLocation(const std::string &uri,
-                                     const Location &start,
-                                     int &http_code) {
+const Location &Server::FindLocation(const std::string &uri, int &http_code,
+                                     const Location &start) {
      if (uri != start.address_) {
          std::string part_uri = uri.substr(1);
          std::string::size_type end = part_uri.find('/');
          if (end == std::string::npos)
              end = uri.size();
-
          part_uri = ("/" + part_uri).substr(0, end + 1);
-         const std::set<Location>::iterator &it =
-                     start.sublocations_.find(Location(part_uri));
-         if (it != start.sublocations_.end()) {
-             return FindLocation(uri.substr(end + 1), *it, http_code);
-         } else {
+         try {
+             const Location &found = start.FindSublocationByAddress(part_uri);
+             return FindLocation(uri.substr(end + 1), http_code, found);
+         } catch (const NotFoundException &) {
              http_code = 404;
              return start;
          }
@@ -299,15 +295,15 @@ void Server::HandleClientRequest(int client_sock) {
      try {
          ClientRequest request(client_sock);
          int http_code;
-         const Location &loc = FindLocation(request.uri_, config_.root_loc_,
-                                            http_code);
-         std::cout << loc.address_ << " " <<http_code << std::endl;
-//////         const Location &loc = (request.uri_ == "/") ? config_.root_loc_ :
-//////         *(config_.root_loc_.sublocations_.find(Location(request.uri_)));
-////
-////         if (it == config_.locations_.end()) {
-//////             return 404
-////         } else {
+         const Location &loc = FindLocation(request.uri_,http_code,
+                                            config_.root_loc_);
+         ServerResponse response(request, loc, http_code);
+         response.SendResponse(client_sock);
+
+
+//         if (it == config_.locations_.end()) {
+////             return 404
+//         } else {
 ////             const Location &to_go = *(it);
 ////             if (!to_go.limit_except_.except_.empty() &&
 ////                    to_go.limit_except_.except_.find(request.method_) ==
@@ -401,3 +397,77 @@ const char *HTTPVersionNotSupportedException::what() const throw() {
 const char *NotFoundException::what() const throw() {
     return exception::what();
 }
+
+const char *HTTPCodeError::what() const throw() {
+    return exception::what();
+}
+
+
+//       ClientRequest request(client_sock);
+//         int http_code;
+//         const Location &loc = FindLocation(request.uri_,
+//                                            config_.root_loc_,
+//                                            http_code);
+//         ServerResponse response(request, config_.root_loc_, http_code);
+//
+//
+//
+//         html.exceptions(std::ifstream::failbit);
+//         header <<  "HTTP/1.1 " << http_code << " ";
+//         if (Location::kHttpOkCodes.find(http_code) !=
+//                                                Location::kHttpOkCodes.end()) {
+//             header << Location::kHttpOkCodes.find(http_code)->second;
+//             if (!loc.index_.empty()) {
+//                 for (std::set<std::string>::iterator it = loc.index_.begin();
+//                      it != loc.index_.end(); ++it) {
+//                     std::cout << kDefaultResPath + loc.root_ + *it << std::endl;
+//                     html.open((kDefaultResPath + loc.root_ + *it).c_str());
+//                     if (html) {
+//                         html.exceptions(std::ifstream::badbit);
+//                         break;
+//                     }
+//                 }
+//             }
+//         } else if (ErrPage::kHttpErrCodes.find(http_code) !=
+//                                                ErrPage::kHttpErrCodes.end()) {
+//             header << ErrPage::kHttpErrCodes.find(http_code)->second;
+//             const std::set<ErrPage>::iterator &err_page =
+//                            loc.error_pages_.find(ErrPage(http_code));
+//             if (err_page != loc.error_pages_.end()) {
+//                 html.open((kDefaultResPath + loc.root_ + err_page->address_).c_str());
+//                 if (html) {
+//                     html.exceptions(std::ifstream::badbit);
+//                 }
+//             }
+//         }
+//         header << " \r\n\r\n";
+//
+
+// // Create a buffer to hold the file data
+//         const size_t bufferSize = 1024;
+//         char buffer[bufferSize];
+//
+//         memccpy(buffer, header.str().c_str(), '\0', header.str().size());
+//         send(client_sock, buffer, header.str().size(), 0);
+//
+//
+//         // Read and send the file data in chunks
+//         while (fileSize > 0) {
+//             // Determine the number of bytes to read
+//             size_t bytesRead = std::min(static_cast<size_t>(bufferSize),
+//                                         static_cast<size_t>(fileSize));
+//
+//             // Read data from the file
+//             html.read(buffer, bytesRead);
+//
+//             // Send the data over the socket
+//             ssize_t bytesSent = send(client_sock, buffer, bytesRead, 0);
+//             if (bytesSent < 0) {
+//                 std::cerr << "Failed to send data over the socket"
+//                           << std::endl;
+//                 break;
+//             }
+//
+//             // Update the remaining file size
+//             fileSize -= bytesSent;
+//         }
