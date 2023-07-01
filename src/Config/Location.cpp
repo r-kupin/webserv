@@ -43,11 +43,30 @@ const std::map<int, std::string> Location::initializeHttpOkCodes() {
 const std::map<int, std::string> Location::kHttpOkCodes =
         Location::initializeHttpOkCodes();
 
+Location::Location(const std::string &address)
+	: return_code_(0), address_(address) {}
+
 Location::Location()
     : return_code_(0), autoindex_(false) {}
 
-Location::Location(const std::string &address)
-    : return_code_(0), address_(address) {}
+Location::Location(const Location& other)
+		: error_pages_(other.error_pages_),
+		  sublocations_(other.sublocations_),
+		  index_(other.index_),
+		  limit_except_(other.limit_except_),
+		  return_code_(other.return_code_),
+		  autoindex_(other.autoindex_),
+		  return_address_(other.return_address_),
+		  root_(other.root_),
+		  address_(other.address_) {}
+
+//Location::Location(const std::string &address)
+//    : return_code_(0), address_(address) {}
+
+Location::Location(const std::string &address, const Location &parent)
+    : error_pages_(parent.error_pages_), index_(parent.index_), return_code_(0),
+	autoindex_(parent.autoindex_), return_address_(parent.return_address_),
+	root_(parent.root_), address_(address) {}
 
 bool Location::operator<(const Location &rhs) const {
     return address_ < rhs.address_;

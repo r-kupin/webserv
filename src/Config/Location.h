@@ -25,8 +25,9 @@ typedef std::vector<std::string> v_strings;
 struct ServerConfiguration;
 
 struct Location {
+	Location(const std::string &address);
 
-class LocationException : public std::exception {};
+	class LocationException : public std::exception {};
     static const std::map<int, std::string> kHttpOkCodes;
     static const std::map<int, std::string> initializeHttpOkCodes();
 
@@ -41,8 +42,10 @@ class LocationException : public std::exception {};
     std::string address_;
 
     Location();
+    Location(const Location &parent);
+	Location(const std::string &address, const Location &parent);
 
-    explicit            Location(const std::string &address);
+//    explicit            Location(const std::string &address);
 
     void                AddErrorPages(const v_strings &directive);
     const Location &    FindSublocationByAddress(const std::string & address) const;

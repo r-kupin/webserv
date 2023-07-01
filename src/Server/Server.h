@@ -46,8 +46,8 @@ protected:
      void SetSocket();
 
      const Location &
-     FindLocation(const std::string &uri, int &http_code,
-                  const Location &start);
+	 FindLocation(const std::string &uri, const Location &start,
+				  int &http_code);
 private:
     ServerConfiguration config_;
     int socket_;

@@ -10,46 +10,127 @@
 /*                                                                            */
 /******************************************************************************/
 
+//TODO !!! Root & exception pages inheritance !!!
+
 #include <sstream>
+#include <iostream>
 #include "ServerResponse.h"
+
 #include "ServerExceptions.h"
 
-ServerResponse::ServerResponse(const ClientRequest &request,
-                               const Location &main, int http_code)
-: request_(request), main_(main), http_code_(http_code) {
-    if (Location::kHttpOkCodes.find(http_code_) !=
-        Location::kHttpOkCodes.end()) {
-        http_code_deskription_ = Location::kHttpOkCodes.find(http_code_)->second;
-        http_is_error_ = false;
-    } else if (ErrPage::kHttpErrCodes.find(http_code_) !=
-               ErrPage::kHttpErrCodes.end()) {
-        http_code_deskription_ = ErrPage::kHttpErrCodes.find(http_code_)->second;
-        http_is_error_ = true;
-    } else {
-        throw HTTPCodeError();
-    }
-    FindResponsePageAddr();
+std::string ServerResponse::FindResponseFileAddr(const Location &where,
+												 const std::string &filename) {
+//	if (http_is_error_) {
+//		const std::set<ErrPage>::iterator &err_page =
+//				main_.error_pages_.find(ErrPage(http_code_));
+//		if (err_page != main_.error_pages_.end()) {
+//			response_filename_ = kDefaultResPath + main_.root_ + err_page->address_;
+//		} else {
+////            No page for this error code
+//		}
+//	} else {
+//		if (!main_.index_.empty()) {
+//			for (std::set<std::string>::iterator indx_it = main_.index_.begin();
+//				 indx_it != main_.index_.end(); ++indx_it) { // Check file like in the config
+//				response_filename_ = kDefaultResPath + main_.root_ + *indx_it;
+//			}
+//		} else {
+////            Location has no index
+//		}
+//	}
+	(void) where;
+	(void) filename;
+	return "";
 }
 
-void ServerResponse::FindResponsePageAddr() {
-    if (http_is_error_) {
-        const std::set<ErrPage>::iterator &err_page =
-                        main_.error_pages_.find(ErrPage(http_code_));
-        if (err_page != main_.error_pages_.end()) {
-            page_addr_ = kDefaultResPath + main_.root_ + err_page->address_;
-        } else {
-//            No page for this error code
-        }
-    } else {
-        if (!main_.index_.empty()) {
-            for (std::set<std::string>::iterator indx_it = main_.index_.begin();
-                 indx_it != main_.index_.end(); ++indx_it) { // Check file like in the config
-                page_addr_ = kDefaultResPath + main_.root_ + *indx_it;
-            }
-        } else {
-//            Location has no index
-        }
-    }
+ServerResponse::ServerResponse(const ClientRequest &request,
+							   const Location &root)
+: request_(request) {
+//	uri_ = ExtractParams(request.uri_);
+//	response_filename_ = ExtractFilename(uri_);
+	bool path_exists = false;
+	const Location & main = FindLocation(uri_, root, path_exists);
+
+	if (path_exists) { // static file
+		if (!response_filename_.empty()) {
+			response_filename_ = FindResponseFileAddr(main, response_filename_);
+//			response_file_stream_ = TryOpenFile(response_filename_);
+			if (response_file_stream_.is_open()) { // file exists
+				// Ready to send
+			} else { // file not found
+				ResourceNotFound();
+			}
+		} else { // location index
+			std::set<std::string>::iterator it = main.index_.begin();
+			for (;it != main.index_.end(); ++it) {
+				response_filename_ = FindResponseFileAddr(main, *it);
+//				response_file_stream_ = TryOpenFile(response_filename_);
+				if (response_file_stream_.is_open()) { // file exists
+					// Ready to send
+				}
+			}
+			if (it == main.index_.end()) { // No Index
+				ResourceNotFound();
+			}
+		}
+
+	} else {
+		ResourceNotFound();
+	}
+
+//    if (Location::kHttpOkCodes.find(http_code_) !=
+//												Location::kHttpOkCodes.end()) {
+//		http_code_description_ = Location::kHttpOkCodes.find(http_code_)->second;
+//        http_is_error_ = false;
+//    } else if (ErrPage::kHttpErrCodes.find(http_code_) !=
+//												ErrPage::kHttpErrCodes.end()) {
+//		http_code_description_ = ErrPage::kHttpErrCodes.find(http_code_)->second;
+//        http_is_error_ = true;
+//    } else {
+//        throw HTTPCodeError();
+//    }
+//	FindResponseFileAddr(<#initializer#>, <#initializer#>);
+}
+
+
+//std::ifstream ServerResponse::TryOpenFile(const std::string &filename) {
+//	std::ifstream source;
+//	source.exceptions(std::ifstream::failbit);
+//	try {
+//		source.open(filename.c_str());
+//		source.exceptions(std::ifstream::badbit);
+//	} catch (const std::ifstream::failure &e) {
+//		std::cout << "Requested file " + filename + " not found" << std::endl;
+//	}
+//	return source;
+//}
+
+void ServerResponse::ResourceNotFound() {
+	http_is_error_ = true;
+	http_code_ = 404;
+}
+//
+//std::string ServerResponse::ExtractFilename(std::string &uri) {
+//	return std::string();
+//}
+
+const Location & ServerResponse::FindLocation(const std::string &uri,
+											  const Location &start,
+											  bool &success) {
+	if (uri != start.address_) {
+		std::string part_uri = uri.substr(1);
+		std::string::size_type end = part_uri.find('/');
+		if (end == std::string::npos)
+			end = uri.size();
+		part_uri = ("/" + part_uri).substr(0, end + 1);
+		try {
+			const Location &found = start.FindSublocationByAddress(part_uri);
+			return FindLocation(uri.substr(end + 1), found, success);
+		} catch (const NotFoundException &) {
+			return start;
+		}
+	}
+	return start;
 }
 
 ServerResponse &ServerResponse::operator=(const ServerResponse &other) {
@@ -63,8 +144,8 @@ ServerResponse::~ServerResponse() {}
 std::string ServerResponse::GetHeader() {
     std::stringstream header;
 
-    header << kHttpVersion << " " << http_code_ << " " << http_code_deskription_ <<
-           " " << kHttpPostfix;
+    header << kHttpVersion << " " << http_code_ << " " << http_code_description_ <<
+		   " " << kHttpPostfix;
 
     return header.str();
 }
@@ -87,17 +168,17 @@ std::string ServerResponse::GetHeader() {
  * is relative to the beginning of the file.
  */
 std::streampos ServerResponse::GetFileSize() {
-    response_page_.seekg(0, std::ios::end);
-    std::streampos filesize = response_page_.tellg();
-    response_page_.seekg(0, std::ios::beg);
+    response_file_stream_.seekg(0, std::ios::end);
+    std::streampos filesize = response_file_stream_.tellg();
+    response_file_stream_.seekg(0, std::ios::beg);
     return filesize;
 }
 
 void ServerResponse::SendResponse(int dest) {
     // Check file like in the config
-    response_page_.exceptions(std::ifstream::failbit);
-    response_page_.open(page_addr_.c_str());
-    response_page_.exceptions(std::ifstream::badbit);
+    response_file_stream_.exceptions(std::ifstream::failbit);
+    response_file_stream_.open(response_filename_.c_str());
+    response_file_stream_.exceptions(std::ifstream::badbit);
     std::streampos filesize = GetFileSize();
     std::string header = GetHeader();
     char buffer[kBufferSize];
@@ -110,7 +191,7 @@ void ServerResponse::SendResponse(int dest) {
             size_t bytes_read = std::min(static_cast<size_t>(kBufferSize),
                                          static_cast<size_t>(filesize));
             // Read data from the file
-            response_page_.read(buffer, bytes_read);
+            response_file_stream_.read(buffer, bytes_read);
             // Send the data over the socket
             ssize_t bytesSent = send(dest, buffer, bytes_read, 0);
             if (bytesSent < 0)
@@ -121,6 +202,29 @@ void ServerResponse::SendResponse(int dest) {
     }
     //  Send header failed
 }
+//
+//std::string ServerResponse::ExtractParams(std::string given_uri) {
+//	return std::string();
+//}
 
-
-
+//std::string ServerResponse::FindResponseFileAddr(const Location &where,
+//												 const std::string &filename) {
+//	if (http_is_error_) {
+//		const std::set<ErrPage>::iterator &err_page =
+//				main_.error_pages_.find(ErrPage(http_code_));
+//		if (err_page != main_.error_pages_.end()) {
+//			response_filename_ = kDefaultResPath + main_.root_ + err_page->address_;
+//		} else {
+////            No page for this error code
+//		}
+//	} else {
+//		if (!main_.index_.empty()) {
+//			for (std::set<std::string>::iterator indx_it = main_.index_.begin();
+//				 indx_it != main_.index_.end(); ++indx_it) { // Check file like in the config
+//				response_filename_ = kDefaultResPath + main_.root_ + *indx_it;
+//			}
+//		} else {
+////            Location has no index
+//		}
+//	}
+//}

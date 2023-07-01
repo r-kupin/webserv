@@ -89,11 +89,14 @@ void    Config::CheckServer(std::vector<ServerConfiguration> &servers,
 
     current.CheckServerDirectives(node.directives_);
     CheckServerSubnodes(node, current);
-
     for (std::vector<ServerConfiguration>::iterator it = servers.begin();
-         it != servers.end(); ++it) {
+													it != servers.end(); ++it) {
         if (it->port_ == current.port_)
             ThrowSyntaxError("Port needs to be unique amongst all servers");
+		for (std::set<Location>::iterator it_l = it->root_loc_.sublocations_.begin();
+							it_l != it->root_loc_.sublocations_.end(); ++it_l) {
+			it->InheritanceErrPagesRoot(it->root_loc_);
+		}
     }
     servers.push_back(current);
 }

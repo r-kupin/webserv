@@ -51,6 +51,13 @@ void ServerConfiguration::UpdateIndex(const v_strings &directive) {
     }
 }
 
+void	ServerConfiguration::InheritanceErrPagesRoot(Location &start) {
+	for (std::_Rb_tree_const_iterator<Location> it = start.sublocations_.begin();
+		 it != start.sublocations_.end(); ++it) {
+		if (it->)
+	}
+}
+
 void
 ServerConfiguration::CheckServerDirectives(std::vector<v_strings> &directives) {
     bool srv_name = false;
@@ -136,4 +143,3 @@ void    ServerConfiguration::ThrowServerConfigError(const std::string &msg) {
     std::cout << "ServerConfigError: " + msg << std::endl;
     throw ConfigFileSyntaxError();
 }
-

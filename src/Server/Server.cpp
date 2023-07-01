@@ -252,8 +252,7 @@ void Server::AddEpollInstance() {
      while (true) {
          struct sockaddr_in client_addr;
          socklen_t client_len = sizeof(client_addr);
-         int client_sock = accept(socket_,
-                                  (struct sockaddr *) &client_addr,
+         int client_sock = accept(socket_, (struct sockaddr *) &client_addr,
                                   &client_len); // may be [MAX_CLIENTS]
          if (client_sock < 0) {
              printf("Error accepting connection: %s\n", strerror(errno));
@@ -271,8 +270,9 @@ void Server::AddEpollInstance() {
      close(socket_);
  }
 
-const Location &Server::FindLocation(const std::string &uri, int &http_code,
-                                     const Location &start) {
+const Location &Server::FindLocation(const std::string &uri,
+									 const Location &start,
+									 int &http_code) {
      if (uri != start.address_) {
          std::string part_uri = uri.substr(1);
          std::string::size_type end = part_uri.find('/');
@@ -281,7 +281,7 @@ const Location &Server::FindLocation(const std::string &uri, int &http_code,
          part_uri = ("/" + part_uri).substr(0, end + 1);
          try {
              const Location &found = start.FindSublocationByAddress(part_uri);
-             return FindLocation(uri.substr(end + 1), http_code, found);
+             return FindLocation(uri.substr(end + 1), found, http_code);
          } catch (const NotFoundException &) {
              http_code = 404;
              return start;
@@ -294,10 +294,11 @@ const Location &Server::FindLocation(const std::string &uri, int &http_code,
 void Server::HandleClientRequest(int client_sock) {
      try {
          ClientRequest request(client_sock);
-         int http_code;
-         const Location &loc = FindLocation(request.uri_,http_code,
-                                            config_.root_loc_);
-         ServerResponse response(request, loc, http_code);
+		 std::cout << "client request uri:" << request.uri_ << std::endl;
+		 std::cout << "client request method:" << request.method_ << std::endl;
+//		 int http_code;
+//		 const Location &loc = FindLocation(request.uri_, config_.root_loc_, http_code);
+         ServerResponse response(request, config_.root_loc_);
          response.SendResponse(client_sock);
 
 

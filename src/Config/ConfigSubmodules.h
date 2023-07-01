@@ -46,6 +46,7 @@ struct ServerConfiguration {
     void                UpdateHostname(const v_strings &directives);
 
     bool operator==(const ServerConfiguration &rhs) const;
+	void InheritanceErrPagesRoot(Location &start);
 };
 
 /**
