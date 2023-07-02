@@ -32,7 +32,7 @@ struct Location {
     static const std::map<int, std::string> initializeHttpOkCodes();
 
     std::set<ErrPage> error_pages_;
-    std::set<Location> sublocations_;
+    std::vector<Location> sublocations_;
     std::set<std::string> index_;
     Limit limit_except_;
     int return_code_;

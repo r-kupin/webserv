@@ -44,9 +44,10 @@ struct ServerConfiguration {
     void                CheckServerDirectives(std::vector<v_strings> &directives);
     static void         ThrowServerConfigError(const std::string &msg);
     void                UpdateHostname(const v_strings &directives);
+    void                InheritanceErrPagesRoot(const Location &parent,
+                                                Location &start);
 
     bool operator==(const ServerConfiguration &rhs) const;
-	void InheritanceErrPagesRoot(Location &start);
 };
 
 /**

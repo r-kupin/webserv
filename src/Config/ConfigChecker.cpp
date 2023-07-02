@@ -41,7 +41,7 @@ void Config::HandleLocationContext(Node &loc_context, ServerConfiguration &sc,
             }
         }
         if (!(current.HasSameAddressAs(parent)))
-            parent.sublocations_.insert(current);
+            parent.sublocations_.push_back(current);
     } else {
         ThrowSyntaxError("Each location needs unique address inside each "
                          "context");
@@ -93,11 +93,8 @@ void    Config::CheckServer(std::vector<ServerConfiguration> &servers,
 													it != servers.end(); ++it) {
         if (it->port_ == current.port_)
             ThrowSyntaxError("Port needs to be unique amongst all servers");
-		for (std::set<Location>::iterator it_l = it->root_loc_.sublocations_.begin();
-							it_l != it->root_loc_.sublocations_.end(); ++it_l) {
-			it->InheritanceErrPagesRoot(it->root_loc_);
-		}
     }
+    current.InheritanceErrPagesRoot(current.root_loc_, current.root_loc_);
     servers.push_back(current);
 }
 

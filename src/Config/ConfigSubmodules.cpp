@@ -51,10 +51,17 @@ void ServerConfiguration::UpdateIndex(const v_strings &directive) {
     }
 }
 
-void	ServerConfiguration::InheritanceErrPagesRoot(Location &start) {
-	for (std::_Rb_tree_const_iterator<Location> it = start.sublocations_.begin();
+void ServerConfiguration::InheritanceErrPagesRoot(const Location &parent,
+                                                  Location &start) {
+    if (start.root_.empty()) {
+        start.root_ = parent.root_;
+    }
+    if (start.error_pages_.empty()) {
+        start.error_pages_ = parent.error_pages_;
+    }
+	for (std::vector<Location>::iterator it = start.sublocations_.begin();
 		 it != start.sublocations_.end(); ++it) {
-		if (it->)
+        InheritanceErrPagesRoot(start, *it);
 	}
 }
 

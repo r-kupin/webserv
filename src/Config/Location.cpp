@@ -101,7 +101,7 @@ bool Location::operator==(const Location &rhs) const {
 }
 
 bool Location::HasSameAddressAsOneOfSublocationsOf(const Location &rhs) const {
-    for (std::_Rb_tree_const_iterator<Location> it = rhs.sublocations_.begin();
+    for (std::vector<Location>::const_iterator it = rhs.sublocations_.begin();
          it != rhs.sublocations_.end(); ++it) {
         if (it->HasSameAddressAs(*this))
             return true;
@@ -163,9 +163,9 @@ const Location & Location::FindSublocationByAddress(
     if (address == "/")
         return *this;
     LocationByAddress to_find(address);
-    std::set<Location>::iterator it = std::find_if(
-            sublocations_.begin(),
-            sublocations_.end(), to_find);
+    const std::vector<Location>::const_iterator &it = std::find_if(
+                                        sublocations_.begin(),
+                                        sublocations_.end(), to_find);
     if (it == sublocations_.end())
         throw NotFoundException();
     return *it;
@@ -280,9 +280,9 @@ std::ostream & Location::RecursivePrint(std::ostream &os, const Location &locati
         os << prefix << location.address_ << ":\t" << "Limit Except: " <<
            location.limit_except_ << std::endl;
     if (!location.sublocations_.empty()) {
-        for (std::_Rb_tree_const_iterator<Location> it =
-                location.sublocations_.begin();
-             it != location.sublocations_.end(); ++it) {
+        for (std::vector<Location>::const_iterator it =
+                                    location.sublocations_.begin();
+                                    it != location.sublocations_.end(); ++it) {
             RecursivePrint(os, *it, prefix + location.address_);
         }
     }
@@ -320,7 +320,7 @@ std::ostream& operator<<(std::ostream& os, const Location& location) {
         os << location.address_ << ":\t" << "Limit Except: " <<
            location.limit_except_ << std::endl;
     if (!location.sublocations_.empty()) {
-        for (std::_Rb_tree_const_iterator<Location> it =
+        for (std::vector<Location>::const_iterator it =
                 location.sublocations_.begin();
              it != location.sublocations_.end(); ++it) {
             os << *it ;

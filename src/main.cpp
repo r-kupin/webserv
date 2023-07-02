@@ -9,7 +9,24 @@
 /*                                                     ###   ########.fr      */
 /*                                                                            */
 /******************************************************************************/
+/**
+        Description
 
+        1. The server starts by reading the nginx configuration file, which
+        specifies the port number, server root_ directory, and any other
+        settings.
+	        1. The program attempts to load the configuration file. The
+	        `try_open_configs` function is called to open the custom
+	        configuration file if provided, or the default configuration file
+	        if not. If there are any errors in opening or reading the
+	        configuration file, corresponding error messages are displayed.
+	        2. If the configuration file is successfully loaded, a message is
+	        printed indicating the path of the loaded configuration file. The
+	        configuration object `conf` is created using the loaded
+	        configuration file.
+	        3. The configuration object `conf` is printed to display its
+	        contents.
+*/
 #include <iostream>
 #include <cassert>
 #include "Config/ConfigExceptions.h"
