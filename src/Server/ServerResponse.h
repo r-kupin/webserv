@@ -25,6 +25,7 @@ const static size_t        kBufferSize = 1024;
 struct ServerResponse {
     ServerResponse(const ClientRequest &request,
 				   const Location &root);
+    ServerResponse();
 
     ~ServerResponse();
 
@@ -33,27 +34,35 @@ struct ServerResponse {
     std::string		GetHeader();
     void			SendResponse(int dest);
 
-    const ClientRequest &	request_;
-	std::string 			uri_;
-	std::string				querry_parameters_;
-    bool					http_is_error_;
-	bool					request_static_;
+    bool location_defined_;
+    bool location_root_path_exists_;
+    bool location_root_has_index_;
 
-	int						http_code_;
-	std::string				http_code_description_;
-    std::string				response_filename_;
-    std::ifstream			response_file_stream_;
+//    const ClientRequest &	request_;
+//	std::string 			uri_;
+//	std::string				querry_parameters_;
+//    bool					http_is_error_;
+//	bool					request_static_;
+//
+//	int						http_code_;
+//	std::string				http_code_description_;
+//    std::string				response_filename_;
+//    std::ifstream			response_file_stream_;
+    std::map<std::string, std::string> headers_;
+
+    static ServerResponse
+    CreateResponse(const ClientRequest &request, const Location &root);
+
 protected:
     std::string		FindResponseFileAddr(const Location &where,
 									 const std::string &filename);
-	const Location &FindLocation(const std::string &uri, const Location &start,
-								 bool &success);
 
     std::streampos	GetFileSize();
 	std::string		ExtractFilename(std::string &uri);
 	void			ResourceNotFound();
-	std::string		ExtractParams(std::string given_uri);
-	std::ifstream TryOpenFile(const std::string &filename);
+	std::ifstream   TryOpenFile(const std::string &filename);
+
+    bool StrEndsWithSlash(std::string uri);
 };
 
 

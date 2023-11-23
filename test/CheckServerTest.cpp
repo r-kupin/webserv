@@ -49,17 +49,17 @@ protected:
 };
 
 TEST_F(CheckServerTest, CheckServerTestHasNoPortKO) {
-    EXPECT_THROW(CheckServer(servers, server_), ConfigFileSyntaxError);
+    EXPECT_THROW(CheckServer(server_), ConfigFileSyntaxError);
 }
 
 TEST_F(CheckServerTest, CheckServerTestHasPortOK) {
     server_.directives_.push_back({"listen", "8080"});
-    EXPECT_NO_THROW(CheckServer(servers, server_));
+    EXPECT_NO_THROW(CheckServer(server_));
 }
 
 TEST_F(CheckServerTest, CheckServerTestSamePortsKO) {
     server_.directives_.push_back({"listen", "8080"});
     server2_.directives_.push_back({"listen", "8080"});
-    EXPECT_NO_THROW(CheckServer(servers, server_));
-    EXPECT_THROW(CheckServer(servers, server2_), ConfigFileSyntaxError);
+    EXPECT_NO_THROW(CheckServer(server_));
+    EXPECT_THROW(CheckServer(server2_), ConfigFileSyntaxError);
 }

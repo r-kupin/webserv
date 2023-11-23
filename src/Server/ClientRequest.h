@@ -17,18 +17,15 @@
 #include <string>
 #include <netinet/in.h>
 #include <vector>
+#include <map>
 #include "../Config/LimitExcept.h"
 
 struct ClientRequest {
-    Methods     method_;
-    std::string uri_;
-    std::string host_;
-//    bool        keep_alive_;
-    std::vector<std::string> request_;
-//    sockaddr_in client_addr_;
-    explicit ClientRequest(int client_sock);
+    Methods                             method_;
+    std::string                         uri_;
+    std::map<std::string, std::string>  headers_;
 
-    void ReadFromSocket(int socket);
+    explicit                    ClientRequest(int client_sock);
 };
 
 

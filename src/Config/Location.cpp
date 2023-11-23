@@ -44,10 +44,10 @@ const std::map<int, std::string> Location::kHttpOkCodes =
         Location::initializeHttpOkCodes();
 
 Location::Location(const std::string &address)
-	: return_code_(0), address_(address) {}
+	: return_code_(0), address_(address), parent_(NULL) {}
 
 Location::Location()
-    : return_code_(0), autoindex_(false) {}
+    : return_code_(0), autoindex_(false), parent_(NULL) {}
 
 Location::Location(const Location& other)
 		: error_pages_(other.error_pages_),
@@ -58,50 +58,47 @@ Location::Location(const Location& other)
 		  autoindex_(other.autoindex_),
 		  return_address_(other.return_address_),
 		  root_(other.root_),
-		  address_(other.address_) {}
+		  address_(other.address_),
+          parent_(other.parent_) {}
 
 //Location::Location(const std::string &address)
 //    : return_code_(0), address_(address) {}
 
-Location::Location(const std::string &address, const Location &parent)
-    : error_pages_(parent.error_pages_), index_(parent.index_), return_code_(0),
-	autoindex_(parent.autoindex_), return_address_(parent.return_address_),
-	root_(parent.root_), address_(address) {}
+Location::Location(const std::string &address, l_it parent)
+    : error_pages_(parent->error_pages_),
+    index_(parent->index_),
+    return_code_(0),
+    autoindex_(parent->autoindex_),
+    return_address_(parent->return_address_),
+    address_(address),
+    parent_(parent) {}
 
 bool Location::operator<(const Location &rhs) const {
     return address_ < rhs.address_;
 }
 
 bool Location::operator==(const Location &rhs) const {
-    // Compare error_pages_
     if (!(error_pages_ == rhs.error_pages_))
         return false;
-    // Compare limit_except_
     if (!(limit_except_ == rhs.limit_except_))
         return false;
-    // Compare return_code_
     if (return_code_ != rhs.return_code_)
         return false;
-    // Compare index_
     if (index_ != rhs.index_)
         return false;
-    // Compare return_address_
     if (return_address_ != rhs.return_address_)
         return false;
-    // Compare root_
     if (root_ != rhs.root_)
         return false;
-    // Compare address_
     if (address_ != rhs.address_)
         return false;
-    // Compare sublocations_
     if (sublocations_ != rhs.sublocations_)
         return false;
     return true;
 }
 
 bool Location::HasSameAddressAsOneOfSublocationsOf(const Location &rhs) const {
-    for (std::vector<Location>::const_iterator it = rhs.sublocations_.begin();
+    for (std::list<Location>::const_iterator it = rhs.sublocations_.begin();
          it != rhs.sublocations_.end(); ++it) {
         if (it->HasSameAddressAs(*this))
             return true;
@@ -163,7 +160,7 @@ const Location & Location::FindSublocationByAddress(
     if (address == "/")
         return *this;
     LocationByAddress to_find(address);
-    const std::vector<Location>::const_iterator &it = std::find_if(
+    const std::list<Location>::const_iterator &it = std::find_if(
                                         sublocations_.begin(),
                                         sublocations_.end(), to_find);
     if (it == sublocations_.end())
@@ -209,29 +206,28 @@ bool Location::UMarkDefined(const std::string &key, bool &flag,
     return false;
 }
 
-void Location::CheckLocationDirectives(std::vector<v_strings> &directives,
-                                       ServerConfiguration &sc) {
+v_strings Location::ProcessDirectives(std::vector<v_strings> &directives) {
     bool    root = false, index = false, ret = false, err = false;
+    v_strings root_index_update;
 
     for (size_t i = 0; i < directives.size(); ++i) {
         if (UMarkDefined("root", root, directives[i]))
             HandleRoot(directives[i]);
         if (MarkDefined("index", index, directives[i])) {
             if (address_ == "/") {
-                sc.UpdateIndex(directives[i]);
+               root_index_update = directives[i];
             } else {
                 for (size_t j = 1; j < directives[i].size(); ++j) {
                     index_.insert(directives[i][j]);
                 }
             }
         }
-        if (UMarkDefined("return", ret, directives[i])) {
+        if (UMarkDefined("return", ret, directives[i]))
             HandleLocationReturn(directives[i]);
-        }
-        if (MarkDefined("error_page", err, directives[i])) {
+        if (MarkDefined("error_page", err, directives[i]))
             AddErrorPages(directives[i]);
-        }
     }
+    return root_index_update;
 }
 
 void Location::ThrowLocationError(const std::string &msg) {
@@ -276,17 +272,45 @@ std::ostream & Location::RecursivePrint(std::ostream &os, const Location &locati
     if (!location.root_.empty())
         os << prefix << location.address_ << ":\t" << "Root: " <<
            location.root_ << std::endl;
-    if (location.limit_except_.return_code_ != -1)
-        os << prefix << location.address_ << ":\t" << "Limit Except: " <<
-           location.limit_except_ << std::endl;
+    if (location.address_ != "/") {
+        os << location.address_ << ":\t" << "Parent: " <<
+           location.parent_->address_ << std::endl;
+    }
     if (!location.sublocations_.empty()) {
-        for (std::vector<Location>::const_iterator it =
+        for (std::list<Location>::const_iterator it =
                                     location.sublocations_.begin();
                                     it != location.sublocations_.end(); ++it) {
             RecursivePrint(os, *it, prefix + location.address_);
         }
     }
+
     return os;
+}
+
+Location &Location::operator=(const Location &rhs) {
+    if (this == &rhs) {
+        return *this; // Handle self-assignment
+    }
+
+    // Copy the data members from rhs to this object
+    error_pages_ = rhs.error_pages_;
+    sublocations_ = rhs.sublocations_;
+    index_ = rhs.index_;
+    limit_except_ = rhs.limit_except_;
+    return_code_ = rhs.return_code_;
+    autoindex_ = rhs.autoindex_;
+    return_address_ = rhs.return_address_;
+    root_ = rhs.root_;
+    address_ = rhs.address_;
+    parent_ = rhs.parent_;
+
+    // Return a reference to this object
+    return *this;}
+
+const Location &Location::getParent() const {
+    if (address_ == "/")
+        return *this;
+    return *parent_;
 }
 
 std::ostream& operator<<(std::ostream& os, const Location& location) {
@@ -314,13 +338,10 @@ std::ostream& operator<<(std::ostream& os, const Location& location) {
         os << std::endl;
     }
     if (!location.root_.empty())
-        os << location.address_ << ":\t" << "Root: " <<
+        os << location.address_ << ":\t" << "zz: " <<
            location.root_ << std::endl;
-    if (location.limit_except_.return_code_ != -1)
-        os << location.address_ << ":\t" << "Limit Except: " <<
-           location.limit_except_ << std::endl;
     if (!location.sublocations_.empty()) {
-        for (std::vector<Location>::const_iterator it =
+        for (std::list<Location>::const_iterator it =
                 location.sublocations_.begin();
              it != location.sublocations_.end(); ++it) {
             os << *it ;

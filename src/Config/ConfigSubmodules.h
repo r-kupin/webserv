@@ -22,7 +22,8 @@
 /**
  * @brief server pre-configuration
  */
-struct ServerConfiguration {
+class ServerConfiguration {
+public:
 //    server properties
     bool default_index_;
     bool default_hostname_;
@@ -30,11 +31,12 @@ struct ServerConfiguration {
     std::string port_str_;
     size_t client_max_body_size_;
     std::string server_name_;
-    std::set<std::string > server_names_;
+    std::set<std::string> server_names_;
 //    secondary locations
-    Location root_loc_;
+    std::list<Location> locations_;
 
     ServerConfiguration();
+    ServerConfiguration(const ServerConfiguration &);
 
     void                UpdateIndex(const v_strings &directive);
     static bool         MarkDefined(const std::string &key, bool &flag,
@@ -44,10 +46,11 @@ struct ServerConfiguration {
     void                CheckServerDirectives(std::vector<v_strings> &directives);
     static void         ThrowServerConfigError(const std::string &msg);
     void                UpdateHostname(const v_strings &directives);
-    void                InheritanceErrPagesRoot(const Location &parent,
-                                                Location &start);
+    void                InheritanceErrPagesRoot(l_it parent,
+                                                std::list<Location> &kids);
 
     bool operator==(const ServerConfiguration &rhs) const;
+    ServerConfiguration& operator=(const ServerConfiguration& rhs);
 };
 
 /**

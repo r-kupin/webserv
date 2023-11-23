@@ -42,9 +42,10 @@ Config::Config(const std::string &config_path)
         source.exceptions(std::ifstream::badbit);
         std::cout << "Opening config on " + conf_path_ << std::endl;
         ParseConfig(source);
+        std::cout << "Parsing finished" << std::endl;
         source.close();
-        std::cout << "Parsing finished. Checking components.. " << std::endl;
-        servers_ = CheckComponents(conf_root_);
+        std::cout << "Checking components.. " << std::endl;
+        CreateSrvConfigs(conf_root_);
         std::cout << "Checking finished. Preconfiguring servers.. " <<
         std::endl;
     } catch (const std::ifstream::failure &e) {
@@ -59,23 +60,24 @@ Config &Config::operator=(const Config &other) {
 }
 
 std::ostream &operator<<(std::ostream &os, const Config &config) {
-    const std::vector<ServerConfiguration> &servers = config.getServers();
-    
-    for (size_t i = 0; i < servers.size(); ++i) {
-        const ServerConfiguration &srv = servers[i];
-        
+    const std::list<ServerConfiguration> &servers = config.getServers();
+
+    for (std::_List_const_iterator<ServerConfiguration> srv = servers.begin();
+         srv != servers.end(); ++srv) {
         os << "server: " << std::endl;
-        os << "hostname: " << srv.server_name_ << std::endl;
-        for (std::set<std::string>::iterator it = srv.server_names_.begin();
-             it != srv.server_names_.end(); ++it) {
+        os << "hostname: " << srv->server_name_ << std::endl;
+        for (std::set<std::string>::iterator it = srv->server_names_.begin();
+             it != srv->server_names_.end(); ++it) {
             os << "name: " << *it << std::endl;
         }
-        os << "port: " << srv.port_ << std::endl;
-        if (srv.client_max_body_size_) {
-            os << "client_max_body_size_: " << srv.client_max_body_size_ <<
-            std::endl;
+        os << "port: " << srv->port_ << std::endl;
+        if (srv->client_max_body_size_) {
+            os << "client_max_body_size_: " << srv->client_max_body_size_ <<
+               std::endl;
         }
-        servers[i].root_loc_.RecursivePrint(os, servers[i].root_loc_,"");
+        srv->locations_.begin()->RecursivePrint(os,
+                                                *srv->locations_.begin(),
+                                                "");
         os << std::endl;
     }
     return os;
@@ -95,6 +97,6 @@ const std::string &Config::getConfPath() const {
     return conf_path_;
 }
 
-const std::vector<ServerConfiguration> &Config::getServers() const {
-    return servers_;
-}
+//const std::vector<ServerConfiguration> &Config::getServers() const {
+//    return servers_;
+//}

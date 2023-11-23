@@ -26,13 +26,13 @@ ServerManager &ServerManager::operator=(const ServerManager &other) {
 
 ServerManager::~ServerManager() {}
 
-ServerManager::ServerManager(const Config &config) {
-    const v_sconfigs &configs = config.getServers();
-
-    for (size_t i = 0; i < configs.size(); ++i) {
-        servers_.push_back(Server(configs[i]));
-    }
-}
+//ServerManager::ServerManager(const Config &config) {
+//    const l_sconfigs &configs = config.getServers();
+//
+//    for (size_t i = 0; i < configs.size(); ++i) {
+//        servers_.push_back(Server(configs[i]));
+//    }
+//}
 
 void ServerManager::RunAll() {
     for (size_t i = 0; i < servers_.size(); ++i) {

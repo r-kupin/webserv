@@ -44,7 +44,7 @@ TEST_F(LocationContextTest, ComponentsTestLocationBlockEmpty) {
     server_.child_nodes_.push_back(location_);
 
     root_.child_nodes_.push_back(server_);
-    EXPECT_THROW(CheckComponents(root_), ConfigFileSyntaxError);
+    EXPECT_THROW(CreateSrvConfigs(root_), ConfigFileSyntaxError);
 }
 
 TEST_F(LocationContextTest, ComponentsTestLocationBlockWithoutPath) {
@@ -53,7 +53,7 @@ TEST_F(LocationContextTest, ComponentsTestLocationBlockWithoutPath) {
     server_.child_nodes_.push_back(location_);
 
     root_.child_nodes_.push_back(server_);
-    EXPECT_THROW(CheckComponents(root_), ConfigFileSyntaxError);
+    EXPECT_THROW(CreateSrvConfigs(root_), ConfigFileSyntaxError);
 }
 
 TEST_F(LocationContextTest, ComponentsTestAllRootInsideLocation) {
@@ -62,7 +62,7 @@ TEST_F(LocationContextTest, ComponentsTestAllRootInsideLocation) {
     server_.child_nodes_.push_back(location_);
 
     root_.child_nodes_.push_back(server_);
-    EXPECT_NO_THROW(CheckComponents(root_));
+    EXPECT_NO_THROW(CreateSrvConfigs(root_));
 }
 
 TEST_F(LocationContextTest, ComponentsTestAllIndexInsideLocation) {
@@ -72,7 +72,7 @@ TEST_F(LocationContextTest, ComponentsTestAllIndexInsideLocation) {
     server_.child_nodes_.push_back(location_);
 
     root_.child_nodes_.push_back(server_);
-    EXPECT_NO_THROW(CheckComponents(root_));
+    EXPECT_NO_THROW(CreateSrvConfigs(root_));
 }
 
 class LimitExceptContextTest  : public ::testing::Test, public Config {
@@ -111,7 +111,7 @@ random.main_ = v_strings({ "random" });
 server_.child_nodes_.push_back(random);
 
 root_.child_nodes_.push_back(server_);
-EXPECT_NO_THROW(CheckComponents(root_));
+EXPECT_NO_THROW(CreateSrvConfigs(root_));
 }
 
 TEST_F(LimitExceptContextTest, ComponentsTestLimitExceptNoHTTPMethods) {
@@ -127,7 +127,7 @@ server_.child_nodes_.push_back(random);
 
 server_.child_nodes_.push_back(location_);
 root_.child_nodes_.push_back(server_);
-EXPECT_THROW(CheckComponents(root_), ConfigFileSyntaxError);
+EXPECT_THROW(CreateSrvConfigs(root_), ConfigFileSyntaxError);
 }
 
 TEST_F(LimitExceptContextTest, ComponentsTestLimitExceptWrongHTTPMethods) {
@@ -143,7 +143,7 @@ server_.child_nodes_.push_back(random);
 
 server_.child_nodes_.push_back(location_);
 root_.child_nodes_.push_back(server_);
-EXPECT_THROW(CheckComponents(root_), ConfigFileSyntaxError);
+EXPECT_THROW(CreateSrvConfigs(root_), ConfigFileSyntaxError);
 }
 
 TEST_F(LimitExceptContextTest, ComponentsTestLimitExceptWrongInServerContext) {
@@ -155,7 +155,7 @@ limit_except.directives_.push_back(v_strings({"deny", "all"}));
 
 server_.child_nodes_.push_back(limit_except);
 root_.child_nodes_.push_back(server_);
-EXPECT_THROW(CheckComponents(root_), ConfigFileSyntaxError);
+EXPECT_THROW(CreateSrvConfigs(root_), ConfigFileSyntaxError);
 }
 
 TEST_F(LimitExceptContextTest, ComponentsTestLimitExceptCorrectHTTPMethods) {
@@ -171,7 +171,7 @@ server_.child_nodes_.push_back(random);
 
 server_.child_nodes_.push_back(location_);
 root_.child_nodes_.push_back(server_);
-EXPECT_NO_THROW(CheckComponents(root_));
+EXPECT_NO_THROW(CreateSrvConfigs(root_));
 }
 
 TEST_F(LimitExceptContextTest,
@@ -188,7 +188,7 @@ server_.child_nodes_.push_back(random);
 
 server_.child_nodes_.push_back(location_);
 root_.child_nodes_.push_back(server_);
-EXPECT_THROW(CheckComponents(root_), ConfigFileSyntaxError);
+EXPECT_THROW(CreateSrvConfigs(root_), ConfigFileSyntaxError);
 }
 
 TEST_F(LimitExceptContextTest, ComponentsTestLimitExceptAllCorrectHTTPMethods) {
@@ -204,7 +204,7 @@ server_.child_nodes_.push_back(random);
 
 server_.child_nodes_.push_back(location_);
 root_.child_nodes_.push_back(server_);
-EXPECT_NO_THROW(CheckComponents(root_));
+EXPECT_NO_THROW(CreateSrvConfigs(root_));
 }
 
 TEST_F(LimitExceptContextTest, ComponentsTestLimitExceptButContextIsEmpty) {
@@ -219,7 +219,7 @@ server_.child_nodes_.push_back(random);
 
 server_.child_nodes_.push_back(location_);
 root_.child_nodes_.push_back(server_);
-EXPECT_THROW(CheckComponents(root_), ConfigFileSyntaxError);
+EXPECT_THROW(CreateSrvConfigs(root_), ConfigFileSyntaxError);
 }
 
 TEST_F(LimitExceptContextTest,
@@ -236,5 +236,5 @@ server_.child_nodes_.push_back(random);
 
 server_.child_nodes_.push_back(location_);
 root_.child_nodes_.push_back(server_);
-EXPECT_THROW(CheckComponents(root_), ConfigFileSyntaxError);
+EXPECT_THROW(CreateSrvConfigs(root_), ConfigFileSyntaxError);
 }

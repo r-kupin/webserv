@@ -29,10 +29,10 @@ protected:
 };
 
 TEST_F(MainNodeTest, ComponentsTestNoServersFail) {
-    EXPECT_THROW(CheckComponents(root_), ConfigFileSyntaxError);
+    EXPECT_THROW(CreateSrvConfigs(root_), ConfigFileSyntaxError);
 }
 
 TEST_F(MainNodeTest, ComponentsTest1EmptyServerFail) {
     root_.child_nodes_.push_back(server_);
-    EXPECT_THROW(CheckComponents(root_), ConfigFileSyntaxError);
+    EXPECT_THROW(CreateSrvConfigs(root_), ConfigFileSyntaxError);
 }

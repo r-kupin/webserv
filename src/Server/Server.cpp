@@ -39,6 +39,28 @@ The epoll interface provides three main functions:
     epoll_wait: Waits for events to occur on the registered file descriptors and returns the events that have occurred.
 
 By using epoll, servers can efficiently handle a large number of connections and effectively manage I/O events, resulting in high-performance and scalable network applications.
+
+   +---------+-------------------------------------------------+
+   | Method  | Description                                     |
+   +---------+-------------------------------------------------+
+   | GET     | Transfer a current representation of the target |
+   |         | resource.                                       |
+   | HEAD    | Same as GET, but only transfer the status line  |
+   |         | and header section.                             |
+   | POST    | Perform resource-specific processing on the     |
+   |         | request payload.                                |
+   | PUT     | Replace all current representations of the      |
+   |         | target resource with the request payload.       |
+   | DELETE  | Remove all current representations of the       |
+   |         | target resource.                                |
+   | CONNECT | Establish a tunnel to the server identified by  |
+   |         | the target resource.                            |
+   | OPTIONS | Describe the communication options for the      |
+   |         | target resource.                                |
+   | TRACE   | Perform a message loop-back test along the path |
+   |         | to the target resource.                         |
+   +---------+-------------------------------------------------+
+
  */
 #include <iostream>
 #include <sys/socket.h>
@@ -46,7 +68,6 @@ By using epoll, servers can efficiently handle a large number of connections and
 #include <unistd.h>
 #include <cstring>
 #include <algorithm>
-#include <sstream>
 #include "ServerExceptions.h"
 
 //const int BUFFER_SIZE = 1024;
@@ -297,9 +318,10 @@ void Server::HandleClientRequest(int client_sock) {
 		 std::cout << "client request uri:" << request.uri_ << std::endl;
 		 std::cout << "client request method:" << request.method_ << std::endl;
 //		 int http_code;
-//		 const Location &loc = FindLocation(request.uri_, config_.root_loc_, http_code);
-         ServerResponse response(request, config_.root_loc_);
-         response.SendResponse(client_sock);
+//		 const Location &loc = FindLocation(request.uri_, config_.locations_, http_code);
+//         ServerResponse response = ServerResponse::CreateResponse(request,
+//                                                                 config_.locations_);
+//         response.SendResponse(client_sock);
 
 
 //         if (it == config_.locations_.end()) {
@@ -407,9 +429,9 @@ const char *HTTPCodeError::what() const throw() {
 //       ClientRequest request(client_sock);
 //         int http_code;
 //         const Location &loc = FindLocation(request.uri_,
-//                                            config_.root_loc_,
+//                                            config_.locations_,
 //                                            http_code);
-//         ServerResponse response(request, config_.root_loc_, http_code);
+//         ServerResponse response(request, config_.locations_, http_code);
 //
 //
 //

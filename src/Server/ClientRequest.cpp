@@ -27,10 +27,10 @@ const std::string & SanitizeInput(const std::string &input) {
     return input;
 }
 
-void ClientRequest::ReadFromSocket(int socket) {
+std::vector<std::string> read_from_socket(int socket) {
     char buffer[BUFFER_SIZE];
     std::string line;
-
+    std::vector<std::string> request;
 
     while (true) {
         //  The recv() function offers some additional features specific to
@@ -46,32 +46,48 @@ void ClientRequest::ReadFromSocket(int socket) {
 
         // Find the end of the line
         line += std::string(buffer);
+
         while (!line.empty()) {
             unsigned long line_break = line.find_first_of("\n\r");
             std::string subline = line.substr(0, line_break);
-            request_.push_back(SanitizeInput(subline));
+            request.push_back(SanitizeInput(subline));
             line = line.substr(line_break + 2);
         }
         if (bytesRead < BUFFER_SIZE - 1)
-            return;
+            return request;
     }
 }
 
-
-ClientRequest::ClientRequest(int client_sock) {
-    ReadFromSocket(client_sock) ;
-    if (request_[0].find("POST") != std::string::npos) {
-        method_ = POST;
-    } else if (request_[0].find("GET") != std::string::npos) {
-        method_ = GET;
-    } else if (request_[0].find("DELETE") != std::string::npos) {
-        method_ = DELETE;
+Methods get_method(const std::string &request) {
+    if (request.find("POST") != std::string::npos) {
+        return POST;
+    } else if (request.find("GET") != std::string::npos) {
+        return GET;
+    } else if (request.find("DELETE") != std::string::npos) {
+        return DELETE;
     } else {
         throw UnsupportedClientMethodException();
     }
-    uri_ = request_[0].substr(request_[0].find_first_of(' ') + 1);
-    uri_ = uri_.substr(0, uri_.find_first_of(' '));
-    if (request_[0].find("HTTP/1.1") == std::string::npos) {
+}
+
+std::string get_uri(const std::string& request) {
+    std::string uri = request.substr(request.find_first_of(' ') + 1);
+    return (uri.substr(0, uri.find_first_of(' ')));
+}
+
+ClientRequest::ClientRequest(int client_sock) {
+    std::vector<std::string> request = read_from_socket(client_sock) ;
+    method_ = get_method(request[0]);
+    uri_ = get_uri(request[0]);
+    if (request[0].find("HTTP/1.1") == std::string::npos) {
         throw HTTPVersionNotSupportedException();
     }
+    for (size_t i = 1; i < request.size(); ++i) {
+        std::string name = request[i].substr(0, request[i].find_first_of(':'));
+        std::string value = request[i].substr(
+                                    request[i].find_first_of(": ") + 1);
+        if (!name.empty() && !value.empty())
+            headers_.insert(std::make_pair(name, value));
+    }
 }
+

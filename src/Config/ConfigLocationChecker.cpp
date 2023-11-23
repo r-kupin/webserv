@@ -68,37 +68,14 @@ Config::HandleLimitExceptContext(Node &node, Limit &curr_limit) const {
                                  "limit_except block");
             }
         }
-        if (node.directives_.size() == 1) {
-            if (node.directives_[0][0] == "deny" &&
-                node.directives_[0][1] == "all" &&
-                node.directives_[0].size() == 2 ) {
-                curr_limit.return_code_ = 403;
-            } else if (node.directives_[0][0] == "return" &&
-                        (node.directives_[0].size() == 2 ||
-                        node.directives_[0].size() == 3)) {
-                curr_limit.return_code_ = std::atoi(node.directives_[0][1].c_str());
-                if (Location::kHttpOkCodes.find(curr_limit.return_code_) ==
-                    Location::kHttpOkCodes.end() &&
-                    ErrPage::kHttpErrCodes.find(curr_limit.return_code_) ==
-                    ErrPage::kHttpErrCodes.end()) {
-                    ThrowSyntaxError("return directive is wrong");
-                }
-                if (node.directives_[0].size() == 3) {
-                    if (node.directives_[0][2].find_first_of('/') !=
-                        std::string::npos) {
-                        curr_limit.return_address_ = node.directives_[0][2];
-                    } else {
-                        ThrowSyntaxError("Limit_except context needs 1 of these "
-                                         "directives: return or deny !");
-                    }
-                }
-            }
+        if (node.directives_.size() == 1 || node.directives_.size() == 2) {
+
         }
     }
-    if (curr_limit.return_code_ == -1) {
-        ThrowSyntaxError("Limit_except context needs 1 of these "
-                         "directives: return or deny !");
-    }
+}
+
+const std::list<ServerConfiguration> &Config::getServers() const {
+    return servers_;
 }
 
 //
@@ -123,3 +100,27 @@ Config::HandleLimitExceptContext(Node &node, Limit &curr_limit) const {
 //    }
 //}
 
+//            if (node.directives_[0][0] == "deny" &&
+//                node.directives_[0][1] == "all" &&
+//                node.directives_[0].size() == 2 ) {
+//                curr_limit.return_code_ = 403;
+//            } else if (node.directives_[0][0] == "return" &&
+//                        (node.directives_[0].size() == 2 ||
+//                        node.directives_[0].size() == 3)) {
+//                curr_limit.return_code_ = std::atoi(node.directives_[0][1].c_str());
+//                if (Location::kHttpOkCodes.find(curr_limit.return_code_) ==
+//                    Location::kHttpOkCodes.end() &&
+//                    ErrPage::kHttpErrCodes.find(curr_limit.return_code_) ==
+//                    ErrPage::kHttpErrCodes.end()) {
+//                    ThrowSyntaxError("return directive is wrong");
+//                }
+//                if (node.directives_[0].size() == 3) {
+//                    if (node.directives_[0][2].find_first_of('/') !=
+//                        std::string::npos) {
+//                        curr_limit.return_address_ = node.directives_[0][2];
+//                    } else {
+//                        ThrowSyntaxError("Limit_except context needs 1 of these "
+//                                         "directives: return or deny !");
+//                    }
+//                }
+//            }

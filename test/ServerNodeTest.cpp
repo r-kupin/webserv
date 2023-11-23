@@ -69,7 +69,7 @@ TEST_F(ServerNodeTest, MultipleLocationSameSeverKO) {
     Location loc = Location("/dup");
     loc.root_ = "resources/locdefault";
     loc.index_.insert("/htmls/index.html");
-    conf_.root_loc_.sublocations_.insert(loc);
+    conf_.locations_.sublocations_.insert(loc);
 
     Node loc_dup;
     loc_dup.main_ = v_strings({"location", "/dup"});

@@ -19,6 +19,7 @@
 #include <vector>
 #include <set>
 #include <ostream>
+#include <list>
 #include "ConfigSubmodules.h"
 
 const static std::string kDefaultResPath = "resources/";
@@ -34,37 +35,39 @@ public:
     Config(const std::string &);
     Config &operator=(const Config &);
 
+    //  Exposed to testing
+    //  Test constructor only
+    explicit                            Config(const Node &confRoot);
+
     ~Config();
 
     const std::string                       &getConfPath() const;
-    const std::vector<ServerConfiguration>  &getServers() const;
+    const std::list<ServerConfiguration>  &getServers() const;
+
+    void MakeServerConfigs();
 
 protected:
-//  Exposed to testing
-//  Test constructor only
-    explicit                            Config(const Node &confRoot);
 //  Config processing utils
     void                                ExcludeComments(std::string &line) const;
     void                                TrimWhitespaces(std::string &line) const;
 //  Parsing config file to tree-like structure of nodes
     void                                ParseConfig(std::ifstream &config);
 //  Parsing config file to tree-like structure of nodes
-    std::vector<ServerConfiguration>    CheckComponents(Node& root);
+    void CreateSrvConfigs(Node& root);
     //      Location subcontext
     void                                HandleLocationContext(Node &loc_context,
-                                              ServerConfiguration &sc,
-                                              Location &parent);
+                                                              ServerConfiguration &sc,
+                                                              l_it parent);
     //  Limit_except subcontext
     void                                HandleLimitExceptContext(Node &node,
                                                                  Limit &curr_limit) const;
     void                                CheckServerSubnodes(Node &node,
                                                   ServerConfiguration &current);
-    void                                CheckServer(std::vector<ServerConfiguration> &servers,
-                                                    Node &node);
+    void CheckServer(Node &node);
 private:
     std::string conf_path_;
     Node conf_root_;
-    std::vector<ServerConfiguration> servers_;
+    std::list<ServerConfiguration> servers_;
 
 //  Parse config
     RawNode             ParseNode(std::ifstream &config,
@@ -93,6 +96,10 @@ private:
                                          std::ifstream &config) const;
     void                ThrowSyntaxError(const std::string &msg) const;
     bool                LimExIsDefined(const Location &location);
+
+    ServerConfiguration &
+    CheckLocationDirectives(Node &loc_context, ServerConfiguration &sc,
+                            Location &current) const;
 };
 
 std::ostream &operator<<(std::ostream &os, const Config &config);

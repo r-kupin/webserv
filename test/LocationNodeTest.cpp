@@ -37,25 +37,25 @@ protected:
 
 TEST_F(LocationNodeTest, RootNoRecursion) {
     EXPECT_NO_THROW(HandleLocationContext(location_root_, conf_,
-                                          conf_.root_loc_));
+                                          conf_.locations_));
 
-    EXPECT_EQ(conf_.root_loc_.address_, "/");
-    EXPECT_EQ(conf_.root_loc_.root_ , "resources/root_loc_default");
-    EXPECT_NE(conf_.root_loc_.index_.find("/htmls/index.html"),
-              conf_.root_loc_.index_.end());
+    EXPECT_EQ(conf_.locations_.address_, "/");
+    EXPECT_EQ(conf_.locations_.root_ , "resources/root_loc_default");
+    EXPECT_NE(conf_.locations_.index_.find("/htmls/index.html"),
+              conf_.locations_.index_.end());
 
     const std::set<ErrPage>::iterator &NotFoundErrPage =
-            conf_.root_loc_.error_pages_.find(ErrPage("/404.html", 404));
-    EXPECT_NE(NotFoundErrPage, conf_.root_loc_.error_pages_.end());
+            conf_.locations_.error_pages_.find(ErrPage("/404.html", 404));
+    EXPECT_NE(NotFoundErrPage, conf_.locations_.error_pages_.end());
     EXPECT_EQ(NotFoundErrPage->address_, "/404.html");
 
     const std::set<ErrPage>::iterator &InternalServerError =
-            conf_.root_loc_.error_pages_.find(ErrPage("/50x.html", 500));
-    EXPECT_NE(InternalServerError, conf_.root_loc_.error_pages_.end());
+            conf_.locations_.error_pages_.find(ErrPage("/50x.html", 500));
+    EXPECT_NE(InternalServerError, conf_.locations_.error_pages_.end());
     EXPECT_EQ(InternalServerError->address_, "/50x.html");
 
-    EXPECT_EQ(conf_.root_loc_.return_code_ , -1);
-    EXPECT_EQ(conf_.root_loc_.return_address_ , "unspecified");
+    EXPECT_EQ(conf_.locations_.return_code_ , -1);
+    EXPECT_EQ(conf_.locations_.return_address_ , "unspecified");
 }
 
 TEST_F(LocationNodeTest, RootRecursive) {
@@ -67,28 +67,28 @@ TEST_F(LocationNodeTest, RootRecursive) {
     location_root_.child_nodes_.push_back(home);
 
     EXPECT_NO_THROW(HandleLocationContext(location_root_, conf_,
-                                          conf_.root_loc_));
+                                          conf_.locations_));
 
-    EXPECT_EQ(conf_.root_loc_.address_, "/");
-    EXPECT_EQ(conf_.root_loc_.root_ , "resources/root_loc_default");
-    EXPECT_NE(conf_.root_loc_.index_.find("/htmls/index.html"),
-              conf_.root_loc_.index_.end());
+    EXPECT_EQ(conf_.locations_.address_, "/");
+    EXPECT_EQ(conf_.locations_.root_ , "resources/root_loc_default");
+    EXPECT_NE(conf_.locations_.index_.find("/htmls/index.html"),
+              conf_.locations_.index_.end());
 
     const std::set<ErrPage>::iterator &NotFoundErrPage =
-            conf_.root_loc_.error_pages_.find(ErrPage("/404.html", 404));
-    EXPECT_NE(NotFoundErrPage, conf_.root_loc_.error_pages_.end());
+            conf_.locations_.error_pages_.find(ErrPage("/404.html", 404));
+    EXPECT_NE(NotFoundErrPage, conf_.locations_.error_pages_.end());
     EXPECT_EQ(NotFoundErrPage->address_, "/404.html");
 
     const std::set<ErrPage>::iterator &InternalServerError =
-            conf_.root_loc_.error_pages_.find(ErrPage("/50x.html", 500));
-    EXPECT_NE(InternalServerError, conf_.root_loc_.error_pages_.end());
+            conf_.locations_.error_pages_.find(ErrPage("/50x.html", 500));
+    EXPECT_NE(InternalServerError, conf_.locations_.error_pages_.end());
     EXPECT_EQ(InternalServerError->address_, "/50x.html");
 
-    EXPECT_EQ(conf_.root_loc_.return_code_ , -1);
-    EXPECT_EQ(conf_.root_loc_.return_address_ , "unspecified");
+    EXPECT_EQ(conf_.locations_.return_code_ , -1);
+    EXPECT_EQ(conf_.locations_.return_address_ , "unspecified");
 
-    EXPECT_EQ(conf_.root_loc_.sublocations_.begin()->address_, "/home");
-    EXPECT_EQ(*conf_.root_loc_.sublocations_.begin()->index_.begin(),
+    EXPECT_EQ(conf_.locations_.sublocations_.begin()->address_, "/home");
+    EXPECT_EQ(*conf_.locations_.sublocations_.begin()->index_.begin(),
                                                                     "home.html");
 }
 
@@ -104,9 +104,9 @@ TEST_F(LocationNodeTest, WithLimitExcept) {
     home.child_nodes_.push_back(limit_except_get);
 
     EXPECT_NO_THROW(HandleLocationContext(home, conf_,
-                                          conf_.root_loc_));
+                                          conf_.locations_));
 
-    Location HomeLoc = *conf_.root_loc_.sublocations_.begin();
+    Location HomeLoc = *conf_.locations_.sublocations_.begin();
     
     EXPECT_EQ(HomeLoc.address_, "/home");
     EXPECT_EQ(*(HomeLoc.index_.begin()), "home.html");
@@ -125,7 +125,7 @@ TEST_F(LocationNodeTest, WrongLocation) {
 
     home.child_nodes_.push_back(limit_except_get);
 
-    EXPECT_THROW(HandleLocationContext(home, conf_, conf_.root_loc_),
+    EXPECT_THROW(HandleLocationContext(home, conf_, conf_.locations_),
                  ConfigFileSyntaxError);
 }
 
@@ -140,7 +140,7 @@ TEST_F(LocationNodeTest, WrongLimitExcept) {
 
     home.child_nodes_.push_back(limit_except_get);
 
-    EXPECT_THROW(HandleLocationContext(home, conf_, conf_.root_loc_),
+    EXPECT_THROW(HandleLocationContext(home, conf_, conf_.locations_),
                  ConfigFileSyntaxError);
 }
 
@@ -159,7 +159,7 @@ TEST_F(LocationNodeTest, MultipleLimitExcept) {
 
     home.child_nodes_.push_back(limit_except_get);
 
-    EXPECT_THROW(HandleLocationContext(home, conf_, conf_.root_loc_),
+    EXPECT_THROW(HandleLocationContext(home, conf_, conf_.locations_),
                  ConfigFileSyntaxError);
 }
 
@@ -175,7 +175,7 @@ TEST_F(LocationNodeTest, MultipleAddressesUnderTheSameParent) {
     location_root_.child_nodes_.push_back(home2);
     location_root_.child_nodes_.push_back(home1);
 
-    EXPECT_THROW(HandleLocationContext(location_root_, conf_, conf_.root_loc_),
+    EXPECT_THROW(HandleLocationContext(location_root_, conf_, conf_.locations_),
                  ConfigFileSyntaxError);
 }
 
@@ -272,35 +272,35 @@ TEST_F(LocationNodeTest, MultipleAddressesUnderTheSameParent) {
 //    expected_srvr.client_max_body_size_ = 1024;
 //
 ////    RootLocation
-//    expected_srvr.root_loc_.address_ = "/";
-//    expected_srvr.root_loc_.root_ = "/var/www/example.com/html";
-//    expected_srvr.root_loc_.index_.clear();
-//    expected_srvr.root_loc_.index_.insert("index.html");
-//    expected_srvr.root_loc_.index_.insert("index.htm");
-//    expected_srvr.root_loc_.error_pages_.clear();
-//    expected_srvr.root_loc_.error_pages_.insert(
+//    expected_srvr.locations_.address_ = "/";
+//    expected_srvr.locations_.root_ = "/var/www/example.com/html";
+//    expected_srvr.locations_.index_.clear();
+//    expected_srvr.locations_.index_.insert("index.html");
+//    expected_srvr.locations_.index_.insert("index.htm");
+//    expected_srvr.locations_.error_pages_.clear();
+//    expected_srvr.locations_.error_pages_.insert(
 //            ErrPage("/htmls/403.html", 403));
-//    expected_srvr.root_loc_.error_pages_.insert(
+//    expected_srvr.locations_.error_pages_.insert(
 //            ErrPage("/404.html", 404));
-//    expected_srvr.root_loc_.error_pages_.insert(
+//    expected_srvr.locations_.error_pages_.insert(
 //            ErrPage("loc/50x.html", 500));
-//    expected_srvr.root_loc_.error_pages_.insert(
+//    expected_srvr.locations_.error_pages_.insert(
 //            ErrPage("loc/50x.html", 502));
-//    expected_srvr.root_loc_.error_pages_.insert(
+//    expected_srvr.locations_.error_pages_.insert(
 //            ErrPage("loc/50x.html", 503));
-//    expected_srvr.root_loc_.error_pages_.insert(
+//    expected_srvr.locations_.error_pages_.insert(
 //            ErrPage("loc/50x.html", 504));
 //
 //    Location ab_us = Location("/about-us");
 //    ab_us.return_code_ = 301;
 //    ab_us.return_address_ = "/about";
-//    expected_srvr.root_loc_.sublocations_.insert(ab_us);
+//    expected_srvr.locations_.sublocations_.insert(ab_us);
 //
 //    Location home = Location("/home");
 //    home.index_.insert("index.html");
 //    home.limit_except_.return_code_ = 403;
 //    home.limit_except_.except_.insert(GET);
-//    expected_srvr.root_loc_.sublocations_.insert(home);
+//    expected_srvr.locations_.sublocations_.insert(home);
 //
 //    exp_srvrs.push_back(expected_srvr);
 //    EXPECT_EQ(test_srvrs, exp_srvrs);
@@ -312,14 +312,14 @@ TEST_F(LocationNodeTest, MultipleAddressesUnderTheSameParent) {
 //    ServerConfiguration & srv = test_srvrs[0];
 //    v_strings directive({"index", "test.htm"});
 //
-//    srv.root_loc_.index_ = std::set<std::string>({"index.html"});
-//    srv.root_loc_.default_index_ = true;
+//    srv.locations_.index_ = std::set<std::string>({"index.html"});
+//    srv.locations_.default_index_ = true;
 //
-//    UpdateIndex(directive, srv.root_loc_);
+//    UpdateIndex(directive, srv.locations_);
 //
-//    EXPECT_NE(srv.root_loc_.index_.find("test.htm"),
-//              srv.root_loc_.index_.end());
-//    EXPECT_FALSE(srv.root_loc_.default_index_);
+//    EXPECT_NE(srv.locations_.index_.find("test.htm"),
+//              srv.locations_.index_.end());
+//    EXPECT_FALSE(srv.locations_.default_index_);
 //}
 //
 //TEST_F(ServerPreconfigTest, HandleLocationFailedLocationTest) {

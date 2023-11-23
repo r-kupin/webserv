@@ -195,23 +195,23 @@ TEST_F(LocationCheckTest, CheckRootLocTest) {
     directives_.push_back({"index", "index_i.html"});
     directives_.push_back({"error_page", "403", "400", "416", "error.html"});
 
-    EXPECT_NE(conf_.root_loc_.error_pages_.find(ErrPage("/htmls/404.html", 404)),
-              conf_.root_loc_.error_pages_.end());
-    EXPECT_NE(conf_.root_loc_.error_pages_.find(ErrPage("/htmls/403.html", 403)),
-              conf_.root_loc_.error_pages_.end());
+    EXPECT_NE(conf_.locations_.error_pages_.find(ErrPage("/htmls/404.html", 404)),
+              conf_.locations_.error_pages_.end());
+    EXPECT_NE(conf_.locations_.error_pages_.find(ErrPage("/htmls/403.html", 403)),
+              conf_.locations_.error_pages_.end());
 
     EXPECT_NO_THROW(
-            conf_.root_loc_.CheckLocationDirectives(directives_, conf_));
+            conf_.locations_.ProcessDirectives(directives_));
 
-    EXPECT_EQ(conf_.root_loc_.root_, "/root");
-    EXPECT_EQ(conf_.root_loc_.index_, std::set<std::string>({"index_i.html"}));
+    EXPECT_EQ(conf_.locations_.root_, "/root");
+    EXPECT_EQ(conf_.locations_.index_, std::set<std::string>({"index_i.html"}));
 
-    EXPECT_NE(conf_.root_loc_.error_pages_.find(ErrPage("error.html", 403)),
-              conf_.root_loc_.error_pages_.end());
-    EXPECT_NE(conf_.root_loc_.error_pages_.find(ErrPage("error.html", 400)),
-              conf_.root_loc_.error_pages_.end());
-    EXPECT_NE(conf_.root_loc_.error_pages_.find(ErrPage("error.html", 416)),
-              conf_.root_loc_.error_pages_.end());
+    EXPECT_NE(conf_.locations_.error_pages_.find(ErrPage("error.html", 403)),
+              conf_.locations_.error_pages_.end());
+    EXPECT_NE(conf_.locations_.error_pages_.find(ErrPage("error.html", 400)),
+              conf_.locations_.error_pages_.end());
+    EXPECT_NE(conf_.locations_.error_pages_.find(ErrPage("error.html", 416)),
+              conf_.locations_.error_pages_.end());
 
     EXPECT_EQ(error_pages_.find(ErrPage("/htmls/404.html", 404)),
               error_pages_.end());
@@ -226,7 +226,7 @@ TEST_F(LocationCheckTest, CheckNonRootLocTest) {
     directives_.push_back({"error_page", "403", "400", "416", "error.html"});
     directives_.push_back({"return", " 300", "/home"});
 
-    EXPECT_NO_THROW(CheckLocationDirectives(directives_, conf_));
+    EXPECT_NO_THROW(ProcessDirectives(directives_));
 
     EXPECT_EQ(root_, "/root");
     EXPECT_EQ(index_, std::set<std::string>({"index_i.html"}));

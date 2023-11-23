@@ -17,7 +17,7 @@
 #include "ServerExceptions.h"
 
 typedef std::vector<Server> v_servers;
-typedef std::vector<ServerConfiguration> v_sconfigs;
+typedef std::list<ServerConfiguration> l_sconfigs;
 
 class ServerManager {
 public:

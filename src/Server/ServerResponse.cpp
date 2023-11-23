@@ -12,14 +12,131 @@
 
 //TODO !!! Root & exception pages inheritance !!!
 
-#include <sstream>
 #include <iostream>
 #include "ServerResponse.h"
 
 #include "ServerExceptions.h"
 
+ServerResponse::ServerResponse() {}
+
+//bool CanProceedWith(const Location &location, const ClientRequest &request) {
+//    if (location.limit_except_.except_.find(request.method_) ==
+//        location.limit_except_.except_.end())
+//    if (location.return_code_ > 0)
+//}
+
+const Location &
+FindLocation(const std::string &uri, const Location &start, bool &path_exists,
+             bool &loc_defined, bool &has_index,
+             const ClientRequest &request) {
+    (void)request;
+    if (uri != start.address_) {
+        std::string part_uri = uri.substr(1);
+        std::string::size_type end = part_uri.find('/');
+        if (end == std::string::npos)
+            end = uri.size();
+        std::string loc_addr = ("/" + part_uri).substr(0, end + 1);
+
+//        std::ifstream directory(start.root_.c_str());
+//        if (directory.good()) {
+//            path_exists = true;
+//            std::ifstream index((start.root_ + "index.html").c_str());
+//            if (index.good()) {
+//                has_index = true;
+//            }
+//        }
+        try {
+            const Location &found = start.FindSublocationByAddress(loc_addr);
+//            if (CanProceedWith(found, request))
+                return FindLocation(uri.substr(end + 1),
+                                    found, path_exists, loc_defined,
+                                    has_index,
+                                    ClientRequest(0));
+        } catch (const NotFoundException &) {
+            return start;
+        }
+    }
+    path_exists = true;
+    loc_defined = true;
+    return start;
+}
+
+std::string ExtractParams(std::string given_uri) {
+    return given_uri;
+}
+
+ServerResponse
+ServerResponse::CreateResponse(const ClientRequest &request, const Location &root) {
+    std::string uri = ExtractParams(request.uri_);
+    bool path_exists = false;
+    bool location_defined = false;
+    bool has_index = false;
+     const Location & main = FindLocation(uri, root, path_exists,
+                                         location_defined, has_index,
+                                         request);
+    (void)main;
+    if (path_exists) {
+
+    }
+    if (location_defined) {
+
+    }
+    return ServerResponse();
+}
+
+//
+//ServerResponse::ServerResponse(const ClientRequest &request,
+//							   const Location &root)
+////: request_(request)
+//{
+//	uri_ = ExtractParams(request.uri_);
+//	bool path_exists = false;
+//	bool location_defined = false;
+//	const Location & main = FindLocation(uri_, root, path_exists,
+//                                         location_defined);
+//	if (path_exists) {
+//
+//		if (!response_filename_.empty()) {
+//			response_filename_ = FindResponseFileAddr(main, response_filename_);
+////			response_file_stream_ = TryOpenFile(response_filename_);
+//			if (response_file_stream_.is_open()) { // file exists
+//				// Ready to send
+//			} else { // file not found
+//				ResourceNotFound();
+//			}
+//		} else { // location index
+//			std::set<std::string>::iterator it = main.index_.begin();
+//			for (;it != main.index_.end(); ++it) {
+//				response_filename_ = FindResponseFileAddr(main, *it);
+////				response_file_stream_ = TryOpenFile(response_filename_);
+//				if (response_file_stream_.is_open()) { // file exists
+//					// Ready to send
+//				}
+//			}
+//			if (it == main.index_.end()) { // No Index
+//				ResourceNotFound();
+//			}
+//		}
+//	} else {
+//		ResourceNotFound();
+//	}
+//
+////    if (Location::kHttpOkCodes.find(http_code_) !=
+////												Location::kHttpOkCodes.end()) {
+////		http_code_description_ = Location::kHttpOkCodes.find(http_code_)->second;
+////        http_is_error_ = false;
+////    } else if (ErrPage::kHttpErrCodes.find(http_code_) !=
+////												ErrPage::kHttpErrCodes.end()) {
+////		http_code_description_ = ErrPage::kHttpErrCodes.find(http_code_)->second;
+////        http_is_error_ = true;
+////    } else {
+////        throw HTTPCodeError();
+////    }
+////	FindResponseFileAddr(<#initializer#>, <#initializer#>);
+//}
+
 std::string ServerResponse::FindResponseFileAddr(const Location &where,
-												 const std::string &filename) {
+                                                 const std::string &filename) {
 //	if (http_is_error_) {
 //		const std::set<ErrPage>::iterator &err_page =
 //				main_.error_pages_.find(ErrPage(http_code_));
@@ -38,60 +155,10 @@ std::string ServerResponse::FindResponseFileAddr(const Location &where,
 ////            Location has no index
 //		}
 //	}
-	(void) where;
-	(void) filename;
-	return "";
+    (void) where;
+    (void) filename;
+    return "";
 }
-
-ServerResponse::ServerResponse(const ClientRequest &request,
-							   const Location &root)
-: request_(request) {
-//	uri_ = ExtractParams(request.uri_);
-//	response_filename_ = ExtractFilename(uri_);
-	bool path_exists = false;
-	const Location & main = FindLocation(uri_, root, path_exists);
-
-	if (path_exists) { // static file
-		if (!response_filename_.empty()) {
-			response_filename_ = FindResponseFileAddr(main, response_filename_);
-//			response_file_stream_ = TryOpenFile(response_filename_);
-			if (response_file_stream_.is_open()) { // file exists
-				// Ready to send
-			} else { // file not found
-				ResourceNotFound();
-			}
-		} else { // location index
-			std::set<std::string>::iterator it = main.index_.begin();
-			for (;it != main.index_.end(); ++it) {
-				response_filename_ = FindResponseFileAddr(main, *it);
-//				response_file_stream_ = TryOpenFile(response_filename_);
-				if (response_file_stream_.is_open()) { // file exists
-					// Ready to send
-				}
-			}
-			if (it == main.index_.end()) { // No Index
-				ResourceNotFound();
-			}
-		}
-
-	} else {
-		ResourceNotFound();
-	}
-
-//    if (Location::kHttpOkCodes.find(http_code_) !=
-//												Location::kHttpOkCodes.end()) {
-//		http_code_description_ = Location::kHttpOkCodes.find(http_code_)->second;
-//        http_is_error_ = false;
-//    } else if (ErrPage::kHttpErrCodes.find(http_code_) !=
-//												ErrPage::kHttpErrCodes.end()) {
-//		http_code_description_ = ErrPage::kHttpErrCodes.find(http_code_)->second;
-//        http_is_error_ = true;
-//    } else {
-//        throw HTTPCodeError();
-//    }
-//	FindResponseFileAddr(<#initializer#>, <#initializer#>);
-}
-
 
 //std::ifstream ServerResponse::TryOpenFile(const std::string &filename) {
 //	std::ifstream source;
@@ -105,33 +172,14 @@ ServerResponse::ServerResponse(const ClientRequest &request,
 //	return source;
 //}
 
-void ServerResponse::ResourceNotFound() {
-	http_is_error_ = true;
-	http_code_ = 404;
-}
+//void ServerResponse::ResourceNotFound() {
+//	http_is_error_ = true;
+//	http_code_ = 404;
+//}
 //
 //std::string ServerResponse::ExtractFilename(std::string &uri) {
 //	return std::string();
 //}
-
-const Location & ServerResponse::FindLocation(const std::string &uri,
-											  const Location &start,
-											  bool &success) {
-	if (uri != start.address_) {
-		std::string part_uri = uri.substr(1);
-		std::string::size_type end = part_uri.find('/');
-		if (end == std::string::npos)
-			end = uri.size();
-		part_uri = ("/" + part_uri).substr(0, end + 1);
-		try {
-			const Location &found = start.FindSublocationByAddress(part_uri);
-			return FindLocation(uri.substr(end + 1), found, success);
-		} catch (const NotFoundException &) {
-			return start;
-		}
-	}
-	return start;
-}
 
 ServerResponse &ServerResponse::operator=(const ServerResponse &other) {
     if (this == &other)
@@ -140,15 +188,15 @@ ServerResponse &ServerResponse::operator=(const ServerResponse &other) {
 }
 
 ServerResponse::~ServerResponse() {}
-
-std::string ServerResponse::GetHeader() {
-    std::stringstream header;
-
-    header << kHttpVersion << " " << http_code_ << " " << http_code_description_ <<
-		   " " << kHttpPostfix;
-
-    return header.str();
-}
+//
+//std::string ServerResponse::GetHeader() {
+//    std::stringstream header;
+//
+//    header << kHttpVersion << " " << http_code_ << " " << http_code_description_ <<
+//		   " " << kHttpPostfix;
+//
+//    return header.str();
+//}
 
 /**
  *  file.seekg(0, std::ios::end);: This line sets the file stream's get
@@ -167,41 +215,43 @@ std::string ServerResponse::GetHeader() {
  * the file, and the second argument std::ios::beg specifying that the offset
  * is relative to the beginning of the file.
  */
-std::streampos ServerResponse::GetFileSize() {
-    response_file_stream_.seekg(0, std::ios::end);
-    std::streampos filesize = response_file_stream_.tellg();
-    response_file_stream_.seekg(0, std::ios::beg);
-    return filesize;
-}
+//std::streampos ServerResponse::GetFileSize() {
+//    response_file_stream_.seekg(0, std::ios::end);
+//    std::streampos filesize = response_file_stream_.tellg();
+//    response_file_stream_.seekg(0, std::ios::beg);
+//    return filesize;
+//}
+//
+//void ServerResponse::SendResponse(int dest) {
+//    // Check file like in the config
+//    response_file_stream_.exceptions(std::ifstream::failbit);
+//    response_file_stream_.open(response_filename_.c_str());
+//    response_file_stream_.exceptions(std::ifstream::badbit);
+//    std::streampos filesize = GetFileSize();
+//    std::string header = GetHeader();
+//    char buffer[kBufferSize];
+//
+//    //  Send HTTP header
+//    if (send(dest, header.c_str(), header.size(), 0) >= 0) {
+//        // Read and send the file data in chunks
+//        while (filesize > 0) {
+//            // Determine the number of bytes to read
+//            size_t bytes_read = std::min(static_cast<size_t>(kBufferSize),
+//                                         static_cast<size_t>(filesize));
+//            // Read data from the file
+//            response_file_stream_.read(buffer, bytes_read);
+//            // Send the data over the socket
+//            ssize_t bytesSent = send(dest, buffer, bytes_read, 0);
+//            if (bytesSent < 0)
+//                break;
+//            // Update the remaining file size
+//            filesize -= bytesSent;
+//        }
+//    }
+//    //  Send header failed
+//}
 
-void ServerResponse::SendResponse(int dest) {
-    // Check file like in the config
-    response_file_stream_.exceptions(std::ifstream::failbit);
-    response_file_stream_.open(response_filename_.c_str());
-    response_file_stream_.exceptions(std::ifstream::badbit);
-    std::streampos filesize = GetFileSize();
-    std::string header = GetHeader();
-    char buffer[kBufferSize];
 
-    //  Send HTTP header
-    if (send(dest, header.c_str(), header.size(), 0) >= 0) {
-        // Read and send the file data in chunks
-        while (filesize > 0) {
-            // Determine the number of bytes to read
-            size_t bytes_read = std::min(static_cast<size_t>(kBufferSize),
-                                         static_cast<size_t>(filesize));
-            // Read data from the file
-            response_file_stream_.read(buffer, bytes_read);
-            // Send the data over the socket
-            ssize_t bytesSent = send(dest, buffer, bytes_read, 0);
-            if (bytesSent < 0)
-                break;
-            // Update the remaining file size
-            filesize -= bytesSent;
-        }
-    }
-    //  Send header failed
-}
 //
 //std::string ServerResponse::ExtractParams(std::string given_uri) {
 //	return std::string();

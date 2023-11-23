@@ -15,11 +15,10 @@
 #include "ConfigSubmodules.h"
 #include "ConfigExceptions.h"
 
-Limit::Limit() : return_code_(-1) {}
+Limit::Limit() : deny_all_(false), allow_all_(true) {}
 
 bool Limit::operator==(const Limit &rhs) const {
-    return except_ == rhs.except_ &&
-           return_code_ == rhs.return_code_;
+    return except_ == rhs.except_;
 }
 
 std::ostream &operator<<(std::ostream &os, const Limit &limit) {
@@ -27,7 +26,6 @@ std::ostream &operator<<(std::ostream &os, const Limit &limit) {
         iterator != limit.except_.end(); ++iterator) {
         os << *iterator << " ";
     }
-    os << limit.return_code_;
     return os;
 }
 
@@ -43,26 +41,27 @@ void ServerConfiguration::UpdateHostname(const v_strings &directives) {
 
 void ServerConfiguration::UpdateIndex(const v_strings &directive) {
     if (default_index_) {
-        root_loc_.index_.clear();
+        locations_.begin()->index_.clear();
         default_index_ = false;
     }
     for (size_t i = 1; i < directive.size(); ++i) {
-        root_loc_.index_.insert(directive[i]);
+        locations_.begin()->index_.insert(directive[i]);
     }
 }
 
-void ServerConfiguration::InheritanceErrPagesRoot(const Location &parent,
-                                                  Location &start) {
-    if (start.root_.empty()) {
-        start.root_ = parent.root_;
+void ServerConfiguration::InheritanceErrPagesRoot(l_it parent,
+                                                  std::list<Location> &kids) {
+    for (l_it it = kids.begin(); it != kids.end(); ++it) {
+        if (it->root_.empty())
+            it->root_ = parent->root_;
+        if (it->address_ != "/")
+            it->root_ = it->root_.substr(0, it->root_.find_last_of('/')) +
+                    it->address_ + "/";
+        if (it->error_pages_.empty())
+            it->error_pages_ = parent->error_pages_;
+        if (!it->sublocations_.empty())
+            InheritanceErrPagesRoot(it, it->sublocations_);
     }
-    if (start.error_pages_.empty()) {
-        start.error_pages_ = parent.error_pages_;
-    }
-	for (std::vector<Location>::iterator it = start.sublocations_.begin();
-		 it != start.sublocations_.end(); ++it) {
-        InheritanceErrPagesRoot(start, *it);
-	}
 }
 
 void
@@ -84,11 +83,11 @@ ServerConfiguration::CheckServerDirectives(std::vector<v_strings> &directives) {
                                 directives[i])) {
             client_max_body_size_ = atoi(directives[i][1].c_str());
         } else if (UMarkDefined("root", root, directives[i])) {
-            root_loc_.root_ = directives[i][1];
+            locations_.begin()->root_ = directives[i][1];
         } else if (MarkDefined("index", index, directives[i])) {
             UpdateIndex(directives[i]);
         } else if (MarkDefined("error_page", err, directives[i])) {
-            root_loc_.AddErrorPages(directives[i]);
+            locations_.begin()->AddErrorPages(directives[i]);
         }
     }
     if (!port)
@@ -97,13 +96,16 @@ ServerConfiguration::CheckServerDirectives(std::vector<v_strings> &directives) {
 
 ServerConfiguration::ServerConfiguration()
 : default_index_(true), default_hostname_(true), client_max_body_size_(1024),
-  server_name_("localhost"), root_loc_(Location("/")) {
-    root_loc_.root_ = "resources/root_loc_default";
-    root_loc_.index_.insert("/htmls/index.html");
-    root_loc_.error_pages_.insert(ErrPage("/htmls/404.html", 404));
-    root_loc_.error_pages_.insert(ErrPage("/htmls/403.html", 403));
-    root_loc_.return_code_ = -1;
-    root_loc_.return_address_ = "unspecified";
+  server_name_("localhost") {
+    Location root_loc("/");
+    root_loc.root_ = "resources/root_loc_default";
+    root_loc.index_.insert("/htmls/index.html");
+    root_loc.error_pages_.insert(ErrPage("/htmls/404.html", 404));
+    root_loc.error_pages_.insert(ErrPage("/htmls/403.html", 403));
+    root_loc.return_code_ = -1;
+    root_loc.return_address_ = "unspecified";
+    root_loc.parent_ = locations_.end();
+    locations_.push_back(root_loc);
 }
 
 bool ServerConfiguration::operator==(const ServerConfiguration &rhs) const {
@@ -120,7 +122,7 @@ bool ServerConfiguration::operator==(const ServerConfiguration &rhs) const {
         return false;
 
     // Compare root location
-    if (!(root_loc_ == rhs.root_loc_))
+    if (!(locations_ == rhs.locations_))
         return false;
 
     return true;
@@ -149,4 +151,35 @@ bool ServerConfiguration::UMarkDefined(const std::string &key, bool &flag,
 void    ServerConfiguration::ThrowServerConfigError(const std::string &msg) {
     std::cout << "ServerConfigError: " + msg << std::endl;
     throw ConfigFileSyntaxError();
+}
+
+ServerConfiguration::ServerConfiguration(const ServerConfiguration &other)
+: default_index_(other.default_index_),
+  default_hostname_(other.default_hostname_),
+  port_(other.port_),
+  port_str_(other.port_str_),
+  client_max_body_size_(other.client_max_body_size_),
+  server_name_(other.server_name_),
+  server_names_(other.server_names_),
+  locations_(other.locations_) {}
+
+ServerConfiguration &
+ServerConfiguration::operator=(const ServerConfiguration &rhs) {
+    if (this == &rhs) {
+        // Self-assignment, no need to do anything
+        return *this;
+    }
+
+    // Copy data members from rhs to this object
+    default_index_ = rhs.default_index_;
+    default_hostname_ = rhs.default_hostname_;
+    port_ = rhs.port_;
+    port_str_ = rhs.port_str_;
+    client_max_body_size_ = rhs.client_max_body_size_;
+    server_name_ = rhs.server_name_;
+    server_names_ = rhs.server_names_;
+    locations_ = rhs.locations_;
+
+    // Return the updated object
+    return *this;
 }
