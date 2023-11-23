@@ -48,6 +48,8 @@ public:
     void                UpdateHostname(const v_strings &directives);
     void                InheritanceErrPagesRoot(l_it parent,
                                                 std::list<Location> &kids);
+    Location            &GetRoot();
+    l_it                GetRootIt();
 
     bool operator==(const ServerConfiguration &rhs) const;
     ServerConfiguration& operator=(const ServerConfiguration& rhs);

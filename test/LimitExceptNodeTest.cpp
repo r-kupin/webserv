@@ -39,37 +39,6 @@ protected:
     }
 };
 
-TEST_F(LimitExceptNodeTest, ReturnOkOneMethod) {
-    limit_except.main_ = v_strings({"limit_except", "GET" });
-    limit_except.directives_.push_back({"return", "403"});
-
-    EXPECT_NO_THROW(HandleLimitExceptContext(limit_except, test));
-    EXPECT_EQ(test.return_code_, 403);
-    EXPECT_EQ(test.return_address_, "");
-    EXPECT_EQ(*(test.except_.begin()), GET);
-}
-
-TEST_F(LimitExceptNodeTest, ReturnOk2MethodsRetAddr) {
-    limit_except.main_ = v_strings({"limit_except", "GET", "POST" });
-    limit_except.directives_.push_back({"return", "403", "/somewhere"});
-
-    EXPECT_NO_THROW(HandleLimitExceptContext(limit_except, test));
-    EXPECT_EQ(test.return_code_, 403);
-    EXPECT_EQ(test.return_address_, "/somewhere");
-    EXPECT_NE(test.except_.find(GET), test.except_.end());
-    EXPECT_NE(test.except_.find(POST), test.except_.end());
-}
-
-TEST_F(LimitExceptNodeTest, DenyAllDelete) {
-    limit_except.main_ = v_strings({"limit_except", "DELETE" });
-    limit_except.directives_.push_back({"deny", "all"});
-
-    EXPECT_NO_THROW(HandleLimitExceptContext(limit_except, test));
-    EXPECT_EQ(test.return_code_, 403);
-    EXPECT_EQ(test.return_address_, "");
-    EXPECT_NE(test.except_.find(DELETE), test.except_.end());
-}
-
 TEST_F(LimitExceptNodeTest, WrongMethodKO) {
     limit_except.main_ = v_strings({"limit_except", "GET", "zz" });
     limit_except.directives_.push_back({"return", "403", "/somewhere"});

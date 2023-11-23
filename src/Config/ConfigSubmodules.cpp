@@ -41,11 +41,11 @@ void ServerConfiguration::UpdateHostname(const v_strings &directives) {
 
 void ServerConfiguration::UpdateIndex(const v_strings &directive) {
     if (default_index_) {
-        locations_.begin()->index_.clear();
+        GetRoot().index_.clear();
         default_index_ = false;
     }
     for (size_t i = 1; i < directive.size(); ++i) {
-        locations_.begin()->index_.insert(directive[i]);
+        GetRoot().index_.insert(directive[i]);
     }
 }
 
@@ -83,11 +83,11 @@ ServerConfiguration::CheckServerDirectives(std::vector<v_strings> &directives) {
                                 directives[i])) {
             client_max_body_size_ = atoi(directives[i][1].c_str());
         } else if (UMarkDefined("root", root, directives[i])) {
-            locations_.begin()->root_ = directives[i][1];
+            GetRoot().root_ = directives[i][1];
         } else if (MarkDefined("index", index, directives[i])) {
             UpdateIndex(directives[i]);
         } else if (MarkDefined("error_page", err, directives[i])) {
-            locations_.begin()->AddErrorPages(directives[i]);
+            GetRoot().AddErrorPages(directives[i]);
         }
     }
     if (!port)
@@ -182,4 +182,12 @@ ServerConfiguration::operator=(const ServerConfiguration &rhs) {
 
     // Return the updated object
     return *this;
+}
+
+Location &ServerConfiguration::GetRoot() {
+    return locations_.front();
+}
+
+l_it ServerConfiguration::GetRootIt() {
+    return locations_.begin();
 }

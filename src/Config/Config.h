@@ -96,7 +96,6 @@ private:
                                          std::ifstream &config) const;
     void                ThrowSyntaxError(const std::string &msg) const;
     bool                LimExIsDefined(const Location &location);
-
     ServerConfiguration &
     CheckLocationDirectives(Node &loc_context, ServerConfiguration &sc,
                             Location &current) const;

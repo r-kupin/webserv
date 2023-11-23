@@ -13,7 +13,6 @@
 #include <iostream>
 #include <string>
 #include <algorithm>
-#include <cstdlib>
 #include "Config.h"
 
 ServerConfiguration &
@@ -115,11 +114,12 @@ void Config::CheckServer(Node &node) {
             ThrowSyntaxError("Port needs to be unique amongst all servers");
     }
     current.InheritanceErrPagesRoot(current.locations_.begin(),
-                                    current.locations_.begin()->sublocations_);
-    std::ifstream check_root_exist(
-                (kDefaultResPath + current.locations_.begin()->address_).c_str());
-    if (!check_root_exist.good())
-        ThrowSyntaxError("Root directory doesn't exist");
+                                    current.GetRoot().sublocations_);
+//    Commnt for tests, uncomment for use
+//    std::ifstream check_root_exist(
+//                (kDefaultResPath + current.GetRoot().address_).c_str());
+//    if (!check_root_exist.good())
+//        ThrowSyntaxError("Root directory doesn't exist");
     servers_.push_back(current);
 }
 

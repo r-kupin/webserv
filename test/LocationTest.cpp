@@ -80,7 +80,7 @@ protected:
         default_loc_ = Location("/");
         Location home("/home");
         home.index_.insert("home_index.html");
-        default_loc_.sublocations_.insert(home);
+        default_loc_.sublocations_.push_back(home);
     }
 };
 
@@ -142,7 +142,7 @@ TEST_F(LocationWithSubsTest, ErrPagesWrongDirective) {
 TEST_F(LocationWithSubsTest, HasSameAddressAsOneOfSublocationsOf) {
     Location contact("/contact");
     contact.index_.insert("contact_index.html");
-    default_loc_.sublocations_.insert(contact);
+    default_loc_.sublocations_.push_back(contact);
 
     Location about("/about");
     about.index_.insert("about_index.html");
@@ -195,23 +195,23 @@ TEST_F(LocationCheckTest, CheckRootLocTest) {
     directives_.push_back({"index", "index_i.html"});
     directives_.push_back({"error_page", "403", "400", "416", "error.html"});
 
-    EXPECT_NE(conf_.locations_.error_pages_.find(ErrPage("/htmls/404.html", 404)),
-              conf_.locations_.error_pages_.end());
-    EXPECT_NE(conf_.locations_.error_pages_.find(ErrPage("/htmls/403.html", 403)),
-              conf_.locations_.error_pages_.end());
+    EXPECT_NE(conf_.GetRoot().error_pages_.find(ErrPage("/htmls/404.html", 404)),
+              conf_.GetRoot().error_pages_.end());
+    EXPECT_NE(conf_.GetRoot().error_pages_.find(ErrPage("/htmls/403.html", 403)),
+              conf_.GetRoot().error_pages_.end());
 
     EXPECT_NO_THROW(
-            conf_.locations_.ProcessDirectives(directives_));
+            conf_.GetRoot().ProcessDirectives(directives_));
 
-    EXPECT_EQ(conf_.locations_.root_, "/root");
-    EXPECT_EQ(conf_.locations_.index_, std::set<std::string>({"index_i.html"}));
+    EXPECT_EQ(conf_.GetRoot().root_, "/root");
+    EXPECT_EQ(conf_.GetRoot().index_, std::set<std::string>({"index_i.html"}));
 
-    EXPECT_NE(conf_.locations_.error_pages_.find(ErrPage("error.html", 403)),
-              conf_.locations_.error_pages_.end());
-    EXPECT_NE(conf_.locations_.error_pages_.find(ErrPage("error.html", 400)),
-              conf_.locations_.error_pages_.end());
-    EXPECT_NE(conf_.locations_.error_pages_.find(ErrPage("error.html", 416)),
-              conf_.locations_.error_pages_.end());
+    EXPECT_NE(conf_.GetRoot().error_pages_.find(ErrPage("error.html", 403)),
+              conf_.GetRoot().error_pages_.end());
+    EXPECT_NE(conf_.GetRoot().error_pages_.find(ErrPage("error.html", 400)),
+              conf_.GetRoot().error_pages_.end());
+    EXPECT_NE(conf_.GetRoot().error_pages_.find(ErrPage("error.html", 416)),
+              conf_.GetRoot().error_pages_.end());
 
     EXPECT_EQ(error_pages_.find(ErrPage("/htmls/404.html", 404)),
               error_pages_.end());

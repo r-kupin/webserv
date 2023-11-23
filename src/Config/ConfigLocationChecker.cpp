@@ -43,6 +43,13 @@ bool Config::IsCorrectLimit(const Node &node) {
             return false;
         }
     }
+//    TODO what else can be in limit_except?
+    for (size_t i = 0; i < node.directives_.size(); ++i) {
+        if (!(node.directives_[i][0] == "deny" &&
+            node.directives_[i][1] == "all")) {
+            return false;
+        }
+    }
     return true;
 //    ThrowSyntaxError("Given HTTP method isn't supported or doesn't exist");
 //    ThrowSyntaxError("HTTP methods needs to be specified");
@@ -71,6 +78,8 @@ Config::HandleLimitExceptContext(Node &node, Limit &curr_limit) const {
         if (node.directives_.size() == 1 || node.directives_.size() == 2) {
 
         }
+    } else {
+        ThrowSyntaxError("Limit_except context is incorrect");
     }
 }
 

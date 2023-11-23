@@ -32,24 +32,24 @@ TEST_F(ServerConfigTest, DetfaultTest) {
     EXPECT_EQ(default_index_, true);
     EXPECT_EQ(default_hostname_, true);
     EXPECT_EQ(server_name_, "localhost");
-    EXPECT_EQ(locations_.address_, "/");
-    EXPECT_EQ(locations_.root_ , "resources/root_loc_default");
-    EXPECT_NE(locations_.index_.find("/htmls/index.html"), locations_.index_.end());
+    EXPECT_EQ(GetRoot().address_, "/");
+    EXPECT_EQ(GetRoot().root_ , "resources/root_loc_default");
+    EXPECT_NE(GetRoot().index_.find("/htmls/index.html"), GetRoot().index_.end());
 
     const std::set<ErrPage>::iterator &NotFoundErrPage =
-            locations_.error_pages_.find(ErrPage("/htmls/404.html", 404));
-    EXPECT_NE(NotFoundErrPage, locations_.error_pages_.end());
+            GetRoot().error_pages_.find(ErrPage("/htmls/404.html", 404));
+    EXPECT_NE(NotFoundErrPage, GetRoot().error_pages_.end());
     EXPECT_EQ(NotFoundErrPage->address_, "/htmls/404.html");
 
     const std::set<ErrPage>::iterator &ForbiddenErrPage =
-            locations_.error_pages_.find(ErrPage("/htmls/403.html", 403));
-    EXPECT_NE(ForbiddenErrPage, locations_.error_pages_.end());
+            GetRoot().error_pages_.find(ErrPage("/htmls/403.html", 403));
+    EXPECT_NE(ForbiddenErrPage, GetRoot().error_pages_.end());
     EXPECT_EQ(ForbiddenErrPage->address_, "/htmls/403.html");
 
-    EXPECT_NE(locations_.error_pages_.find(ErrPage("/htmls/403.html", 403)),
-              locations_.error_pages_.end());
-    EXPECT_EQ(locations_.return_code_ , -1);
-    EXPECT_EQ(locations_.return_address_ , "unspecified");
+    EXPECT_NE(GetRoot().error_pages_.find(ErrPage("/htmls/403.html", 403)),
+              GetRoot().error_pages_.end());
+    EXPECT_EQ(GetRoot().return_code_ , -1);
+    EXPECT_EQ(GetRoot().return_address_ , "unspecified");
 }
 
 TEST_F(ServerConfigTest, ServerConfDirectivesSuccess) {
@@ -67,22 +67,22 @@ TEST_F(ServerConfigTest, ServerConfDirectivesSuccess) {
     EXPECT_EQ(default_hostname_, false);
     EXPECT_EQ(server_name_, "localhost");
     EXPECT_EQ(server_names_.find("example.com"), server_names_.begin());
-    EXPECT_EQ(locations_.address_, "/");
-    EXPECT_EQ(locations_.root_ , "resources/root_loc_default");
-    EXPECT_NE(locations_.index_.find("/htmls/index.html"), locations_.index_.end());
+    EXPECT_EQ(GetRoot().address_, "/");
+    EXPECT_EQ(GetRoot().root_ , "resources/root_loc_default");
+    EXPECT_NE(GetRoot().index_.find("/htmls/index.html"), GetRoot().index_.end());
 
     const std::set<ErrPage>::iterator &NotFoundErrPage =
-            locations_.error_pages_.find(ErrPage("/404.html", 404));
-    EXPECT_NE(NotFoundErrPage, locations_.error_pages_.end());
+            GetRoot().error_pages_.find(ErrPage("/404.html", 404));
+    EXPECT_NE(NotFoundErrPage, GetRoot().error_pages_.end());
     EXPECT_EQ(NotFoundErrPage->address_, "/404.html");
 
     const std::set<ErrPage>::iterator &InternalServerError =
-            locations_.error_pages_.find(ErrPage("/50x.html", 500));
-    EXPECT_NE(InternalServerError, locations_.error_pages_.end());
+            GetRoot().error_pages_.find(ErrPage("/50x.html", 500));
+    EXPECT_NE(InternalServerError, GetRoot().error_pages_.end());
     EXPECT_EQ(InternalServerError->address_, "/50x.html");
 
-    EXPECT_EQ(locations_.return_code_ , -1);
-    EXPECT_EQ(locations_.return_address_ , "unspecified");
+    EXPECT_EQ(GetRoot().return_code_ , -1);
+    EXPECT_EQ(GetRoot().return_address_ , "unspecified");
 }
 
 TEST_F(ServerConfigTest, ServerConfDirectivesPortOnlySuccess) {

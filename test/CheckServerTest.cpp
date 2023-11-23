@@ -34,8 +34,8 @@ protected:
         server_.directives_.push_back(
                 v_strings({ "index", "index.html", "index.htm" }));
         server_.directives_.push_back(
-                v_strings({ "error_page", "401" , "err.html" }));server_ = Node();
-
+                v_strings({ "error_page", "401" , "err.html" }));
+        server_ = Node();
         server_.main_ = v_strings ({"server"});
         server_.directives_.push_back(
                 v_strings({ "server_name", "localhost" }));
