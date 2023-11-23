@@ -100,6 +100,10 @@ private:
     ServerConfiguration &
     CheckLocationDirectives(Node &loc_context, ServerConfiguration &sc,
                             Location &current) const;
+
+    bool WillHaveSameAddressAs(Node &node, Location &location);
+
+    bool HasAsSublocation(Location &location);
 };
 
 std::ostream &operator<<(std::ostream &os, const Config &config);

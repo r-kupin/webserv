@@ -33,6 +33,10 @@ bool Config::LimExIsDefined(const Location &location) {
     return true;
 }
 
+bool Config::WillHaveSameAddressAs(Node &node, Location &location) {
+    return node.main_[1] == location.address_;
+}
+
 void Config::HandleLocationContext(Node &loc_context, ServerConfiguration &sc,
                                    l_it parent) {
     if (!IsCorrectLocation(loc_context))
@@ -54,14 +58,17 @@ void Config::HandleLocationContext(Node &loc_context, ServerConfiguration &sc,
             } else if (IsLocation(*it)) {
                 if (!IsCorrectLocation(*it))
                     ThrowSyntaxError("Location is incorrect");
-                if (current.HasSameAddressAs(*parent)) {
-                    HandleLocationContext(*it, sc, parent);
-                } else {
+                if (!WillHaveSameAddressAs(*it, current) &&
+                    parent->address_ != current.address_ &&
+                    !parent->HasAsSublocation(current) ) {
                     parent->sublocations_.push_front(current);
-                    HandleLocationContext(*it, sc, parent->sublocations_.begin());
                 }
+                HandleLocationContext(*it, sc, parent->sublocations_.begin());
             }
         }
+        if (parent->address_ != current.address_ && !parent->HasAsSublocation
+        (current) )
+            parent->sublocations_.push_front(current);
     } else {
         ThrowSyntaxError("Each location needs unique address inside each "
                          "context");

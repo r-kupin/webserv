@@ -72,6 +72,8 @@ public:
     bool operator<(const Location &rhs) const;
     bool operator==(const Location &rhs) const;
     Location& operator=(const Location& rhs);
+
+    bool HasAsSublocation(Location &location);
 };
 
 struct LocationByAddress {
