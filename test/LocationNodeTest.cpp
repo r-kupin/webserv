@@ -35,6 +35,35 @@ protected:
     }
 };
 
+TEST_F(LocationNodeTest, RootsParentTest) {
+    EXPECT_NO_THROW(HandleLocationContext(location_root_, conf_,
+                                          conf_.GetRootIt()));
+    EXPECT_EQ(*conf_.GetRootIt(), conf_.GetRoot());
+    EXPECT_NO_THROW(
+            HandleLocationContext(location_root_, conf_, conf_.GetRootIt()));
+}
+
+TEST_F(LocationNodeTest, RootSubnodeParentTest) {
+    Node home;
+    home.main_ = v_strings({"location", "/home" });
+    home.directives_.push_back({"index", "home.html"});
+
+    Node limit_except_get;
+    limit_except_get.main_ = v_strings({"limit_except", "GET" });
+    limit_except_get.directives_.push_back({"deny", "all"});
+
+    home.child_nodes_.push_back(limit_except_get);
+
+    EXPECT_NO_THROW(
+            HandleLocationContext(location_root_, conf_, conf_.GetRootIt()));
+    EXPECT_NO_THROW(
+            HandleLocationContext(home, conf_, conf_.GetRootIt()));
+    EXPECT_EQ(conf_.locations_.size(), 1);
+    EXPECT_EQ(conf_.locations_.begin(), conf_.GetRootIt());
+    EXPECT_EQ(conf_.GetRoot().sublocations_.size(), 1);
+    EXPECT_EQ(conf_.GetRoot().sublocations_.begin()->parent_, conf_.GetRootIt());
+}
+
 TEST_F(LocationNodeTest, WithLimitExcept) {
     Node home;
     home.main_ = v_strings({"location", "/home" });

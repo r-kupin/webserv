@@ -48,21 +48,21 @@ void ServerConfiguration::UpdateIndex(const v_strings &directive) {
         GetRoot().index_.insert(directive[i]);
     }
 }
-
-void ServerConfiguration::InheritanceErrPagesRoot(l_it parent,
-                                                  std::list<Location> &kids) {
-    for (l_it it = kids.begin(); it != kids.end(); ++it) {
-        if (it->root_.empty())
-            it->root_ = parent->root_;
-        if (it->address_ != "/")
-            it->root_ = it->root_.substr(0, it->root_.find_last_of('/')) +
-                    it->address_ + "/";
-        if (it->error_pages_.empty())
-            it->error_pages_ = parent->error_pages_;
-        if (!it->sublocations_.empty())
-            InheritanceErrPagesRoot(it, it->sublocations_);
-    }
-}
+//
+//void ServerConfiguration::InheritanceErrPagesRoot(l_it parent,
+//                                                  std::list<Location> &kids) {
+//    for (l_it it = kids.begin(); it != kids.end(); ++it) {
+//        if (it->root_.empty())
+//            it->root_ = parent->root_;
+//        if (it->address_ != "/")
+//            it->root_ = it->root_.substr(0, it->root_.find_last_of('/')) +
+//                    it->address_ + "/";
+//        if (it->error_pages_.empty())
+//            it->error_pages_ = parent->error_pages_;
+//        if (!it->sublocations_.empty())
+//            InheritanceErrPagesRoot(it, it->sublocations_);
+//    }
+//}
 
 void
 ServerConfiguration::CheckServerDirectives(std::vector<v_strings> &directives) {

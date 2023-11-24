@@ -322,6 +322,19 @@ bool Location::HasAsSublocation(Location &location) {
     return false;
 }
 
+void Location::UpdeteSublocations() {
+    if (address_ != "/") {
+        if (root_.empty())
+            root_ = parent_->root_;
+        root_ = root_.substr(0, root_.find_last_of('/')) + address_ + "/";
+        if (error_pages_.empty())
+            error_pages_ = parent_->error_pages_;
+    }
+    for (l_it it = sublocations_.begin(); it != sublocations_.end(); ++it) {
+        it->UpdeteSublocations();
+    }
+}
+
 std::ostream& operator<<(std::ostream& os, const Location& location) {
     os << std::endl << "Localion " << location.address_ << ":" << std::endl;
     if (!location.error_pages_.empty()) {

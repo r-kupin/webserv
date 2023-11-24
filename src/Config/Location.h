@@ -55,17 +55,17 @@ public:
     void                HandleLocationReturn(const v_strings &directives_);
     bool                HasSameAddressAs(const Location &rhs) const;
     bool                HasSameAddressAsOneOfSublocationsOf(const Location &rhs) const;
-    v_strings ProcessDirectives(std::vector<v_strings> &directives);
+    v_strings           ProcessDirectives(std::vector<v_strings> &directives);
     static bool         MarkDefined(const std::string &key, bool &flag,
                                     const v_strings &directive);
     static bool         UMarkDefined(const std::string &key, bool &flag,
                                      const v_strings &directive);
     static void         ThrowLocationError(const std::string &msg);
-    void                CheckRoot(const v_strings &root_directive);
     void                HandleRoot(const v_strings &directive);
     std::ostream &      RecursivePrint(std::ostream &os,
                                        const Location &location,
                                        const std::string &prefix) const;
+    void                UpdeteSublocations();
 
     const Location &getParent() const;
 

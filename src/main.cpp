@@ -35,7 +35,7 @@
 Config try_open_default_config() {
     std::cout << "Trying to open default config..." << std::endl;
     try {
-        return Config(std::string(kDefaultConfig));
+        return Config(kDefaultConfig);
     } catch (const ConfigFileNotFound& e) {
         std::cout << "Can't open default config file!" << std::endl;
         throw e;
