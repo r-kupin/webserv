@@ -15,15 +15,13 @@
 #include <algorithm>
 #include "Config.h"
 
-ServerConfiguration &
-Config::CheckLocationDirectives(Node &loc_context, ServerConfiguration &sc,
+void Config::CheckLocationDirectives(Node &loc_context, ServerConfiguration &sc,
                                 Location &current) const {
     const v_strings &root_index_upd = current.ProcessDirectives(
             loc_context.directives_);
     if (!root_index_upd.empty()) {
         sc.UpdateIndex(root_index_upd);
     }
-    return sc;
 }
 
 bool Config::LimExIsDefined(const Location &location) {
@@ -36,7 +34,8 @@ bool Config::WillHaveSameAddressAs(Node &node, Location &location) {
     return node.main_[1] == location.address_;
 }
 
-void Config::HandleLocationContext(Node &loc_context, ServerConfiguration &sc,
+void Config::HandleLocationContext(Node &loc_context,
+                                   ServerConfiguration &sc,
                                    l_it parent) {
     if (!IsCorrectLocation(loc_context))
         ThrowSyntaxError("Location is incorrect");
@@ -62,7 +61,11 @@ void Config::HandleLocationContext(Node &loc_context, ServerConfiguration &sc,
                     !parent->HasAsSublocation(current) ) {
                     parent->sublocations_.push_front(current);
                 }
-                HandleLocationContext(*it, sc, parent->sublocations_.begin());
+                if (parent->address_ == current.address_ ) {
+                    HandleLocationContext(*it, sc, parent);
+                } else {
+                    HandleLocationContext(*it, sc, parent->sublocations_.begin());
+                }
             }
         }
         if (parent->address_ != current.address_ && !parent->HasAsSublocation

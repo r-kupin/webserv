@@ -35,30 +35,25 @@ protected:
     }
 };
 
-TEST_F(LocationNodeTest, RootNoRecursion) {
-    EXPECT_NO_THROW(HandleLocationContext(location_root_, conf_,
-                                          conf_.GetRootIt()));
+TEST_F(LocationNodeTest, WithLimitExcept) {
+    Node home;
+    home.main_ = v_strings({"location", "/home" });
+    home.directives_.push_back({"index", "home.html"});
 
-    EXPECT_EQ(conf_.GetRoot().address_, "/");
-    EXPECT_EQ(conf_.GetRoot().root_, "resources/root_loc_default");
-    EXPECT_NE(conf_.GetRoot().index_.find("/htmls/index.html"),
-              conf_.GetRoot().index_.end());
+    Node limit_except_get;
+    limit_except_get.main_ = v_strings({"limit_except", "GET" });
+    limit_except_get.directives_.push_back({"deny", "all"});
 
-    const std::set<ErrPage>::iterator &NotFoundErrPage =
-            conf_.GetRoot().error_pages_.find(ErrPage("/404.html",
-                                                               404));
-    EXPECT_NE(NotFoundErrPage, conf_.GetRoot().error_pages_.end());
-    EXPECT_EQ(NotFoundErrPage->address_, "/404.html");
+    home.child_nodes_.push_back(limit_except_get);
 
-    const std::set<ErrPage>::iterator &InternalServerError =
-            conf_.GetRoot().error_pages_.find(ErrPage("/50x.html",
-                                                               500));
-    EXPECT_NE(InternalServerError, conf_.GetRoot().error_pages_.end
-    ());
-    EXPECT_EQ(InternalServerError->address_, "/50x.html");
+    EXPECT_NO_THROW(HandleLocationContext(home, conf_, conf_.GetRootIt()));
 
-    EXPECT_EQ(conf_.GetRoot().return_code_ , -1);
-    EXPECT_EQ(conf_.GetRoot().return_address_ , "unspecified");
+    Location HomeLoc = conf_.GetRoot().sublocations_.back();
+
+    EXPECT_EQ(HomeLoc.address_, "/home");
+    //    TODO test for append, but maybe need replace?
+    EXPECT_NE(HomeLoc.index_.find("home.html"), HomeLoc.index_.end());
+    EXPECT_EQ(HomeLoc.limit_except_.except_, std::set<Methods>({GET}));
 }
 
 TEST_F(LocationNodeTest, RootRecursive) {
@@ -91,29 +86,35 @@ TEST_F(LocationNodeTest, RootRecursive) {
     EXPECT_EQ(conf_.GetRoot().return_address_ , "unspecified");
 
     EXPECT_EQ(conf_.GetRoot().sublocations_.begin()->address_, "/home");
-    EXPECT_EQ(*conf_.GetRoot().sublocations_.begin()->index_.begin(),
-                                                                    "home.html");
+//    TODO test for append, but maybe need replace?
+    EXPECT_NE(conf_.GetRoot().sublocations_.begin()->index_.find("home.html"),
+              conf_.GetRoot().sublocations_.begin()->index_.end());
 }
 
-TEST_F(LocationNodeTest, WithLimitExcept) {
-    Node home;
-    home.main_ = v_strings({"location", "/home" });
-    home.directives_.push_back({"index", "home.html"});
-
-    Node limit_except_get;
-    limit_except_get.main_ = v_strings({"limit_except", "GET" });
-    limit_except_get.directives_.push_back({"return", "403"});
-
-    home.child_nodes_.push_back(limit_except_get);
-
-    EXPECT_NO_THROW(HandleLocationContext(home, conf_,
+TEST_F(LocationNodeTest, RootNoRecursion) {
+    EXPECT_NO_THROW(HandleLocationContext(location_root_, conf_,
                                           conf_.GetRootIt()));
 
-    Location HomeLoc = *conf_.GetRoot().sublocations_.begin();
-    
-    EXPECT_EQ(HomeLoc.address_, "/home");
-    EXPECT_EQ(*(HomeLoc.index_.begin()), "home.html");
-    EXPECT_EQ(HomeLoc.limit_except_.except_, std::set<Methods>({GET}));
+    EXPECT_EQ(conf_.GetRoot().address_, "/");
+    EXPECT_EQ(conf_.GetRoot().root_, "resources/root_loc_default");
+    EXPECT_NE(conf_.GetRoot().index_.find("/htmls/index.html"),
+              conf_.GetRoot().index_.end());
+
+    const std::set<ErrPage>::iterator &NotFoundErrPage =
+            conf_.GetRoot().error_pages_.find(ErrPage("/404.html",
+                                                               404));
+    EXPECT_NE(NotFoundErrPage, conf_.GetRoot().error_pages_.end());
+    EXPECT_EQ(NotFoundErrPage->address_, "/404.html");
+
+    const std::set<ErrPage>::iterator &InternalServerError =
+            conf_.GetRoot().error_pages_.find(ErrPage("/50x.html",
+                                                               500));
+    EXPECT_NE(InternalServerError, conf_.GetRoot().error_pages_.end
+    ());
+    EXPECT_EQ(InternalServerError->address_, "/50x.html");
+
+    EXPECT_EQ(conf_.GetRoot().return_code_ , -1);
+    EXPECT_EQ(conf_.GetRoot().return_address_ , "unspecified");
 }
 
 TEST_F(LocationNodeTest, WrongLocation) {

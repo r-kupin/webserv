@@ -217,6 +217,7 @@ v_strings Location::ProcessDirectives(std::vector<v_strings> &directives) {
             if (address_ == "/") {
                root_index_update = directives[i];
             } else {
+// append or replace?
                 for (size_t j = 1; j < directives[i].size(); ++j) {
                     index_.insert(directives[i][j]);
                 }

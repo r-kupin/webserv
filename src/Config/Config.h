@@ -64,6 +64,9 @@ protected:
     void                                CheckServerSubnodes(Node &node,
                                                   ServerConfiguration &current);
     void CheckServer(Node &node);
+    void
+    CheckLocationDirectives(Node &loc_context, ServerConfiguration &sc,
+                            Location &current) const;
 private:
     std::string conf_path_;
     Node conf_root_;
@@ -96,9 +99,6 @@ private:
                                          std::ifstream &config) const;
     void                ThrowSyntaxError(const std::string &msg) const;
     bool                LimExIsDefined(const Location &location);
-    ServerConfiguration &
-    CheckLocationDirectives(Node &loc_context, ServerConfiguration &sc,
-                            Location &current) const;
 
     bool WillHaveSameAddressAs(Node &node, Location &location);
 
