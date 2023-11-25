@@ -36,3 +36,4 @@ TEST_F(MainNodeTest, ComponentsTest1EmptyServerFail) {
     root_.child_nodes_.push_back(server_);
     EXPECT_THROW(CreateSrvConfigs(root_), ConfigFileSyntaxError);
 }
+

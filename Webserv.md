@@ -83,7 +83,7 @@ private:
     bool                LimExIsDefined(const Location &location);  
   
     ServerConfiguration &  
-    CheckLocationDirectives(Node &loc_context, ServerConfiguration &sc,  
+    ProcessLocationDirectives(Node &loc_context, ServerConfiguration &sc,  
                             Location &current) const;  
 };  
   

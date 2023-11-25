@@ -14,22 +14,37 @@
 #include <algorithm>
 #include "Config.h"
 
-bool Config::IsLocation(const Node &node) {
-    if (node.main_[0] == "location")
-        return true;
-    return false;
-}
-
 bool Config::IsLimitExcept(const Node &node) {
     if (node.main_[0] == "limit_except")
         return true;
     return false;
 }
 
-bool Config::IsCorrectLocation(const Node &node) {
-    if (node.main_.size() == 2 &&
-        (!node.directives_.empty() || !node.child_nodes_.empty()))
+bool Config::IsCorrectLimitExcept(Node &node, Location &current) {
+    if (IsLimitExcept(node)) {
+        if (!IsCorrectLimit(node))
+            ThrowSyntaxError("Limit_except context is incorrect");
+        if (LimExIsDefined(current))
+            ThrowSyntaxError("Limit_except context is already defined");
         return true;
+    }
+    return false;
+}
+
+bool Config::IsLocation(const Node &node) {
+    if (node.main_[0] == "location")
+        return true;
+    return false;
+}
+
+bool Config::IsCorrectLocation(const Node &node) {
+    if (IsLocation(node)) {
+        if (node.main_.size() != 2)
+            ThrowSyntaxError("Location path is incorrect or missing");
+        if (node.directives_.empty() && node.child_nodes_.empty())
+            ThrowSyntaxError("Location context can't be empty !");
+        return true;
+    }
     return false;
 }
 
@@ -56,39 +71,35 @@ bool Config::IsCorrectLimit(const Node &node) {
 //    ThrowSyntaxError("Limit_except context can't be empty !");
 }
 
+//todo check is redefinition of limit_except is allowed
 void
 Config::HandleLimitExceptContext(Node &node, Limit &curr_limit) const {
-    if (IsCorrectLimit(node)) {
-        for (std::vector<std::string>::iterator it = node.main_.begin() + 1;
-             it != node.main_.end(); ++it) {
-            if (*it == "GET" &&
-                curr_limit.except_.find(GET) == curr_limit.except_.end()) {
-                curr_limit.except_.insert(GET);
-            } else if (*it == "POST" &&
-                curr_limit.except_.find(POST) == curr_limit.except_.end()) {
-                curr_limit.except_.insert(POST);
-            } else if (*it == "DELETE" &&
-                curr_limit.except_.find(DELETE) == curr_limit.except_.end()) {
-                curr_limit.except_.insert(DELETE);
-            } else {
-                ThrowSyntaxError("Seems like there are repeatable methods in the "
-                                 "limit_except block");
-            }
+    for (std::vector<std::string>::iterator it = node.main_.begin() + 1;
+         it != node.main_.end(); ++it) {
+        if (*it == "GET" &&
+            curr_limit.except_.find(GET) == curr_limit.except_.end()) {
+            curr_limit.except_.insert(GET);
+        } else if (*it == "POST" &&
+            curr_limit.except_.find(POST) == curr_limit.except_.end()) {
+            curr_limit.except_.insert(POST);
+        } else if (*it == "DELETE" &&
+            curr_limit.except_.find(DELETE) == curr_limit.except_.end()) {
+            curr_limit.except_.insert(DELETE);
+        } else {
+            ThrowSyntaxError("Seems like there are repeatable methods in the "
+                             "limit_except block");
         }
-        if (node.directives_.size() == 1 || node.directives_.size() == 2) {
-
-        }
-    } else {
-        ThrowSyntaxError("Limit_except context is incorrect");
     }
+    if (node.directives_.size() == 1 || node.directives_.size() == 2) {}
 }
 
 const std::list<ServerConfiguration> &Config::getServers() const {
     return servers_;
 }
 
+
 //
-//void Config::CheckLocation(Node &loc_node, Location &current_l) {
+//void Config::IsCorrectLocation(Node &loc_node, Location &current_l) {
 //    if (loc_node.main_[0] == "location") {
 //        bool        ret = false, limit = false, root = false,
 //                    index = false, err = false;
@@ -100,7 +111,7 @@ const std::list<ServerConfiguration> &Config::getServers() const {
 //            HandleLimitExceptContext(loc_node.child_nodes_[i],
 //                                     current_l);
 //        }
-//        CheckLocationDirectives(loc_node, current_l, root, index, ret,
+//        ProcessLocationDirectives(loc_node, current_l, root, index, ret,
 //                                err);
 //        if (!index && !ret && !limit && !root && !err)
 //            ThrowSyntaxError("Location context should contain at least one of "

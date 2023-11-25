@@ -15,8 +15,8 @@
 #include <algorithm>
 #include "Config.h"
 
-void Config::CheckLocationDirectives(Node &loc_context, ServerConfiguration &sc,
-                                Location &current) const {
+void Config::ProcessLocationDirectives(Node &loc_context, ServerConfiguration &sc,
+                                       Location &current) const {
     const v_strings &root_index_upd = current.ProcessDirectives(
             loc_context.directives_);
     if (!root_index_upd.empty()) {
@@ -34,54 +34,61 @@ bool Config::WillHaveSameAddressAs(Node &node, Location &location) {
     return node.main_[1] == location.address_;
 }
 
+Location &Config::AddOrUpdate(Location &child, Location &parent) {
+    return (child.HasSameAddressAs(parent)) ? parent : child;
+}
+
+void
+Config::CheckParentDoesntHaveItAlready(Location &current, Location &parent) {
+    if (current.HasSameAddressAsOneOfSublocationsOf(parent))
+        ThrowSyntaxError("Each location needs unique address inside each "
+                         "context");
+}
+
+bool Config::NeedToAddCurrentToParent(l_it &parent, Location &current,
+                                      std::vector<Node>::iterator &it) {
+    return !WillHaveSameAddressAs(*it, current) &&
+           parent->address_ != current.address_ &&
+           !parent->HasAsSublocation(current);
+}
+
+void Config::HandleSublocation(ServerConfiguration &sc, l_it &parent,
+                               Location &current,
+                               std::vector<Node>::iterator &it) {
+    if (NeedToAddCurrentToParent(parent, current, it))
+        parent->sublocations_.push_front(current);
+    if (parent->HasSameAddressAs(current)) {
+        HandleLocationContext(*it, sc, parent);
+    } else {
+        HandleLocationContext(*it, sc, parent->sublocations_.begin());
+    }
+}
+
 void Config::HandleLocationContext(Node &loc_context,
                                    ServerConfiguration &sc,
                                    l_it parent) {
-    if (!IsCorrectLocation(loc_context))
-        ThrowSyntaxError("Location is incorrect");
-
+    IsCorrectLocation(loc_context);
     Location    maybe_current(loc_context.main_[1], parent);
+    CheckParentDoesntHaveItAlready(maybe_current, *parent);
+    Location &current = AddOrUpdate(maybe_current, *parent);
+    ProcessLocationDirectives(loc_context, sc, current);
 
-    if (!maybe_current.HasSameAddressAsOneOfSublocationsOf(*parent)) {
-        Location &current =
-            (maybe_current.HasSameAddressAs(*parent)) ? *parent : maybe_current;
-
-        CheckLocationDirectives(loc_context, sc, current);
-        for (std::vector<Node>::iterator it = loc_context.child_nodes_.begin();
-             it != loc_context.child_nodes_.end(); ++it) {
-            if (IsLimitExcept(*it)) {
-                if (LimExIsDefined(maybe_current))
-                    ThrowSyntaxError("Limit except is incorrect");
-                HandleLimitExceptContext(*it, current.limit_except_);
-            } else if (IsLocation(*it)) {
-                if (!IsCorrectLocation(*it))
-                    ThrowSyntaxError("Location is incorrect");
-                if (!WillHaveSameAddressAs(*it, current) &&
-                    parent->address_ != current.address_ &&
-                    !parent->HasAsSublocation(current) ) {
-                    parent->sublocations_.push_front(current);
-                }
-                if (parent->address_ == current.address_ ) {
-                    HandleLocationContext(*it, sc, parent);
-                } else {
-                    HandleLocationContext(*it, sc, parent->sublocations_.begin());
-                }
-            }
+    for (std::vector<Node>::iterator it = loc_context.child_nodes_.begin();
+    it != loc_context.child_nodes_.end(); ++it) {
+        if (IsCorrectLimitExcept(*it, current)) {
+            HandleLimitExceptContext(*it, current.limit_except_);
+        } else if (IsCorrectLocation(*it)) {
+            HandleSublocation(sc, parent, current, it);
         }
-        if (parent->address_ != current.address_ && !parent->HasAsSublocation
-        (current) )
-            parent->sublocations_.push_front(current);
-    } else {
-        ThrowSyntaxError("Each location needs unique address inside each "
-                         "context");
     }
+    if (!parent->HasSameAddressAs(current) &&
+        !parent->HasAsSublocation(current))
+        parent->sublocations_.push_front(current);
 }
 
 void    Config::CheckServerSubnodes(Node &node, ServerConfiguration &current) {
     for (size_t i = 0; i < node.child_nodes_.size(); i++) {
-        if (IsLocation(node.child_nodes_[i])) {
-            if (!IsCorrectLocation(node.child_nodes_[i]))
-                ThrowSyntaxError("Location path is incorrect or missing");
+        if (IsCorrectLocation(node.child_nodes_[i])) {
             try {
                 HandleLocationContext(node.child_nodes_[i], current,
                                       current.locations_.begin());
@@ -117,7 +124,7 @@ void Config::CheckServer(Node &node) {
             ThrowSyntaxError("Port needs to be unique amongst all servers");
     }
     current.GetRoot().UpdeteSublocations();
-//    Commnt for tests, uncomment for use
+//    todo commnt for tests, uncomment for use
 //    std::ifstream check_root_exist(
 //                (kDefaultResPath + current.GetRoot().address_).c_str());
 //    if (!check_root_exist.good())

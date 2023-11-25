@@ -65,8 +65,8 @@ protected:
                                                   ServerConfiguration &current);
     void CheckServer(Node &node);
     void
-    CheckLocationDirectives(Node &loc_context, ServerConfiguration &sc,
-                            Location &current) const;
+    ProcessLocationDirectives(Node &loc_context, ServerConfiguration &sc,
+                              Location &current) const;
 private:
     std::string conf_path_;
     Node conf_root_;
@@ -92,7 +92,7 @@ private:
 //  Global server check
 
     static bool         IsLocation(const Node &node);
-    static bool         IsCorrectLocation(const Node &node);
+    bool IsCorrectLocation(const Node &node);
     static bool         IsLimitExcept(const Node &node);
     static bool         IsCorrectLimit(const Node &node);
     void                ThrowSyntaxError(const std::string &msg,
@@ -102,7 +102,18 @@ private:
 
     bool WillHaveSameAddressAs(Node &node, Location &location);
 
-    bool HasAsSublocation(Location &location);
+    Location &AddOrUpdate(Location &child, Location &parent);
+
+    void CheckParentDoesntHaveItAlready(Location &current, Location &parent);
+
+    bool IsCorrectLimitExcept(Node &node, Location &current);
+
+    bool NeedToAddCurrentToParent(l_it &parent, Location &current,
+                                  std::vector<Node>::iterator &it);
+
+    void
+    HandleSublocation(ServerConfiguration &sc, l_it &parent, Location &current,
+                      std::vector<Node>::iterator &it);
 };
 
 std::ostream &operator<<(std::ostream &os, const Config &config);
