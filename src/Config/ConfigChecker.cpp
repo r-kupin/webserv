@@ -15,15 +15,6 @@
 #include <algorithm>
 #include "Config.h"
 
-void Config::ProcessLocationDirectives(Node &loc_context, ServerConfiguration &sc,
-                                       Location &current) const {
-    const v_strings &root_index_upd = current.ProcessDirectives(
-            loc_context.directives_);
-    if (!root_index_upd.empty()) {
-        sc.UpdateIndex(root_index_upd);
-    }
-}
-
 bool Config::LimExIsDefined(const Location &location) {
     if (location.limit_except_.except_.empty())
         return false;
@@ -67,12 +58,12 @@ void Config::HandleSublocation(ServerConfiguration &sc, l_it &parent,
 void Config::HandleLocationContext(Node &loc_context,
                                    ServerConfiguration &sc,
                                    l_it parent) {
-    IsCorrectLocation(loc_context);
     Location    maybe_current(loc_context.main_[1], parent);
     CheckParentDoesntHaveItAlready(maybe_current, *parent);
+//    todo redefinition of non-parent - is it possible ?
     Location &current = AddOrUpdate(maybe_current, *parent);
-    ProcessLocationDirectives(loc_context, sc, current);
 
+    current.ProcessDirectives(loc_context.directives_);
     for (std::vector<Node>::iterator it = loc_context.child_nodes_.begin();
     it != loc_context.child_nodes_.end(); ++it) {
         if (IsCorrectLimitExcept(*it, current)) {

@@ -25,7 +25,6 @@
 class ServerConfiguration {
 public:
 //    server properties
-    bool default_index_;
     bool default_hostname_;
     int port_;
     std::string port_str_;

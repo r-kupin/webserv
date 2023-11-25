@@ -64,9 +64,13 @@ protected:
     void                                CheckServerSubnodes(Node &node,
                                                   ServerConfiguration &current);
     void CheckServer(Node &node);
-    void
-    ProcessLocationDirectives(Node &loc_context, ServerConfiguration &sc,
-                              Location &current) const;
+
+    static bool         IsLocation(const Node &node);
+
+    static bool         IsLimitExcept(const Node &node);
+
+    bool IsCorrectLocation(const Node &node);
+
 private:
     std::string conf_path_;
     Node conf_root_;
@@ -91,9 +95,6 @@ private:
                                        std::ifstream &config) const;
 //  Global server check
 
-    static bool         IsLocation(const Node &node);
-    bool IsCorrectLocation(const Node &node);
-    static bool         IsLimitExcept(const Node &node);
     static bool         IsCorrectLimit(const Node &node);
     void                ThrowSyntaxError(const std::string &msg,
                                          std::ifstream &config) const;

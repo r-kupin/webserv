@@ -55,7 +55,7 @@ public:
     void                HandleLocationReturn(const v_strings &directives_);
     bool                HasSameAddressAs(const Location &rhs) const;
     bool                HasSameAddressAsOneOfSublocationsOf(const Location &rhs) const;
-    v_strings           ProcessDirectives(std::vector<v_strings> &directives);
+    void ProcessDirectives(std::vector<v_strings> &directives);
     static bool         MarkDefined(const std::string &key, bool &flag,
                                     const v_strings &directive);
     static bool         UMarkDefined(const std::string &key, bool &flag,
@@ -74,6 +74,8 @@ public:
     Location& operator=(const Location& rhs);
 
     bool HasAsSublocation(Location &location);
+
+    void HandleIndex(const v_strings &directives);
 };
 
 struct LocationByAddress {

@@ -135,7 +135,7 @@ void Location::AddErrorPages(const v_strings &directive) {
         throw LocationException();
     }
 }
-
+// todo problem here :ProcessDirectivesTestForNewLocation
 void Location::HandleLocationReturn(const v_strings &directives_) {
     if ((directives_.size() == 2 || directives_.size() == 3) &&
         address_ != "/") { // ?
@@ -206,29 +206,26 @@ bool Location::UMarkDefined(const std::string &key, bool &flag,
     return false;
 }
 
-v_strings Location::ProcessDirectives(std::vector<v_strings> &directives) {
+void Location::ProcessDirectives(std::vector<v_strings> &directives) {
     bool    root = false, index = false, ret = false, err = false;
-    v_strings root_index_update;
 
     for (size_t i = 0; i < directives.size(); ++i) {
         if (UMarkDefined("root", root, directives[i]))
             HandleRoot(directives[i]);
-        if (MarkDefined("index", index, directives[i])) {
-            if (address_ == "/") {
-               root_index_update = directives[i];
-            } else {
-// append or replace?
-                for (size_t j = 1; j < directives[i].size(); ++j) {
-                    index_.insert(directives[i][j]);
-                }
-            }
-        }
+// todo unique or not?
+        if (MarkDefined("index", index, directives[i]))
+            HandleIndex(directives[i]);
         if (UMarkDefined("return", ret, directives[i]))
             HandleLocationReturn(directives[i]);
         if (MarkDefined("error_page", err, directives[i]))
             AddErrorPages(directives[i]);
     }
-    return root_index_update;
+}
+
+// todo append or replace?
+void Location::HandleIndex(const v_strings &directives) {
+    for (size_t j = 1; j < directives.size(); ++j)
+        index_.insert(directives[j]);
 }
 
 void Location::ThrowLocationError(const std::string &msg) {

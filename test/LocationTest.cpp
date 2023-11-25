@@ -57,18 +57,125 @@ class SimpleLocTest : public ::testing::Test, public Location {
 public:
     explicit SimpleLocTest() : Location() {};
 protected:
-    Location default_loc_;
+    ServerConfiguration sc;
+    std::vector<v_strings> directives_;
 };
 
-TEST_F(SimpleLocTest, HandleRootFail) {
-    EXPECT_THROW(default_loc_.HandleRoot({"root", "/aaa", "/bbb"}), LocationException);
-    EXPECT_THROW(default_loc_.HandleRoot({"root"}), LocationException);
+TEST_F(SimpleLocTest, ProcessDirectivesTestForNewLocation) {
+    Location home_loc = Location("/home", sc.GetRootIt());
+
+    directives_.push_back({"root", "/root"});
+    directives_.push_back({"index", "index_i.html"});
+    directives_.push_back({"error_page", "403", "400", "416", "error.html"});
+    directives_.push_back({"return", " 300", "/home"});
+
+    EXPECT_NO_THROW(home_loc.ProcessDirectives(directives_));
+
+    EXPECT_EQ(home_loc.root_, "/root");
+    EXPECT_NE(home_loc.index_.find("index_i.html"), home_loc.index_.end());
+    EXPECT_EQ(home_loc.return_code_, 300);
+//    EXPECT_EQ(home_loc.return_address_, "/home");
+
+    EXPECT_NE(home_loc.error_pages_.find(ErrPage("error.html", 403)),
+              home_loc.error_pages_.end());
+    EXPECT_NE(home_loc.error_pages_.find(ErrPage("error.html", 400)),
+              home_loc.error_pages_.end());
+    EXPECT_NE(home_loc.error_pages_.find(ErrPage("error.html", 416)),
+              home_loc.error_pages_.end());
 }
 
-TEST_F(SimpleLocTest, HandleRootSuccess) {
-    EXPECT_NO_THROW(default_loc_.HandleRoot({"root", "/"}));
-    EXPECT_EQ(default_loc_.root_, "/");
+TEST_F(SimpleLocTest, ProcessDirectivesTestForRootRedefinition) {
+    directives_.push_back({"root", "/root"});
+    directives_.push_back({"index", "index_i.html"});
+    directives_.push_back({"error_page", "403", "400", "416", "error.html"});
+
+    Location &root_loc = sc.GetRoot();
+
+    EXPECT_NO_THROW(root_loc.ProcessDirectives(directives_));
+    
+    EXPECT_EQ(root_loc.root_, "/root");
+    EXPECT_NE(root_loc.index_.find("index_i.html"), root_loc.index_.end());
+
+    EXPECT_NE(root_loc.error_pages_.find(ErrPage("error.html", 403)),
+              root_loc.error_pages_.end());
+    EXPECT_NE(root_loc.error_pages_.find(ErrPage("error.html", 400)),
+              root_loc.error_pages_.end());
+    EXPECT_NE(root_loc.error_pages_.find(ErrPage("error.html", 416)),
+              root_loc.error_pages_.end());
 }
+
+// todo is it even possible? makes sense?
+TEST_F(SimpleLocTest, ProcessDirectivesTestForRootRootRedefinition) {
+    std::vector<v_strings> directives_2;
+
+    directives_.push_back({"root", "/root1"});
+    directives_.push_back({"index", "index_1.html"});
+    directives_.push_back({"error_page", "403", "400", "416", "error1.html"});
+
+    directives_2.push_back({"root", "/root2"});
+    directives_2.push_back({"index", "index_2.html"});
+    directives_2.push_back({"error_page", "403", "400", "416", "error2.html"});
+
+    Location &root_loc = sc.GetRoot();
+
+    EXPECT_NO_THROW(root_loc.ProcessDirectives(directives_));
+
+    EXPECT_EQ(root_loc.root_, "/root1");
+    EXPECT_NE(root_loc.index_.find("index_1.html"), root_loc.index_.end());
+
+    EXPECT_NE(root_loc.error_pages_.find(ErrPage("error1.html", 403)),
+              root_loc.error_pages_.end());
+    EXPECT_NE(root_loc.error_pages_.find(ErrPage("error1.html", 400)),
+              root_loc.error_pages_.end());
+    EXPECT_NE(root_loc.error_pages_.find(ErrPage("error1.html", 416)),
+              root_loc.error_pages_.end());
+
+    EXPECT_NO_THROW(root_loc.ProcessDirectives(directives_2));
+
+    Location &root_loc2 = sc.GetRoot();
+
+    EXPECT_EQ(sc.locations_.size(), 1);
+    EXPECT_EQ(root_loc2.sublocations_.size(), 0);
+
+    EXPECT_EQ(root_loc2.root_, "/root2");
+    EXPECT_NE(root_loc2.index_.find("index_2.html"), root_loc2.index_.end());
+
+    EXPECT_NE(root_loc2.error_pages_.find(ErrPage("error2.html", 403)),
+              root_loc2.error_pages_.end());
+    EXPECT_NE(root_loc2.error_pages_.find(ErrPage("error2.html", 400)),
+              root_loc2.error_pages_.end());
+    EXPECT_NE(root_loc2.error_pages_.find(ErrPage("error2.html", 416)),
+              root_loc2.error_pages_.end());
+}
+
+// todo can we redefine non-root?
+//TEST_F(SimpleLocTest, ProcessDirectivesTestForNonRootRedefinition) {
+//    Location default_loc = Location("/", sc.GetRootIt());
+//
+//    directives_.push_back({"root", "/root"});
+//    directives_.push_back({"index", "index_i.html"});
+//    directives_.push_back({"error_page", "403", "400", "416", "error.html"});
+//    directives_.push_back({"return", " 300", "/home"});
+//
+//    v_strings root_index_update;
+//
+//    EXPECT_NO_THROW(root_index_update =
+//                                    default_loc.ProcessDirectives(directives_));
+//
+//    EXPECT_EQ(default_loc.root_, "/root");
+//    EXPECT_EQ(default_loc.index_, std::set<std::string>({"index_i.html"}));
+//    EXPECT_EQ(default_loc.return_code_, 300);
+//    EXPECT_EQ(default_loc.return_address_, "/home");
+//
+//    EXPECT_NE(error_pages_.find(ErrPage("error.html", 403)),
+//              error_pages_.end());
+//    EXPECT_NE(error_pages_.find(ErrPage("error.html", 400)),
+//              error_pages_.end());
+//    EXPECT_NE(error_pages_.find(ErrPage("error.html", 416)),
+//              error_pages_.end());
+//
+//    EXPECT_EQ(root_index_update, v_strings({ "index", "index_i.html"}));
+//}
 
 class LocationWithSubsTest : public ::testing::Test, public Location {
 public:

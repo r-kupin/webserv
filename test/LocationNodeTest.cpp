@@ -35,6 +35,70 @@ protected:
     }
 };
 
+TEST_F(LocationNodeTest, IsLocationTest) {
+    Node home;
+    home.main_ = v_strings({"location", "/home" });
+    home.directives_.push_back({"index", "home.html"});
+
+    Node limit_except_get;
+    limit_except_get.main_ = v_strings({"limit_except", "GET" });
+    limit_except_get.directives_.push_back({"deny", "all"});
+
+    EXPECT_TRUE(IsLocation(home));
+    EXPECT_FALSE(IsLocation(limit_except_get));
+}
+
+TEST_F(LocationNodeTest, IsLimitTest) {
+    Node home;
+    home.main_ = v_strings({"location", "/home" });
+    home.directives_.push_back({"index", "home.html"});
+
+    Node limit_except_get;
+    limit_except_get.main_ = v_strings({"limit_except", "GET" });
+    limit_except_get.directives_.push_back({"deny", "all"});
+
+    EXPECT_FALSE(IsLimitExcept(home));
+    EXPECT_TRUE(IsLimitExcept(limit_except_get));
+}
+
+TEST_F(LocationNodeTest, IsCorrectLocationTestMoreThan2InMain) {
+    Node ff;
+    ff.main_ = v_strings({"location", "/", "ff" });
+    ff.directives_.push_back({"index", "ff.html"});
+
+    EXPECT_TRUE(IsLocation(ff));
+    EXPECT_THROW(IsCorrectLocation(ff), ConfigFileSyntaxError);
+}
+
+TEST_F(LocationNodeTest, IsCorrectLocationTestNoDirectives) {
+
+    Node home;
+    home.main_ = v_strings({"location", "/home" });
+
+    EXPECT_TRUE(IsLocation(home));
+    EXPECT_THROW(IsCorrectLocation(home), ConfigFileSyntaxError);
+}
+
+TEST_F(LocationNodeTest, IsCorrectLocationTestNotALocation) {
+
+    Node limit_except_get;
+    limit_except_get.main_ = v_strings({"limit_except", "GET" });
+    limit_except_get.directives_.push_back({"deny", "all"});
+
+    EXPECT_NO_THROW(IsCorrectLocation(limit_except_get));
+    EXPECT_FALSE(IsCorrectLocation(limit_except_get));
+}
+
+TEST_F(LocationNodeTest, IsCorrectLocationTestGoodLocation) {
+
+    Node home;
+    home.main_ = v_strings({"location", "/home" });
+    home.directives_.push_back({"index", "home.html"});
+
+    EXPECT_NO_THROW(IsCorrectLocation(home));
+    EXPECT_TRUE(IsCorrectLocation(home));
+}
+
 TEST_F(LocationNodeTest, RootsParentTest) {
     EXPECT_NO_THROW(HandleLocationContext(location_root_, conf_,
                                           conf_.GetRootIt()));
@@ -118,21 +182,6 @@ TEST_F(LocationNodeTest, HomeInReDefinedRoot) {
 //    TODO test for append, but maybe need replace?
     EXPECT_NE(conf_.GetRoot().sublocations_.begin()->index_.find("home.html"),
               conf_.GetRoot().sublocations_.begin()->index_.end());
-}
-
-TEST_F(LocationNodeTest, WrongLocation) {
-    Node home;
-    home.main_ = v_strings({"location", "/", "ff" });
-    home.directives_.push_back({"index", "home.html"});
-
-    Node limit_except_get;
-    limit_except_get.main_ = v_strings({"limit_except", "GET" });
-    limit_except_get.directives_.push_back({"deny", "all"});
-
-    home.child_nodes_.push_back(limit_except_get);
-
-    EXPECT_THROW(HandleLocationContext(home, conf_, conf_.GetRootIt()),
-                 ConfigFileSyntaxError);
 }
 
 TEST_F(LocationNodeTest, CorrectLocationHasWrongOneInside) {

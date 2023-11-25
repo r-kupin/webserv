@@ -39,14 +39,10 @@ void ServerConfiguration::UpdateHostname(const v_strings &directives) {
         server_names_.insert(directives[i]);
 }
 
+//    todo append index or replace?
 void ServerConfiguration::UpdateIndex(const v_strings &directive) {
-    if (default_index_) {
-        GetRoot().index_.clear();
-        default_index_ = false;
-    }
-    for (size_t i = 1; i < directive.size(); ++i) {
+    for (size_t i = 1; i < directive.size(); ++i)
         GetRoot().index_.insert(directive[i]);
-    }
 }
 //
 //void ServerConfiguration::InheritanceErrPagesRoot(l_it parent,
@@ -95,7 +91,7 @@ ServerConfiguration::CheckServerDirectives(std::vector<v_strings> &directives) {
 }
 
 ServerConfiguration::ServerConfiguration()
-: default_index_(true), default_hostname_(true), client_max_body_size_(1024),
+: default_hostname_(true), client_max_body_size_(1024),
   server_name_("localhost") {
     Location root_loc("/");
     root_loc.root_ = "resources/root_loc_default";
@@ -154,8 +150,7 @@ void    ServerConfiguration::ThrowServerConfigError(const std::string &msg) {
 }
 
 ServerConfiguration::ServerConfiguration(const ServerConfiguration &other)
-: default_index_(other.default_index_),
-  default_hostname_(other.default_hostname_),
+: default_hostname_(other.default_hostname_),
   port_(other.port_),
   port_str_(other.port_str_),
   client_max_body_size_(other.client_max_body_size_),
@@ -171,7 +166,6 @@ ServerConfiguration::operator=(const ServerConfiguration &rhs) {
     }
 
     // Copy data members from rhs to this object
-    default_index_ = rhs.default_index_;
     default_hostname_ = rhs.default_hostname_;
     port_ = rhs.port_;
     port_str_ = rhs.port_str_;

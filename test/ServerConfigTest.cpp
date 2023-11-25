@@ -29,7 +29,6 @@ protected:
 
 TEST_F(ServerConfigTest, DetfaultTest) {
     EXPECT_EQ(client_max_body_size_, 1024);
-    EXPECT_EQ(default_index_, true);
     EXPECT_EQ(default_hostname_, true);
     EXPECT_EQ(server_name_, "localhost");
     EXPECT_EQ(GetRoot().address_, "/");
@@ -63,7 +62,6 @@ TEST_F(ServerConfigTest, ServerConfDirectivesSuccess) {
 
     EXPECT_EQ(port_, 8080);
     EXPECT_EQ(port_str_, "8080");
-    EXPECT_EQ(default_index_, true);
     EXPECT_EQ(default_hostname_, false);
     EXPECT_EQ(server_name_, "localhost");
     EXPECT_EQ(server_names_.find("example.com"), server_names_.begin());
