@@ -45,8 +45,6 @@ public:
     void                CheckServerDirectives(std::vector<v_strings> &directives);
     static void         ThrowServerConfigError(const std::string &msg);
     void                UpdateHostname(const v_strings &directives);
-    void                InheritanceErrPagesRoot(l_it parent,
-                                                std::list<Location> &kids);
     Location            &GetRoot();
     l_it                GetRootIt();
 

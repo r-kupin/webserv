@@ -71,6 +71,8 @@ protected:
 
     bool IsCorrectLocation(const Node &node);
 
+    bool IsCorrectLimitExcept(Node &node, Location &current);
+
 private:
     std::string conf_path_;
     Node conf_root_;
@@ -106,8 +108,6 @@ private:
     Location &AddOrUpdate(Location &child, Location &parent);
 
     void CheckParentDoesntHaveItAlready(Location &current, Location &parent);
-
-    bool IsCorrectLimitExcept(Node &node, Location &current);
 
     bool NeedToAddCurrentToParent(l_it &parent, Location &current,
                                   std::vector<Node>::iterator &it);

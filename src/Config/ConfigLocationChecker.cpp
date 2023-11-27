@@ -20,6 +20,29 @@ bool Config::IsLimitExcept(const Node &node) {
     return false;
 }
 
+bool Config::IsCorrectLimit(const Node &node) {
+    if (node.main_.size() < 2 || node.directives_.empty())
+        return false;
+    Limit curr_limit;
+    for (size_t i = 1; i < node.main_.size(); ++i) {
+        if (node.main_[i] != "GET" && node.main_[i] != "POST" &&
+            node.main_[i] != "DELETE") {
+            return false;
+        }
+    }
+//    TODO what else can be in limit_except?
+    for (size_t i = 0; i < node.directives_.size(); ++i) {
+        if (!(node.directives_[i][0] == "deny" &&
+              node.directives_[i][1] == "all")) {
+            return false;
+        }
+    }
+    return true;
+//    ThrowSyntaxError("Given HTTP method isn't supported or doesn't exist");
+//    ThrowSyntaxError("HTTP methods needs to be specified");
+//    ThrowSyntaxError("Limit_except context can't be empty !");
+}
+
 bool Config::IsCorrectLimitExcept(Node &node, Location &current) {
     if (IsLimitExcept(node)) {
         if (!IsCorrectLimit(node))
@@ -46,29 +69,6 @@ bool Config::IsCorrectLocation(const Node &node) {
         return true;
     }
     return false;
-}
-
-bool Config::IsCorrectLimit(const Node &node) {
-    if (node.main_.size() < 2 || node.directives_.empty())
-        return false;
-    Limit curr_limit;
-    for (size_t i = 1; i < node.main_.size(); ++i) {
-        if (node.main_[i] != "GET" && node.main_[i] != "POST" &&
-            node.main_[i] != "DELETE") {
-            return false;
-        }
-    }
-//    TODO what else can be in limit_except?
-    for (size_t i = 0; i < node.directives_.size(); ++i) {
-        if (!(node.directives_[i][0] == "deny" &&
-            node.directives_[i][1] == "all")) {
-            return false;
-        }
-    }
-    return true;
-//    ThrowSyntaxError("Given HTTP method isn't supported or doesn't exist");
-//    ThrowSyntaxError("HTTP methods needs to be specified");
-//    ThrowSyntaxError("Limit_except context can't be empty !");
 }
 
 //todo check is redefinition of limit_except is allowed
