@@ -12,35 +12,63 @@
 /**
         Description
 
-     The setsockopt function can be used to set various socket options, each with its own specific data type. Here are some commonly used socket options and their corresponding data types:
+        The setsockopt function can be used to set various socket options, each
+    with its own specific data type. Here are some commonly used socket
+    options and their corresponding data types:
+        - SO_REUSEADDR: Controls the reuse of local addresses. It is typically
+        used with TCP sockets and has an int data type. The opt variable in
+        your code is of type int, and its value is set to 1 to enable the
+        option.
+        - SO_KEEPALIVE: Enables sending periodic keep-alive messages on the
+        socket. It is typically used with TCP sockets and has an int data
+        type. The opt variable can be set to 1 to enable the option or 0 to
+        disable it.
+        - SO_RCVBUF and SO_SNDBUF: Set the receive and send buffer sizes,
+        respectively, for the socket. These options require an int data type.
+        The opt variable can be set to the desired buffer size in bytes.
+        - SO_LINGER: Specifies the behavior when closing the socket. It is used
+        to control whether the socket lingers on closing, waiting for unsent
+        data to be transmitted. It has a struct linger data type. You would
+        need to create a linger structure and set its fields (l_onoff and
+        l_linger) accordingly.
+        - SO_BROADCAST: Enables sending broadcast messages on the socket. It
+        is typically used with UDP sockets and has an int data type. The opt
+        variable can be set to 1 to enable the option or 0 to disable it.
+        - TCP_NODELAY: Disables Nagle's algorithm, which combines small
+        outgoing TCP packets into a larger packet for efficiency. It is used
+        with TCP sockets and has an int data type. The opt variable can be
+        set to 1 to disable Nagle's algorithm or 0 to enable it.
 
-    SO_REUSEADDR: Controls the reuse of local addresses. It is typically used with TCP sockets and has an int data type. The opt variable in your code is of type int, and its value is set to 1 to enable the option.
+        epoll is a scalable I/O event notification mechanism in Linux that allows
+    monitoring multiple file descriptors for events efficiently. It is
+    primarily used for building high-performance servers that handle a large
+    number of concurrent connections.
+    The epoll system call provided by the Linux kernel allows applications to
+    register file descriptors (sockets, pipes, etc.) with an epoll instance
+    and specify the events they are interested in (such as read, write, or
+    error events). The epoll instance keeps track of these file descriptors
+    and notifies the application when the specified events occur.
+    One of the key advantages of epoll is its ability to efficiently handle a
+    large number of file descriptors with a scalable event-driven model. It
+    uses a data structure called an "event poll" that efficiently stores and
+    manages the registered file descriptors. This allows for high-performance
+    event notification and avoids the inefficiencies associated with
+    traditional polling mechanisms like select or poll.
 
-    SO_KEEPALIVE: Enables sending periodic keep-alive messages on the socket. It is typically used with TCP sockets and has an int data type. The opt variable can be set to 1 to enable the option or 0 to disable it.
+    The epoll interface provides three main functions:
+        epoll_create: Creates an epoll instance and returns a file descriptor
+    associated with it.
+        epoll_ctl: Modifies or adds file descriptors to the epoll instance and
+    specifies the events to monitor.
+        epoll_wait: Waits for events to occur on the registered file descriptors
+    and returns the events that have occurred.
 
-    SO_RCVBUF and SO_SNDBUF: Set the receive and send buffer sizes, respectively, for the socket. These options require an int data type. The opt variable can be set to the desired buffer size in bytes.
+    By using epoll, servers can efficiently handle a large number of
+    connections and effectively manage I/O events, resulting in
+    high-performance and scalable network applications.
 
-    SO_LINGER: Specifies the behavior when closing the socket. It is used to control whether the socket lingers on closing, waiting for unsent data to be transmitted. It has a struct linger data type. You would need to create a linger structure and set its fields (l_onoff and l_linger) accordingly.
-
-    SO_BROADCAST: Enables sending broadcast messages on the socket. It is typically used with UDP sockets and has an int data type. The opt variable can be set to 1 to enable the option or 0 to disable it.
-
-    TCP_NODELAY: Disables Nagle's algorithm, which combines small outgoing TCP packets into a larger packet for efficiency. It is used with TCP sockets and has an int data type. The opt variable can be set to 1 to disable Nagle's algorithm or 0 to enable it.
-
-    epoll is a scalable I/O event notification mechanism in Linux that allows monitoring multiple file descriptors for events efficiently. It is primarily used for building high-performance servers that handle a large number of concurrent connections.
-
-The epoll system call provided by the Linux kernel allows applications to register file descriptors (sockets, pipes, etc.) with an epoll instance and specify the events they are interested in (such as read, write, or error events). The epoll instance keeps track of these file descriptors and notifies the application when the specified events occur.
-
-One of the key advantages of epoll is its ability to efficiently handle a large number of file descriptors with a scalable event-driven model. It uses a data structure called an "event poll" that efficiently stores and manages the registered file descriptors. This allows for high-performance event notification and avoids the inefficiencies associated with traditional polling mechanisms like select or poll.
-
-The epoll interface provides three main functions:
-
-    epoll_create: Creates an epoll instance and returns a file descriptor associated with it.
-    epoll_ctl: Modifies or adds file descriptors to the epoll instance and specifies the events to monitor.
-    epoll_wait: Waits for events to occur on the registered file descriptors and returns the events that have occurred.
-
-By using epoll, servers can efficiently handle a large number of connections and effectively manage I/O events, resulting in high-performance and scalable network applications.
-
-   +---------+-------------------------------------------------+
+    HTTP Methods:
+   +-----------------------------------------------------------+
    | Method  | Description                                     |
    +---------+-------------------------------------------------+
    | GET     | Transfer a current representation of the target |
@@ -80,7 +108,9 @@ Server::Server(const Server &other)
   event_(other.event_) {}
 
  Server::Server(const ServerConfiguration &config)
-: config_(config), socket_(0), epoll_fd_(0) {
+: config_(config), socket_(0), epoll_fd_(0) {}
+
+void Server::Init() {
     try {
         struct addrinfo *addr = NULL;
 
@@ -88,9 +118,7 @@ Server::Server(const Server &other)
         CreateSocket(addr);
         SetSocketOptions(addr);
         BindSocket(addr);
-
         freeaddrinfo(addr);
-
         ListenSocket();
         CreateEpoll();
         AddEpollInstance();
@@ -130,8 +158,8 @@ void Server::PresetAddress(addrinfo **addr) {
     hints.ai_socktype = SOCK_STREAM; // Stream socket (Not Datagram) TCP (not UDP)
     hints.ai_flags = AI_PASSIVE; // Use the local IP
 
-    if (getaddrinfo(config_.server_name_.c_str(),
-                    config_.port_str_.c_str(),
+    if (getaddrinfo(config_.server_name_.c_str(), // localhost
+                    config_.port_str_.c_str(), // 8080
                     &hints, addr)) {
         throw AddrinfoCreationFailed();
     }
@@ -269,6 +297,7 @@ void Server::AddEpollInstance() {
  *  TODO MAX_CLIENTS
  */
  void Server::Start() {
+     Init();
      std::cout << "started server at " << config_.port_ << " port" << std::endl;
      while (true) {
          struct sockaddr_in client_addr;
@@ -317,8 +346,11 @@ void Server::HandleClientRequest(int client_sock) {
          ClientRequest request(client_sock);
 		 std::cout << "client request uri:" << request.uri_ << std::endl;
 		 std::cout << "client request method:" << request.method_ << std::endl;
-//		 int http_code;
-//		 const Location &loc = FindLocation(request.uri_, config_.locations_, http_code);
+		 int http_code;
+		 const Location &loc = FindLocation(request.uri_, config_.GetRoot(),
+                                            http_code);
+
+         std::cout << "location root:" << loc.root_ << std::endl;
 //         ServerResponse response = ServerResponse::CreateResponse(request,
 //                                                                 config_.locations_);
 //         response.SendResponse(client_sock);
@@ -376,6 +408,22 @@ Server &Server::operator=(const Server &other) {
 }
 
 Server::~Server() {}
+
+ServerConfiguration &Server::getConfig() {
+    return config_;
+}
+
+int Server::getSocket() const {
+    return socket_;
+}
+
+int Server::getEpollFd() const {
+    return epoll_fd_;
+}
+
+const epoll_event &Server::getEvent() const {
+    return event_;
+}
 
 const char *SocketOpeningFailureException::what() const throw() {
     return exception::what();

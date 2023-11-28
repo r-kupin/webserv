@@ -11,6 +11,7 @@
 /******************************************************************************/
 
 #include <csignal>
+#include <iostream>
 #include "ClientRequest.h"
 #include "ServerExceptions.h"
 
@@ -38,7 +39,9 @@ std::vector<std::string> read_from_socket(int socket) {
         //  socket options and to handle different types of sockets (e.g., TCP or
         //  UDP). It provides more flexibility and control over socket
         //  communication compared to the read() function.
-        int bytesRead = recv(socket, buffer, BUFFER_SIZE - 1, 0);
+//        int bytesRead = recv(socket, buffer, BUFFER_SIZE - 1, 0);
+        int bytesRead = read(socket, buffer, BUFFER_SIZE - 1);
+
         if (bytesRead <= 0)
             throw ReadFromSocketFailedException();
 
@@ -85,7 +88,7 @@ ClientRequest::ClientRequest(int client_sock) {
     for (size_t i = 1; i < request.size(); ++i) {
         std::string name = request[i].substr(0, request[i].find_first_of(':'));
         std::string value = request[i].substr(
-                                    request[i].find_first_of(": ") + 1);
+                                    request[i].find_first_of(": ") + 2);
         if (!name.empty() && !value.empty())
             headers_.insert(std::make_pair(name, value));
     }

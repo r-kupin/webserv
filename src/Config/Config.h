@@ -44,8 +44,6 @@ public:
     const std::string                       &getConfPath() const;
     const std::list<ServerConfiguration>  &getServers() const;
 
-    void MakeServerConfigs();
-
 protected:
 //  Config processing utils
     void                                ExcludeComments(std::string &line) const;

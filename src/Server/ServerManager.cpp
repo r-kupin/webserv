@@ -26,16 +26,17 @@ ServerManager &ServerManager::operator=(const ServerManager &other) {
 
 ServerManager::~ServerManager() {}
 
-//ServerManager::ServerManager(const Config &config) {
-//    const l_sconfigs &configs = config.getServers();
-//
-//    for (size_t i = 0; i < configs.size(); ++i) {
-//        servers_.push_back(Server(configs[i]));
-//    }
-//}
+ServerManager::ServerManager(const Config &config) {
+    for (std::_List_const_iterator<ServerConfiguration> it =
+                                                    config.getServers().begin();
+         it != config.getServers().end(); ++it) {
+        servers_.push_back(Server(*it));
+    }
+}
 
 void ServerManager::RunAll() {
-    for (size_t i = 0; i < servers_.size(); ++i) {
-        servers_[i].Start();
+    for (std::vector<Server>::iterator it = servers_.begin();
+         it != servers_.end(); ++it) {
+        it->Start();
     }
 }

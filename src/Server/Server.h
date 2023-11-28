@@ -48,12 +48,20 @@ protected:
      const Location &
 	 FindLocation(const std::string &uri, const Location &start,
 				  int &http_code);
+
+    ServerConfiguration &getConfig();
+    int getSocket() const;
+    int getEpollFd() const;
+    const epoll_event &getEvent() const;
+
 private:
     ServerConfiguration config_;
     int socket_;
     int epoll_fd_;
     epoll_event event_;
- };
+
+    void Init();
+};
 
 
 #endif //WEBSERV_LIB_SERVER_H
