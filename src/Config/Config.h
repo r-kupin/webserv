@@ -46,31 +46,24 @@ public:
 
 protected:
 //  Config processing utils
-    void                                ExcludeComments(std::string &line) const;
-    void                                TrimWhitespaces(std::string &line) const;
+    void        ExcludeComments(std::string &line) const;
+    void        TrimWhitespaces(std::string &line) const;
 //  Parsing config file to tree-like structure of nodes
-    void                                ParseConfig(std::ifstream &config);
+    void        ParseConfig(std::ifstream &config);
 //  Parsing config file to tree-like structure of nodes
-    void CreateSrvConfigs(Node& root);
+    void        CreateSrvConfigs(Node& root);
     //      Location subcontext
-    void                                HandleLocationContext(Node &loc_context,
-                                                              ServerConfiguration &sc,
-                                                              l_it parent);
+    void        HandleLocationContext(Node &loc_context,
+                                      ServerConfiguration &sc,
+                                      l_it parent);
     //  Limit_except subcontext
-    void                                HandleLimitExceptContext(Node &node,
-                                                                 Limit &curr_limit) const;
-    void                                CheckServerSubnodes(Node &node,
-                                                  ServerConfiguration &current);
-    void CheckServer(Node &node);
-
-    static bool         IsLocation(const Node &node);
-
-    static bool         IsLimitExcept(const Node &node);
-
-    bool IsCorrectLocation(const Node &node);
-
-    bool IsCorrectLimitExcept(Node &node, Location &current);
-
+    void        HandleLimitExceptContext(Node &node, Limit &curr_limit) const;
+    void        CheckServerSubnodes(Node &node, ServerConfiguration &current);
+    void        CheckServer(Node &node);
+    static bool IsLocation(const Node &node);
+    static bool IsLimitExcept(const Node &node);
+    bool        IsCorrectLocation(const Node &node);
+    bool        IsCorrectLimitExcept(Node &node, Location &current);
 private:
     std::string conf_path_;
     Node conf_root_;
@@ -95,26 +88,22 @@ private:
                                        std::ifstream &config) const;
 //  Global server check
 
-    static bool         IsCorrectLimit(const Node &node);
-    void                ThrowSyntaxError(const std::string &msg,
-                                         std::ifstream &config) const;
-    void                ThrowSyntaxError(const std::string &msg) const;
-    bool                LimExIsDefined(const Location &location);
-
-    bool WillHaveSameAddressAs(Node &node, Location &location);
-
-    Location &AddOrUpdate(Location &child, Location &parent);
-
-    void CheckParentDoesntHaveItAlready(Location &current, Location &parent);
-
-    bool NeedToAddCurrentToParent(l_it &parent, Location &current,
+    static bool IsCorrectLimit(const Node &node);
+    void        ThrowSyntaxError(const std::string &msg,
+                                 std::ifstream &config) const;
+    void        ThrowSyntaxError(const std::string &msg) const;
+    bool        LimExIsDefined(const Location &location);
+    bool        WillHaveSameAddressAs(Node &node, Location &location);
+    Location    &AddOrUpdate(Location &child, Location &parent);
+    void        CheckParentDoesntHaveItAlready(Location &current,
+                                               Location &parent);
+    bool        NeedToAddCurrentToParent(l_it &parent, Location &current,
+                                         std::vector<Node>::iterator &it);
+    void        HandleSublocation(ServerConfiguration &sc, l_it &parent,
+                                  Location &current,
                                   std::vector<Node>::iterator &it);
-
-    void
-    HandleSublocation(ServerConfiguration &sc, l_it &parent, Location &current,
-                      std::vector<Node>::iterator &it);
 };
 
-std::ostream &operator<<(std::ostream &os, const Config &config);
+std::ostream    &operator<<(std::ostream &os, const Config &config);
 
 #endif //WEBSERV_CONFIGPARSER_H

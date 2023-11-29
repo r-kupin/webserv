@@ -120,24 +120,24 @@ const std::list<ServerConfiguration> &Config::getServers() const {
 //    }
 //}
 
-//            if (node.directives_[0][0] == "deny" &&
-//                node.directives_[0][1] == "all" &&
-//                node.directives_[0].size() == 2 ) {
+//            if (node_.directives_[0][0] == "deny" &&
+//                node_.directives_[0][1] == "all" &&
+//                node_.directives_[0].size() == 2 ) {
 //                curr_limit.return_code_ = 403;
-//            } else if (node.directives_[0][0] == "return" &&
-//                        (node.directives_[0].size() == 2 ||
-//                        node.directives_[0].size() == 3)) {
-//                curr_limit.return_code_ = std::atoi(node.directives_[0][1].c_str());
+//            } else if (node_.directives_[0][0] == "return" &&
+//                        (node_.directives_[0].size() == 2 ||
+//                        node_.directives_[0].size() == 3)) {
+//                curr_limit.return_code_ = std::atoi(node_.directives_[0][1].c_str());
 //                if (Location::kHttpOkCodes.find(curr_limit.return_code_) ==
 //                    Location::kHttpOkCodes.end() &&
 //                    ErrPage::kHttpErrCodes.find(curr_limit.return_code_) ==
 //                    ErrPage::kHttpErrCodes.end()) {
 //                    ThrowSyntaxError("return directive is wrong");
 //                }
-//                if (node.directives_[0].size() == 3) {
-//                    if (node.directives_[0][2].find_first_of('/') !=
+//                if (node_.directives_[0].size() == 3) {
+//                    if (node_.directives_[0][2].find_first_of('/') !=
 //                        std::string::npos) {
-//                        curr_limit.return_address_ = node.directives_[0][2];
+//                        curr_limit.return_address_ = node_.directives_[0][2];
 //                    } else {
 //                        ThrowSyntaxError("Limit_except context needs 1 of these "
 //                                         "directives: return or deny !");

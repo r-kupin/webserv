@@ -20,7 +20,7 @@ bool is_min(size_t n, size_t a, size_t b) {
 
 /**
  * @brief recursive config parser
- * Creates a main node out of main block, then goes through directives and
+ * Creates a main node_ out of main block, then goes through directives and
  * explicit sub-nodes
  * @param config input stream
  */
@@ -30,14 +30,14 @@ void Config::ParseConfig(std::ifstream &config) {
 
     std::string empty = std::string("");
     RawNode root = ParseNode(config, empty, main);
-    if (!root.leftover.empty()) {
+    if (!root.leftover_.empty()) {
         ThrowSyntaxError("main block isn't closed!", config);
     }
-    conf_root_ = root.node;
+    conf_root_ = root.node_;
 }
 
 /**
- * @brief Parses a NGINX block into a config node
+ * @brief Parses a NGINX block into a config node_
  *  NGINX block is one or many lines that has a main directive (array of
  * strings) and a block body - directives and sub-blocks between '{' and '}'.
  *  NGINX blocks are used to group together directives and define
@@ -54,13 +54,13 @@ void Config::ParseConfig(std::ifstream &config) {
  * Goes through config or lefter line left from previous nodes
  * Founds first occurrence of '{', ';' and/or '}'
  *  if ';' - extracts directive
- *  if '{' - recursively parses sub node
- *  if '}' - end of current (sub)node
+ *  if '{' - recursively parses sub node_
+ *  if '}' - end of current (sub)node_
  * Saves unparsed line leftovers for next iterations
  * @param config input stream
  * @param main_directive directive that was preceding current block
  * @param line_leftover unparsed leftovers from previous getline() call
- * @return parsed node with saved leftovers
+ * @return parsed node_ with saved leftovers
  */
 RawNode
 Config::ParseNode(std::ifstream &config, std::string &line_leftover,
@@ -68,7 +68,7 @@ Config::ParseNode(std::ifstream &config, std::string &line_leftover,
     std::string line;
     RawNode current;
 
-    current.node.main_ = main_directive;
+    current.node_.main_ = main_directive;
     while (std::getline(config, line) || !line_leftover.empty()) {
         PreprocessLine(line, line_leftover);
         while (!line.empty()) {
@@ -109,9 +109,9 @@ void Config::PreprocessLine(std::string &line,
 }
 
 /**
- * @brief recursively calls ParseNode() for a sub-node
- * Parses sub-node (child)
- * Assigns child node to supernode
+ * @brief recursively calls ParseNode() for a sub-node_
+ * Parses sub-node_ (child)
+ * Assigns child node_ to supernode
  * Saves line leftovers
  * @param current supernode
  * @param line needed to save leftovers
@@ -123,25 +123,25 @@ void Config::GetChildNode(RawNode &current,
             config,
             line,
             ParseDirective(line, '{'));
-    current.node.child_nodes_.push_back(child.node);
-    line = child.leftover;
+    current.node_.child_nodes_.push_back(child.node_);
+    line = child.leftover_;
 }
 
 /**
- * @brief Assigns directive to current node
+ * @brief Assigns directive to current node_
  */
 void Config::GetDirective(std::string &line, RawNode &current,
                           std::ifstream &config) const {
     if (line[0] == ';')
         ThrowSyntaxError("found consecutive semicolons!", config);
-    current.node.directives_.push_back(ParseDirective(line, ';'));
+    current.node_.directives_.push_back(ParseDirective(line, ';'));
 }
 
 Config::Config(const Node &confRoot)
 : conf_root_(confRoot) {}
 
 /**
- * @brief Prepares node to be returned
+ * @brief Prepares node_ to be returned
  * Removes closing brace
  * Saves leftovers if there are any
  * @throw exception if block is empty, `cause it makes no sense
@@ -149,9 +149,9 @@ Config::Config(const Node &confRoot)
 void Config::FinishSubNode(std::string &line,
                            RawNode &current,
                            std::ifstream &config) const {
-    if (current.node.child_nodes_.empty() && current.node.directives_.empty())
+    if (current.node_.child_nodes_.empty() && current.node_.directives_.empty())
         ThrowSyntaxError("found an empty block!", config);
-    if (current.node.main_[0] == "main")
+    if (current.node_.main_[0] == "main")
         ThrowSyntaxError("found unexpected '}' !", config);
     size_t before_brace = line.find_first_not_of(" \t}");
     size_t brace = line.find_first_of('}');
@@ -160,9 +160,9 @@ void Config::FinishSubNode(std::string &line,
                          config);
     if (line.size() > 1) {
         line = line.substr(brace + 1);
-        current.leftover = line;
+        current.leftover_ = line;
     } else {
-        current.leftover = "";
+        current.leftover_ = "";
     }
 }
 
@@ -210,6 +210,6 @@ void Config::HandleLineLeftower(std::string &line_leftover,
 
 void
 Config::FinishMainNode(RawNode &current, std::ifstream &config) const {
-    if (current.node.main_[0] != "main")
+    if (current.node_.main_[0] != "main")
         ThrowSyntaxError("missing '}' !", config);
 }

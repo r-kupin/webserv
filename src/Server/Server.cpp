@@ -296,49 +296,61 @@ void Server::AddEpollInstance() {
 /**
  *  TODO MAX_CLIENTS
  */
- void Server::Start() {
-     Init();
-     std::cout << "started server at " << config_.port_ << " port" << std::endl;
-     while (true) {
-         struct sockaddr_in client_addr;
-         socklen_t client_len = sizeof(client_addr);
-         int client_sock = accept(socket_, (struct sockaddr *) &client_addr,
-                                  &client_len); // may be [MAX_CLIENTS]
-         if (client_sock < 0) {
-             printf("Error accepting connection: %s\n", strerror(errno));
-             continue;
-         }
-         std::cout << "Accepted client connection from " <<
-                                    client_addr.sin_addr.s_addr << std::endl;
-         try {
-             HandleClientRequest(client_sock);
-         } catch (ReadFromSocketFailedException) {
-             std::cout << "Read from socket failed!" << std::endl;
-         }
-         close(client_sock);
-     }
-     close(socket_);
- }
+void Server::Start() {
+    Init();
+    std::cout << "started server at " << config_.port_ << " port" << std::endl;
+    while (true) {
+        struct sockaddr_in client_addr;
+        socklen_t client_len = sizeof(client_addr);
+        int client_sock = accept(socket_, (struct sockaddr *) &client_addr,
+                                 &client_len); // may be [MAX_CLIENTS]
+        if (client_sock < 0) {
+            printf("Error accepting connection: %s\n", strerror(errno));
+            continue;
+        }
+        std::cout << "Accepted client connection from " <<
+                                   client_addr.sin_addr.s_addr << std::endl;
+        try {
+            HandleClientRequest(client_sock);
+        } catch (ReadFromSocketFailedException) {
+            std::cout << "Read from socket failed!" << std::endl;
+        }
+        close(client_sock);
+    }
+    close(socket_);
+}
+
+std::string get_next_location_address(const std::string &uri) {
+    std::string current = uri;
+    if (current[0] == '/')
+        current = current.substr(1);
+    std::string::size_type current_end = current.find_first_of('/');
+    return "/" + current.substr(0, current_end);
+}
 
 const Location &Server::FindLocation(const std::string &uri,
 									 const Location &start,
 									 int &http_code) {
-     if (uri != start.address_) {
-         std::string part_uri = uri.substr(1);
-         std::string::size_type end = part_uri.find('/');
-         if (end == std::string::npos)
-             end = uri.size();
-         part_uri = ("/" + part_uri).substr(0, end + 1);
-         try {
-             const Location &found = start.FindSublocationByAddress(part_uri);
-             return FindLocation(uri.substr(end + 1), found, http_code);
-         } catch (const NotFoundException &) {
-             http_code = 404;
-             return start;
-         }
-     }
-     http_code = 200;
-     return start;
+    if (uri.empty() || uri[0] != '/') {
+        http_code = 400; // Bad Request
+        return start;
+    } else if (uri != start.address_) {
+        std::string first = get_next_location_address(uri);
+        std::string remainder = "/";
+        if (first != uri)
+            remainder = uri.substr(first.size());
+        if (first != "/") {
+            try {
+                const Location &found = start.FindSublocationByAddress(first);
+                return FindLocation(remainder, found, http_code);
+            } catch (const NotFoundException &) {
+                http_code = 404; // Not Found
+                return start;
+            }
+        }
+    }
+    http_code = 200; // OK
+    return start;
 }
 
 void Server::HandleClientRequest(int client_sock) {

@@ -177,6 +177,8 @@ TEST_F(SimpleLocTest, ProcessDirectivesTestForRootRootRedefinition) {
 //    EXPECT_EQ(root_index_update, v_strings({ "index", "index_i.html"}));
 //}
 
+
+
 class LocationWithSubsTest : public ::testing::Test, public Location {
 public:
     explicit LocationWithSubsTest() : Location() {};

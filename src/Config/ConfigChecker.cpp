@@ -93,7 +93,7 @@ void    Config::CheckServerSubnodes(Node &node, ServerConfiguration &current) {
 }
 
 /**
- * Checks server node, and creates a server config based on the content of node
+ * Checks server node_, and creates a server config based on the content of node_
  * 1. Making a set to keep track of the crucial parameters of the server. If
  *    we encounter the definition of a parameter - mark corresponding bool flag
  *    as true
@@ -126,7 +126,7 @@ void Config::CheckServer(Node &node) {
 /**
  * Checks directives and blocks of a main context, creating server
  * configurations at the same time
- * @param root node of a parsed config
+ * @param root node_ of a parsed config
  */
 void Config::CreateSrvConfigs(Node& root) {
     if (!root.directives_.empty()) {

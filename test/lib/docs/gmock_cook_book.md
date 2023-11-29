@@ -1729,7 +1729,7 @@ require you to come up with different names for the expectations in the chains.
 Here's how it works:
 
 If we view `EXPECT_CALL()` statements as nodes in a graph, and add an edge from
-node A to node B wherever A must occur before B, we can get a DAG. We use the
+node_ A to node_ B wherever A must occur before B, we can get a DAG. We use the
 term "sequence" to mean a directed path in this DAG. Now, if we decompose the
 DAG into sequences, we just need to know which sequences each `EXPECT_CALL()`
 belongs to in order to be able to reconstruct the original DAG.

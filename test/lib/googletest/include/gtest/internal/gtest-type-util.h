@@ -104,7 +104,7 @@ std::string GetTypeName() {
 #endif  // GTEST_HAS_RTTI
 }
 
-// A unique type indicating an empty node
+// A unique type indicating an empty node_
 struct None {};
 
 #define GTEST_TEMPLATE_ \

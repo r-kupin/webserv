@@ -69,8 +69,8 @@ struct Node {
  * leftovers left after block parsing
  */
 struct RawNode {
-    Node node;
-    std::string leftover;
+    Node node_;
+    std::string leftover_;
 };
 
 #endif //WEBSERV_LIB_CONFIGSUBMODULES_H
