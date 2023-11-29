@@ -61,6 +61,13 @@ protected:
     std::vector<v_strings> directives_;
 };
 
+TEST_F(SimpleLocTest, LocationWithQuestionInName) {
+    EXPECT_THROW(Location("/ho?me"), Location::LocationException);
+    EXPECT_THROW(Location("/ho?me", sc.GetRootIt()),Location::LocationException);
+    EXPECT_THROW(Location("/home/w?tf"), Location::LocationException);
+    EXPECT_THROW(Location("/ho?me/w?tf", sc.GetRootIt()),Location::LocationException);
+}
+
 TEST_F(SimpleLocTest, ProcessDirectivesTestForNewLocation) {
     Location home_loc = Location("/home", sc.GetRootIt());
 

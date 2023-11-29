@@ -44,7 +44,10 @@ const std::map<int, std::string> Location::kHttpOkCodes =
         Location::initializeHttpOkCodes();
 
 Location::Location(const std::string &address)
-	: return_code_(0), address_(address), parent_(NULL) {}
+	: return_code_(0), address_(address), parent_(NULL) {
+    if (address_.find_first_of('?') != std::string::npos)
+        throw LocationException();
+}
 
 Location::Location()
     : return_code_(0), autoindex_(false), parent_(NULL) {}
@@ -71,7 +74,10 @@ Location::Location(const std::string &address, l_it parent)
     autoindex_(parent->autoindex_),
     return_address_(parent->return_address_),
     address_(address),
-    parent_(parent) {}
+    parent_(parent) {
+    if (address_.find_first_of('?') != std::string::npos)
+        throw LocationException();
+}
 
 bool Location::operator<(const Location &rhs) const {
     return address_ < rhs.address_;

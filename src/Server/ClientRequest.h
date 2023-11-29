@@ -29,7 +29,6 @@ struct ClientRequest {
     explicit                    ClientRequest(int client_sock);
 private:
     void fill_headers(const std::vector<std::string> &request);
-
     void fill_uri_params(const std::string &uri);
 };
 

@@ -58,7 +58,14 @@ void Config::HandleSublocation(ServerConfiguration &sc, l_it &parent,
 void Config::HandleLocationContext(Node &loc_context,
                                    ServerConfiguration &sc,
                                    l_it parent) {
-    Location    maybe_current(loc_context.main_[1], parent);
+    Location maybe_current;
+
+    try {
+        maybe_current = Location(loc_context.main_[1], parent);
+    } catch (Location::LocationException &) {
+        ThrowSyntaxError("Location address contains invalid characters");
+    }
+
     CheckParentDoesntHaveItAlready(maybe_current, *parent);
 //    todo redefinition of non-parent - is it possible ?
     Location &current = AddOrUpdate(maybe_current, *parent);
