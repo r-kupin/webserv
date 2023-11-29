@@ -356,15 +356,14 @@ const Location &Server::FindLocation(const std::string &uri,
 void Server::HandleClientRequest(int client_sock) {
      try {
          ClientRequest request(client_sock);
-		 std::cout << "client request uri:" << request.uri_ << std::endl;
+		 std::cout << "client request uri:" << request.address_ << std::endl;
 		 std::cout << "client request method:" << request.method_ << std::endl;
 		 int http_code;
-		 const Location &loc = FindLocation(request.uri_, config_.GetRoot(),
+		 const Location &loc = FindLocation(request.address_, config_.GetRoot(),
                                             http_code);
 
          std::cout << "location root:" << loc.root_ << std::endl;
-//         ServerResponse response = ServerResponse::CreateResponse(request,
-//                                                                 config_.locations_);
+         ServerResponse response = ServerResponse::CreateResponse(request, loc);
 //         response.SendResponse(client_sock);
 
 
@@ -481,14 +480,14 @@ const char *NotFoundException::what() const throw() {
     return exception::what();
 }
 
-const char *HTTPCodeError::what() const throw() {
+const char *BadParams::what() const throw() {
     return exception::what();
 }
 
 
 //       ClientRequest request(client_sock);
 //         int http_code;
-//         const Location &loc = FindLocation(request.uri_,
+//         const Location &loc = FindLocation(request.address_,
 //                                            config_.locations_,
 //                                            http_code);
 //         ServerResponse response(request, config_.locations_, http_code);

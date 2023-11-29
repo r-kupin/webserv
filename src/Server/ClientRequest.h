@@ -22,10 +22,15 @@
 
 struct ClientRequest {
     Methods                             method_;
-    std::string                         uri_;
+    std::string                         address_;
+    std::map<std::string, std::string>  params_;
     std::map<std::string, std::string>  headers_;
 
     explicit                    ClientRequest(int client_sock);
+private:
+    void fill_headers(const std::vector<std::string> &request);
+
+    void fill_uri_params(const std::string &uri);
 };
 
 

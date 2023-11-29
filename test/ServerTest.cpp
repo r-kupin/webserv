@@ -48,9 +48,45 @@ TEST_F(ClienRequestTest, StandardFromFirefox) {
     pipe_reguest_to_fd(request);
     ClientRequest cl_req(fd_);
     EXPECT_EQ(cl_req.method_, GET);
-    EXPECT_EQ(cl_req.uri_, "/");
+    EXPECT_EQ(cl_req.address_, "/");
     EXPECT_EQ(cl_req.headers_.size(), 12);
     EXPECT_EQ(cl_req.headers_["Host"], "localhost:8080");
+}
+
+TEST_F(ClienRequestTest, OneParam) {
+    std::string uri = "/results?search_query=pony";
+    std::string request = "GET " + uri + " HTTP/1.1\n\r"
+        "Host: localhost:8080\n\r";
+
+    pipe_reguest_to_fd(request);
+    ClientRequest cl_req(fd_);
+    EXPECT_EQ(cl_req.method_, GET);
+    EXPECT_EQ(cl_req.address_, "/results");
+    EXPECT_EQ(cl_req.headers_.size(), 1);
+    EXPECT_EQ(cl_req.headers_["Host"], "localhost:8080");
+    EXPECT_EQ(cl_req.params_.size(), 1);
+    EXPECT_EQ(cl_req.params_["search_query"], "pony");
+}
+
+TEST_F(ClienRequestTest, MoarParamz) {
+    std::string uri = "/results?"
+                      "search_query=pony&"
+                      "search_type=pics&"
+                      "safe_search=off&"
+                      "nsfw_allow=true&"
+                      "sure=yes";
+    std::string request = "GET " + uri + " HTTP/1.1\n\r"
+        "Host: localhost:8080\n\r";
+
+    pipe_reguest_to_fd(request);
+    ClientRequest cl_req(fd_);
+    EXPECT_EQ(cl_req.method_, GET);
+    EXPECT_EQ(cl_req.address_, "/results");
+    EXPECT_EQ(cl_req.headers_.size(), 1);
+    EXPECT_EQ(cl_req.headers_["Host"], "localhost:8080");
+    EXPECT_EQ(cl_req.params_.size(), 5);
+    EXPECT_EQ(cl_req.params_["search_query"], "pony");
+    EXPECT_EQ(cl_req.params_["nsfw_allow"], "true");
 }
 
 TEST_F(ClienRequestTest, HTTP2) {

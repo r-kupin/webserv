@@ -39,7 +39,7 @@ struct ServerResponse {
     bool location_root_has_index_;
 
 //    const ClientRequest &	request_;
-//	std::string 			uri_;
+//	std::string 			address_;
 //	std::string				querry_parameters_;
 //    bool					http_is_error_;
 //	bool					request_static_;

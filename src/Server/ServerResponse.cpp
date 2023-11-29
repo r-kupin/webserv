@@ -65,9 +65,9 @@ std::string ExtractParams(std::string given_uri) {
     return given_uri;
 }
 
-ServerResponse
-ServerResponse::CreateResponse(const ClientRequest &request, const Location &root) {
-    std::string uri = ExtractParams(request.uri_);
+ServerResponse  ServerResponse::CreateResponse(const ClientRequest &request,
+                                               const Location &root) {
+    std::string uri = ExtractParams(request.address_);
     bool path_exists = false;
     bool location_defined = false;
     bool has_index = false;
@@ -89,10 +89,10 @@ ServerResponse::CreateResponse(const ClientRequest &request, const Location &roo
 //							   const Location &root)
 ////: request_(request)
 //{
-//	uri_ = ExtractParams(request.uri_);
+//	address_ = ExtractParams(request.address_);
 //	bool path_exists = false;
 //	bool location_defined = false;
-//	const Location & main = FindLocation(uri_, root, path_exists,
+//	const Location & main = FindLocation(address_, root, path_exists,
 //                                         location_defined);
 //	if (path_exists) {
 //
@@ -130,7 +130,7 @@ ServerResponse::CreateResponse(const ClientRequest &request, const Location &roo
 ////		http_code_description_ = ErrPage::kHttpErrCodes.find(http_code_)->second;
 ////        http_is_error_ = true;
 ////    } else {
-////        throw HTTPCodeError();
+////        throw BadParams();
 ////    }
 ////	FindResponseFileAddr(<#initializer#>, <#initializer#>);
 //}

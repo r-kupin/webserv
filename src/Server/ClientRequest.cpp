@@ -78,19 +78,65 @@ std::string get_uri(const std::string& request) {
     return (uri.substr(0, uri.find_first_of(' ')));
 }
 
-ClientRequest::ClientRequest(int client_sock) {
-    std::vector<std::string> request = read_from_socket(client_sock) ;
-    method_ = get_method(request[0]);
-    uri_ = get_uri(request[0]);
-    if (request[0].find("HTTP/1.1") == std::string::npos) {
-        throw HTTPVersionNotSupportedException();
-    }
+std::string get_address(const std::string& uri) {
+    unsigned long separator = uri.find_first_of('?');
+    if (separator == std::string::npos)
+        return uri;
+    return (uri.substr(0, separator));
+}
+
+bool        uri_has_query(const std::string& uri) {
+    return (uri.find_first_of('?') != std::string::npos);
+}
+
+bool        request_has_headers(const std::vector<std::string>& request) {
+    return request.size() > 1;
+}
+
+void ClientRequest::fill_headers(const std::vector<std::string> &request) {
     for (size_t i = 1; i < request.size(); ++i) {
         std::string name = request[i].substr(0, request[i].find_first_of(':'));
         std::string value = request[i].substr(
-                                    request[i].find_first_of(": ") + 2);
+                request[i].find_first_of(": ") + 2);
         if (!name.empty() && !value.empty())
             headers_.insert(std::make_pair(name, value));
     }
 }
 
+
+void ClientRequest::fill_uri_params(const std::string &uri) {
+    std::string query = uri.substr(uri.find_first_of('?') + 1);
+    for (size_t separator = query.find_first_of('&');
+         separator != std::string::npos;
+         separator = query.find_first_of('&')) {
+        std::string pair = query.substr(0, separator);
+        std::string name = pair.substr(0, query.find_first_of('='));
+        std::string value = pair.substr(query.find_first_of('=') + 1);
+        if (!name.empty() && !value.empty())
+            params_.insert(std::make_pair(name, value));
+        query = query.substr(pair.size() + 1);
+    }
+    if (!query.empty()) {
+        std::string name = query.substr(0, query.find_first_of('='));
+        std::string value = query.substr(query.find_first_of('=') + 1);
+        if (!name.empty() && !value.empty())
+            params_.insert(std::make_pair(name, value));
+    }
+}
+
+ClientRequest::ClientRequest(int client_sock) {
+    std::vector<std::string> request = read_from_socket(client_sock) ;
+    std::string uri = get_uri(request[0]);
+    if (uri_has_query(uri))
+        address_ = get_address(uri);
+    else
+        address_ = uri;
+    method_ = get_method(request[0]);
+    if (request[0].find("HTTP/1.1") == std::string::npos) {
+        throw HTTPVersionNotSupportedException();
+    }
+    if (request_has_headers(request))
+        fill_headers(request);
+    if (uri_has_query(uri))
+        fill_uri_params(uri);
+}
