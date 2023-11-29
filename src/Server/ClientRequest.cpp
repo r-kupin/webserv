@@ -110,6 +110,8 @@ void ClientRequest::fill_uri_params(const std::string &uri) {
          separator != std::string::npos;
          separator = query.find_first_of('&')) {
         std::string pair = query.substr(0, separator);
+        if (pair.empty())
+            return;
         std::string name = pair.substr(0, query.find_first_of('='));
         std::string value = pair.substr(query.find_first_of('=') + 1);
         if (!name.empty() && !value.empty())

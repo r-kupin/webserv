@@ -89,6 +89,120 @@ TEST_F(ClienRequestTest, MoarParamz) {
     EXPECT_EQ(cl_req.params_["nsfw_allow"], "true");
 }
 
+TEST_F(ClienRequestTest, IncompleteQuerry1) {
+    std::string uri = "/results?"
+                      "search_query=";
+    std::string request = "GET " + uri + " HTTP/1.1\n\r"
+        "Host: localhost:8080\n\r";
+
+    pipe_reguest_to_fd(request);
+    ClientRequest cl_req(fd_);
+    EXPECT_EQ(cl_req.method_, GET);
+    EXPECT_EQ(cl_req.address_, "/results");
+    EXPECT_EQ(cl_req.headers_.size(), 1);
+    EXPECT_EQ(cl_req.headers_["Host"], "localhost:8080");
+    EXPECT_TRUE(cl_req.params_.empty());
+}
+
+TEST_F(ClienRequestTest, IncompleteQuerry2) {
+    std::string uri = "/results?"
+                      "search_query=pony&"
+                      "search_type=&"
+                      "safe_search=off&"
+                      "nsfw_allow=true&"
+                      "sure=yes";
+    std::string request = "GET " + uri + " HTTP/1.1\n\r"
+        "Host: localhost:8080\n\r";
+
+    pipe_reguest_to_fd(request);
+    ClientRequest cl_req(fd_);
+    EXPECT_EQ(cl_req.method_, GET);
+    EXPECT_EQ(cl_req.address_, "/results");
+    EXPECT_EQ(cl_req.headers_.size(), 1);
+    EXPECT_EQ(cl_req.headers_["Host"], "localhost:8080");
+    EXPECT_EQ(cl_req.params_.size(), 4);
+    EXPECT_EQ(cl_req.params_["search_query"], "pony");
+    EXPECT_EQ(cl_req.params_["nsfw_allow"], "true");
+    EXPECT_EQ(cl_req.params_.find("search_type"), cl_req.params_.end());
+}
+
+TEST_F(ClienRequestTest, OnlyAmpersand) {
+    std::string uri = "/results?&";
+    std::string request = "GET " + uri + " HTTP/1.1\n\r"
+        "Host: localhost:8080\n\r";
+
+    pipe_reguest_to_fd(request);
+    ClientRequest cl_req(fd_);
+    EXPECT_EQ(cl_req.method_, GET);
+    EXPECT_EQ(cl_req.address_, "/results");
+    EXPECT_EQ(cl_req.headers_.size(), 1);
+    EXPECT_EQ(cl_req.headers_["Host"], "localhost:8080");
+    EXPECT_TRUE(cl_req.params_.empty());
+}
+
+TEST_F(ClienRequestTest, OnlyAssign) {
+    std::string uri = "/results?=";
+    std::string request = "GET " + uri + " HTTP/1.1\n\r"
+        "Host: localhost:8080\n\r";
+
+    pipe_reguest_to_fd(request);
+    ClientRequest cl_req(fd_);
+    EXPECT_EQ(cl_req.method_, GET);
+    EXPECT_EQ(cl_req.address_, "/results");
+    EXPECT_EQ(cl_req.headers_.size(), 1);
+    EXPECT_EQ(cl_req.headers_["Host"], "localhost:8080");
+    EXPECT_TRUE(cl_req.params_.empty());
+}
+
+TEST_F(ClienRequestTest, AsignAndAmpersand) {
+    std::string uri = "/results?=&";
+    std::string request = "GET " + uri + " HTTP/1.1\n\r"
+        "Host: localhost:8080\n\r";
+
+    pipe_reguest_to_fd(request);
+    ClientRequest cl_req(fd_);
+    EXPECT_EQ(cl_req.method_, GET);
+    EXPECT_EQ(cl_req.address_, "/results");
+    EXPECT_EQ(cl_req.headers_.size(), 1);
+    EXPECT_EQ(cl_req.headers_["Host"], "localhost:8080");
+    EXPECT_TRUE(cl_req.params_.empty());
+}
+
+TEST_F(ClienRequestTest, AmpersandAndAsign) {
+    std::string uri = "/results?&=";
+    std::string request = "GET " + uri + " HTTP/1.1\n\r"
+                                         "Host: localhost:8080\n\r";
+
+    pipe_reguest_to_fd(request);
+    ClientRequest cl_req(fd_);
+    EXPECT_EQ(cl_req.method_, GET);
+    EXPECT_EQ(cl_req.address_, "/results");
+    EXPECT_EQ(cl_req.headers_.size(), 1);
+    EXPECT_EQ(cl_req.headers_["Host"], "localhost:8080");
+    EXPECT_TRUE(cl_req.params_.empty());
+}
+
+TEST_F(ClienRequestTest, QuerryWithQestionMark) {
+    std::string uri = "/results?"
+                      "search_query=pony&"
+                      "search_type=pics&"
+                      "safe_search=o?ff&"
+                      "nsfw_allow=true&"
+                      "sure=yes";
+    std::string request = "GET " + uri + " HTTP/1.1\n\r"
+        "Host: localhost:8080\n\r";
+
+    pipe_reguest_to_fd(request);
+    ClientRequest cl_req(fd_);
+    EXPECT_EQ(cl_req.method_, GET);
+    EXPECT_EQ(cl_req.address_, "/results");
+    EXPECT_EQ(cl_req.headers_.size(), 1);
+    EXPECT_EQ(cl_req.headers_["Host"], "localhost:8080");
+    EXPECT_EQ(cl_req.params_.size(), 5);
+    EXPECT_EQ(cl_req.params_["search_query"], "pony");
+    EXPECT_EQ(cl_req.params_["safe_search"], "o?ff");
+}
+
 TEST_F(ClienRequestTest, HTTP2) {
     std::string request ="GET / HTTP/2.0\n\r"
         "Host: localhost:8080\n\r";
