@@ -328,9 +328,9 @@ std::string get_next_location_address(const std::string &uri) {
     return "/" + current.substr(0, current_end);
 }
 
-const Location &Server::FindLocation(const std::string &uri,
-									 const Location &start,
-									 int &http_code) {
+const Location &Server::FindSublocation(const std::string &uri,
+                                        const Location &start,
+                                        int &http_code) {
     if (uri.empty() || uri[0] != '/') {
         http_code = 400; // Bad Request
         return start;
@@ -342,7 +342,7 @@ const Location &Server::FindLocation(const std::string &uri,
         if (first != "/") {
             try {
                 const Location &found = start.FindSublocationByAddress(first);
-                return FindLocation(remainder, found, http_code);
+                return FindSublocation(remainder, found, http_code);
             } catch (const NotFoundException &) {
                 http_code = 404; // Not Found
                 return start;
@@ -350,20 +350,25 @@ const Location &Server::FindLocation(const std::string &uri,
         }
     }
     http_code = 200; // OK
+    if (start.return_code_ > 0)
+        http_code = start.return_code_;
     return start;
 }
+
+//const Location &Server::FindLocation(const std::string& uri) {
+//    int http_code;
+//    const Location &loc = FindSublocation(uri, config_.GetRoot(), http_code);
+//    while (!loc.return_address_.empty())
+//        http_code = loc.return_
+//}
 
 void Server::HandleClientRequest(int client_sock) {
      try {
          ClientRequest request(client_sock);
-		 std::cout << "client request uri:" << request.address_ << std::endl;
-		 std::cout << "client request method:" << request.method_ << std::endl;
-		 int http_code;
-		 const Location &loc = FindLocation(request.address_, config_.GetRoot(),
-                                            http_code);
-
-         std::cout << "location root:" << loc.root_ << std::endl;
-         ServerResponse response = ServerResponse::CreateResponse(request, loc);
+         int http_code;
+		 const Location &loc = FindSublocation(request.address_, config_.GetRoot(), http_code);
+         (void )loc;
+//         ServerResponse response(request, loc, http_code);
 //         response.SendResponse(client_sock);
 
 
@@ -487,7 +492,7 @@ const char *BadParams::what() const throw() {
 
 //       ClientRequest request(client_sock);
 //         int http_code;
-//         const Location &loc = FindLocation(request.address_,
+//         const Location &loc = FindSublocation(request.address_,
 //                                            config_.locations_,
 //                                            http_code);
 //         ServerResponse response(request, config_.locations_, http_code);

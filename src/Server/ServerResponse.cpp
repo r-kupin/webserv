@@ -19,70 +19,74 @@
 
 ServerResponse::ServerResponse() {}
 
+ServerResponse::ServerResponse(const ClientRequest &request,
+                               const Location &root,
+                               int http_code_assumption) {
+    (void )request;
+    (void )root;
+    (void )http_code_assumption;
+}
+
 //bool CanProceedWith(const Location &location, const ClientRequest &request) {
 //    if (location.limit_except_.except_.find(request.method_) ==
 //        location.limit_except_.except_.end())
 //    if (location.return_code_ > 0)
 //}
-
-const Location &
-FindLocation(const std::string &uri, const Location &start, bool &path_exists,
-             bool &loc_defined, bool &has_index,
-             const ClientRequest &request) {
-    (void)request;
-    if (uri != start.address_) {
-        std::string part_uri = uri.substr(1);
-        std::string::size_type end = part_uri.find('/');
-        if (end == std::string::npos)
-            end = uri.size();
-        std::string loc_addr = ("/" + part_uri).substr(0, end + 1);
-
-//        std::ifstream directory(start.root_.c_str());
-//        if (directory.good()) {
-//            path_exists = true;
-//            std::ifstream index((start.root_ + "index.html").c_str());
-//            if (index.good()) {
-//                has_index = true;
-//            }
+//
+//Location &
+//FindLocation(const std::string &uri, const Location &start, bool &path_exists,
+//             bool &loc_defined, bool &has_index,
+//             const ClientRequest &request) {
+//    (void)request;
+//    if (uri != start.address_) {
+//        std::string part_uri = uri.substr(1);
+//        std::string::size_type end = part_uri.find('/');
+//        if (end == std::string::npos)
+//            end = uri.size();
+//        std::string loc_addr = ("/" + part_uri).substr(0, end + 1);
+//
+////        std::ifstream directory(start.root_.c_str());
+////        if (directory.good()) {
+////            path_exists = true;
+////            std::ifstream index((start.root_ + "index.html").c_str());
+////            if (index.good()) {
+////                has_index = true;
+////            }
+////        }
+//        try {
+//            const Location &found = start.FindSublocationByAddress(loc_addr);
+////            if (CanProceedWith(found, request))
+//                return FindLocation(uri.substr(end + 1),
+//                                    found, path_exists, loc_defined,
+//                                    has_index,
+//                                    ClientRequest(0));
+//        } catch (const NotFoundException &) {
+//            return start;
 //        }
-        try {
-            const Location &found = start.FindSublocationByAddress(loc_addr);
-//            if (CanProceedWith(found, request))
-                return FindLocation(uri.substr(end + 1),
-                                    found, path_exists, loc_defined,
-                                    has_index,
-                                    ClientRequest(0));
-        } catch (const NotFoundException &) {
-            return start;
-        }
-    }
-    path_exists = true;
-    loc_defined = true;
-    return start;
-}
-
-std::string ExtractParams(std::string given_uri) {
-    return given_uri;
-}
-
-ServerResponse  ServerResponse::CreateResponse(const ClientRequest &request,
-                                               const Location &root) {
-    std::string uri = ExtractParams(request.address_);
-    bool path_exists = false;
-    bool location_defined = false;
-    bool has_index = false;
-     const Location & main = FindLocation(uri, root, path_exists,
-                                         location_defined, has_index,
-                                         request);
-    (void)main;
-    if (path_exists) {
-
-    }
-    if (location_defined) {
-
-    }
-    return ServerResponse();
-}
+//    }
+//    path_exists = true;
+//    loc_defined = true;
+//    return start;
+//}
+//
+//ServerResponse  ServerResponse::CreateResponse(const ClientRequest &request,
+//                                               const Location &root) {
+//
+////    bool path_exists = false;
+////    bool location_defined = false;
+////    bool has_index = false;
+////     const Location & main = FindSublocation(uri, root, path_exists,
+////                                         location_defined, has_index,
+////                                         request);
+////    (void)main;
+////    if (path_exists) {
+////
+////    }
+////    if (location_defined) {
+////
+////    }
+//    return ServerResponse();
+//}
 
 //
 //ServerResponse::ServerResponse(const ClientRequest &request,
@@ -92,7 +96,7 @@ ServerResponse  ServerResponse::CreateResponse(const ClientRequest &request,
 //	address_ = ExtractParams(request.address_);
 //	bool path_exists = false;
 //	bool location_defined = false;
-//	const Location & main = FindLocation(address_, root, path_exists,
+//	const Location & main = FindSublocation(address_, root, path_exists,
 //                                         location_defined);
 //	if (path_exists) {
 //
@@ -188,6 +192,7 @@ ServerResponse &ServerResponse::operator=(const ServerResponse &other) {
 }
 
 ServerResponse::~ServerResponse() {}
+
 //
 //std::string ServerResponse::GetHeader() {
 //    std::stringstream header;

@@ -243,7 +243,7 @@ TEST_F(RequestHandlingTest, FindRootLocation) {
     int code;
     std::string addr = "/";
 
-    EXPECT_EQ(FindLocation(addr, getConfig().GetRoot(), code).address_, addr);
+    EXPECT_EQ(FindSublocation(addr, getConfig().GetRoot(), code).address_, addr);
     EXPECT_EQ(code, 200);
 }
 
@@ -251,7 +251,7 @@ TEST_F(RequestHandlingTest, FindHomeLocation) {
     int code;
     std::string addr = "/home";
 
-    EXPECT_EQ(FindLocation(addr, getConfig().GetRoot(), code).address_,
+    EXPECT_EQ(FindSublocation(addr, getConfig().GetRoot(), code).address_,
               "/home");
     EXPECT_EQ(code, 200);
 }
@@ -260,7 +260,7 @@ TEST_F(RequestHandlingTest, FindAboutUs_ContactsLocation) {
     int code;
     std::string addr = "/about-us/contacts";
 
-    EXPECT_EQ(FindLocation(addr, getConfig().GetRoot(), code).address_,
+    EXPECT_EQ(FindSublocation(addr, getConfig().GetRoot(), code).address_,
               "/contacts");
     EXPECT_EQ(code, 200);
 }
@@ -269,16 +269,25 @@ TEST_F(RequestHandlingTest, FindUploadsSomethWhatewerSomething) {
     int code;
     std::string addr = "/uploads/something/whatever";
 
-    EXPECT_EQ(FindLocation(addr, getConfig().GetRoot(), code).address_,
+    EXPECT_EQ(FindSublocation(addr, getConfig().GetRoot(), code).address_,
               "/whatever");
     EXPECT_EQ(code, 200);
+}
+
+TEST_F(RequestHandlingTest, FindLocationWithReturnDirective) {
+    int code;
+    std::string addr = "/uploads/something/whatever/something";
+
+    EXPECT_EQ(FindSublocation(addr, getConfig().GetRoot(), code).address_,
+              "/something");
+    EXPECT_EQ(code, 401);
 }
 
 TEST_F(RequestHandlingTest, BadRequest) {
     int code;
     std::string addr = "kjhsdklhfg";
 
-    EXPECT_EQ(FindLocation(addr, getConfig().GetRoot(), code).address_, "/");
+    EXPECT_EQ(FindSublocation(addr, getConfig().GetRoot(), code).address_, "/");
     EXPECT_EQ(code, 400);
 }
 
@@ -286,7 +295,7 @@ TEST_F(RequestHandlingTest, RootNotFound) {
     int code;
     std::string addr = "/kjhsdklhfg";
 
-    EXPECT_EQ(FindLocation(addr, getConfig().GetRoot(), code).address_, "/");
+    EXPECT_EQ(FindSublocation(addr, getConfig().GetRoot(), code).address_, "/");
     EXPECT_EQ(code, 404);
 }
 
@@ -294,7 +303,7 @@ TEST_F(RequestHandlingTest, SublocationNotFound) {
     int code;
     std::string addr = "/home/kjhsdklhfg";
 
-    EXPECT_EQ(FindLocation(addr, getConfig().GetRoot(), code).address_,
+    EXPECT_EQ(FindSublocation(addr, getConfig().GetRoot(), code).address_,
               "/home");
     EXPECT_EQ(code, 404);
 }

@@ -46,8 +46,8 @@ protected:
      void SetSocket();
 
      const Location &
-	 FindLocation(const std::string &uri, const Location &start,
-				  int &http_code);
+	 FindSublocation(const std::string &uri, const Location &start,
+                     int &http_code);
 
     ServerConfiguration &getConfig();
     int getSocket() const;
@@ -61,6 +61,8 @@ private:
     epoll_event event_;
 
     void Init();
+
+    const Location &FindLocation(const std::string& uri);
 };
 
 

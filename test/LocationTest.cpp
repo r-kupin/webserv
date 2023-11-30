@@ -74,13 +74,13 @@ TEST_F(SimpleLocTest, ProcessDirectivesTestForNewLocation) {
     directives_.push_back({"root", "/root"});
     directives_.push_back({"index", "index_i.html"});
     directives_.push_back({"error_page", "403", "400", "416", "error.html"});
-    directives_.push_back({"return", " 300", "/home"});
+    directives_.push_back({"return", "301", "/home"});
 
     EXPECT_NO_THROW(home_loc.ProcessDirectives(directives_));
 
     EXPECT_EQ(home_loc.root_, "/root");
     EXPECT_NE(home_loc.index_.find("index_i.html"), home_loc.index_.end());
-    EXPECT_EQ(home_loc.return_code_, 300);
+    EXPECT_EQ(home_loc.return_code_, 301);
 //    EXPECT_EQ(home_loc.return_address_, "/home");
 
     EXPECT_NE(home_loc.error_pages_.find(ErrPage("error.html", 403)),

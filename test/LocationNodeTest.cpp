@@ -176,7 +176,7 @@ TEST_F(LocationNodeTest, HomeInReDefinedRoot) {
     EXPECT_EQ(InternalServerError->address_, "/50x.html");
 
     EXPECT_EQ(conf_.GetRoot().return_code_ , -1);
-    EXPECT_EQ(conf_.GetRoot().return_address_ , "unspecified");
+    EXPECT_EQ(conf_.GetRoot().return_address_ , "");
 
     EXPECT_EQ(conf_.GetRoot().sublocations_.begin()->address_, "/home");
 //    TODO test for append, but maybe need replace?
@@ -242,7 +242,7 @@ TEST_F(LocationNodeTest, MultipleAddressesUnderTheSameParent) {
 
     Node home2;
     home2.main_ = v_strings({"location", "/home" });
-    home2.directives_.push_back({"return", "300", "/somewhere"});
+    home2.directives_.push_back({"return", "301", "/somewhere"});
 
     location_root_.child_nodes_.push_back(home2);
     location_root_.child_nodes_.push_back(home1);
