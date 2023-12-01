@@ -15,7 +15,7 @@
 #include "ConfigSubmodules.h"
 #include "ConfigExceptions.h"
 
-Limit::Limit() : deny_all_(false), allow_all_(true) {}
+Limit::Limit() : deny_all_(false), allow_all_(false) {}
 
 bool Limit::operator==(const Limit &rhs) const {
     return except_ == rhs.except_;

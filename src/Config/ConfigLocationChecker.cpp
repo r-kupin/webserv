@@ -20,33 +20,8 @@ bool Config::IsLimitExcept(const Node &node) {
     return false;
 }
 
-bool Config::IsCorrectLimit(const Node &node) {
-    if (node.main_.size() < 2 || node.directives_.empty())
-        return false;
-    Limit curr_limit;
-    for (size_t i = 1; i < node.main_.size(); ++i) {
-        if (node.main_[i] != "GET" && node.main_[i] != "POST" &&
-            node.main_[i] != "DELETE") {
-            return false;
-        }
-    }
-//    TODO what else can be in limit_except?
-    for (size_t i = 0; i < node.directives_.size(); ++i) {
-        if (!(node.directives_[i][0] == "deny" &&
-              node.directives_[i][1] == "all")) {
-            return false;
-        }
-    }
-    return true;
-//    ThrowSyntaxError("Given HTTP method isn't supported or doesn't exist");
-//    ThrowSyntaxError("HTTP methods needs to be specified");
-//    ThrowSyntaxError("Limit_except context can't be empty !");
-}
-
 bool Config::IsCorrectLimitExcept(Node &node, Location &current) {
     if (IsLimitExcept(node)) {
-        if (!IsCorrectLimit(node))
-            ThrowSyntaxError("Limit_except context is incorrect");
         if (LimExIsDefined(current))
             ThrowSyntaxError("Limit_except context is already defined");
         return true;
@@ -77,6 +52,28 @@ Config::HandleLimitExceptContext(Node &node, Limit &curr_limit) const {
     CheckDirectivesLimitExcept(node, curr_limit);
 }
 
+bool is_deny_all(const v_strings &directives) {
+    return directives.size() == 2 &&
+    directives[0] == "deny" &&
+    directives[1] == "all";
+}
+
+bool is_allow_all(const v_strings &directives) {
+    return directives.size() == 2 &&
+    directives[0] == "allow" &&
+    directives[1] == "all";
+}
+
+bool is_deny_address(const v_strings &directives) {
+    return directives.size() > 1 &&
+           directives[0] == "deny";
+}
+
+bool is_allow_address(const v_strings &directives) {
+    return directives.size() > 1 &&
+           directives[0] == "allow";
+}
+
 void
 Config::CheckDirectivesLimitExcept(const Node &node, Limit &curr_limit) const {
     if (node.directives_.empty())
@@ -84,29 +81,46 @@ Config::CheckDirectivesLimitExcept(const Node &node, Limit &curr_limit) const {
                          "specified in limit_except context: deny: all or "
                          "address or allow: all or address");
     for (size_t i = 0; i < node.directives_.size(); ++i) {
-        if (node.directives_[i][0] == "deny" &&
-            node.directives_[i][1] == "all" &&
-            node.directives_[i].size() == 2) {
+        if (node.directives_[i].size() == 1)
+            ThrowSyntaxError("Limit_except context needs 1 of these "
+                             "directives: deny: all or address or allow: all "
+                             "or address");
+        if (is_deny_all(node.directives_[i])) {
             curr_limit.deny_all_ = true;
-        } else if (node.directives_[i][0] == "allow" &&
-                   node.directives_[i][1] == "all" &&
-                   node.directives_[i].size() == 2) {
+        } else if (is_allow_all(node.directives_[i])) {
             curr_limit.allow_all_ = true;
-        } else if (node.directives_[i][0] == "deny" &&
-                   node.directives_[i].size() > 1) {
-            for (size_t j = 1; j < node.directives_[i].size(); ++j) {
-                curr_limit.deny_.push_back(node.directives_[i][j]);
-            }
-        } else if (node.directives_[i][0] == "allow" &&
-                   node.directives_[i].size() > 1) {
-            for (size_t j = 1; j < node.directives_[i].size(); ++j) {
-                curr_limit.alow_.push_back(node.directives_[i][j]);
-            }
+        } else if (is_deny_address(node.directives_[i])) {
+            for (size_t j = 1; j < node.directives_[i].size(); ++j)
+                deny_address(node.directives_[i][j], curr_limit);
+        } else if (is_allow_address(node.directives_[i])) {
+            for (size_t j = 1; j < node.directives_[i].size(); ++j)
+                allow_address(node.directives_[i][j], curr_limit);
         } else {
             ThrowSyntaxError("Limit_except context needs deny: all or address "
                              "or allow: all or address");
         }
     }
+    if (curr_limit.deny_all_ && curr_limit.allow_all_)
+        ThrowSyntaxError("deny: all and allow: all can't be specified "
+                         "simultaneously");
+}
+
+void Config::deny_address(const std::string &address, Limit &curr_limit) const {
+    if (!curr_limit.allow_.empty() &&
+        std::find(curr_limit.allow_.begin(), curr_limit.allow_.end(),
+                  address) != curr_limit.allow_.end()) {
+        ThrowSyntaxError("can't deny and allow the same address");
+    }
+    curr_limit.deny_.push_back(address);
+}
+
+void Config::allow_address(const std::string &address, Limit &curr_limit)const {
+    if (!curr_limit.deny_.empty() &&
+        std::find(curr_limit.deny_.begin(),curr_limit.deny_.end(),
+                  address) != curr_limit.deny_.end()) {
+        ThrowSyntaxError("can't deny and allow the same address");
+    }
+    curr_limit.allow_.push_back(address);
 }
 
 void Config::CheckHTTPMethodsLimitExcept(Node &node, Limit &curr_limit) const {
@@ -126,6 +140,8 @@ void Config::CheckHTTPMethodsLimitExcept(Node &node, Limit &curr_limit) const {
                              "methods methods, in the limit_except block");
         }
     }
+    if (curr_limit.except_.empty())
+        ThrowSyntaxError("Limit_except context needs at least one HTTP method");
 }
 
 const std::list<ServerConfiguration> &Config::getServers() const {

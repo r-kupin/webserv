@@ -11,6 +11,7 @@
 /******************************************************************************/
 
 #include <gtest/gtest.h>
+#include <algorithm>
 #include "../src/Config/Config.h"
 #include "../src/Config/ConfigExceptions.h"
 
@@ -39,34 +40,51 @@ protected:
     }
 };
 
-//TEST_F(LimitExceptNodeTest, WrongMethodKO) {
-//    limit_except.main_ = v_strings({"limit_except", "GET", "zz" });
-//    limit_except.directives_.push_back({"return", "403", "/somewhere"});
-//
-//    EXPECT_FA(IsCorrectLimitExcept(limit_except, conf_.GetRoot()),
-//             ConfigFileSyntaxError);
-//}
+TEST_F(LimitExceptNodeTest, WrongMethodKO) {
+    limit_except.main_ = v_strings({"limit_except", "zz" });
+    limit_except.directives_.push_back({"deny", "all"});
+
+    EXPECT_THROW(HandleLimitExceptContext(limit_except, test), ConfigFileSyntaxError);
+}
 
 TEST_F(LimitExceptNodeTest, RepeatableMethodsKO) {
     limit_except.main_ = v_strings({"limit_except", "GET","GET"});
-    limit_except.directives_.push_back({"return", "403", "/somewhere"});
+    limit_except.directives_.push_back({"deny", "all"});
 
     EXPECT_THROW(HandleLimitExceptContext(limit_except, test), ConfigFileSyntaxError);
 }
 
 TEST_F(LimitExceptNodeTest, NoMethodsKO) {
     limit_except.main_ = v_strings({"limit_except"});
-    limit_except.directives_.push_back({"return", "403", "/somewhere"});
+    limit_except.directives_.push_back({"deny", "all"});
 
     EXPECT_THROW(HandleLimitExceptContext(limit_except, test), ConfigFileSyntaxError);
 }
 
 TEST_F(LimitExceptNodeTest, TwoDirectives) {
     limit_except.main_ = v_strings({"limit_except", "GET" });
-    limit_except.directives_.push_back({"return", "403", "/somewhere"});
     limit_except.directives_.push_back({"deny", "all"});
+    limit_except.directives_.push_back({"allow", "172.17.0.1"});
 
-    EXPECT_THROW(HandleLimitExceptContext(limit_except, test), ConfigFileSyntaxError);
+    EXPECT_NO_THROW(HandleLimitExceptContext(limit_except, test));
+    EXPECT_EQ(test.deny_all_, true);
+    EXPECT_EQ(test.allow_all_, false);
+    EXPECT_EQ(test.deny_.size(), 0);
+    EXPECT_EQ(test.allow_.size(), 1);
+    EXPECT_EQ(test.allow_[0], "172.17.0.1");
+}
+
+TEST_F(LimitExceptNodeTest, TwoDirectives2) {
+    limit_except.main_ = v_strings({"limit_except", "GET" });
+    limit_except.directives_.push_back({"allow", "all"});
+    limit_except.directives_.push_back({"deny", "172.17.0.1"});
+
+    EXPECT_NO_THROW(HandleLimitExceptContext(limit_except, test));
+    EXPECT_EQ(test.deny_all_, false);
+    EXPECT_EQ(test.allow_all_, true);
+    EXPECT_EQ(test.deny_.size(), 1);
+    EXPECT_EQ(test.allow_.size(), 0);
+    EXPECT_EQ(test.deny_[0], "172.17.0.1");
 }
 
 TEST_F(LimitExceptNodeTest, NoDirective) {
@@ -84,21 +102,22 @@ TEST_F(LimitExceptNodeTest, WrongReturnCode) {
 
 TEST_F(LimitExceptNodeTest, WrongAmountOfReturnArgs1) {
     limit_except.main_ = v_strings({"limit_except", "GET" });
-    limit_except.directives_.push_back({"return"});
+    limit_except.directives_.push_back({"deny"});
 
     EXPECT_THROW(HandleLimitExceptContext(limit_except, test), ConfigFileSyntaxError);
 }
 
-TEST_F(LimitExceptNodeTest, WrongAmountOfReturnArgs2) {
+TEST_F(LimitExceptNodeTest, AmountOfReturnArgs2) {
     limit_except.main_ = v_strings({"limit_except", "GET" });
-    limit_except.directives_.push_back({"return", "404", "aa", "bb"});
+    limit_except.directives_.push_back({"allow", "172.17.0.1", "172.17.0.2"});
 
-    EXPECT_THROW(HandleLimitExceptContext(limit_except, test), ConfigFileSyntaxError);
-}
-
-TEST_F(LimitExceptNodeTest, WrongReturnAddr) {
-    limit_except.main_ = v_strings({"limit_except", "GET" });
-    limit_except.directives_.push_back({"return", "404", "aa"});
-
-    EXPECT_THROW(HandleLimitExceptContext(limit_except, test), ConfigFileSyntaxError);
+    EXPECT_NO_THROW(HandleLimitExceptContext(limit_except, test));
+    EXPECT_EQ(test.deny_all_, false);
+    EXPECT_EQ(test.allow_all_, false);
+    EXPECT_EQ(test.deny_.size(), 0);
+    EXPECT_EQ(test.allow_.size(), 2);
+    EXPECT_NE(std::find(test.allow_.begin(), test.allow_.end(), "172.17.0.1"),
+               test.allow_.end());
+    EXPECT_NE(std::find(test.allow_.begin(), test.allow_.end(), "172.17.0.2"),
+               test.allow_.end());
 }

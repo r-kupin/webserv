@@ -22,7 +22,7 @@ enum Methods {GET, POST, DELETE};
 
 struct Limit {
     std::set<Methods>           except_;
-    std::vector<std::string>    alow_;
+    std::vector<std::string>    allow_;
     std::vector<std::string>    deny_;
     bool                        deny_all_;
     bool                        allow_all_;

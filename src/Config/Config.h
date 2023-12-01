@@ -88,7 +88,6 @@ private:
                                        std::ifstream &config) const;
 //  Global server check
 
-    static bool IsCorrectLimit(const Node &node);
     void        ThrowSyntaxError(const std::string &msg,
                                  std::ifstream &config) const;
     void        ThrowSyntaxError(const std::string &msg) const;
@@ -106,6 +105,10 @@ private:
     void CheckHTTPMethodsLimitExcept(Node &node, Limit &curr_limit) const;
 
     void CheckDirectivesLimitExcept(const Node &node, Limit &curr_limit) const;
+
+    void deny_address(const std::string &address, Limit &curr_limit) const;
+
+    void allow_address(const std::string &address, Limit &curr_limit) const;
 };
 
 std::ostream    &operator<<(std::ostream &os, const Config &config);
