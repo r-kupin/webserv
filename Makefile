@@ -17,17 +17,18 @@ SRCS = src/main.cpp \
 		src/Config/ErrPage.cpp \
 		src/Server/ServerResponse.cpp
 LIB_SRCS = src/Config/Config.cpp \
-           src/Server/Server.cpp \
-           src/Config/ConfigParser.cpp \
-           src/Config/ChonfigProcessingUtils.cpp \
-           src/Config/ConfigChecker.cpp \
-           src/Server/ServerManager.cpp \
-           src/Config/ConfigLocationChecker.cpp \
-           src/Config/ConfigSubmodules.cpp \
-           src/Server/ClientRequest.cpp \
-           src/Config/Location.cpp \
-           src/Config/ErrPage.cpp \
-           src/Server/ServerResponse.cpp
+            src/Config/Config.cpp \
+			src/Server/Server.cpp \
+			src/Config/ConfigParser.cpp \
+			src/Config/ChonfigProcessingUtils.cpp \
+			src/Config/ConfigChecker.cpp \
+			src/Server/ServerManager.cpp \
+			src/Config/ConfigLocationChecker.cpp \
+			src/Config/ConfigSubmodules.cpp \
+			src/Server/ClientRequest.cpp \
+			src/Config/Location.cpp \
+			src/Config/ErrPage.cpp \
+			src/Server/ServerResponse.cpp
 TEST_SRCS = test/ConfigParsingTest.cpp \
 			test/ConfigProcessingTest.cpp \
 			test/LocationNodeTest.cpp \
@@ -36,7 +37,8 @@ TEST_SRCS = test/ConfigParsingTest.cpp \
 			test/LimitExceptNodeTest.cpp \
 			test/MainNodeTest.cpp \
 			test/ServerNodeTest.cpp \
-			test/CheckServerTest.cpp
+			test/CheckServerTest.cpp \
+            test/ServerTest.cpp
 
 TEST_LIB_DIR = test/lib
 TEST_LIB_INCL_DIR = $(TEST_LIB_DIR)/googletest/include

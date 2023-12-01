@@ -36,6 +36,7 @@ add_library(webserv_lib
         src/Config/Config.h
         src/Server/Server.cpp
         src/Server/Server.h
+        src/Config/ConfigChecker.cpp
         src/Config/ConfigExceptions.h
         src/Config/ConfigParser.cpp
         src/Config/ChonfigProcessingUtils.cpp
