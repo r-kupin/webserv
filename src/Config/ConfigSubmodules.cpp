@@ -98,7 +98,7 @@ ServerConfiguration::ServerConfiguration()
     root_loc.index_.insert("/htmls/index.html");
     root_loc.error_pages_.insert(ErrPage("/htmls/404.html", 404));
     root_loc.error_pages_.insert(ErrPage("/htmls/403.html", 403));
-    root_loc.return_code_ = -1;
+    root_loc.return_code_ = 0;
     root_loc.return_address_ = "";
     root_loc.parent_ = locations_.end();
     locations_.push_back(root_loc);

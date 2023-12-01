@@ -328,6 +328,7 @@ std::string get_next_location_address(const std::string &uri) {
     return "/" + current.substr(0, current_end);
 }
 
+// todo Handle requests fot files like /home/pic.jpeg !!!
 const Location &Server::FindSublocation(const std::string &uri,
                                         const Location &start,
                                         int &http_code) {
@@ -355,20 +356,31 @@ const Location &Server::FindSublocation(const std::string &uri,
     return start;
 }
 
-//const Location &Server::FindLocation(const std::string& uri) {
-//    int http_code;
-//    const Location &loc = FindSublocation(uri, config_.GetRoot(), http_code);
-//    while (!loc.return_address_.empty())
-//        http_code = loc.return_
-//}
+/**
+ * Depending on compliance between what was requested and what is being found
+ * creates a synthetic location - a copy of the location that was found, but
+ * with altered return code, and ...
+ * @param uri
+ * @return not-exact copy of a location found
+ */
+Location Server::SynthesizeHandlingLocation(const std::string& uri) {
+    int http_code;
+    const Location &found = FindSublocation(uri, config_.GetRoot(), http_code);
+    Location synth(found);
+    if (http_code == 200) {
+        if (found.return_code_ > 0 && found.return_address_.empty()) {
+            synth.return_code_ = 200;
+        }
+    }
+        
+    return synth;
+}
 
 void Server::HandleClientRequest(int client_sock) {
      try {
          ClientRequest request(client_sock);
-         int http_code;
-		 const Location &loc = FindSublocation(request.address_, config_.GetRoot(), http_code);
-         (void )loc;
-//         ServerResponse response(request, loc, http_code);
+		 const Location &loc = SynthesizeHandlingLocation(request.address_);
+         ServerResponse response(request, loc);
 //         response.SendResponse(client_sock);
 
 

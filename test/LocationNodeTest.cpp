@@ -175,7 +175,7 @@ TEST_F(LocationNodeTest, HomeInReDefinedRoot) {
     EXPECT_NE(InternalServerError, conf_.GetRoot().error_pages_.end());
     EXPECT_EQ(InternalServerError->address_, "/50x.html");
 
-    EXPECT_EQ(conf_.GetRoot().return_code_ , -1);
+    EXPECT_EQ(conf_.GetRoot().return_code_ , 0);
     EXPECT_EQ(conf_.GetRoot().return_address_ , "");
 
     EXPECT_EQ(conf_.GetRoot().sublocations_.begin()->address_, "/home");

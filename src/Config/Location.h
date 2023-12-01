@@ -39,8 +39,8 @@ public:
     std::list<Location>     sublocations_;
     std::set<std::string>   index_;
     Limit                   limit_except_;
-    int                     return_code_;
     int                     autoindex_;
+    int                     return_code_;
     std::string             return_address_;
     std::string             return_custom_message_;
     std::string             root_;

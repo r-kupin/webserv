@@ -62,16 +62,16 @@ Location::Location(const std::string &address)
 }
 
 Location::Location()
-    : return_code_(0), autoindex_(false), parent_(NULL) {}
+    : autoindex_(false), return_code_(0), parent_(NULL) {}
 
 Location::Location(const Location& other)
 		: error_pages_(other.error_pages_),
 		  sublocations_(other.sublocations_),
 		  index_(other.index_),
 		  limit_except_(other.limit_except_),
-		  return_code_(other.return_code_),
 		  autoindex_(other.autoindex_),
-		  return_address_(other.return_address_),
+          return_code_(other.return_code_),
+          return_address_(other.return_address_),
 		  root_(other.root_),
 		  address_(other.address_),
           parent_(other.parent_) {}
@@ -82,8 +82,8 @@ Location::Location(const Location& other)
 Location::Location(const std::string &address, l_it parent)
     : error_pages_(parent->error_pages_),
     index_(parent->index_),
-    return_code_(0),
     autoindex_(parent->autoindex_),
+    return_code_(0),
     return_address_(parent->return_address_),
     address_(address),
     parent_(parent) {

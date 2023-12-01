@@ -62,7 +62,7 @@ private:
 
     void Init();
 
-    const Location &FindLocation(const std::string& uri);
+    Location SynthesizeHandlingLocation(const std::string& uri);
 };
 
 

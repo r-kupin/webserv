@@ -24,8 +24,7 @@ const static size_t        kBufferSize = 1024;
 
 struct ServerResponse {
     ServerResponse(const ClientRequest &request,
-                   const Location &root,
-                   int http_code_assumption);
+                   const Location &root);
     ServerResponse();
 
     ~ServerResponse();

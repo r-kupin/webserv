@@ -20,11 +20,9 @@
 ServerResponse::ServerResponse() {}
 
 ServerResponse::ServerResponse(const ClientRequest &request,
-                               const Location &root,
-                               int http_code_assumption) {
-    (void )request;
-    (void )root;
-    (void )http_code_assumption;
+                               const Location &root) {
+    (void) request;
+    (void) root;
 }
 
 //bool CanProceedWith(const Location &location, const ClientRequest &request) {
@@ -34,7 +32,7 @@ ServerResponse::ServerResponse(const ClientRequest &request,
 //}
 //
 //Location &
-//FindLocation(const std::string &uri, const Location &start, bool &path_exists,
+//SynthesizeHandlingLocation(const std::string &uri, const Location &start, bool &path_exists,
 //             bool &loc_defined, bool &has_index,
 //             const ClientRequest &request) {
 //    (void)request;
@@ -56,7 +54,7 @@ ServerResponse::ServerResponse(const ClientRequest &request,
 //        try {
 //            const Location &found = start.FindSublocationByAddress(loc_addr);
 ////            if (CanProceedWith(found, request))
-//                return FindLocation(uri.substr(end + 1),
+//                return SynthesizeHandlingLocation(uri.substr(end + 1),
 //                                    found, path_exists, loc_defined,
 //                                    has_index,
 //                                    ClientRequest(0));
