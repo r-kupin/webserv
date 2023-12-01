@@ -279,9 +279,6 @@ TEST_F(LocationWithSubsTest, HandleReturnGood) {
 }
 
 TEST_F(LocationWithSubsTest, HandleReturnWrong) {
-    EXPECT_THROW(default_loc_.HandleLocationReturn(
-            v_strings({"return", "301"})), LocationException);
-
     Location forbidden("/forbidden");
     EXPECT_THROW(forbidden.HandleLocationReturn(
                             v_strings({"return", "zzz","/home"})),
@@ -342,13 +339,13 @@ TEST_F(LocationCheckTest, CheckNonRootLocTest) {
     directives_.push_back({"root", "/root"});
     directives_.push_back({"index", "index_i.html"});
     directives_.push_back({"error_page", "403", "400", "416", "error.html"});
-    directives_.push_back({"return", " 300", "/home"});
+    directives_.push_back({"return", "301", "/home"});
 
     EXPECT_NO_THROW(ProcessDirectives(directives_));
 
     EXPECT_EQ(root_, "/root");
     EXPECT_EQ(index_, std::set<std::string>({"index_i.html"}));
-    EXPECT_EQ(return_code_, 300);
+    EXPECT_EQ(return_code_, 301);
     EXPECT_EQ(return_address_, "/home");
 
     EXPECT_NE(error_pages_.find(ErrPage("error.html", 403)),

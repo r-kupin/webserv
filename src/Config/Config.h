@@ -102,6 +102,10 @@ private:
     void        HandleSublocation(ServerConfiguration &sc, l_it &parent,
                                   Location &current,
                                   std::vector<Node>::iterator &it);
+
+    void CheckHTTPMethodsLimitExcept(Node &node, Limit &curr_limit) const;
+
+    void CheckDirectivesLimitExcept(const Node &node, Limit &curr_limit) const;
 };
 
 std::ostream    &operator<<(std::ostream &os, const Config &config);

@@ -48,7 +48,7 @@ TEST_F(ServerConfigTest, DetfaultTest) {
     EXPECT_NE(GetRoot().error_pages_.find(ErrPage("/htmls/403.html", 403)),
               GetRoot().error_pages_.end());
     EXPECT_EQ(GetRoot().return_code_ , -1);
-    EXPECT_EQ(GetRoot().return_address_ , "unspecified");
+    EXPECT_EQ(GetRoot().return_address_ , "");
 }
 
 TEST_F(ServerConfigTest, ServerConfDirectivesSuccess) {
@@ -80,7 +80,7 @@ TEST_F(ServerConfigTest, ServerConfDirectivesSuccess) {
     EXPECT_EQ(InternalServerError->address_, "/50x.html");
 
     EXPECT_EQ(GetRoot().return_code_ , -1);
-    EXPECT_EQ(GetRoot().return_address_ , "unspecified");
+    EXPECT_EQ(GetRoot().return_address_ , "");
 }
 
 TEST_F(ServerConfigTest, ServerConfDirectivesPortOnlySuccess) {

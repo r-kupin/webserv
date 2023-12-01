@@ -71,9 +71,45 @@ bool Config::IsCorrectLocation(const Node &node) {
     return false;
 }
 
-//todo check is redefinition of limit_except is allowed
 void
 Config::HandleLimitExceptContext(Node &node, Limit &curr_limit) const {
+    CheckHTTPMethodsLimitExcept(node, curr_limit);
+    CheckDirectivesLimitExcept(node, curr_limit);
+}
+
+void
+Config::CheckDirectivesLimitExcept(const Node &node, Limit &curr_limit) const {
+    if (node.directives_.empty())
+        ThrowSyntaxError("At least one of these directives should be "
+                         "specified in limit_except context: deny: all or "
+                         "address or allow: all or address");
+    for (size_t i = 0; i < node.directives_.size(); ++i) {
+        if (node.directives_[i][0] == "deny" &&
+            node.directives_[i][1] == "all" &&
+            node.directives_[i].size() == 2) {
+            curr_limit.deny_all_ = true;
+        } else if (node.directives_[i][0] == "allow" &&
+                   node.directives_[i][1] == "all" &&
+                   node.directives_[i].size() == 2) {
+            curr_limit.allow_all_ = true;
+        } else if (node.directives_[i][0] == "deny" &&
+                   node.directives_[i].size() > 1) {
+            for (size_t j = 1; j < node.directives_[i].size(); ++j) {
+                curr_limit.deny_.push_back(node.directives_[i][j]);
+            }
+        } else if (node.directives_[i][0] == "allow" &&
+                   node.directives_[i].size() > 1) {
+            for (size_t j = 1; j < node.directives_[i].size(); ++j) {
+                curr_limit.alow_.push_back(node.directives_[i][j]);
+            }
+        } else {
+            ThrowSyntaxError("Limit_except context needs deny: all or address "
+                             "or allow: all or address");
+        }
+    }
+}
+
+void Config::CheckHTTPMethodsLimitExcept(Node &node, Limit &curr_limit) const {
     for (std::vector<std::string>::iterator it = node.main_.begin() + 1;
          it != node.main_.end(); ++it) {
         if (*it == "GET" &&
@@ -86,11 +122,10 @@ Config::HandleLimitExceptContext(Node &node, Limit &curr_limit) const {
             curr_limit.except_.find(DELETE) == curr_limit.except_.end()) {
             curr_limit.except_.insert(DELETE);
         } else {
-            ThrowSyntaxError("Seems like there are repeatable methods in the "
-                             "limit_except block");
+            ThrowSyntaxError("Seems like there are repeatable or unsupported "
+                             "methods methods, in the limit_except block");
         }
     }
-    if (node.directives_.size() == 1 || node.directives_.size() == 2) {}
 }
 
 const std::list<ServerConfiguration> &Config::getServers() const {
