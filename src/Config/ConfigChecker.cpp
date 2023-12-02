@@ -121,7 +121,7 @@ void Config::CheckServer(Node &node) {
         if (it->port_ == current.port_)
             ThrowSyntaxError("Port needs to be unique amongst all servers");
     }
-    current.GetRoot().UpdeteSublocations();
+    current.GetRoot().UpdateSublocations();
 //    todo commnt for tests, uncomment for use
 //    std::ifstream check_root_exist(
 //                (kDefaultResPath + current.GetRoot().address_).c_str());

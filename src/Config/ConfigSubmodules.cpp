@@ -100,6 +100,7 @@ ServerConfiguration::ServerConfiguration()
     root_loc.error_pages_.insert(ErrPage("/htmls/403.html", 403));
     root_loc.return_code_ = 0;
     root_loc.return_address_ = "";
+    root_loc.full_address_ = "";
     root_loc.parent_ = locations_.end();
     locations_.push_back(root_loc);
 }

@@ -1,7 +1,7 @@
 - ### Request for the /`address` 
 	- Path `server_root`/`address` exists
 		- Return `301` and send to `address`/
-	- Path `server_root`/`address` not exists
+	- Path `server_root`/`address` does not exists
 		- Return `404` 
 - ### Request for the /`address`/
 	-  Path `server_root`/`address`/ exists
@@ -39,5 +39,7 @@
 			- Sub-location
 			- `limit-except` block
 
-
- return redirect CAN be defined in root
+uri ends:
+/`location`
+/`location`/
+/`location`/`file.txt`

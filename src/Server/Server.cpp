@@ -331,9 +331,9 @@ std::string get_next_location_address(const std::string &uri) {
 // todo Handle requests fot files like /home/pic.jpeg !!!
 const Location &Server::FindSublocation(const std::string &uri,
                                         const Location &start,
-                                        int &http_code) {
+                                        std::string &status) {
     if (uri.empty() || uri[0] != '/') {
-        http_code = 400; // Bad Request
+        status = "uri misconfigured";
         return start;
     } else if (uri != start.address_) {
         std::string first = get_next_location_address(uri);
@@ -343,34 +343,71 @@ const Location &Server::FindSublocation(const std::string &uri,
         if (first != "/") {
             try {
                 const Location &found = start.FindSublocationByAddress(first);
-                return FindSublocation(remainder, found, http_code);
+                return FindSublocation(remainder, found, status);
             } catch (const NotFoundException &) {
-                http_code = 404; // Not Found
+                status = "not found";
                 return start;
             }
         }
     }
-    http_code = 200; // OK
-    if (start.return_code_ > 0)
-        http_code = start.return_code_;
+    status = "found";
     return start;
+}
+
+bool Server::CheckFilesystem(const std::string &address,
+                             const std::string &def_res_address) const {
+    std::ifstream file((def_res_address + address).c_str());
+    if (file.good()) {
+        file.close();
+        return true;
+    }
+    file.close();
+    return false;
+}
+
+//todo check allow and deny of the requester address
+bool Server::CheckLimitedAccess(const Location &found, Methods method) const {
+    if (found.limit_except_.except_.empty() ||
+            found.limit_except_.except_.find(method) !=
+            found.limit_except_.except_.end()) {
+        if (found.address_ == "/")
+            return true;
+        else return CheckLimitedAccess(*found.parent_, method);
+    }
+    return false;
 }
 
 /**
  * Depending on compliance between what was requested and what is being found
  * creates a synthetic location - a copy of the location that was found, but
  * with altered return code, and ...
- * @param uri
+ * @param request
  * @return not-exact copy of a location found
  */
-Location Server::SynthesizeHandlingLocation(const std::string& uri) {
-    int http_code;
-    const Location &found = FindSublocation(uri, config_.GetRoot(), http_code);
+Location Server::SynthesizeHandlingLocation(const ClientRequest& request) {
+    std::string status;
+    const Location &found = FindSublocation(request.address_,
+                                            config_.GetRoot(),
+                                            status);
     Location synth(found);
-    if (http_code == 200) {
+    if (status == "found") { // literal match between uri and location hierarchy
         if (found.return_code_ > 0 && found.return_address_.empty()) {
-            synth.return_code_ = 200;
+            if (CheckFilesystem(found.root_, kDefaultResPath) &&
+                CheckLimitedAccess(found, request.method_)) {
+                synth.return_code_ = 200;
+            }
+        } else {
+//            todo here or somewhere else?
         }
+    } else if (status == "not found") {
+// No literal match. Found location will be the closest one. Maybe request
+// asks for a file?
+        if (CheckFilesystem(found.root_, kDefaultResPath) &&
+            CheckLimitedAccess(found, request.method_)) {
+//            check found location
+        }
+    } else if (status == "request misconfigured") {
+        synth.return_code_ = 400;
     }
         
     return synth;
@@ -379,8 +416,8 @@ Location Server::SynthesizeHandlingLocation(const std::string& uri) {
 void Server::HandleClientRequest(int client_sock) {
      try {
          ClientRequest request(client_sock);
-		 const Location &loc = SynthesizeHandlingLocation(request.address_);
-         ServerResponse response(request, loc);
+         ServerResponse response(request,
+                                 SynthesizeHandlingLocation(request));
 //         response.SendResponse(client_sock);
 
 
@@ -497,7 +534,7 @@ const char *NotFoundException::what() const throw() {
     return exception::what();
 }
 
-const char *BadParams::what() const throw() {
+const char *BadURI::what() const throw() {
     return exception::what();
 }
 

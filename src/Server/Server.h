@@ -34,21 +34,22 @@ public:
 
     void Start();
 protected:
-     void PresetAddress(addrinfo **addr);
-     void CreateSocket(addrinfo *res);
-     void BindSocket(addrinfo *res);
-     void ListenSocket();
-     void SetSocketOptions(addrinfo *res) const;
-     void CreateEpoll();
-     void AddEpollInstance();
-     void HandleClientRequest(int i);
+    void PresetAddress(addrinfo **addr);
+    void CreateSocket(addrinfo *res);
+    void BindSocket(addrinfo *res);
+    void ListenSocket();
+    void SetSocketOptions(addrinfo *res) const;
+    void CreateEpoll();
+    void AddEpollInstance();
+    void HandleClientRequest(int i);
+    bool CheckLimitedAccess(const Location &found, Methods method) const ;
+    bool CheckFilesystem(const std::string &address,
+                         const std::string &def_res_address) const ;
 
-     void SetSocket();
-
-     const Location &
-	 FindSublocation(const std::string &uri, const Location &start,
-                     int &http_code);
-
+    void SetSocket();
+    const Location &    FindSublocation(const std::string &uri,
+                                        const Location &start,
+                                        std::string &status);
     ServerConfiguration &getConfig();
     int getSocket() const;
     int getEpollFd() const;
@@ -62,7 +63,7 @@ private:
 
     void Init();
 
-    Location SynthesizeHandlingLocation(const std::string& uri);
+    Location SynthesizeHandlingLocation(const ClientRequest&);
 };
 
 

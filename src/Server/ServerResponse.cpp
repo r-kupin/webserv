@@ -132,7 +132,7 @@ ServerResponse::ServerResponse(const ClientRequest &request,
 ////		http_code_description_ = ErrPage::kHttpErrCodes.find(http_code_)->second;
 ////        http_is_error_ = true;
 ////    } else {
-////        throw BadParams();
+////        throw BadURI();
 ////    }
 ////	FindResponseFileAddr(<#initializer#>, <#initializer#>);
 //}

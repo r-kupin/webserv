@@ -20,6 +20,7 @@
 #include <list>
 #include "ErrPage.h"
 #include "LimitExcept.h"
+
 class Location;
 
 typedef std::vector<std::string>            v_strings;
@@ -45,6 +46,7 @@ public:
     std::string             return_custom_message_;
     std::string             root_;
     std::string             address_;
+    std::string             full_address_;
     l_it                    parent_;
 
     Location();
@@ -65,19 +67,16 @@ public:
     static void         ThrowLocationError(const std::string &msg);
     void                HandleRoot(const v_strings &directive);
     std::ostream &      RecursivePrint(std::ostream &os,
-                                       const Location &location,
-                                       const std::string &prefix) const;
-    void                UpdeteSublocations();
+                                       const Location &location) const;
+    void                UpdateSublocations();
     const Location      &getParent() const;
     bool                operator<(const Location &rhs) const;
     bool                operator==(const Location &rhs) const;
     Location&           operator=(const Location& rhs);
     bool                HasAsSublocation(Location &location);
     void                HandleIndex(const v_strings &directives);
-
-    void HandleCode(const std::string &str);
-
-    void HandleAddress(const std::string &str);
+    void                HandleCode(const std::string &str);
+    void                HandleAddress(const std::string &str);
 };
 
 struct LocationByAddress {

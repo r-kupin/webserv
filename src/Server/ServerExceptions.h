@@ -92,9 +92,9 @@ public:
     const char *what() const throw();
 };
 
-class BadParams : public Server::ServerException {
+class BadURI : public Server::ServerException {
 public:
-    BadParams() : Server::ServerException() {}
+    BadURI() : Server::ServerException() {}
 
     const char *what() const throw();
 };

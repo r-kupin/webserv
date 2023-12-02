@@ -242,7 +242,7 @@ TEST_F(LocationNodeTest, MultipleAddressesUnderTheSameParent) {
 
     Node home2;
     home2.main_ = v_strings({"location", "/home" });
-    home2.directives_.push_back({"return", "301", "/somewhere"});
+    home2.directives_.push_back({"return", "301", "http://localhost:4280/somewhere"});
 
     location_root_.child_nodes_.push_back(home2);
     location_root_.child_nodes_.push_back(home1);

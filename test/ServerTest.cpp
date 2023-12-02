@@ -2,7 +2,6 @@
 #include "../src/Server/Server.h"
 #include "../src/Server/ServerExceptions.h"
 
-
 class ClienRequestTest : public ::testing::Test {
 protected:
     int fd_;
@@ -240,70 +239,95 @@ public:
 };
 
 TEST_F(RequestHandlingTest, FindRootLocation) {
-    int code;
+    std::string status;
     std::string addr = "/";
 
-    EXPECT_EQ(FindSublocation(addr, getConfig().GetRoot(), code).address_, addr);
-    EXPECT_EQ(code, 200);
+    EXPECT_EQ(FindSublocation(addr, getConfig().GetRoot(), status).address_,
+              addr);
+    EXPECT_EQ(status, "found");
 }
 
 TEST_F(RequestHandlingTest, FindHomeLocation) {
-    int code;
+    std::string status;
     std::string addr = "/home";
 
-    EXPECT_EQ(FindSublocation(addr, getConfig().GetRoot(), code).address_,
+    EXPECT_EQ(FindSublocation(addr, getConfig().GetRoot(), status).address_,
               "/home");
-    EXPECT_EQ(code, 200);
+    EXPECT_EQ(status, "found");
 }
 
 TEST_F(RequestHandlingTest, FindAboutUs_ContactsLocation) {
-    int code;
+    std::string status;
     std::string addr = "/about-us/contacts";
 
-    EXPECT_EQ(FindSublocation(addr, getConfig().GetRoot(), code).address_,
+    EXPECT_EQ(FindSublocation(addr, getConfig().GetRoot(), status).address_,
               "/contacts");
-    EXPECT_EQ(code, 200);
+    EXPECT_EQ(status, "found");
 }
 
 TEST_F(RequestHandlingTest, FindUploadsSomethWhatewerSomething) {
-    int code;
+    std::string status;
     std::string addr = "/uploads/something/whatever";
 
-    EXPECT_EQ(FindSublocation(addr, getConfig().GetRoot(), code).address_,
+    EXPECT_EQ(FindSublocation(addr, getConfig().GetRoot(), status).address_,
               "/whatever");
-    EXPECT_EQ(code, 200);
-}
-
-TEST_F(RequestHandlingTest, FindLocationWithReturnDirective) {
-    int code;
-    std::string addr = "/uploads/something/whatever/something";
-
-    EXPECT_EQ(FindSublocation(addr, getConfig().GetRoot(), code).address_,
-              "/something");
-    EXPECT_EQ(code, 401);
+    EXPECT_EQ(status, "found");
 }
 
 TEST_F(RequestHandlingTest, BadRequest) {
-    int code;
+    std::string status;
     std::string addr = "kjhsdklhfg";
 
-    EXPECT_EQ(FindSublocation(addr, getConfig().GetRoot(), code).address_, "/");
-    EXPECT_EQ(code, 400);
+    EXPECT_EQ(FindSublocation(addr, getConfig().GetRoot(), status).address_,
+              "/");
+    EXPECT_EQ(status, "uri misconfigured");
 }
 
 TEST_F(RequestHandlingTest, RootNotFound) {
-    int code;
+    std::string status;
     std::string addr = "/kjhsdklhfg";
 
-    EXPECT_EQ(FindSublocation(addr, getConfig().GetRoot(), code).address_, "/");
-    EXPECT_EQ(code, 404);
+    EXPECT_EQ(FindSublocation(addr, getConfig().GetRoot(), status).address_,
+              "/");
+    EXPECT_EQ(status, "not found");
 }
 
 TEST_F(RequestHandlingTest, SublocationNotFound) {
-    int code;
+    std::string status;
     std::string addr = "/home/kjhsdklhfg";
 
-    EXPECT_EQ(FindSublocation(addr, getConfig().GetRoot(), code).address_,
+    EXPECT_EQ(FindSublocation(addr, getConfig().GetRoot(), status).address_,
               "/home");
-    EXPECT_EQ(code, 404);
+    EXPECT_EQ(status, "not found");
+}
+
+class LocationSynthesingTest : public ::testing::Test, public Server {
+public:
+    explicit LocationSynthesingTest() : Server(
+            *Config("test_resources/test1/default/nginx.conf").getServers()
+            .begin())
+            {};
+};
+
+TEST_F(LocationSynthesingTest, CheckFoundLocationPathDoesntExist) {
+    std::string status;
+    const Location &found = FindSublocation("/about-us",
+                                            getConfig().GetRoot(),
+                                            status);
+    // root = example/htmls/about-us
+    // path = test_resources/test1/example/htmls/about-us/about-us
+    EXPECT_TRUE(CheckFilesystem(found.root_, "test_resources/test1/"));
+    EXPECT_FALSE(CheckFilesystem(found.root_, "test_resources/test2/"));
+}
+
+TEST_F(LocationSynthesingTest, CheckFoundLocationAccessNotLimited) {
+    std::string status;
+    const Location &found = FindSublocation("/uploads/something/whatever",
+                                            getConfig().GetRoot(),
+                                            status);
+    EXPECT_TRUE(CheckLimitedAccess(found, Methods::GET));
+    EXPECT_FALSE(CheckLimitedAccess(found, Methods::POST));
+
+    EXPECT_TRUE(CheckLimitedAccess(*found.parent_, Methods::GET));
+    EXPECT_FALSE(CheckLimitedAccess(*found.parent_, Methods::POST));
 }

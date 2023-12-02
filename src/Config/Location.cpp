@@ -74,6 +74,7 @@ Location::Location(const Location& other)
           return_address_(other.return_address_),
 		  root_(other.root_),
 		  address_(other.address_),
+		  full_address_(other.full_address_),
           parent_(other.parent_) {}
 
 //Location::Location(const std::string &address)
@@ -86,6 +87,7 @@ Location::Location(const std::string &address, l_it parent)
     return_code_(0),
     return_address_(parent->return_address_),
     address_(address),
+    full_address_(parent->full_address_ + address),
     parent_(parent) {
     if (address_.find_first_of('?') != std::string::npos)
         throw LocationException();
@@ -163,8 +165,10 @@ bool is_address(const std::string &str) {
 }
 
 void Location::HandleAddress(const std::string &str) {
+    const std::string kAddressPrefix = "http://";
     if (is_address(str)) {
-        if (return_address_ == "") {
+        if (return_address_ == "" &&
+            str.substr(0, kAddressPrefix.size()) == kAddressPrefix) {
             return_address_ = str;
         } else {
             throw LocationException();
@@ -247,6 +251,26 @@ const Location & Location::FindSublocationByAddress(
     return *it;
 }
 
+
+/** todo location get's appended to root
+ * from nginx docs:
+ *  Syntax: 	root path;
+ *  Default: 	root html;
+ *  Context: 	http, server, location, if in location
+ *
+ *  Sets the root directory for requests. For example, with the following
+ *  configuration
+ *    location /i/ {
+ *        root /data/w3;
+ *    }
+ *  The /data/w3/i/top.gif file will be sent in response to the “/i/top.gif”
+ *  request.
+ *  The path value can contain variables, except $document_root and
+ *  $realpath_root.
+ *  A path to the file is constructed by merely adding a URI to the value of
+ *  the root directive. If a URI has to be modified, the alias directive
+ *  should be used.
+ */
 void Location::HandleRoot(const v_strings &directive) {
     if (directive.size() == 2) {
         root_ = directive[1];
@@ -319,27 +343,26 @@ bool LocationByAddress::operator()(const Location &location) const {
     return location.address_ == targetAddress_;
 }
 
-std::ostream & Location::RecursivePrint(std::ostream &os, const Location &location,
-                                        const std::string &prefix) const {
-    os << std::endl << "Localion " << prefix << location.address_ << ":" <<
+std::ostream & Location::RecursivePrint(std::ostream &os, const Location &location) const {
+    os << std::endl << "Localion " << location.address_ << ":" <<
     std::endl;
     if (!location.error_pages_.empty()) {
-        os << prefix << location.address_ << ":\t" << "Error Pages: " <<
+        os << location.full_address_ << ":\t" << "Error Pages: " <<
         std::endl;
         for (std::_Rb_tree_const_iterator<ErrPage> it =
                 location.error_pages_.begin();
              it != location.error_pages_.end(); ++it) {
-            os << prefix << location.address_ <<  ":\t\t" << *it << std::endl;
+            os << location.full_address_ <<  ":\t\t" << *it << std::endl;
         }
     }
     if (location.return_code_ > 0) {
-        os << prefix << location.address_ << ":\t" << "Return Code: " <<
+        os << location.full_address_ << ":\t" << "Return Code: " <<
            location.return_code_ << std::endl;
-        os << prefix << location.address_ << ":\t" << "Return Address: " <<
+        os << location.full_address_ << ":\t" << "Return Address: " <<
            location.return_address_ << std::endl;
     }
     if (!location.index_.empty()) {
-        os << prefix << location.address_ << ":\t" << "Index: ";
+        os << location.full_address_ << ":\t" << "Index: ";
         for (std::set<std::string>::iterator it = location.index_.begin();
              it != location.index_.end(); ++it) {
             os << *it << " ";
@@ -347,7 +370,7 @@ std::ostream & Location::RecursivePrint(std::ostream &os, const Location &locati
         os << std::endl;
     }
     if (!location.root_.empty())
-        os << prefix << location.address_ << ":\t" << "Root: " <<
+        os << location.full_address_ << ":\t" << "Root: " <<
            location.root_ << std::endl;
     if (location.address_ != "/") {
         os << location.address_ << ":\t" << "Parent: " <<
@@ -357,7 +380,7 @@ std::ostream & Location::RecursivePrint(std::ostream &os, const Location &locati
         for (std::list<Location>::const_iterator it =
                                     location.sublocations_.begin();
                                     it != location.sublocations_.end(); ++it) {
-            RecursivePrint(os, *it, prefix + location.address_);
+            RecursivePrint(os, *it);
         }
     }
 
@@ -379,6 +402,7 @@ Location &Location::operator=(const Location &rhs) {
     return_address_ = rhs.return_address_;
     root_ = rhs.root_;
     address_ = rhs.address_;
+    full_address_ = rhs.full_address_;
     parent_ = rhs.parent_;
 
     // Return a reference to this object
@@ -398,16 +422,19 @@ bool Location::HasAsSublocation(Location &location) {
     return false;
 }
 
-void Location::UpdeteSublocations() {
+// todo tests! check root inheritance!
+void Location::UpdateSublocations() {
     if (address_ != "/") {
         if (root_.empty())
             root_ = parent_->root_;
-        root_ = root_.substr(0, root_.find_last_of('/')) + address_ + "/";
+        if (root_[root_.size() - 1] == '/')
+            root_ = root_.substr(0, root_.size() - 1);
+        root_ += address_;
         if (error_pages_.empty())
             error_pages_ = parent_->error_pages_;
     }
     for (l_it it = sublocations_.begin(); it != sublocations_.end(); ++it) {
-        it->UpdeteSublocations();
+        it->UpdateSublocations();
     }
 }
 

@@ -23,6 +23,7 @@
 struct ClientRequest {
     Methods                             method_;
     std::string                         address_;
+    std::string                         last_step_uri_;
     std::map<std::string, std::string>  params_;
     std::map<std::string, std::string>  headers_;
 

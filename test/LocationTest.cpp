@@ -74,7 +74,7 @@ TEST_F(SimpleLocTest, ProcessDirectivesTestForNewLocation) {
     directives_.push_back({"root", "/root"});
     directives_.push_back({"index", "index_i.html"});
     directives_.push_back({"error_page", "403", "400", "416", "error.html"});
-    directives_.push_back({"return", "301", "/home"});
+    directives_.push_back({"return", "301", "http://localhost:4280/home"});
 
     EXPECT_NO_THROW(home_loc.ProcessDirectives(directives_));
 
@@ -269,9 +269,9 @@ TEST_F(LocationWithSubsTest, HasSameAddressAsOneOfSublocationsOf) {
 
 TEST_F(LocationWithSubsTest, HandleReturnGood) {
     Location redirect_home("/go-home");
-    redirect_home.HandleLocationReturn(v_strings({"return", "301", "/home"}));
+    redirect_home.HandleLocationReturn(v_strings({"return", "301", "http://localhost:4280/home"}));
     EXPECT_EQ(redirect_home.return_code_, 301);
-    EXPECT_EQ(redirect_home.return_address_, "/home");
+    EXPECT_EQ(redirect_home.return_address_, "http://localhost:4280/home");
 
     Location forbidden("/forbidden");
     forbidden.HandleLocationReturn(v_strings({"return", "403"}));
@@ -281,10 +281,10 @@ TEST_F(LocationWithSubsTest, HandleReturnGood) {
 TEST_F(LocationWithSubsTest, HandleReturnWrong) {
     Location forbidden("/forbidden");
     EXPECT_THROW(forbidden.HandleLocationReturn(
-                            v_strings({"return", "zzz","/home"})),
+                            v_strings({"return", "zzz","http://localhost:4280/home"})),
                  LocationException);
     EXPECT_THROW(forbidden.HandleLocationReturn(
-                            v_strings({"return", "301","/home", "/gg"})),
+                            v_strings({"return", "301","http://localhost:4280/home", "/gg"})),
                  LocationException);
 }
 
@@ -339,14 +339,14 @@ TEST_F(LocationCheckTest, CheckNonRootLocTest) {
     directives_.push_back({"root", "/root"});
     directives_.push_back({"index", "index_i.html"});
     directives_.push_back({"error_page", "403", "400", "416", "error.html"});
-    directives_.push_back({"return", "301", "/home"});
+    directives_.push_back({"return", "301", "http://localhost:4280/home"});
 
     EXPECT_NO_THROW(ProcessDirectives(directives_));
 
     EXPECT_EQ(root_, "/root");
     EXPECT_EQ(index_, std::set<std::string>({"index_i.html"}));
     EXPECT_EQ(return_code_, 301);
-    EXPECT_EQ(return_address_, "/home");
+    EXPECT_EQ(return_address_, "http://localhost:4280/home");
 
     EXPECT_NE(error_pages_.find(ErrPage("error.html", 403)),
               error_pages_.end());

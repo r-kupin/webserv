@@ -75,9 +75,7 @@ std::ostream &operator<<(std::ostream &os, const Config &config) {
             os << "client_max_body_size_: " << srv->client_max_body_size_ <<
                std::endl;
         }
-        srv->locations_.begin()->RecursivePrint(os,
-                                                *srv->locations_.begin(),
-                                                "");
+        srv->locations_.begin()->RecursivePrint(os, *srv->locations_.begin());
         os << std::endl;
     }
     return os;

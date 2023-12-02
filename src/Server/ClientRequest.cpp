@@ -85,6 +85,13 @@ std::string get_address(const std::string& uri) {
     return (uri.substr(0, separator));
 }
 
+std::string get_last_uri_step(const std::string& uri) {
+    unsigned long separator = uri.find_last_of('/');
+    if (separator == std::string::npos)
+        throw BadURI();
+    return (uri.substr(separator + 1));
+}
+
 bool        uri_has_query(const std::string& uri) {
     return (uri.find_first_of('?') != std::string::npos);
 }
@@ -102,7 +109,6 @@ void ClientRequest::fill_headers(const std::vector<std::string> &request) {
             headers_.insert(std::make_pair(name, value));
     }
 }
-
 
 void ClientRequest::fill_uri_params(const std::string &uri) {
     std::string query = uri.substr(uri.find_first_of('?') + 1);
@@ -134,6 +140,7 @@ ClientRequest::ClientRequest(int client_sock) {
     else
         address_ = uri;
     method_ = get_method(request[0]);
+    last_step_uri_ = get_last_uri_step(uri);
     if (request[0].find("HTTP/1.1") == std::string::npos) {
         throw HTTPVersionNotSupportedException();
     }
