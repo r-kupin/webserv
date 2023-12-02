@@ -46,6 +46,22 @@ protected:
     bool CheckFilesystem(const std::string &address,
                          const std::string &def_res_address) const ;
 
+
+    Location SynthesizeHandlingLocation(const ClientRequest&);
+
+    Location &
+    SynthFoundExact(const ClientRequest &request,
+                    const Location &found,
+                    Location &synth,
+                    const std::string &def_res_address = kDefaultResPath) const;
+
+
+    Location &
+    SynthForNotFound(const ClientRequest &request,
+                     const Location &found,
+                     Location &synth,
+                     const std::string &def_res_address = kDefaultResPath)const;
+
     void SetSocket();
     const Location &    FindSublocation(const std::string &uri,
                                         const Location &start,
@@ -62,8 +78,6 @@ private:
     epoll_event event_;
 
     void Init();
-
-    Location SynthesizeHandlingLocation(const ClientRequest&);
 };
 
 

@@ -6,7 +6,6 @@ class ClienRequestTest : public ::testing::Test {
 protected:
     int fd_;
 
-protected:
     virtual void TearDown() {
         close(fd_);
     }
@@ -307,6 +306,29 @@ public:
             *Config("test_resources/test1/default/nginx.conf").getServers()
             .begin())
             {};
+protected:
+    int fd_;
+
+    virtual void TearDown() {
+        close(fd_);
+    }
+
+    void pipe_reguest_to_fd(std::string & request) {
+        int pipe_fd[2];
+        if (pipe(pipe_fd) == -1) {
+            perror("pipe");
+            FAIL();
+        }
+        if (write(pipe_fd[1], request.c_str(), request.size()) == -1) {
+            perror("write");
+            close(pipe_fd[0]);
+            close(pipe_fd[1]);
+            FAIL(); // Fail the test if write fails
+        }
+        // Close the write end of the pipe
+        close(pipe_fd[1]);
+        fd_ = pipe_fd[0];
+    }
 };
 
 TEST_F(LocationSynthesingTest, CheckFoundLocationPathDoesntExist) {
@@ -320,7 +342,7 @@ TEST_F(LocationSynthesingTest, CheckFoundLocationPathDoesntExist) {
     EXPECT_FALSE(CheckFilesystem(found.root_, "test_resources/test2/"));
 }
 
-TEST_F(LocationSynthesingTest, CheckFoundLocationAccessNotLimited) {
+TEST_F(LocationSynthesingTest, CheckFoundLocationAccessLimitation) {
     std::string status;
     const Location &found = FindSublocation("/uploads/something/whatever",
                                             getConfig().GetRoot(),
@@ -330,4 +352,24 @@ TEST_F(LocationSynthesingTest, CheckFoundLocationAccessNotLimited) {
 
     EXPECT_TRUE(CheckLimitedAccess(*found.parent_, Methods::GET));
     EXPECT_FALSE(CheckLimitedAccess(*found.parent_, Methods::POST));
+}
+
+TEST_F(LocationSynthesingTest, SynthesiseForExactMatchDirectoryExistence) {
+    std::string loc = "/home";
+    std::string status;
+    const Location &found = FindSublocation(loc,
+                                            getConfig().GetRoot(),
+                                            status);
+
+    std::string request = "GET " + loc + " HTTP/1.1\n\r";
+
+    pipe_reguest_to_fd(request);
+    ClientRequest cl_req(fd_);
+
+    Location synth(found);
+    synth = SynthFoundExact(cl_req,
+                            found,
+                            synth,
+                            "test_resources/test1/");
+    EXPECT_EQ(synth.return_code_, 404);
 }

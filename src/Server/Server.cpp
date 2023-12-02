@@ -390,26 +390,53 @@ Location Server::SynthesizeHandlingLocation(const ClientRequest& request) {
                                             config_.GetRoot(),
                                             status);
     Location synth(found);
-    if (status == "found") { // literal match between uri and location hierarchy
-        if (found.return_code_ > 0 && found.return_address_.empty()) {
-            if (CheckFilesystem(found.root_, kDefaultResPath) &&
-                CheckLimitedAccess(found, request.method_)) {
-                synth.return_code_ = 200;
-            }
-        } else {
-//            todo here or somewhere else?
-        }
+    if (status == "found") {
+        synth = SynthFoundExact(request, found, synth);
     } else if (status == "not found") {
-// No literal match. Found location will be the closest one. Maybe request
-// asks for a file?
-        if (CheckFilesystem(found.root_, kDefaultResPath) &&
-            CheckLimitedAccess(found, request.method_)) {
-//            check found location
-        }
+        synth = SynthForNotFound(request, found, synth);
     } else if (status == "request misconfigured") {
         synth.return_code_ = 400;
     }
         
+    return synth;
+}
+
+Location &Server::SynthFoundExact(const ClientRequest &request,
+                                  const Location &found,
+                                  Location &synth,
+                                  const std::string &def_res_address) const {
+    // literal match between uri and location hierarchy
+    if (CheckFilesystem(found.root_, def_res_address) &&
+        CheckLimitedAccess(found, request.method_)) {
+            // todo check for existence of index - if defined explicitly
+            synth.return_code_ = 200;
+    } else {
+        // todo if code is overridden - handle here or somewhere else?
+        synth.return_code_ = 404; // Not Found
+    }
+    return synth;
+}
+
+Location &Server::SynthForNotFound(const ClientRequest &request,
+                                   const Location &found,
+                                   Location &synth,
+                                   const std::string &def_res_address) const {
+    // No literal match. Found location will be the closest one.
+    // Maybe request asks for a file?
+    if (CheckFilesystem(found.root_, def_res_address) &&
+        CheckLimitedAccess(found, request.method_)) {
+        // closest location exists and allows access
+        if (found.full_address_ + request.last_step_uri_ ==
+            request.address_) { // request asks for a file or subdirectory
+            if (CheckFilesystem(found.root_ + request.last_step_uri_,
+                                def_res_address)) {
+                synth.return_code_ = 200;
+                synth.root_ += request.last_step_uri_;
+            } else {
+                synth.return_code_ = 404;
+            }
+        }
+    }
     return synth;
 }
 
