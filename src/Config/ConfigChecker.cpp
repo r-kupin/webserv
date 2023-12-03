@@ -155,6 +155,7 @@ void Config::CreateSrvConfigs(Node& root) {
             if (HasServerWithSameName(config))
                 ThrowSyntaxError("Server name needs to be unique amongst all "
                                  "servers");
+            servers_.push_back(config);
         } else {
             std::cout << "Found block " + root.child_nodes_[i].main_[0] + " " +
                          "inside main context" << std::endl;
