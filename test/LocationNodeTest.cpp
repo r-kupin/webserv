@@ -11,6 +11,7 @@
 /******************************************************************************/
 
 #include <gtest/gtest.h>
+#include <algorithm>
 #include "../src/Config/Config.h"
 #include "../src/Config/ConfigExceptions.h"
 
@@ -25,7 +26,7 @@ protected:
         location_root_ = Node();
         conf_ = ServerConfiguration();
 
-        location_root_.main_ = v_strings({"location", "/"});
+        location_root_.main_ = v_str({"location", "/"});
         location_root_.directives_.push_back({"listen", "8080"});
         location_root_.directives_.push_back({"server_name", "example.com"});
         location_root_.directives_.push_back({"client_max_body_size", "2048"});
@@ -37,11 +38,11 @@ protected:
 
 TEST_F(LocationNodeTest, IsLocationTest) {
     Node home;
-    home.main_ = v_strings({"location", "/home" });
+    home.main_ = v_str({"location", "/home" });
     home.directives_.push_back({"index", "home.html"});
 
     Node limit_except_get;
-    limit_except_get.main_ = v_strings({"limit_except", "GET" });
+    limit_except_get.main_ = v_str({"limit_except", "GET" });
     limit_except_get.directives_.push_back({"deny", "all"});
 
     EXPECT_TRUE(IsLocation(home));
@@ -50,11 +51,11 @@ TEST_F(LocationNodeTest, IsLocationTest) {
 
 TEST_F(LocationNodeTest, IsLimitTest) {
     Node home;
-    home.main_ = v_strings({"location", "/home" });
+    home.main_ = v_str({"location", "/home" });
     home.directives_.push_back({"index", "home.html"});
 
     Node limit_except_get;
-    limit_except_get.main_ = v_strings({"limit_except", "GET" });
+    limit_except_get.main_ = v_str({"limit_except", "GET" });
     limit_except_get.directives_.push_back({"deny", "all"});
 
     EXPECT_FALSE(IsLimitExcept(home));
@@ -63,7 +64,7 @@ TEST_F(LocationNodeTest, IsLimitTest) {
 
 TEST_F(LocationNodeTest, IsCorrectLocationTestMoreThan2InMain) {
     Node ff;
-    ff.main_ = v_strings({"location", "/", "ff" });
+    ff.main_ = v_str({"location", "/", "ff" });
     ff.directives_.push_back({"index", "ff.html"});
 
     EXPECT_TRUE(IsLocation(ff));
@@ -73,7 +74,7 @@ TEST_F(LocationNodeTest, IsCorrectLocationTestMoreThan2InMain) {
 TEST_F(LocationNodeTest, IsCorrectLocationTestNoDirectives) {
 
     Node home;
-    home.main_ = v_strings({"location", "/home" });
+    home.main_ = v_str({"location", "/home" });
 
     EXPECT_TRUE(IsLocation(home));
     EXPECT_THROW(IsCorrectLocation(home), ConfigFileSyntaxError);
@@ -82,7 +83,7 @@ TEST_F(LocationNodeTest, IsCorrectLocationTestNoDirectives) {
 TEST_F(LocationNodeTest, IsCorrectLocationTestNotALocation) {
 
     Node limit_except_get;
-    limit_except_get.main_ = v_strings({"limit_except", "GET" });
+    limit_except_get.main_ = v_str({"limit_except", "GET" });
     limit_except_get.directives_.push_back({"deny", "all"});
 
     EXPECT_NO_THROW(IsCorrectLocation(limit_except_get));
@@ -92,7 +93,7 @@ TEST_F(LocationNodeTest, IsCorrectLocationTestNotALocation) {
 TEST_F(LocationNodeTest, IsCorrectLocationTestGoodLocation) {
 
     Node home;
-    home.main_ = v_strings({"location", "/home" });
+    home.main_ = v_str({"location", "/home" });
     home.directives_.push_back({"index", "home.html"});
 
     EXPECT_NO_THROW(IsCorrectLocation(home));
@@ -109,11 +110,11 @@ TEST_F(LocationNodeTest, RootsParentTest) {
 
 TEST_F(LocationNodeTest, RootSubnodeParentTest) {
     Node home;
-    home.main_ = v_strings({"location", "/home" });
+    home.main_ = v_str({"location", "/home" });
     home.directives_.push_back({"index", "home.html"});
 
     Node limit_except_get;
-    limit_except_get.main_ = v_strings({"limit_except", "GET" });
+    limit_except_get.main_ = v_str({"limit_except", "GET" });
     limit_except_get.directives_.push_back({"deny", "all"});
 
     home.child_nodes_.push_back(limit_except_get);
@@ -130,11 +131,11 @@ TEST_F(LocationNodeTest, RootSubnodeParentTest) {
 
 TEST_F(LocationNodeTest, WithLimitExcept) {
     Node home;
-    home.main_ = v_strings({"location", "/home" });
+    home.main_ = v_str({"location", "/home" });
     home.directives_.push_back({"index", "home.html"});
 
     Node limit_except_get;
-    limit_except_get.main_ = v_strings({"limit_except", "GET" });
+    limit_except_get.main_ = v_str({"limit_except", "GET" });
     limit_except_get.directives_.push_back({"deny", "all"});
 
     home.child_nodes_.push_back(limit_except_get);
@@ -145,14 +146,15 @@ TEST_F(LocationNodeTest, WithLimitExcept) {
 
     EXPECT_EQ(HomeLoc.address_, "/home");
     //    TODO test for append, but maybe need replace?
-    EXPECT_NE(HomeLoc.index_.find("home.html"), HomeLoc.index_.end());
+    EXPECT_NE(std::find(HomeLoc.index_.begin(), HomeLoc.index_.end(), "home.html"),
+              HomeLoc.index_.end());
     EXPECT_EQ(HomeLoc.limit_except_.except_, std::set<Methods>({GET}));
 }
 
 TEST_F(LocationNodeTest, HomeInReDefinedRoot) {
     Node home;
 
-    home.main_ = v_strings({"location", "/home" });
+    home.main_ = v_str({"location", "/home" });
     home.directives_.push_back({"index", "home.html"});
 
     location_root_.child_nodes_.push_back(home);
@@ -162,7 +164,7 @@ TEST_F(LocationNodeTest, HomeInReDefinedRoot) {
 
     EXPECT_EQ(conf_.GetRoot().address_, "/");
     EXPECT_EQ(conf_.GetRoot().root_ , "resources/root_loc_default");
-    EXPECT_NE(conf_.GetRoot().index_.find("/htmls/index.html"),
+    EXPECT_NE(std::find(conf_.GetRoot().index_.begin(), conf_.GetRoot().index_.end(),"/htmls/index.html"),
               conf_.GetRoot().index_.end());
 
     const std::set<ErrPage>::iterator &NotFoundErrPage =
@@ -180,17 +182,18 @@ TEST_F(LocationNodeTest, HomeInReDefinedRoot) {
 
     EXPECT_EQ(conf_.GetRoot().sublocations_.begin()->address_, "/home");
 //    TODO test for append, but maybe need replace?
-    EXPECT_NE(conf_.GetRoot().sublocations_.begin()->index_.find("home.html"),
+    EXPECT_NE(std::find(conf_.GetRoot().sublocations_.begin()->index_.begin(),
+                        conf_.GetRoot().sublocations_.begin()->index_.end(), "home.html"),
               conf_.GetRoot().sublocations_.begin()->index_.end());
 }
 
 TEST_F(LocationNodeTest, CorrectLocationHasWrongOneInside) {
     Node home;
-    home.main_ = v_strings({"location", "/", "ff" });
+    home.main_ = v_str({"location", "/", "ff" });
     home.directives_.push_back({"index", "home.html"});
 
     Node limit_except_get;
-    limit_except_get.main_ = v_strings({"limit_except", "GET" });
+    limit_except_get.main_ = v_str({"limit_except", "GET" });
     limit_except_get.directives_.push_back({"deny", "all"});
 
     home.child_nodes_.push_back(limit_except_get);
@@ -202,11 +205,11 @@ TEST_F(LocationNodeTest, CorrectLocationHasWrongOneInside) {
 
 TEST_F(LocationNodeTest, WrongLimitExcept) {
     Node home;
-    home.main_ = v_strings({"location", "/home" });
+    home.main_ = v_str({"location", "/home" });
     home.directives_.push_back({"index", "home.html"});
 
     Node limit_except_get;
-    limit_except_get.main_ = v_strings({"limit_except" });
+    limit_except_get.main_ = v_str({"limit_except" });
     limit_except_get.directives_.push_back({"return", "403"});
 
     home.child_nodes_.push_back(limit_except_get);
@@ -217,15 +220,15 @@ TEST_F(LocationNodeTest, WrongLimitExcept) {
 
 TEST_F(LocationNodeTest, MultipleLimitExcept) {
     Node home;
-    home.main_ = v_strings({"location", "/home" });
+    home.main_ = v_str({"location", "/home" });
     home.directives_.push_back({"index", "home.html"});
 
     Node limit_except_get;
-    limit_except_get.main_ = v_strings({"limit_except", "GET" });
+    limit_except_get.main_ = v_str({"limit_except", "GET" });
     limit_except_get.directives_.push_back({"deny", "all"});
 
     Node limit_except_post;
-    limit_except_post.main_ = v_strings({"limit_except", "POST" });
+    limit_except_post.main_ = v_str({"limit_except", "POST" });
     limit_except_post.directives_.push_back({"deny", "all"});
 
     home.child_nodes_.push_back(limit_except_get);
@@ -237,11 +240,11 @@ TEST_F(LocationNodeTest, MultipleLimitExcept) {
 
 TEST_F(LocationNodeTest, MultipleAddressesUnderTheSameParent) {
     Node home1;
-    home1.main_ = v_strings({"location", "/home" });
+    home1.main_ = v_str({"location", "/home" });
     home1.directives_.push_back({"index", "home.html"});
 
     Node home2;
-    home2.main_ = v_strings({"location", "/home" });
+    home2.main_ = v_str({"location", "/home" });
     home2.directives_.push_back({"return", "301", "http://localhost:4280/somewhere"});
 
     location_root_.child_nodes_.push_back(home2);
@@ -279,53 +282,53 @@ TEST_F(LocationNodeTest, MultipleAddressesUnderTheSameParent) {
 //    }
 //
 //    void UpdateRootLocation() {
-//        location_root_.main_ = v_strings({"location", "/"});
-//        location_root_.directives_.push_back(v_strings(
+//        location_root_.main_ = v_str({"location", "/"});
+//        location_root_.directives_.push_back(v_str(
 //                                        {"root","/var/www/example.com/html"}));
-//        location_root_.directives_.push_back(v_strings(
+//        location_root_.directives_.push_back(v_str(
 //                                        {"index", "index.html", "index.htm"}));
-//        location_root_.directives_.push_back(v_strings(
+//        location_root_.directives_.push_back(v_str(
 //                    {"error_page", "500", "502", "503", "504", "loc/50x.html"}));
 //        server_.child_nodes_.push_back(location_root_);
 //    }
 //
 //    void AddAboutUsLocationToSeServer() {
-//        location_about_us_.main_ = v_strings({"location", "/about-us"});
-//        location_about_us_.directives_.push_back(v_strings(
+//        location_about_us_.main_ = v_str({"location", "/loc_defined_index_which_exist"});
+//        location_about_us_.directives_.push_back(v_str(
 //                {"return", "301", "/about"}));
 //
 //        server_.child_nodes_.push_back(location_about_us_);
 //    }
 //
 //    void AddHomeLocationToServer() {
-//        location_home_.main_ = v_strings({"location", "/home" });
-//        location_home_.directives_.push_back(v_strings({"index", "index.html"}));
+//        location_home_.main_ = v_str({"location", "/home" });
+//        location_home_.directives_.push_back(v_str({"index", "index.html"}));
 //
-//        limit_except_home_.main_ = v_strings({ "limit_except", "GET" });
-//        limit_except_home_.directives_.push_back(v_strings({"deny", "all"}));
+//        limit_except_home_.main_ = v_str({ "limit_except", "GET" });
+//        limit_except_home_.directives_.push_back(v_str({"deny", "all"}));
 //
 //        location_home_.child_nodes_.push_back(limit_except_home_);
 //        server_.child_nodes_.push_back(location_home_);
 //    }
 //
 //    void SetRootDirectives() {
-//        root_.main_ = v_strings ({"main"});
+//        root_.main_ = v_str ({"main"});
 //        root_.directives_.push_back({"include", "mime.types"});
 //        root_.directives_.push_back({"default_type", "application/octet-stream"});
 //    }
 //
 //    void SetServerDirectives() {
-//        server_.main_ = v_strings ({"server"});
+//        server_.main_ = v_str ({"server"});
 //        server_.directives_.push_back(
-//                v_strings({ "listen", "8080" }));
+//                v_str({ "listen", "8080" }));
 //        server_.directives_.push_back(
-//                v_strings({ "server_name", "localhost" }));
+//                v_str({ "server_name", "localhost" }));
 //        server_.directives_.push_back(
-//                v_strings({ "client_max_body_size", "1024" }));
+//                v_str({ "client_max_body_size", "1024" }));
 //        server_.directives_.push_back(
-//                v_strings({ "error_page", "404", "/404.html" }));
+//                v_str({ "error_page", "404", "/404.html" }));
 //        server_.directives_.push_back(
-//                v_strings({ "error_page", "500",
+//                v_str({ "error_page", "500",
 //                            "502", "503", "504", "/50x.html" }));
 //    }
 //};
@@ -339,7 +342,7 @@ TEST_F(LocationNodeTest, MultipleAddressesUnderTheSameParent) {
 ////  srv
 //    expected_srvr.port_ = 8080;
 //    expected_srvr.port_str_ = "8080";
-//    expected_srvr.server_names_ = v_strings({"localhost"});
+//    expected_srvr.server_names_ = v_str({"localhost"});
 //    expected_srvr.server_name_ = std::string("localhost");
 //    expected_srvr.client_max_body_size_ = 1024;
 //
@@ -347,8 +350,8 @@ TEST_F(LocationNodeTest, MultipleAddressesUnderTheSameParent) {
 //    expected_srvr.locations_.address_ = "/";
 //    expected_srvr.locations_.root_ = "/var/www/example.com/html";
 //    expected_srvr.locations_.index_.clear();
-//    expected_srvr.locations_.index_.insert("index.html");
-//    expected_srvr.locations_.index_.insert("index.htm");
+//    expected_srvr.locations_.index_.push_back("index.html");
+//    expected_srvr.locations_.index_.push_back("index.htm");
 //    expected_srvr.locations_.error_pages_.clear();
 //    expected_srvr.locations_.error_pages_.insert(
 //            ErrPage("/htmls/403.html", 403));
@@ -363,13 +366,13 @@ TEST_F(LocationNodeTest, MultipleAddressesUnderTheSameParent) {
 //    expected_srvr.locations_.error_pages_.insert(
 //            ErrPage("loc/50x.html", 504));
 //
-//    Location ab_us = Location("/about-us");
+//    Location ab_us = Location("/loc_defined_index_which_exist");
 //    ab_us.return_code_ = 301;
 //    ab_us.return_address_ = "/about";
 //    expected_srvr.locations_.sublocations_.push_back(ab_us);
 //
 //    Location home = Location("/home");
-//    home.index_.insert("index.html");
+//    home.index_.push_back("index.html");
 //    home.limit_except_.return_code_ = 403;
 //    home.limit_except_.except_.insert(GET);
 //    expected_srvr.locations_.sublocations_.push_back(home);
@@ -382,7 +385,7 @@ TEST_F(LocationNodeTest, MultipleAddressesUnderTheSameParent) {
 //TEST_F(ServerPreconfigTest, UpdateIndexTest) {
 //    std::vector<ServerConfiguration> test_srvrs = CheckComponents(root_);
 //    ServerConfiguration & srv = test_srvrs[0];
-//    v_strings directive({"index", "test.htm"});
+//    v_str directive({"index", "test.htm"});
 //
 //    srv.locations_.index_ = std::set<std::string>({"index.html"});
 //    srv.locations_.default_index_ = true;
@@ -397,19 +400,19 @@ TEST_F(LocationNodeTest, MultipleAddressesUnderTheSameParent) {
 //TEST_F(ServerPreconfigTest, HandleLocationFailedLocationTest) {
 //    Node srv_node, loc_node, root;
 //
-//    srv_node.main_ = v_strings ({"server"});
+//    srv_node.main_ = v_str ({"server"});
 //    srv_node.directives_.push_back(
-//            v_strings({ "listen", "8080" }));
+//            v_str({ "listen", "8080" }));
 //    srv_node.directives_.push_back(
-//            v_strings({ "server_name", "localhost" }));
+//            v_str({ "server_name", "localhost" }));
 //    srv_node.directives_.push_back(
-//            v_strings({ "client_max_body_size", "1024" }));
+//            v_str({ "client_max_body_size", "1024" }));
 //    srv_node.directives_.push_back(
-//            v_strings({ "error_page", "404", "/404.html" }));
+//            v_str({ "error_page", "404", "/404.html" }));
 //    srv_node.directives_.push_back(
-//            v_strings({ "error_page", "500",
+//            v_str({ "error_page", "500",
 //                        "502", "503", "504", "/50x.html" }));
-//    loc_node.main_ = v_strings({"location", "/"});
+//    loc_node.main_ = v_str({"location", "/"});
 //    srv_node.child_nodes_.push_back(loc_node);
 //    root.child_nodes_.push_back(srv_node);
 //

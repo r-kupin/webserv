@@ -28,10 +28,10 @@ const std::string & SanitizeInput(const std::string &input) {
     return input;
 }
 
-std::vector<std::string> read_from_socket(int socket) {
+v_str read_from_socket(int socket) {
     char buffer[BUFFER_SIZE];
     std::string line;
-    std::vector<std::string> request;
+    v_str request;
 
     while (true) {
         //  The recv() function offers some additional features specific to
@@ -96,11 +96,11 @@ bool        uri_has_query(const std::string& uri) {
     return (uri.find_first_of('?') != std::string::npos);
 }
 
-bool        request_has_headers(const std::vector<std::string>& request) {
+bool        request_has_headers(const v_str& request) {
     return request.size() > 1;
 }
 
-void ClientRequest::fill_headers(const std::vector<std::string> &request) {
+void ClientRequest::fill_headers(const v_str &request) {
     for (size_t i = 1; i < request.size(); ++i) {
         std::string name = request[i].substr(0, request[i].find_first_of(':'));
         std::string value = request[i].substr(
@@ -133,7 +133,7 @@ void ClientRequest::fill_uri_params(const std::string &uri) {
 }
 
 ClientRequest::ClientRequest(int client_sock) {
-    std::vector<std::string> request = read_from_socket(client_sock) ;
+    v_str request = read_from_socket(client_sock) ;
     std::string uri = get_uri(request[0]);
     if (uri_has_query(uri))
         address_ = get_address(uri);

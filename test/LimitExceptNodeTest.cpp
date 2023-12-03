@@ -30,7 +30,7 @@ protected:
         limit_except = Node();
         test = Limit();
 
-        location_root_.main_ = v_strings({"location", "/"});
+        location_root_.main_ = v_str({"location", "/"});
         location_root_.directives_.push_back({"listen", "8080"});
         location_root_.directives_.push_back({"server_name", "example.com"});
         location_root_.directives_.push_back({"client_max_body_size", "2048"});
@@ -41,28 +41,28 @@ protected:
 };
 
 TEST_F(LimitExceptNodeTest, WrongMethodKO) {
-    limit_except.main_ = v_strings({"limit_except", "zz" });
+    limit_except.main_ = v_str({"limit_except", "zz" });
     limit_except.directives_.push_back({"deny", "all"});
 
     EXPECT_THROW(HandleLimitExceptContext(limit_except, test), ConfigFileSyntaxError);
 }
 
 TEST_F(LimitExceptNodeTest, RepeatableMethodsKO) {
-    limit_except.main_ = v_strings({"limit_except", "GET","GET"});
+    limit_except.main_ = v_str({"limit_except", "GET", "GET"});
     limit_except.directives_.push_back({"deny", "all"});
 
     EXPECT_THROW(HandleLimitExceptContext(limit_except, test), ConfigFileSyntaxError);
 }
 
 TEST_F(LimitExceptNodeTest, NoMethodsKO) {
-    limit_except.main_ = v_strings({"limit_except"});
+    limit_except.main_ = v_str({"limit_except"});
     limit_except.directives_.push_back({"deny", "all"});
 
     EXPECT_THROW(HandleLimitExceptContext(limit_except, test), ConfigFileSyntaxError);
 }
 
 TEST_F(LimitExceptNodeTest, TwoDirectives) {
-    limit_except.main_ = v_strings({"limit_except", "GET" });
+    limit_except.main_ = v_str({"limit_except", "GET" });
     limit_except.directives_.push_back({"deny", "all"});
     limit_except.directives_.push_back({"allow", "172.17.0.1"});
 
@@ -75,7 +75,7 @@ TEST_F(LimitExceptNodeTest, TwoDirectives) {
 }
 
 TEST_F(LimitExceptNodeTest, TwoDirectives2) {
-    limit_except.main_ = v_strings({"limit_except", "GET" });
+    limit_except.main_ = v_str({"limit_except", "GET" });
     limit_except.directives_.push_back({"allow", "all"});
     limit_except.directives_.push_back({"deny", "172.17.0.1"});
 
@@ -88,27 +88,27 @@ TEST_F(LimitExceptNodeTest, TwoDirectives2) {
 }
 
 TEST_F(LimitExceptNodeTest, NoDirective) {
-    limit_except.main_ = v_strings({"limit_except", "GET" });
+    limit_except.main_ = v_str({"limit_except", "GET" });
 
     EXPECT_THROW(HandleLimitExceptContext(limit_except, test), ConfigFileSyntaxError);
 }
 
 TEST_F(LimitExceptNodeTest, WrongReturnCode) {
-    limit_except.main_ = v_strings({"limit_except", "GET" });
+    limit_except.main_ = v_str({"limit_except", "GET" });
     limit_except.directives_.push_back({"return", "666"});
 
     EXPECT_THROW(HandleLimitExceptContext(limit_except, test), ConfigFileSyntaxError);
 }
 
 TEST_F(LimitExceptNodeTest, WrongAmountOfReturnArgs1) {
-    limit_except.main_ = v_strings({"limit_except", "GET" });
+    limit_except.main_ = v_str({"limit_except", "GET" });
     limit_except.directives_.push_back({"deny"});
 
     EXPECT_THROW(HandleLimitExceptContext(limit_except, test), ConfigFileSyntaxError);
 }
 
 TEST_F(LimitExceptNodeTest, AmountOfReturnArgs2) {
-    limit_except.main_ = v_strings({"limit_except", "GET" });
+    limit_except.main_ = v_str({"limit_except", "GET" });
     limit_except.directives_.push_back({"allow", "172.17.0.1", "172.17.0.2"});
 
     EXPECT_NO_THROW(HandleLimitExceptContext(limit_except, test));

@@ -24,17 +24,17 @@ protected:
 
     virtual void SetUp() {
         conf_ = ServerConfiguration();
-        server_.main_ = v_strings ({"server"});
+        server_.main_ = v_str ({"server"});
         server_.directives_.push_back(
-                v_strings({ "server_name", "example.com" }));
+                v_str({"server_name", "example.com" }));
         server_.directives_.push_back(
-                v_strings({ "listen", "8182" }));
+                v_str({"listen", "8182" }));
         server_.directives_.push_back(
-                v_strings({ "root", "/some/where/deep/inside" }));
+                v_str({"root", "/some/where/deep/inside" }));
         server_.directives_.push_back(
-                v_strings({ "index", "index.html", "index.htm" }));
+                v_str({"index", "index.html", "index.htm" }));
         server_.directives_.push_back(
-                v_strings({ "error_page", "401" , "err.html" }));
+                v_str({"error_page", "401" , "err.html" }));
     }
 };
 
@@ -45,7 +45,7 @@ TEST_F(ServerNodeTest, AllNoChioldnodesOK) {
 TEST_F(ServerNodeTest, LocationOK) {
     Node loc;
 
-    loc.main_ = v_strings({"location", "/"});
+    loc.main_ = v_str({"location", "/"});
     loc.directives_.push_back({"listen", "8080"});
     loc.directives_.push_back({"server_name", "example.com"});
     loc.directives_.push_back({"client_max_body_size", "2048"});
@@ -59,7 +59,7 @@ TEST_F(ServerNodeTest, LocationOK) {
 TEST_F(ServerNodeTest, LocationKO) {
     Node loc;
 
-    loc.main_ = v_strings({"location", "/", "zz"});
+    loc.main_ = v_str({"location", "/", "zz"});
 
     server_.child_nodes_.push_back(loc);
     EXPECT_THROW(CheckServerSubnodes(server_, conf_), ConfigFileSyntaxError);
@@ -68,11 +68,11 @@ TEST_F(ServerNodeTest, LocationKO) {
 TEST_F(ServerNodeTest, MultipleLocationSameSeverKO) {
     Location loc = Location("/dup");
     loc.root_ = "resources/locdefault";
-    loc.index_.insert("/htmls/index.html");
+    loc.index_.push_back("/htmls/index.html");
     conf_.GetRoot().sublocations_.push_back(loc);
 
     Node loc_dup;
-    loc_dup.main_ = v_strings({"location", "/dup"});
+    loc_dup.main_ = v_str({"location", "/dup"});
     loc_dup.directives_.push_back({"root", "resources/locdefault"});
     server_.child_nodes_.push_back(loc_dup);
 
@@ -82,7 +82,7 @@ TEST_F(ServerNodeTest, MultipleLocationSameSeverKO) {
 
 TEST_F(ServerNodeTest, LimitExceptInSeverNodeKO) {
     Node lim_ex_;
-    lim_ex_.main_ = v_strings({"limit_except", "GET" });
+    lim_ex_.main_ = v_str({"limit_except", "GET" });
     lim_ex_.directives_.push_back({"return", "403"});
 
     server_.child_nodes_.push_back(lim_ex_);
@@ -92,7 +92,7 @@ TEST_F(ServerNodeTest, LimitExceptInSeverNodeKO) {
 
 TEST_F(ServerNodeTest, LocationThrowsAnException) {
     Node lim_ex_;
-    lim_ex_.main_ = v_strings({"limit_except", "GET" });
+    lim_ex_.main_ = v_str({"limit_except", "GET" });
     lim_ex_.directives_.push_back({"return", "403"});
 
     server_.child_nodes_.push_back(lim_ex_);
@@ -102,17 +102,17 @@ TEST_F(ServerNodeTest, LocationThrowsAnException) {
 
 
 //TEST_F(ServerNodeTest, ComponentsTestAllPresent) {
-//    server_.main_ = v_strings ({"server"});
+//    server_.main_ = v_str ({"server"});
 //    server_.directives_.push_back(
-//            v_strings({ "server_name", "localhost" }));
+//            v_str({ "server_name", "localhost" }));
 //    server_.directives_.push_back(
-//            v_strings({ "listen", "8080" }));
+//            v_str({ "listen", "8080" }));
 //    server_.directives_.push_back(
-//            v_strings({ "root", "/some/where/deep/inside" }));
+//            v_str({ "root", "/some/where/deep/inside" }));
 //    server_.directives_.push_back(
-//            v_strings({ "index", "index.html", "index.htm" }));
+//            v_str({ "index", "index.html", "index.htm" }));
 //    server_.directives_.push_back(
-//            v_strings({ "error_page", "401" , "err.html" }));
+//            v_str({ "error_page", "401" , "err.html" }));
 //    root_.child_nodes_.push_back(server_);
 //    EXPECT_NO_THROW(CheckComponents(root_));
 //}

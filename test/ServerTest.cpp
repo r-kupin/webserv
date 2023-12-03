@@ -234,7 +234,7 @@ TEST_F(ClienRequestTest, SomeGarbage) {
 class RequestHandlingTest : public ::testing::Test, public Server {
 public:
     explicit RequestHandlingTest() : Server(
-            *Config("resources/default/nginx.conf").getServers().begin()) {}
+            *Config("test_resources/test1/default/nginx.conf").getServers().begin()) {}
 };
 
 TEST_F(RequestHandlingTest, FindRootLocation) {
@@ -255,9 +255,10 @@ TEST_F(RequestHandlingTest, FindHomeLocation) {
     EXPECT_EQ(status, "found");
 }
 
-TEST_F(RequestHandlingTest, FindAboutUs_ContactsLocation) {
+TEST_F(RequestHandlingTest,
+       Find_loc_defined_index_which_exist_ContactsLocation) {
     std::string status;
-    std::string addr = "/about-us/contacts";
+    std::string addr = "/loc_defined_index_which_exist/contacts";
 
     EXPECT_EQ(FindSublocation(addr, getConfig().GetRoot(), status).address_,
               "/contacts");
@@ -333,11 +334,11 @@ protected:
 
 TEST_F(LocationSynthesingTest, CheckFoundLocationPathDoesntExist) {
     std::string status;
-    const Location &found = FindSublocation("/about-us",
+    const Location &found = FindSublocation("/loc_defined_index_which_exist",
                                             getConfig().GetRoot(),
                                             status);
-    // root = example/htmls/about-us
-    // path = test_resources/test1/example/htmls/about-us/about-us
+    // root = example/htmls/loc_defined_index_which_exist
+    // path = test_resources/test1/example/htmls/loc_defined_index_which_exist/loc_defined_index_which_exist
     EXPECT_TRUE(CheckFilesystem(found.root_, "test_resources/test1/"));
     EXPECT_FALSE(CheckFilesystem(found.root_, "test_resources/test2/"));
 }
@@ -354,7 +355,7 @@ TEST_F(LocationSynthesingTest, CheckFoundLocationAccessLimitation) {
     EXPECT_FALSE(CheckLimitedAccess(*found.parent_, Methods::POST));
 }
 
-TEST_F(LocationSynthesingTest, SynthesiseForExactMatchDirectoryExistence) {
+TEST_F(LocationSynthesingTest, SynthesiseForExactMatchDirectoryDontExist) {
     std::string loc = "/home";
     std::string status;
     const Location &found = FindSublocation(loc,
@@ -372,4 +373,24 @@ TEST_F(LocationSynthesingTest, SynthesiseForExactMatchDirectoryExistence) {
                             synth,
                             "test_resources/test1/");
     EXPECT_EQ(synth.return_code_, 404);
+}
+
+TEST_F(LocationSynthesingTest, SynthesiseForExactMatchDirectoryDoExist) {
+    std::string loc = "/loc_defined_index_which_exist";
+    std::string status;
+    const Location &found = FindSublocation(loc,
+                                            getConfig().GetRoot(),
+                                            status);
+
+    std::string request = "GET " + loc + " HTTP/1.1\n\r";
+
+    pipe_reguest_to_fd(request);
+    ClientRequest cl_req(fd_);
+
+    Location synth(found);
+    synth = SynthFoundExact(cl_req,
+                            found,
+                            synth,
+                            "test_resources/test1/");
+    EXPECT_EQ(synth.return_code_, 200);
 }

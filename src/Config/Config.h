@@ -55,7 +55,7 @@ protected:
     //      Location subcontext
     void        HandleLocationContext(Node &loc_context,
                                       ServerConfiguration &sc,
-                                      l_it parent);
+                                      l_loc_it parent);
     //  Limit_except subcontext
     void        HandleLimitExceptContext(Node &node, Limit &curr_limit) const;
     void        CheckServerSubnodes(Node &node, ServerConfiguration &current);
@@ -72,7 +72,7 @@ private:
 //  Parse config
     RawNode             ParseNode(std::ifstream &config,
                                   std::string &line_leftover,
-                                  const v_strings &main_directive) const;
+                                  const v_str &main_directive) const;
     void                PreprocessLine(std::string &line,
                                        const std::string &line_leftover) const;
     void                GetChildNode(RawNode &current, std::ifstream &config,
@@ -81,7 +81,7 @@ private:
                                      std::ifstream &config) const;
     void                FinishSubNode(std::string &line, RawNode &current,
                                       std::ifstream &config) const;
-    static v_strings    ParseDirective(std::string &line, char c);
+    static v_str    ParseDirective(std::string &line, char c);
     void                HandleLineLeftower(std::string &line_leftover,
                                            std::string &line) const;
     void                FinishMainNode(RawNode &current,
@@ -96,9 +96,9 @@ private:
     Location    &AddOrUpdate(Location &child, Location &parent);
     void        CheckParentDoesntHaveItAlready(Location &current,
                                                Location &parent);
-    bool        NeedToAddCurrentToParent(l_it &parent, Location &current,
+    bool        NeedToAddCurrentToParent(l_loc_it &parent, Location &current,
                                          std::vector<Node>::iterator &it);
-    void        HandleSublocation(ServerConfiguration &sc, l_it &parent,
+    void        HandleSublocation(ServerConfiguration &sc, l_loc_it &parent,
                                   Location &current,
                                   std::vector<Node>::iterator &it);
 

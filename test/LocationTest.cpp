@@ -11,45 +11,46 @@
 /******************************************************************************/
 
 #include <gtest/gtest.h>
+#include <algorithm>
 #include "../src/Config/Config.h"
 #include "../src/Server/ServerExceptions.h"
 
 
 TEST(LocationTest, MarkDefinedNonMarked) {
     bool unmarked = false;
-    EXPECT_NO_THROW(Location::MarkDefined("key", unmarked, v_strings({"key",
-                                                                     "value"})));
+    EXPECT_NO_THROW(Location::MarkDefined("key", unmarked, v_str({"key",
+                                                                  "value"})));
     EXPECT_TRUE(unmarked);
 }
 
 TEST(LocationTest, MarkDefinedMarked) {
     bool marked = true;
-    EXPECT_NO_THROW(Location::MarkDefined("key", marked, v_strings({"key", "value"})));
+    EXPECT_NO_THROW(Location::MarkDefined("key", marked, v_str({"key", "value"})));
     EXPECT_TRUE(marked);
 }
 
 TEST(LocationTest, MarkDefinedFailsDueToInsufficientDirective) {
     bool unmarked = false;
-    EXPECT_THROW(Location::MarkDefined("key", unmarked, v_strings({"key"})),
+    EXPECT_THROW(Location::MarkDefined("key", unmarked, v_str({"key"})),
                  Location::LocationException);
 }
 
 TEST(LocationTest, UMarkDefinedFailsRepetative) {
     bool marked = true;
-    EXPECT_THROW(Location::UMarkDefined("key", marked, v_strings({"key", "value"})),
+    EXPECT_THROW(Location::UMarkDefined("key", marked, v_str({"key", "value"})),
                  Location::LocationException);
 }
 
 TEST(LocationTest, UMarkDefinedFailsDueToInsufficientDirective) {
     bool unmarked = false;
-    EXPECT_THROW(Location::UMarkDefined("key", unmarked, v_strings({"key"})),
+    EXPECT_THROW(Location::UMarkDefined("key", unmarked, v_str({"key"})),
                  Location::LocationException);
 }
 
 TEST(LocationTest, UMarkDefinedMarked) {
     bool marked = false;
     EXPECT_NO_THROW(Location::UMarkDefined("key", marked,
-                                           v_strings({"key", "value"})));
+                                           v_str({"key", "value"})));
     EXPECT_TRUE(marked);
 }
 
@@ -58,7 +59,7 @@ public:
     explicit SimpleLocTest() : Location() {};
 protected:
     ServerConfiguration sc;
-    std::vector<v_strings> directives_;
+    std::vector<v_str> directives_;
 };
 
 TEST_F(SimpleLocTest, LocationWithQuestionInName) {
@@ -79,7 +80,7 @@ TEST_F(SimpleLocTest, ProcessDirectivesTestForNewLocation) {
     EXPECT_NO_THROW(home_loc.ProcessDirectives(directives_));
 
     EXPECT_EQ(home_loc.root_, "/root");
-    EXPECT_NE(home_loc.index_.find("index_i.html"), home_loc.index_.end());
+    EXPECT_NE(std::find(home_loc.index_.begin(), home_loc.index_.end(),"index_i.html"), home_loc.index_.end());
     EXPECT_EQ(home_loc.return_code_, 301);
 //    EXPECT_EQ(home_loc.return_address_, "/home");
 
@@ -101,7 +102,7 @@ TEST_F(SimpleLocTest, ProcessDirectivesTestForRootRedefinition) {
     EXPECT_NO_THROW(root_loc.ProcessDirectives(directives_));
     
     EXPECT_EQ(root_loc.root_, "/root");
-    EXPECT_NE(root_loc.index_.find("index_i.html"), root_loc.index_.end());
+    EXPECT_NE(std::find(root_loc.index_.begin(), root_loc.index_.end(),"index_i.html"), root_loc.index_.end());
 
     EXPECT_NE(root_loc.error_pages_.find(ErrPage("error.html", 403)),
               root_loc.error_pages_.end());
@@ -113,7 +114,7 @@ TEST_F(SimpleLocTest, ProcessDirectivesTestForRootRedefinition) {
 
 // todo is it even possible? makes sense?
 TEST_F(SimpleLocTest, ProcessDirectivesTestForRootRootRedefinition) {
-    std::vector<v_strings> directives_2;
+    std::vector<v_str> directives_2;
 
     directives_.push_back({"root", "/root1"});
     directives_.push_back({"index", "index_1.html"});
@@ -128,7 +129,7 @@ TEST_F(SimpleLocTest, ProcessDirectivesTestForRootRootRedefinition) {
     EXPECT_NO_THROW(root_loc.ProcessDirectives(directives_));
 
     EXPECT_EQ(root_loc.root_, "/root1");
-    EXPECT_NE(root_loc.index_.find("index_1.html"), root_loc.index_.end());
+    EXPECT_NE(std::find(root_loc.index_.begin(), root_loc.index_.end(),"index_1.html"), root_loc.index_.end());
 
     EXPECT_NE(root_loc.error_pages_.find(ErrPage("error1.html", 403)),
               root_loc.error_pages_.end());
@@ -145,7 +146,7 @@ TEST_F(SimpleLocTest, ProcessDirectivesTestForRootRootRedefinition) {
     EXPECT_EQ(root_loc2.sublocations_.size(), 0);
 
     EXPECT_EQ(root_loc2.root_, "/root2");
-    EXPECT_NE(root_loc2.index_.find("index_2.html"), root_loc2.index_.end());
+    EXPECT_NE(std::find(root_loc2.index_.begin(), root_loc2.index_.end(),"index_2.html"), root_loc2.index_.end());
 
     EXPECT_NE(root_loc2.error_pages_.find(ErrPage("error2.html", 403)),
               root_loc2.error_pages_.end());
@@ -164,7 +165,7 @@ TEST_F(SimpleLocTest, ProcessDirectivesTestForRootRootRedefinition) {
 //    directives_.push_back({"error_page", "403", "400", "416", "error.html"});
 //    directives_.push_back({"return", " 300", "/home"});
 //
-//    v_strings root_index_update;
+//    v_str root_index_update;
 //
 //    EXPECT_NO_THROW(root_index_update =
 //                                    default_loc.ProcessDirectives(directives_));
@@ -181,7 +182,7 @@ TEST_F(SimpleLocTest, ProcessDirectivesTestForRootRootRedefinition) {
 //    EXPECT_NE(error_pages_.find(ErrPage("error.html", 416)),
 //              error_pages_.end());
 //
-//    EXPECT_EQ(root_index_update, v_strings({ "index", "index_i.html"}));
+//    EXPECT_EQ(root_index_update, v_str({ "index", "index_i.html"}));
 //}
 
 
@@ -195,7 +196,7 @@ protected:
     virtual void SetUp() {
         default_loc_ = Location("/");
         Location home("/home");
-        home.index_.insert("home_index.html");
+        home.index_.push_back("home_index.html");
         default_loc_.sublocations_.push_back(home);
     }
 };
@@ -219,8 +220,8 @@ TEST_F(LocationWithSubsTest, RootFindSublocationByAddressTest) {
 }
 
 TEST_F(LocationWithSubsTest, AddErrPages) {
-    default_loc_.AddErrorPages(v_strings({"error_page", "404", "/404.html"}));
-    default_loc_.AddErrorPages(v_strings({"error_page", "403", "/403.html"}));
+    default_loc_.AddErrorPages(v_str({"error_page", "404", "/404.html"}));
+    default_loc_.AddErrorPages(v_str({"error_page", "403", "/403.html"}));
 
     EXPECT_EQ(default_loc_.error_pages_.find(
             ErrPage("/404.html", 404))->address_, "/404.html");
@@ -229,39 +230,39 @@ TEST_F(LocationWithSubsTest, AddErrPages) {
 }
 
 TEST_F(LocationWithSubsTest, UpdateErrPages) {
-    default_loc_.AddErrorPages(v_strings({"error_page", "404", "/404.html"}));
+    default_loc_.AddErrorPages(v_str({"error_page", "404", "/404.html"}));
 
     EXPECT_EQ(default_loc_.error_pages_.find(
             ErrPage("/404.html", 404))->address_, "/404.html");
 
-    default_loc_.AddErrorPages(v_strings({"error_page", "404", "/404_new.html"}));
+    default_loc_.AddErrorPages(v_str({"error_page", "404", "/404_new.html"}));
 
     EXPECT_EQ(default_loc_.error_pages_.find(
             ErrPage("/404_new.html", 404))->address_, "/404_new.html");
 }
 
 TEST_F(LocationWithSubsTest, ErrPagesWrongDirective) {
-    EXPECT_THROW(default_loc_.AddErrorPages(v_strings(
+    EXPECT_THROW(default_loc_.AddErrorPages(v_str(
                                         {"error_page", "404"})),
                  LocationException);
-    EXPECT_THROW(default_loc_.AddErrorPages(v_strings(
+    EXPECT_THROW(default_loc_.AddErrorPages(v_str(
                                         {"error_page", "304"})),
                  LocationException);
-    EXPECT_THROW(default_loc_.AddErrorPages(v_strings(
+    EXPECT_THROW(default_loc_.AddErrorPages(v_str(
                                         {"error_page", "404", "/aaa", "bbb"})),
                  LocationException);
-    EXPECT_THROW(default_loc_.AddErrorPages(v_strings(
+    EXPECT_THROW(default_loc_.AddErrorPages(v_str(
                                         {"error_page", "zzz", "/aaa"})),
                  LocationException);
 }
 
 TEST_F(LocationWithSubsTest, HasSameAddressAsOneOfSublocationsOf) {
     Location contact("/contact");
-    contact.index_.insert("contact_index.html");
+    contact.index_.push_back("contact_index.html");
     default_loc_.sublocations_.push_back(contact);
 
     Location about("/about");
-    about.index_.insert("about_index.html");
+    about.index_.push_back("about_index.html");
 
     EXPECT_TRUE(contact.HasSameAddressAsOneOfSublocationsOf(default_loc_));
     EXPECT_FALSE(about.HasSameAddressAsOneOfSublocationsOf(default_loc_));
@@ -269,22 +270,22 @@ TEST_F(LocationWithSubsTest, HasSameAddressAsOneOfSublocationsOf) {
 
 TEST_F(LocationWithSubsTest, HandleReturnGood) {
     Location redirect_home("/go-home");
-    redirect_home.HandleLocationReturn(v_strings({"return", "301", "http://localhost:4280/home"}));
+    redirect_home.HandleLocationReturn(v_str({"return", "301", "http://localhost:4280/home"}));
     EXPECT_EQ(redirect_home.return_code_, 301);
     EXPECT_EQ(redirect_home.return_address_, "http://localhost:4280/home");
 
     Location forbidden("/forbidden");
-    forbidden.HandleLocationReturn(v_strings({"return", "403"}));
+    forbidden.HandleLocationReturn(v_str({"return", "403"}));
     EXPECT_EQ(forbidden.return_code_, 403);
 }
 
 TEST_F(LocationWithSubsTest, HandleReturnWrong) {
     Location forbidden("/forbidden");
     EXPECT_THROW(forbidden.HandleLocationReturn(
-                            v_strings({"return", "zzz","http://localhost:4280/home"})),
+            v_str({"return", "zzz", "http://localhost:4280/home"})),
                  LocationException);
     EXPECT_THROW(forbidden.HandleLocationReturn(
-                            v_strings({"return", "301","http://localhost:4280/home", "/gg"})),
+            v_str({"return", "301", "http://localhost:4280/home", "/gg"})),
                  LocationException);
 }
 
@@ -294,11 +295,11 @@ public:
 protected:
     Location parent_;
     ServerConfiguration conf_;
-    std::vector<v_strings> directives_;
+    std::vector<v_str> directives_;
 
     virtual void SetUp() {
         conf_ = ServerConfiguration();
-        directives_ = std::vector<v_strings>();
+        directives_ = std::vector<v_str>();
         conf_.port_ = 8080;
     }
 };
@@ -317,8 +318,8 @@ protected:
 //            conf_.GetRoot().ProcessDirectives(directives_));
 //
 //    EXPECT_EQ(conf_.GetRoot().root_, "/root");
-////    todo append, but maybe need replace ?
-//    EXPECT_NE(conf_.GetRoot().index_.find("index_i.html"),
+////    todo replace, not appnd !
+//    EXPECT_NE(std::find(conf_.GetRoot().index_.begin(), conf_.GetRoot().index_.end(),"index_i.html"),
 //              conf_.GetRoot().index_.end());
 //
 //    EXPECT_NE(conf_.GetRoot().error_pages_.find(ErrPage("error.html", 403)),
@@ -344,7 +345,7 @@ TEST_F(LocationCheckTest, CheckNonRootLocTest) {
     EXPECT_NO_THROW(ProcessDirectives(directives_));
 
     EXPECT_EQ(root_, "/root");
-    EXPECT_EQ(index_, std::set<std::string>({"index_i.html"}));
+    EXPECT_EQ(index_, l_str({"index_i.html"}));
     EXPECT_EQ(return_code_, 301);
     EXPECT_EQ(return_address_, "http://localhost:4280/home");
 

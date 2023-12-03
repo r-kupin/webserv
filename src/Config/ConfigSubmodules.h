@@ -37,16 +37,16 @@ public:
     ServerConfiguration();
     ServerConfiguration(const ServerConfiguration &);
 
-    void                UpdateIndex(const v_strings &directive);
+    void                UpdateIndex(const v_str &directive);
     static bool         MarkDefined(const std::string &key, bool &flag,
-                                    const v_strings &directive);
+                                    const v_str &directive);
     static bool         UMarkDefined(const std::string &key, bool &flag,
-                                     const v_strings &directive);
-    void                CheckServerDirectives(std::vector<v_strings> &directives);
+                                     const v_str &directive);
+    void                CheckServerDirectives(std::vector<v_str> &directives);
     static void         ThrowServerConfigError(const std::string &msg);
-    void                UpdateHostname(const v_strings &directives);
+    void                UpdateHostname(const v_str &directives);
     Location            &GetRoot();
-    l_it                GetRootIt();
+    l_loc_it                GetRootIt();
 
     bool operator==(const ServerConfiguration &rhs) const;
     ServerConfiguration& operator=(const ServerConfiguration& rhs);
@@ -59,8 +59,8 @@ public:
  * @param child_nodes_ nested blocks
  */
 struct Node {
-    v_strings main_;
-    std::vector<v_strings> directives_;
+    v_str main_;
+    std::vector<v_str> directives_;
     std::vector<Node> child_nodes_;
 };
 

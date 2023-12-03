@@ -11,6 +11,7 @@
 /******************************************************************************/
 
 #include <gtest/gtest.h>
+#include <algorithm>
 #include "../src/Config/Config.h"
 #include "../src/Config/ConfigExceptions.h"
 #include "../src/Server/ServerExceptions.h"
@@ -19,11 +20,11 @@ class ServerConfigTest : public ::testing::Test, public ServerConfiguration {
 public:
     explicit ServerConfigTest() : ServerConfiguration() {};
 protected:
-    std::vector<v_strings> directives_;
+    std::vector<v_str> directives_;
 
     virtual void SetUp() {
         port_ = false;
-        directives_ = std::vector<v_strings>();
+        directives_ = std::vector<v_str>();
     }
 };
 
@@ -33,7 +34,8 @@ TEST_F(ServerConfigTest, DetfaultTest) {
     EXPECT_EQ(server_name_, "localhost");
     EXPECT_EQ(GetRoot().address_, "/");
     EXPECT_EQ(GetRoot().root_ , "resources/root_loc_default");
-    EXPECT_NE(GetRoot().index_.find("/htmls/index.html"), GetRoot().index_.end());
+    EXPECT_NE(std::find(GetRoot().index_.begin(), GetRoot().index_.end(),"/htmls/index.html"),
+              GetRoot().index_.end());
 
     const std::set<ErrPage>::iterator &NotFoundErrPage =
             GetRoot().error_pages_.find(ErrPage("/htmls/404.html", 404));
@@ -67,7 +69,7 @@ TEST_F(ServerConfigTest, ServerConfDirectivesSuccess) {
     EXPECT_EQ(server_names_.find("example.com"), server_names_.begin());
     EXPECT_EQ(GetRoot().address_, "/");
     EXPECT_EQ(GetRoot().root_ , "resources/root_loc_default");
-    EXPECT_NE(GetRoot().index_.find("/htmls/index.html"), GetRoot().index_.end());
+    EXPECT_NE(std::find(GetRoot().index_.begin(), GetRoot().index_.end(),"/htmls/index.html"), GetRoot().index_.end());
 
     const std::set<ErrPage>::iterator &NotFoundErrPage =
             GetRoot().error_pages_.find(ErrPage("/404.html", 404));

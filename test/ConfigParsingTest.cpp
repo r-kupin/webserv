@@ -70,26 +70,26 @@ TEST(ConfigParsingTest, ConfigThrowsNonExistentConf) {
 //    Node random;
 //    Node limit_except;
 //
-//    limit_except.main_ = v_strings({ "limit_except", "GET", "POST", "DELETE" });
-//    limit_except.directives_.push_back(v_strings({"return", "404"}));
+//    limit_except.main_ = v_str({ "limit_except", "GET", "POST", "DELETE" });
+//    limit_except.directives_.push_back(v_str({"return", "404"}));
 //    location.child_nodes_.push_back(limit_except);
 //
-//    location.main_ = v_strings({ "location", "/" });
-//    location.directives_.push_back(v_strings({"root", "/some/where"}));
+//    location.main_ = v_str({ "location", "/" });
+//    location.directives_.push_back(v_str({"root", "/some/where"}));
 //    server_.child_nodes_.push_back(location);
 //
 //
-//    random.main_ = v_strings({ "random" });
+//    random.main_ = v_str({ "random" });
 //    server_.child_nodes_.push_back(random);
 //
 //    server_.directives_.push_back(
-//            v_strings({ "server_name", "localhost" }));
+//            v_str({ "server_name", "localhost" }));
 //    server_.directives_.push_back(
-//            v_strings({ "listen", "8080" }));
+//            v_str({ "listen", "8080" }));
 //    server_.directives_.push_back(
-//            v_strings({ "index", "index.html", "index.htm" }));
+//            v_str({ "index", "index.html", "index.htm" }));
 //    server_.directives_.push_back(
-//            v_strings({ "error_page", "err.html" }));
+//            v_str({ "error_page", "err.html" }));
 //    root_.child_nodes_.push_back(server_);
 //    EXPECT_NO_THROW(CheckComponents(root_));
 //}

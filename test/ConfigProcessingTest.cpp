@@ -24,23 +24,23 @@ protected:
     virtual void SetUp() {
         root_ = Node();
         server_ = Node();
-        root_.main_ = v_strings ({"main"});
-        server_.main_ = v_strings ({"server"});
+        root_.main_ = v_str ({"main"});
+        server_.main_ = v_str ({"server"});
         server_.directives_.push_back(
-                v_strings({ "server_name", "localhost" }));
+                v_str({"server_name", "localhost" }));
         server_.directives_.push_back(
-                v_strings({ "listen", "8080" }));
+                v_str({"listen", "8080" }));
         server_.directives_.push_back(
-                v_strings({ "root", "/some/where/deep/inside" }));
+                v_str({"root", "/some/where/deep/inside" }));
         server_.directives_.push_back(
-                v_strings({ "index", "index.html", "index.htm" }));
+                v_str({"index", "index.html", "index.htm" }));
         server_.directives_.push_back(
-                v_strings({ "error_page", "401" , "err.html" }));
+                v_str({"error_page", "401" , "err.html" }));
     }
 };
 
 TEST_F(LocationContextTest, ComponentsTestLocationBlockEmpty) {
-    location_.main_ = v_strings({ "location", "/" });
+    location_.main_ = v_str({"location", "/" });
     server_.child_nodes_.push_back(location_);
 
     root_.child_nodes_.push_back(server_);
@@ -48,8 +48,8 @@ TEST_F(LocationContextTest, ComponentsTestLocationBlockEmpty) {
 }
 
 TEST_F(LocationContextTest, ComponentsTestLocationBlockWithoutPath) {
-    location_.main_ = v_strings({ "location"});
-    location_.directives_.push_back(v_strings({"root", "/some/where"}));
+    location_.main_ = v_str({"location"});
+    location_.directives_.push_back(v_str({"root", "/some/where"}));
     server_.child_nodes_.push_back(location_);
 
     root_.child_nodes_.push_back(server_);
@@ -57,8 +57,8 @@ TEST_F(LocationContextTest, ComponentsTestLocationBlockWithoutPath) {
 }
 
 TEST_F(LocationContextTest, ComponentsTestAllRootInsideLocation) {
-    location_.main_ = v_strings({ "location", "/" });
-    location_.directives_.push_back(v_strings({"root", "/some/where"}));
+    location_.main_ = v_str({"location", "/" });
+    location_.directives_.push_back(v_str({"root", "/some/where"}));
     server_.child_nodes_.push_back(location_);
 
     root_.child_nodes_.push_back(server_);
@@ -66,9 +66,9 @@ TEST_F(LocationContextTest, ComponentsTestAllRootInsideLocation) {
 }
 
 TEST_F(LocationContextTest, ComponentsTestAllIndexInsideLocation) {
-    location_.main_ = v_strings({"location", "/" });
+    location_.main_ = v_str({"location", "/" });
     location_.directives_.push_back(
-            v_strings({ "index", "index.html", "index.htm" }));
+            v_str({"index", "index.html", "index.htm" }));
     server_.child_nodes_.push_back(location_);
 
     root_.child_nodes_.push_back(server_);
@@ -87,27 +87,27 @@ protected:
         server_ = Node();
         location_ = Node();
 
-        root_.main_ = v_strings ({"main"});
-        server_.main_ = v_strings ({"server"});
+        root_.main_ = v_str ({"main"});
+        server_.main_ = v_str ({"server"});
         server_.directives_.push_back(
-                v_strings({ "server_name", "localhost" }));
+                v_str({"server_name", "localhost" }));
         server_.directives_.push_back(
-                v_strings({ "listen", "8080" }));
+                v_str({"listen", "8080" }));
         server_.directives_.push_back(
-                v_strings({ "root", "/some/where/deep/inside" }));
+                v_str({"root", "/some/where/deep/inside" }));
         server_.directives_.push_back(
-                v_strings({ "index", "index.html", "index.htm" }));
+                v_str({"index", "index.html", "index.htm" }));
         server_.directives_.push_back(
-                v_strings({ "error_page", "401" , "err.html" }));
+                v_str({"error_page", "401" , "err.html" }));
 
-        location_.main_ = v_strings({"location", "/" });
-        location_.directives_.push_back(v_strings({"root", "/some/where"}));
+        location_.main_ = v_str({"location", "/" });
+        location_.directives_.push_back(v_str({"root", "/some/where"}));
     }
 };
 
 TEST_F(LimitExceptContextTest, ComponentsTestLocationSomeRandomBlocksArePresent) {
 Node random;
-random.main_ = v_strings({ "random" });
+random.main_ = v_str({"random" });
 server_.child_nodes_.push_back(random);
 
 root_.child_nodes_.push_back(server_);
@@ -118,11 +118,11 @@ TEST_F(LimitExceptContextTest, ComponentsTestLimitExceptNoHTTPMethods) {
 Node random;
 Node limit_except;
 
-limit_except.main_ = v_strings({ "limit_except" });
-limit_except.directives_.push_back(v_strings({"deny", "all"}));
+limit_except.main_ = v_str({"limit_except" });
+limit_except.directives_.push_back(v_str({"deny", "all"}));
 location_.child_nodes_.push_back(limit_except);
 
-random.main_ = v_strings({ "random" });
+random.main_ = v_str({"random" });
 server_.child_nodes_.push_back(random);
 
 server_.child_nodes_.push_back(location_);
@@ -134,11 +134,11 @@ TEST_F(LimitExceptContextTest, ComponentsTestLimitExceptWrongHTTPMethods) {
 Node random;
 Node limit_except;
 
-limit_except.main_ = v_strings({ "limit_except", "QWER" });
-limit_except.directives_.push_back(v_strings({"deny", "all"}));
+limit_except.main_ = v_str({"limit_except", "QWER" });
+limit_except.directives_.push_back(v_str({"deny", "all"}));
 location_.child_nodes_.push_back(limit_except);
 
-random.main_ = v_strings({ "random" });
+random.main_ = v_str({"random" });
 server_.child_nodes_.push_back(random);
 
 server_.child_nodes_.push_back(location_);
@@ -150,8 +150,8 @@ TEST_F(LimitExceptContextTest, ComponentsTestLimitExceptWrongInServerContext) {
 Node random;
 Node limit_except;
 
-limit_except.main_ = v_strings({ "limit_except", "GET", "POST" });
-limit_except.directives_.push_back(v_strings({"deny", "all"}));
+limit_except.main_ = v_str({"limit_except", "GET", "POST" });
+limit_except.directives_.push_back(v_str({"deny", "all"}));
 
 server_.child_nodes_.push_back(limit_except);
 root_.child_nodes_.push_back(server_);
@@ -162,11 +162,11 @@ TEST_F(LimitExceptContextTest, ComponentsTestLimitExceptCorrectHTTPMethods) {
 Node random;
 Node limit_except;
 
-limit_except.main_ = v_strings({ "limit_except", "GET" });
-limit_except.directives_.push_back(v_strings({"deny", "all"}));
+limit_except.main_ = v_str({"limit_except", "GET" });
+limit_except.directives_.push_back(v_str({"deny", "all"}));
 location_.child_nodes_.push_back(limit_except);
 
-random.main_ = v_strings({ "random" });
+random.main_ = v_str({"random" });
 server_.child_nodes_.push_back(random);
 
 server_.child_nodes_.push_back(location_);
@@ -179,11 +179,11 @@ TEST_F(LimitExceptContextTest,
 Node random;
 Node limit_except;
 
-limit_except.main_ = v_strings({ "limit_except", "GET", "QWER" });
-limit_except.directives_.push_back(v_strings({"deny", "all"}));
+limit_except.main_ = v_str({"limit_except", "GET", "QWER" });
+limit_except.directives_.push_back(v_str({"deny", "all"}));
 location_.child_nodes_.push_back(limit_except);
 
-random.main_ = v_strings({ "random" });
+random.main_ = v_str({"random" });
 server_.child_nodes_.push_back(random);
 
 server_.child_nodes_.push_back(location_);
@@ -195,11 +195,11 @@ TEST_F(LimitExceptContextTest, ComponentsTestLimitExceptAllCorrectHTTPMethods) {
 Node random;
 Node limit_except;
 
-limit_except.main_ = v_strings({ "limit_except", "GET", "POST", "DELETE" });
-limit_except.directives_.push_back(v_strings({"deny", "all"}));
+limit_except.main_ = v_str({"limit_except", "GET", "POST", "DELETE" });
+limit_except.directives_.push_back(v_str({"deny", "all"}));
 location_.child_nodes_.push_back(limit_except);
 
-random.main_ = v_strings({ "random" });
+random.main_ = v_str({"random" });
 server_.child_nodes_.push_back(random);
 
 server_.child_nodes_.push_back(location_);
@@ -211,10 +211,10 @@ TEST_F(LimitExceptContextTest, ComponentsTestLimitExceptButContextIsEmpty) {
 Node random;
 Node limit_except;
 
-limit_except.main_ = v_strings({ "limit_except", "GET", "POST", "DELETE" });
+limit_except.main_ = v_str({"limit_except", "GET", "POST", "DELETE" });
 location_.child_nodes_.push_back(limit_except);
 
-random.main_ = v_strings({ "random" });
+random.main_ = v_str({"random" });
 server_.child_nodes_.push_back(random);
 
 server_.child_nodes_.push_back(location_);
@@ -227,11 +227,11 @@ TEST_F(LimitExceptContextTest,
 Node random;
 Node limit_except;
 
-limit_except.main_ = v_strings({ "limit_except", "GET", "POST", "DELETE" });
-limit_except.directives_.push_back(v_strings({"bias", "whatever"}));
+limit_except.main_ = v_str({"limit_except", "GET", "POST", "DELETE" });
+limit_except.directives_.push_back(v_str({"bias", "whatever"}));
 location_.child_nodes_.push_back(limit_except);
 
-random.main_ = v_strings({ "random" });
+random.main_ = v_str({"random" });
 server_.child_nodes_.push_back(random);
 
 server_.child_nodes_.push_back(location_);

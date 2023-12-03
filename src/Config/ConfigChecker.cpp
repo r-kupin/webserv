@@ -36,14 +36,14 @@ Config::CheckParentDoesntHaveItAlready(Location &current, Location &parent) {
                          "context");
 }
 
-bool Config::NeedToAddCurrentToParent(l_it &parent, Location &current,
+bool Config::NeedToAddCurrentToParent(l_loc_it &parent, Location &current,
                                       std::vector<Node>::iterator &it) {
     return !WillHaveSameAddressAs(*it, current) &&
            parent->address_ != current.address_ &&
            !parent->HasAsSublocation(current);
 }
 
-void Config::HandleSublocation(ServerConfiguration &sc, l_it &parent,
+void Config::HandleSublocation(ServerConfiguration &sc, l_loc_it &parent,
                                Location &current,
                                std::vector<Node>::iterator &it) {
     if (NeedToAddCurrentToParent(parent, current, it))
@@ -57,7 +57,7 @@ void Config::HandleSublocation(ServerConfiguration &sc, l_it &parent,
 
 void Config::HandleLocationContext(Node &loc_context,
                                    ServerConfiguration &sc,
-                                   l_it parent) {
+                                   l_loc_it parent) {
     Location maybe_current;
 
     try {

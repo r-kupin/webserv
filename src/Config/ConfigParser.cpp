@@ -25,7 +25,7 @@ bool is_min(size_t n, size_t a, size_t b) {
  * @param config input stream
  */
 void Config::ParseConfig(std::ifstream &config) {
-    v_strings main;
+    v_str main;
     main.push_back("main");
 
     std::string empty = std::string("");
@@ -64,7 +64,7 @@ void Config::ParseConfig(std::ifstream &config) {
  */
 RawNode
 Config::ParseNode(std::ifstream &config, std::string &line_leftover,
-                  const v_strings &main_directive) const {
+                  const v_str &main_directive) const {
     std::string line;
     RawNode current;
 
@@ -179,8 +179,8 @@ void Config::FinishSubNode(std::string &line,
  * @param c terminating character
  * @return vector of strings - parsed directive
  */
-v_strings Config::ParseDirective(std::string &line, char c) {
-    v_strings params;
+v_str Config::ParseDirective(std::string &line, char c) {
+    v_str params;
     std::string all_separators = " \t";
     all_separators.push_back(c);
     while (line[0] != c) {

@@ -78,6 +78,10 @@ private:
     epoll_event event_;
 
     void Init();
+
+    l_str_c_it
+    FindIndexToSend(const Location &found,
+                    const std::string &def_res_address) const;
 };
 
 

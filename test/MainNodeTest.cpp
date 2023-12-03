@@ -23,8 +23,8 @@ protected:
     virtual void SetUp() {
         root_ = Node();
         server_ = Node();
-        root_.main_ = v_strings ({"main"});
-        server_.main_ = v_strings ({"server"});
+        root_.main_ = v_str ({"main"});
+        server_.main_ = v_str ({"server"});
     }
 };
 

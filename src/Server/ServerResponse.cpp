@@ -33,7 +33,7 @@ ServerResponse::ServerResponse(const ClientRequest &request,
 //
 //Location &
 //SynthesizeHandlingLocation(const std::string &uri, const Location &start, bool &path_exists,
-//             bool &loc_defined, bool &has_index,
+//             bool &loc_defined, bool &loc_defined_index_which_exist,
 //             const ClientRequest &request) {
 //    (void)request;
 //    if (uri != start.address_) {
@@ -48,7 +48,7 @@ ServerResponse::ServerResponse(const ClientRequest &request,
 ////            path_exists = true;
 ////            std::ifstream index((start.root_ + "index.html").c_str());
 ////            if (index.good()) {
-////                has_index = true;
+////                loc_defined_index_which_exist = true;
 ////            }
 ////        }
 //        try {
@@ -56,7 +56,7 @@ ServerResponse::ServerResponse(const ClientRequest &request,
 ////            if (CanProceedWith(found, request))
 //                return SynthesizeHandlingLocation(uri.substr(end + 1),
 //                                    found, path_exists, loc_defined,
-//                                    has_index,
+//                                    loc_defined_index_which_exist,
 //                                    ClientRequest(0));
 //        } catch (const NotFoundException &) {
 //            return start;
@@ -72,9 +72,9 @@ ServerResponse::ServerResponse(const ClientRequest &request,
 //
 ////    bool path_exists = false;
 ////    bool location_defined = false;
-////    bool has_index = false;
+////    bool loc_defined_index_which_exist = false;
 ////     const Location & main = FindSublocation(uri, root, path_exists,
-////                                         location_defined, has_index,
+////                                         location_defined, loc_defined_index_which_exist,
 ////                                         request);
 ////    (void)main;
 ////    if (path_exists) {

@@ -18,7 +18,7 @@
 #include "../Server/ServerExceptions.h"
 
 
-code_map Location::initializeHttpRedirectCodes() {
+m_codes_c Location::initializeHttpRedirectCodes() {
     std::map<int, std::string> codes;
     codes.insert(std::make_pair(301, "Moved Permanently"));
     codes.insert(std::make_pair(302, "Found"));
@@ -29,7 +29,7 @@ code_map Location::initializeHttpRedirectCodes() {
     return codes;
 }
 
-code_map Location::initializeHttpOKCodes() {
+m_codes_c Location::initializeHttpOKCodes() {
     std::map<int, std::string> codes;
     codes.insert(std::make_pair(100, "Continue"));
     codes.insert(std::make_pair(101, "Switching Protocols"));
@@ -52,24 +52,24 @@ code_map Location::initializeHttpOKCodes() {
     return codes;
 }
 
-code_map Location::kHttpOkCodes = Location::initializeHttpOKCodes();
-code_map Location::kHttpRedirectCodes = Location::initializeHttpRedirectCodes();
+m_codes_c Location::kHttpOkCodes = Location::initializeHttpOKCodes();
+m_codes_c Location::kHttpRedirectCodes = Location::initializeHttpRedirectCodes();
 
 Location::Location(const std::string &address)
-	: return_code_(0), address_(address), parent_(NULL) {
+	: index_defined_(false), return_code_(0), address_(address), parent_(NULL) {
     if (address_.find_first_of('?') != std::string::npos)
         throw LocationException();
 }
 
 Location::Location()
-    : autoindex_(false), return_code_(0), parent_(NULL) {}
+    : index_defined_(false), return_code_(0), parent_(NULL) {}
 
 Location::Location(const Location& other)
 		: error_pages_(other.error_pages_),
 		  sublocations_(other.sublocations_),
 		  index_(other.index_),
+          index_defined_(other.index_defined_),
 		  limit_except_(other.limit_except_),
-		  autoindex_(other.autoindex_),
           return_code_(other.return_code_),
           return_address_(other.return_address_),
 		  root_(other.root_),
@@ -80,10 +80,10 @@ Location::Location(const Location& other)
 //Location::Location(const std::string &address)
 //    : return_code_(0), address_(address) {}
 
-Location::Location(const std::string &address, l_it parent)
+Location::Location(const std::string &address, l_loc_it parent)
     : error_pages_(parent->error_pages_),
     index_(parent->index_),
-    autoindex_(parent->autoindex_),
+    index_defined_(false),
     return_code_(0),
     return_address_(parent->return_address_),
     address_(address),
@@ -118,7 +118,7 @@ bool Location::operator==(const Location &rhs) const {
 }
 
 bool Location::HasSameAddressAsOneOfSublocationsOf(const Location &rhs) const {
-    for (std::list<Location>::const_iterator it = rhs.sublocations_.begin();
+    for (l_loc_c_it it = rhs.sublocations_.begin();
          it != rhs.sublocations_.end(); ++it) {
         if (it->HasSameAddressAs(*this))
             return true;
@@ -130,7 +130,7 @@ bool Location::HasSameAddressAs(const Location &rhs) const {
     return address_ == rhs.address_;
 }
 
-void Location::AddErrorPages(const v_strings &directive) {
+void Location::AddErrorPages(const v_str &directive) {
     std::string         address;
     int                 code;
 
@@ -210,7 +210,7 @@ void Location::HandleCode(const std::string &str) {
  * custom message !! depending on the return code !!
  *  There can't be more than 2 args, and code can't be the second arg.
  */
-void Location::HandleLocationReturn(const v_strings &directives_) {
+void Location::HandleLocationReturn(const v_str &directives_) {
     if (directives_.size() == 2 &&
         (is_number(directives_[1]) || is_address(directives_[1]))) {
         if (is_address(directives_[1])) {
@@ -243,7 +243,7 @@ const Location & Location::FindSublocationByAddress(
     if (address == "/")
         return *this;
     LocationByAddress to_find(address);
-    const std::list<Location>::const_iterator &it = std::find_if(
+    const l_loc_c_it &it = std::find_if(
                                         sublocations_.begin(),
                                         sublocations_.end(), to_find);
     if (it == sublocations_.end())
@@ -271,7 +271,7 @@ const Location & Location::FindSublocationByAddress(
  *  the root directive. If a URI has to be modified, the alias directive
  *  should be used.
  */
-void Location::HandleRoot(const v_strings &directive) {
+void Location::HandleRoot(const v_str &directive) {
     if (directive.size() == 2) {
         root_ = directive[1];
     } else {
@@ -280,7 +280,7 @@ void Location::HandleRoot(const v_strings &directive) {
 }
 
 bool Location::MarkDefined(const std::string &key, bool &flag,
-                                      const v_strings &directive) {
+                                      const v_str &directive) {
     if (directive[0] == key) {
         if (directive.size() < 2) {
             ThrowLocationError("definition has to contain at least key and 1 "
@@ -294,7 +294,7 @@ bool Location::MarkDefined(const std::string &key, bool &flag,
 }
 
 bool Location::UMarkDefined(const std::string &key, bool &flag,
-                                       const v_strings &directive) {
+                                       const v_str &directive) {
     if (directive[0] == key) {
         if (flag) {
             ThrowLocationError("Redefinition of " + key + " is not allowed");
@@ -309,7 +309,7 @@ bool Location::UMarkDefined(const std::string &key, bool &flag,
     return false;
 }
 
-void Location::ProcessDirectives(std::vector<v_strings> &directives) {
+void Location::ProcessDirectives(std::vector<v_str> &directives) {
     bool    root = false, index = false, ret = false, err = false;
 
     for (size_t i = 0; i < directives.size(); ++i) {
@@ -325,10 +325,13 @@ void Location::ProcessDirectives(std::vector<v_strings> &directives) {
     }
 }
 
-// todo append or replace?
-void Location::HandleIndex(const v_strings &directives) {
+void Location::HandleIndex(const v_str &directives) {
+    if (!index_defined_) {
+        index_.clear();
+        index_defined_ = true;
+    }
     for (size_t j = 1; j < directives.size(); ++j)
-        index_.insert(directives[j]);
+        index_.push_back(directives[j]);
 }
 
 void Location::ThrowLocationError(const std::string &msg) {
@@ -363,8 +366,8 @@ std::ostream & Location::RecursivePrint(std::ostream &os, const Location &locati
     }
     if (!location.index_.empty()) {
         os << location.full_address_ << ":\t" << "Index: ";
-        for (std::set<std::string>::iterator it = location.index_.begin();
-             it != location.index_.end(); ++it) {
+        for (l_str_c_it it = location.index_.begin();
+            it != location.index_.end(); ++it) {
             os << *it << " ";
         }
         os << std::endl;
@@ -377,9 +380,8 @@ std::ostream & Location::RecursivePrint(std::ostream &os, const Location &locati
            location.parent_->address_ << std::endl;
     }
     if (!location.sublocations_.empty()) {
-        for (std::list<Location>::const_iterator it =
-                                    location.sublocations_.begin();
-                                    it != location.sublocations_.end(); ++it) {
+        for (l_loc_c_it it = location.sublocations_.begin();
+            it != location.sublocations_.end(); ++it) {
             RecursivePrint(os, *it);
         }
     }
@@ -396,9 +398,9 @@ Location &Location::operator=(const Location &rhs) {
     error_pages_ = rhs.error_pages_;
     sublocations_ = rhs.sublocations_;
     index_ = rhs.index_;
+    index_defined_ = rhs.index_defined_;
     limit_except_ = rhs.limit_except_;
     return_code_ = rhs.return_code_;
-    autoindex_ = rhs.autoindex_;
     return_address_ = rhs.return_address_;
     root_ = rhs.root_;
     address_ = rhs.address_;
@@ -415,7 +417,7 @@ const Location &Location::getParent() const {
 }
 
 bool Location::HasAsSublocation(Location &location) {
-    for (l_it it = sublocations_.begin(); it != sublocations_.end(); ++it) {
+    for (l_loc_it it = sublocations_.begin(); it != sublocations_.end(); ++it) {
         if (location.HasSameAddressAs(*it))
             return true;
     }
@@ -433,44 +435,7 @@ void Location::UpdateSublocations() {
         if (error_pages_.empty())
             error_pages_ = parent_->error_pages_;
     }
-    for (l_it it = sublocations_.begin(); it != sublocations_.end(); ++it) {
+    for (l_loc_it it = sublocations_.begin(); it != sublocations_.end(); ++it) {
         it->UpdateSublocations();
     }
-}
-
-std::ostream& operator<<(std::ostream& os, const Location& location) {
-    os << std::endl << "Localion " << location.address_ << ":" << std::endl;
-    if (!location.error_pages_.empty()) {
-        os << location.address_ << ":\t" << "Error Pages: " << std::endl;
-        for (std::_Rb_tree_const_iterator<ErrPage> it =
-                location.error_pages_.begin();
-             it != location.error_pages_.end(); ++it) {
-            os << location.address_ <<  ":\t\t" << *it << std::endl;
-        }
-    }
-    if (location.return_code_ > 0) {
-        os << location.address_ << ":\t" << "Return Code: " <<
-           location.return_code_ << std::endl;
-        os << location.address_ << ":\t" << "Return Address: " <<
-           location.return_address_ << std::endl;
-    }
-    if (!location.index_.empty()) {
-        os << location.address_ << ":\t" << "Index: ";
-        for (std::set<std::string>::iterator it = location.index_.begin();
-             it != location.index_.end(); ++it) {
-            os << *it << " ";
-        }
-        os << std::endl;
-    }
-    if (!location.root_.empty())
-        os << location.address_ << ":\t" << "zz: " <<
-           location.root_ << std::endl;
-    if (!location.sublocations_.empty()) {
-        for (std::list<Location>::const_iterator it =
-                location.sublocations_.begin();
-             it != location.sublocations_.end(); ++it) {
-            os << *it ;
-        }
-    }
-    return os;
 }

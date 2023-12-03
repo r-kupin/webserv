@@ -51,24 +51,24 @@ Config::HandleLimitExceptContext(Node &node, Limit &curr_limit) const {
     CheckDirectivesLimitExcept(node, curr_limit);
 }
 
-bool is_deny_all(const v_strings &directives) {
+bool is_deny_all(const v_str &directives) {
     return directives.size() == 2 &&
     directives[0] == "deny" &&
     directives[1] == "all";
 }
 
-bool is_allow_all(const v_strings &directives) {
+bool is_allow_all(const v_str &directives) {
     return directives.size() == 2 &&
     directives[0] == "allow" &&
     directives[1] == "all";
 }
 
-bool is_deny_address(const v_strings &directives) {
+bool is_deny_address(const v_str &directives) {
     return directives.size() > 1 &&
            directives[0] == "deny";
 }
 
-bool is_allow_address(const v_strings &directives) {
+bool is_allow_address(const v_str &directives) {
     return directives.size() > 1 &&
            directives[0] == "allow";
 }

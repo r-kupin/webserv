@@ -29,7 +29,7 @@ std::ostream &operator<<(std::ostream &os, const Limit &limit) {
     return os;
 }
 
-void ServerConfiguration::UpdateHostname(const v_strings &directives) {
+void ServerConfiguration::UpdateHostname(const v_str &directives) {
     // TODO server names - hostnames ....
     if (default_hostname_) {
         server_names_.clear();
@@ -39,15 +39,15 @@ void ServerConfiguration::UpdateHostname(const v_strings &directives) {
         server_names_.insert(directives[i]);
 }
 
-//    todo append index or replace?
-void ServerConfiguration::UpdateIndex(const v_strings &directive) {
+void ServerConfiguration::UpdateIndex(const v_str &directive) {
+    GetRoot().index_defined_ = true;
     for (size_t i = 1; i < directive.size(); ++i)
-        GetRoot().index_.insert(directive[i]);
+        GetRoot().index_.push_back(directive[i]);
 }
 //
-//void ServerConfiguration::InheritanceErrPagesRoot(l_it parent,
+//void ServerConfiguration::InheritanceErrPagesRoot(l_loc_it parent,
 //                                                  std::list<Location> &kids) {
-//    for (l_it it = kids.begin(); it != kids.end(); ++it) {
+//    for (l_loc_it it = kids.begin(); it != kids.end(); ++it) {
 //        if (it->root_.empty())
 //            it->root_ = parent->root_;
 //        if (it->address_ != "/")
@@ -61,7 +61,7 @@ void ServerConfiguration::UpdateIndex(const v_strings &directive) {
 //}
 
 void
-ServerConfiguration::CheckServerDirectives(std::vector<v_strings> &directives) {
+ServerConfiguration::CheckServerDirectives(std::vector<v_str> &directives) {
     bool srv_name = false;
     bool cl_max_bd_size = false;
     bool err = false;
@@ -95,7 +95,7 @@ ServerConfiguration::ServerConfiguration()
   server_name_("localhost") {
     Location root_loc("/");
     root_loc.root_ = "resources/root_loc_default";
-    root_loc.index_.insert("/htmls/index.html");
+    root_loc.index_.push_back("/htmls/index.html");
     root_loc.error_pages_.insert(ErrPage("/htmls/404.html", 404));
     root_loc.error_pages_.insert(ErrPage("/htmls/403.html", 403));
     root_loc.return_code_ = 0;
@@ -126,7 +126,7 @@ bool ServerConfiguration::operator==(const ServerConfiguration &rhs) const {
 }
 
 bool ServerConfiguration::MarkDefined(const std::string &key, bool &flag,
-                                      const v_strings &directive) {
+                                      const v_str &directive) {
     if (directive[0] == key && directive.size() > 1) {
         flag = true;
         return true;
@@ -134,7 +134,7 @@ bool ServerConfiguration::MarkDefined(const std::string &key, bool &flag,
     return false;}
 
 bool ServerConfiguration::UMarkDefined(const std::string &key, bool &flag,
-                                       const v_strings &directive) {
+                                       const v_str &directive) {
     if (directive[0] == key && directive.size() > 1) {
         if (flag)
             ThrowServerConfigError(
@@ -183,6 +183,6 @@ Location &ServerConfiguration::GetRoot() {
     return locations_.front();
 }
 
-l_it ServerConfiguration::GetRootIt() {
+l_loc_it ServerConfiguration::GetRootIt() {
     return locations_.begin();
 }
