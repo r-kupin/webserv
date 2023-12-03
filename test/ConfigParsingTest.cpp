@@ -76,20 +76,20 @@ TEST(ConfigParsingTest, ConfigThrowsNonExistentConf) {
 //
 //    location.main_ = v_str({ "location", "/" });
 //    location.directives_.push_back(v_str({"root", "/some/where"}));
-//    server_.child_nodes_.push_back(location);
+//    empty_server_.child_nodes_.push_back(location);
 //
 //
 //    random.main_ = v_str({ "random" });
-//    server_.child_nodes_.push_back(random);
+//    empty_server_.child_nodes_.push_back(random);
 //
-//    server_.directives_.push_back(
+//    empty_server_.directives_.push_back(
 //            v_str({ "server_name", "localhost" }));
-//    server_.directives_.push_back(
+//    empty_server_.directives_.push_back(
 //            v_str({ "listen", "8080" }));
-//    server_.directives_.push_back(
+//    empty_server_.directives_.push_back(
 //            v_str({ "index", "index.html", "index.htm" }));
-//    server_.directives_.push_back(
+//    empty_server_.directives_.push_back(
 //            v_str({ "error_page", "err.html" }));
-//    root_.child_nodes_.push_back(server_);
+//    root_.child_nodes_.push_back(empty_server_);
 //    EXPECT_NO_THROW(CheckComponents(root_));
 //}

@@ -328,7 +328,7 @@ std::string get_next_location_address(const std::string &uri) {
     return "/" + current.substr(0, current_end);
 }
 
-// todo Handle requests fot files like /home/pic.jpeg !!!
+// todo Handle requests fot files like /loc_defined_index_not_exist/pic.jpeg !!!
 const Location &Server::FindSublocation(const std::string &uri,
                                         const Location &start,
                                         std::string &status) {

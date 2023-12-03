@@ -60,9 +60,9 @@ Config &Config::operator=(const Config &other) {
 }
 
 std::ostream &operator<<(std::ostream &os, const Config &config) {
-    const std::list<ServerConfiguration> &servers = config.getServers();
+    l_srvconf &servers = config.getServers();
 
-    for (std::_List_const_iterator<ServerConfiguration> srv = servers.begin();
+    for (l_srvconf_it_c srv = servers.begin();
          srv != servers.end(); ++srv) {
         os << "server: " << std::endl;
         os << "hostname: " << srv->server_name_ << std::endl;

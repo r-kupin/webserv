@@ -21,6 +21,7 @@ protected:
     Node root_;
     Node server_;
     Node location_;
+
     virtual void SetUp() {
         root_ = Node();
         server_ = Node();

@@ -102,17 +102,17 @@ TEST_F(ServerNodeTest, LocationThrowsAnException) {
 
 
 //TEST_F(ServerNodeTest, ComponentsTestAllPresent) {
-//    server_.main_ = v_str ({"server"});
-//    server_.directives_.push_back(
+//    empty_server_.main_ = v_str ({"server"});
+//    empty_server_.directives_.push_back(
 //            v_str({ "server_name", "localhost" }));
-//    server_.directives_.push_back(
+//    empty_server_.directives_.push_back(
 //            v_str({ "listen", "8080" }));
-//    server_.directives_.push_back(
+//    empty_server_.directives_.push_back(
 //            v_str({ "root", "/some/where/deep/inside" }));
-//    server_.directives_.push_back(
+//    empty_server_.directives_.push_back(
 //            v_str({ "index", "index.html", "index.htm" }));
-//    server_.directives_.push_back(
+//    empty_server_.directives_.push_back(
 //            v_str({ "error_page", "401" , "err.html" }));
-//    root_.child_nodes_.push_back(server_);
+//    root_.child_nodes_.push_back(empty_server_);
 //    EXPECT_NO_THROW(CheckComponents(root_));
 //}

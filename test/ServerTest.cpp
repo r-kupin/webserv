@@ -248,10 +248,10 @@ TEST_F(RequestHandlingTest, FindRootLocation) {
 
 TEST_F(RequestHandlingTest, FindHomeLocation) {
     std::string status;
-    std::string addr = "/home";
+    std::string addr = "/loc_defined_index_not_exist";
 
     EXPECT_EQ(FindSublocation(addr, getConfig().GetRoot(), status).address_,
-              "/home");
+              "/loc_defined_index_not_exist");
     EXPECT_EQ(status, "found");
 }
 
@@ -294,10 +294,10 @@ TEST_F(RequestHandlingTest, RootNotFound) {
 
 TEST_F(RequestHandlingTest, SublocationNotFound) {
     std::string status;
-    std::string addr = "/home/kjhsdklhfg";
+    std::string addr = "/loc_defined_index_not_exist/kjhsdklhfg";
 
     EXPECT_EQ(FindSublocation(addr, getConfig().GetRoot(), status).address_,
-              "/home");
+              "/loc_defined_index_not_exist");
     EXPECT_EQ(status, "not found");
 }
 
@@ -355,8 +355,9 @@ TEST_F(LocationSynthesingTest, CheckFoundLocationAccessLimitation) {
     EXPECT_FALSE(CheckLimitedAccess(*found.parent_, Methods::POST));
 }
 
-TEST_F(LocationSynthesingTest, SynthesiseForExactMatchDirectoryDontExist) {
-    std::string loc = "/home";
+TEST_F(LocationSynthesingTest,
+       SynthesiseFor_ExactMatch_DirectoryExist_IndexDefinedButDontExist) {
+    std::string loc = "/loc_defined_index_not_exist";
     std::string status;
     const Location &found = FindSublocation(loc,
                                             getConfig().GetRoot(),
@@ -368,14 +369,13 @@ TEST_F(LocationSynthesingTest, SynthesiseForExactMatchDirectoryDontExist) {
     ClientRequest cl_req(fd_);
 
     Location synth(found);
-    synth = SynthFoundExact(cl_req,
-                            found,
-                            synth,
+    synth = SynthFoundExact(cl_req, found, synth,
                             "test_resources/test1/");
-    EXPECT_EQ(synth.return_code_, 404);
+    EXPECT_EQ(synth.return_code_, 403);
 }
 
-TEST_F(LocationSynthesingTest, SynthesiseForExactMatchDirectoryDoExist) {
+TEST_F(LocationSynthesingTest,
+       SynthesiseFor_ExactMatch_DirectoryExist_IndexDefined_AndExist) {
     std::string loc = "/loc_defined_index_which_exist";
     std::string status;
     const Location &found = FindSublocation(loc,
@@ -388,9 +388,7 @@ TEST_F(LocationSynthesingTest, SynthesiseForExactMatchDirectoryDoExist) {
     ClientRequest cl_req(fd_);
 
     Location synth(found);
-    synth = SynthFoundExact(cl_req,
-                            found,
-                            synth,
+    synth = SynthFoundExact(cl_req, found, synth,
                             "test_resources/test1/");
     EXPECT_EQ(synth.return_code_, 200);
 }

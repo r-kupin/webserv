@@ -41,7 +41,7 @@ public:
 
     std::set<ErrPage>       error_pages_;
     std::list<Location>     sublocations_;
-    l_str  index_;
+    l_str                   index_;
     bool                    index_defined_;
     Limit                   limit_except_;
     int                     return_code_;
@@ -50,7 +50,7 @@ public:
     std::string             root_;
     std::string             address_;
     std::string             full_address_;
-    l_loc_it                    parent_;
+    l_loc_it                parent_;
 
     Location();
     Location(const Location &);

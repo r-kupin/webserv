@@ -22,6 +22,9 @@
 #include <list>
 #include "ConfigSubmodules.h"
 
+typedef const std::list<ServerConfiguration> l_srvconf;
+
+typedef std::list<ServerConfiguration>::const_iterator l_srvconf_it_c;
 const static std::string kDefaultResPath = "resources/";
 const static std::string kDefaultConfig = "resources/default/nginx.conf";
 
@@ -59,7 +62,7 @@ protected:
     //  Limit_except subcontext
     void        HandleLimitExceptContext(Node &node, Limit &curr_limit) const;
     void        CheckServerSubnodes(Node &node, ServerConfiguration &current);
-    void        CheckServer(Node &node);
+    ServerConfiguration CheckServer(Node &node);
     static bool IsLocation(const Node &node);
     static bool IsLimitExcept(const Node &node);
     bool        IsCorrectLocation(const Node &node);
@@ -109,6 +112,8 @@ private:
     void deny_address(const std::string &address, Limit &curr_limit) const;
 
     void allow_address(const std::string &address, Limit &curr_limit) const;
+
+    bool HasServerWithSameName(const ServerConfiguration &config);
 };
 
 std::ostream    &operator<<(std::ostream &os, const Config &config);

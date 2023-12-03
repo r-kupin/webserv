@@ -111,7 +111,7 @@ void    Config::CheckServerSubnodes(Node &node, ServerConfiguration &current) {
  * @param node of the server block we are currently checking
  * @return ready-to-use server configuration
  */
-void Config::CheckServer(Node &node) {
+ServerConfiguration Config::CheckServer(Node &node) {
     ServerConfiguration current;
 
     current.CheckServerDirectives(node.directives_);
@@ -127,7 +127,15 @@ void Config::CheckServer(Node &node) {
 //                (kDefaultResPath + current.GetRoot().address_).c_str());
 //    if (!check_root_exist.good())
 //        ThrowSyntaxError("Root directory doesn't exist");
-    servers_.push_back(current);
+    return current;
+}
+
+bool Config::HasServerWithSameName(const ServerConfiguration &config) {
+    for (l_srvconf_it_c it = servers_.begin(); it != servers_.end(); ++it) {
+        if (it->server_name_ == config.server_name_)
+            return true;
+    }
+    return false;
 }
 
 /**
@@ -143,7 +151,10 @@ void Config::CreateSrvConfigs(Node& root) {
     }
     for (size_t i = 0; i < root.child_nodes_.size(); i++) {
         if (root.child_nodes_[i].main_[0] == "server") {
-            CheckServer(root.child_nodes_[i]);
+            ServerConfiguration config = CheckServer(root.child_nodes_[i]);
+            if (HasServerWithSameName(config))
+                ThrowSyntaxError("Server name needs to be unique amongst all "
+                                 "servers");
         } else {
             std::cout << "Found block " + root.child_nodes_[i].main_[0] + " " +
                          "inside main context" << std::endl;

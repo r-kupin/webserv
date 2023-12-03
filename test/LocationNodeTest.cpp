@@ -38,7 +38,7 @@ protected:
 
 TEST_F(LocationNodeTest, IsLocationTest) {
     Node home;
-    home.main_ = v_str({"location", "/home" });
+    home.main_ = v_str({"location", "/loc_defined_index_not_exist" });
     home.directives_.push_back({"index", "home.html"});
 
     Node limit_except_get;
@@ -51,7 +51,7 @@ TEST_F(LocationNodeTest, IsLocationTest) {
 
 TEST_F(LocationNodeTest, IsLimitTest) {
     Node home;
-    home.main_ = v_str({"location", "/home" });
+    home.main_ = v_str({"location", "/loc_defined_index_not_exist" });
     home.directives_.push_back({"index", "home.html"});
 
     Node limit_except_get;
@@ -74,7 +74,7 @@ TEST_F(LocationNodeTest, IsCorrectLocationTestMoreThan2InMain) {
 TEST_F(LocationNodeTest, IsCorrectLocationTestNoDirectives) {
 
     Node home;
-    home.main_ = v_str({"location", "/home" });
+    home.main_ = v_str({"location", "/loc_defined_index_not_exist" });
 
     EXPECT_TRUE(IsLocation(home));
     EXPECT_THROW(IsCorrectLocation(home), ConfigFileSyntaxError);
@@ -93,7 +93,7 @@ TEST_F(LocationNodeTest, IsCorrectLocationTestNotALocation) {
 TEST_F(LocationNodeTest, IsCorrectLocationTestGoodLocation) {
 
     Node home;
-    home.main_ = v_str({"location", "/home" });
+    home.main_ = v_str({"location", "/loc_defined_index_not_exist" });
     home.directives_.push_back({"index", "home.html"});
 
     EXPECT_NO_THROW(IsCorrectLocation(home));
@@ -110,7 +110,7 @@ TEST_F(LocationNodeTest, RootsParentTest) {
 
 TEST_F(LocationNodeTest, RootSubnodeParentTest) {
     Node home;
-    home.main_ = v_str({"location", "/home" });
+    home.main_ = v_str({"location", "/loc_defined_index_not_exist" });
     home.directives_.push_back({"index", "home.html"});
 
     Node limit_except_get;
@@ -131,7 +131,7 @@ TEST_F(LocationNodeTest, RootSubnodeParentTest) {
 
 TEST_F(LocationNodeTest, WithLimitExcept) {
     Node home;
-    home.main_ = v_str({"location", "/home" });
+    home.main_ = v_str({"location", "/loc_defined_index_not_exist" });
     home.directives_.push_back({"index", "home.html"});
 
     Node limit_except_get;
@@ -144,7 +144,7 @@ TEST_F(LocationNodeTest, WithLimitExcept) {
 
     Location HomeLoc = conf_.GetRoot().sublocations_.back();
 
-    EXPECT_EQ(HomeLoc.address_, "/home");
+    EXPECT_EQ(HomeLoc.address_, "/loc_defined_index_not_exist");
     //    TODO test for append, but maybe need replace?
     EXPECT_NE(std::find(HomeLoc.index_.begin(), HomeLoc.index_.end(), "home.html"),
               HomeLoc.index_.end());
@@ -154,7 +154,7 @@ TEST_F(LocationNodeTest, WithLimitExcept) {
 TEST_F(LocationNodeTest, HomeInReDefinedRoot) {
     Node home;
 
-    home.main_ = v_str({"location", "/home" });
+    home.main_ = v_str({"location", "/loc_defined_index_not_exist" });
     home.directives_.push_back({"index", "home.html"});
 
     location_root_.child_nodes_.push_back(home);
@@ -180,7 +180,7 @@ TEST_F(LocationNodeTest, HomeInReDefinedRoot) {
     EXPECT_EQ(conf_.GetRoot().return_code_ , 0);
     EXPECT_EQ(conf_.GetRoot().return_address_ , "");
 
-    EXPECT_EQ(conf_.GetRoot().sublocations_.begin()->address_, "/home");
+    EXPECT_EQ(conf_.GetRoot().sublocations_.begin()->address_, "/loc_defined_index_not_exist");
 //    TODO test for append, but maybe need replace?
     EXPECT_NE(std::find(conf_.GetRoot().sublocations_.begin()->index_.begin(),
                         conf_.GetRoot().sublocations_.begin()->index_.end(), "home.html"),
@@ -205,7 +205,7 @@ TEST_F(LocationNodeTest, CorrectLocationHasWrongOneInside) {
 
 TEST_F(LocationNodeTest, WrongLimitExcept) {
     Node home;
-    home.main_ = v_str({"location", "/home" });
+    home.main_ = v_str({"location", "/loc_defined_index_not_exist" });
     home.directives_.push_back({"index", "home.html"});
 
     Node limit_except_get;
@@ -220,7 +220,7 @@ TEST_F(LocationNodeTest, WrongLimitExcept) {
 
 TEST_F(LocationNodeTest, MultipleLimitExcept) {
     Node home;
-    home.main_ = v_str({"location", "/home" });
+    home.main_ = v_str({"location", "/loc_defined_index_not_exist" });
     home.directives_.push_back({"index", "home.html"});
 
     Node limit_except_get;
@@ -240,11 +240,11 @@ TEST_F(LocationNodeTest, MultipleLimitExcept) {
 
 TEST_F(LocationNodeTest, MultipleAddressesUnderTheSameParent) {
     Node home1;
-    home1.main_ = v_str({"location", "/home" });
+    home1.main_ = v_str({"location", "/loc_defined_index_not_exist" });
     home1.directives_.push_back({"index", "home.html"});
 
     Node home2;
-    home2.main_ = v_str({"location", "/home" });
+    home2.main_ = v_str({"location", "/loc_defined_index_not_exist" });
     home2.directives_.push_back({"return", "301", "http://localhost:4280/somewhere"});
 
     location_root_.child_nodes_.push_back(home2);
@@ -259,7 +259,7 @@ TEST_F(LocationNodeTest, MultipleAddressesUnderTheSameParent) {
 //    explicit ServerPreconfigTest() : Config() {};
 //protected:
 //    Node root_;
-//    Node server_;
+//    Node empty_server_;
 //    Node location_home_;
 //    Node limit_except_home_;
 //    Node location_about_us_;
@@ -267,7 +267,7 @@ TEST_F(LocationNodeTest, MultipleAddressesUnderTheSameParent) {
 //
 //    virtual void SetUp() {
 //        root_ = Node();
-//        server_ = Node();
+//        empty_server_ = Node();
 //        location_home_ = Node();
 //        location_about_us_ = Node();
 //        limit_except_home_ = Node();
@@ -278,7 +278,7 @@ TEST_F(LocationNodeTest, MultipleAddressesUnderTheSameParent) {
 //        AddAboutUsLocationToSeServer();
 //        UpdateRootLocation();
 //
-//        root_.child_nodes_.push_back(server_);
+//        root_.child_nodes_.push_back(empty_server_);
 //    }
 //
 //    void UpdateRootLocation() {
@@ -289,7 +289,7 @@ TEST_F(LocationNodeTest, MultipleAddressesUnderTheSameParent) {
 //                                        {"index", "index.html", "index.htm"}));
 //        location_root_.directives_.push_back(v_str(
 //                    {"error_page", "500", "502", "503", "504", "loc/50x.html"}));
-//        server_.child_nodes_.push_back(location_root_);
+//        empty_server_.child_nodes_.push_back(location_root_);
 //    }
 //
 //    void AddAboutUsLocationToSeServer() {
@@ -297,18 +297,18 @@ TEST_F(LocationNodeTest, MultipleAddressesUnderTheSameParent) {
 //        location_about_us_.directives_.push_back(v_str(
 //                {"return", "301", "/about"}));
 //
-//        server_.child_nodes_.push_back(location_about_us_);
+//        empty_server_.child_nodes_.push_back(location_about_us_);
 //    }
 //
 //    void AddHomeLocationToServer() {
-//        location_home_.main_ = v_str({"location", "/home" });
+//        location_home_.main_ = v_str({"location", "/loc_defined_index_not_exist" });
 //        location_home_.directives_.push_back(v_str({"index", "index.html"}));
 //
 //        limit_except_home_.main_ = v_str({ "limit_except", "GET" });
 //        limit_except_home_.directives_.push_back(v_str({"deny", "all"}));
 //
 //        location_home_.child_nodes_.push_back(limit_except_home_);
-//        server_.child_nodes_.push_back(location_home_);
+//        empty_server_.child_nodes_.push_back(location_home_);
 //    }
 //
 //    void SetRootDirectives() {
@@ -318,16 +318,16 @@ TEST_F(LocationNodeTest, MultipleAddressesUnderTheSameParent) {
 //    }
 //
 //    void SetServerDirectives() {
-//        server_.main_ = v_str ({"server"});
-//        server_.directives_.push_back(
+//        empty_server_.main_ = v_str ({"server"});
+//        empty_server_.directives_.push_back(
 //                v_str({ "listen", "8080" }));
-//        server_.directives_.push_back(
+//        empty_server_.directives_.push_back(
 //                v_str({ "server_name", "localhost" }));
-//        server_.directives_.push_back(
+//        empty_server_.directives_.push_back(
 //                v_str({ "client_max_body_size", "1024" }));
-//        server_.directives_.push_back(
+//        empty_server_.directives_.push_back(
 //                v_str({ "error_page", "404", "/404.html" }));
-//        server_.directives_.push_back(
+//        empty_server_.directives_.push_back(
 //                v_str({ "error_page", "500",
 //                            "502", "503", "504", "/50x.html" }));
 //    }
@@ -371,7 +371,7 @@ TEST_F(LocationNodeTest, MultipleAddressesUnderTheSameParent) {
 //    ab_us.return_address_ = "/about";
 //    expected_srvr.locations_.sublocations_.push_back(ab_us);
 //
-//    Location home = Location("/home");
+//    Location home = Location("/loc_defined_index_not_exist");
 //    home.index_.push_back("index.html");
 //    home.limit_except_.return_code_ = 403;
 //    home.limit_except_.except_.insert(GET);
