@@ -113,7 +113,7 @@ private:
 
     void allow_address(const std::string &address, Limit &curr_limit) const;
 
-    bool HasServerWithSameName(const ServerConfiguration &config);
+    bool HasServerWithSameNameOrPort(const ServerConfiguration &config);
 };
 
 std::ostream    &operator<<(std::ostream &os, const Config &config);

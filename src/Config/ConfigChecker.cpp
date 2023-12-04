@@ -130,9 +130,11 @@ ServerConfiguration Config::CheckServer(Node &node) {
     return current;
 }
 
-bool Config::HasServerWithSameName(const ServerConfiguration &config) {
+bool Config::HasServerWithSameNameOrPort(const ServerConfiguration &config) {
     for (l_srvconf_it_c it = servers_.begin(); it != servers_.end(); ++it) {
         if (it->server_name_ == config.server_name_)
+            return true;
+        if (it->port_ == config.port_)
             return true;
     }
     return false;
@@ -152,7 +154,7 @@ void Config::CreateSrvConfigs(Node& root) {
     for (size_t i = 0; i < root.child_nodes_.size(); i++) {
         if (root.child_nodes_[i].main_[0] == "server") {
             ServerConfiguration config = CheckServer(root.child_nodes_[i]);
-            if (HasServerWithSameName(config))
+            if (HasServerWithSameNameOrPort(config))
                 ThrowSyntaxError("Server name needs to be unique amongst all "
                                  "servers");
             servers_.push_back(config);
