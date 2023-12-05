@@ -101,7 +101,7 @@ bool        request_has_headers(const v_str& request) {
 }
 
 void ClientRequest::fill_headers(const v_str &request) {
-    for (size_t i = 1; i < request.size(); ++i) {
+    for (size_t i = 1; !request[i].empty(); ++i) {
         std::string name = request[i].substr(0, request[i].find_first_of(':'));
         std::string value = request[i].substr(
                 request[i].find_first_of(": ") + 2);
@@ -140,6 +140,7 @@ ClientRequest::ClientRequest(int client_sock) {
     else
         address_ = uri;
     method_ = get_method(request[0]);
+    // todo: last step, not params!
     last_step_uri_ = get_last_uri_step(uri);
     if (request[0].find("HTTP/1.1") == std::string::npos) {
         throw HTTPVersionNotSupportedException();
