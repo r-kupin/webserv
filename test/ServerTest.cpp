@@ -303,10 +303,9 @@ TEST_F(RequestHandlingTest, SublocationNotFound) {
 
 class LocationSynthesingTest : public ::testing::Test, public Server {
 public:
-    explicit LocationSynthesingTest() : Server(
-            *Config("test_resources/test1/default/nginx.conf").getServers()
-            .begin())
-            {};
+    explicit LocationSynthesingTest()
+    : Server(*Config("test_resources/test1/default/nginx.conf").
+                                                    getServers().begin()) {};
 protected:
     int fd_;
 

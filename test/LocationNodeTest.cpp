@@ -36,128 +36,60 @@ protected:
     }
 };
 
-TEST_F(LocationNodeTest, IsLocationTest) {
-    Node home;
-    home.main_ = v_str({"location", "/loc_defined_index_not_exist" });
-    home.directives_.push_back({"index", "home.html"});
+// -------------------------- test correctness of location class made from node
+TEST_F(LocationNodeTest, RootSubnodeParentTest) {
+    Node loc_n;
+    loc_n.main_ = v_str({"location", "/loc_defined_index_not_exist" });
+    loc_n.directives_.push_back({"index", "index.html"});
 
     Node limit_except_get;
     limit_except_get.main_ = v_str({"limit_except", "GET" });
     limit_except_get.directives_.push_back({"deny", "all"});
 
-    EXPECT_TRUE(IsLocation(home));
-    EXPECT_FALSE(IsLocation(limit_except_get));
-}
+    loc_n.child_nodes_.push_back(limit_except_get);
+    location_root_.child_nodes_.push_back(loc_n);
 
-TEST_F(LocationNodeTest, IsLimitTest) {
-    Node home;
-    home.main_ = v_str({"location", "/loc_defined_index_not_exist" });
-    home.directives_.push_back({"index", "home.html"});
-
-    Node limit_except_get;
-    limit_except_get.main_ = v_str({"limit_except", "GET" });
-    limit_except_get.directives_.push_back({"deny", "all"});
-
-    EXPECT_FALSE(IsLimitExcept(home));
-    EXPECT_TRUE(IsLimitExcept(limit_except_get));
-}
-
-TEST_F(LocationNodeTest, IsCorrectLocationTestMoreThan2InMain) {
-    Node ff;
-    ff.main_ = v_str({"location", "/", "ff" });
-    ff.directives_.push_back({"index", "ff.html"});
-
-    EXPECT_TRUE(IsLocation(ff));
-    EXPECT_THROW(IsCorrectLocation(ff), ConfigFileSyntaxError);
-}
-
-TEST_F(LocationNodeTest, IsCorrectLocationTestNoDirectives) {
-
-    Node home;
-    home.main_ = v_str({"location", "/loc_defined_index_not_exist" });
-
-    EXPECT_TRUE(IsLocation(home));
-    EXPECT_THROW(IsCorrectLocation(home), ConfigFileSyntaxError);
-}
-
-TEST_F(LocationNodeTest, IsCorrectLocationTestNotALocation) {
-
-    Node limit_except_get;
-    limit_except_get.main_ = v_str({"limit_except", "GET" });
-    limit_except_get.directives_.push_back({"deny", "all"});
-
-    EXPECT_NO_THROW(IsCorrectLocation(limit_except_get));
-    EXPECT_FALSE(IsCorrectLocation(limit_except_get));
-}
-
-TEST_F(LocationNodeTest, IsCorrectLocationTestGoodLocation) {
-
-    Node home;
-    home.main_ = v_str({"location", "/loc_defined_index_not_exist" });
-    home.directives_.push_back({"index", "home.html"});
-
-    EXPECT_NO_THROW(IsCorrectLocation(home));
-    EXPECT_TRUE(IsCorrectLocation(home));
-}
-
-TEST_F(LocationNodeTest, RootsParentTest) {
     EXPECT_NO_THROW(HandleLocationContext(location_root_, conf_,
                                           conf_.GetRootIt()));
-    EXPECT_EQ(*conf_.GetRootIt(), conf_.GetRoot());
-    EXPECT_NO_THROW(
-            HandleLocationContext(location_root_, conf_, conf_.GetRootIt()));
-}
 
-TEST_F(LocationNodeTest, RootSubnodeParentTest) {
-    Node home;
-    home.main_ = v_str({"location", "/loc_defined_index_not_exist" });
-    home.directives_.push_back({"index", "home.html"});
-
-    Node limit_except_get;
-    limit_except_get.main_ = v_str({"limit_except", "GET" });
-    limit_except_get.directives_.push_back({"deny", "all"});
-
-    home.child_nodes_.push_back(limit_except_get);
-
-    EXPECT_NO_THROW(
-            HandleLocationContext(location_root_, conf_, conf_.GetRootIt()));
-    EXPECT_NO_THROW(
-            HandleLocationContext(home, conf_, conf_.GetRootIt()));
     EXPECT_EQ(conf_.locations_.size(), 1);
     EXPECT_EQ(conf_.locations_.begin(), conf_.GetRootIt());
     EXPECT_EQ(conf_.GetRoot().sublocations_.size(), 1);
     EXPECT_EQ(conf_.GetRoot().sublocations_.begin()->parent_, conf_.GetRootIt());
+
+    Location loc_loc = conf_.GetRoot().sublocations_.back();
+
+    EXPECT_EQ(loc_loc.address_, "/loc_defined_index_not_exist");
+    EXPECT_NE(std::find(loc_loc.index_.begin(),
+                        loc_loc.index_.end(),
+                        "index.html"),
+              loc_loc.index_.end());
 }
 
 TEST_F(LocationNodeTest, WithLimitExcept) {
-    Node home;
-    home.main_ = v_str({"location", "/loc_defined_index_not_exist" });
-    home.directives_.push_back({"index", "home.html"});
+    Node loc_n;
+    loc_n.main_ = v_str({"location", "/loc_defined_index_not_exist" });
+    loc_n.directives_.push_back({"index", "index.html"});
 
     Node limit_except_get;
     limit_except_get.main_ = v_str({"limit_except", "GET" });
     limit_except_get.directives_.push_back({"deny", "all"});
 
-    home.child_nodes_.push_back(limit_except_get);
+    loc_n.child_nodes_.push_back(limit_except_get);
 
-    EXPECT_NO_THROW(HandleLocationContext(home, conf_, conf_.GetRootIt()));
+    EXPECT_NO_THROW(HandleLocationContext(loc_n, conf_, conf_.GetRootIt()));
 
-    Location HomeLoc = conf_.GetRoot().sublocations_.back();
-
-    EXPECT_EQ(HomeLoc.address_, "/loc_defined_index_not_exist");
-    //    TODO test for append, but maybe need replace?
-    EXPECT_NE(std::find(HomeLoc.index_.begin(), HomeLoc.index_.end(), "home.html"),
-              HomeLoc.index_.end());
-    EXPECT_EQ(HomeLoc.limit_except_.except_, std::set<Methods>({GET}));
+    Location loc_loc = conf_.GetRoot().sublocations_.back();
+    EXPECT_EQ(loc_loc.limit_except_.except_, std::set<Methods>({GET}));
 }
 
 TEST_F(LocationNodeTest, HomeInReDefinedRoot) {
-    Node home;
+    Node loc_n;
 
-    home.main_ = v_str({"location", "/loc_defined_index_not_exist" });
-    home.directives_.push_back({"index", "home.html"});
+    loc_n.main_ = v_str({"location", "/loc_defined_index_not_exist" });
+    loc_n.directives_.push_back({"index", "index.html"});
 
-    location_root_.child_nodes_.push_back(home);
+    location_root_.child_nodes_.push_back(loc_n);
 
     EXPECT_NO_THROW(HandleLocationContext(location_root_, conf_,
                                           conf_.GetRootIt()));
@@ -183,45 +115,41 @@ TEST_F(LocationNodeTest, HomeInReDefinedRoot) {
     EXPECT_EQ(conf_.GetRoot().sublocations_.begin()->address_, "/loc_defined_index_not_exist");
 //    TODO test for append, but maybe need replace?
     EXPECT_NE(std::find(conf_.GetRoot().sublocations_.begin()->index_.begin(),
-                        conf_.GetRoot().sublocations_.begin()->index_.end(), "home.html"),
+                        conf_.GetRoot().sublocations_.begin()->index_.end(),
+                        "index.html"),
               conf_.GetRoot().sublocations_.begin()->index_.end());
 }
 
 TEST_F(LocationNodeTest, CorrectLocationHasWrongOneInside) {
-    Node home;
-    home.main_ = v_str({"location", "/", "ff" });
-    home.directives_.push_back({"index", "home.html"});
+    Node root_n;
+    root_n.main_ = v_str({"location", "/", "ff" });
+    root_n.directives_.push_back({"index", "index.html"});
 
-    Node limit_except_get;
-    limit_except_get.main_ = v_str({"limit_except", "GET" });
-    limit_except_get.directives_.push_back({"deny", "all"});
-
-    home.child_nodes_.push_back(limit_except_get);
-    location_root_.child_nodes_.push_back(home);
+    location_root_.child_nodes_.push_back(root_n);
 
     EXPECT_THROW(HandleLocationContext(location_root_, conf_, conf_.GetRootIt()),
                  ConfigFileSyntaxError);
 }
 
 TEST_F(LocationNodeTest, WrongLimitExcept) {
-    Node home;
-    home.main_ = v_str({"location", "/loc_defined_index_not_exist" });
-    home.directives_.push_back({"index", "home.html"});
+    Node loc_n;
+    loc_n.main_ = v_str({"location", "/loc_defined_index_not_exist" });
+    loc_n.directives_.push_back({"index", "index.html"});
 
     Node limit_except_get;
     limit_except_get.main_ = v_str({"limit_except" });
     limit_except_get.directives_.push_back({"return", "403"});
 
-    home.child_nodes_.push_back(limit_except_get);
+    loc_n.child_nodes_.push_back(limit_except_get);
 
-    EXPECT_THROW(HandleLocationContext(home, conf_, conf_.GetRootIt()),
+    EXPECT_THROW(HandleLocationContext(loc_n, conf_, conf_.GetRootIt()),
                  ConfigFileSyntaxError);
 }
 
 TEST_F(LocationNodeTest, MultipleLimitExcept) {
-    Node home;
-    home.main_ = v_str({"location", "/loc_defined_index_not_exist" });
-    home.directives_.push_back({"index", "home.html"});
+    Node loc_n;
+    loc_n.main_ = v_str({"location", "/loc_defined_index_not_exist" });
+    loc_n.directives_.push_back({"index", "index.html"});
 
     Node limit_except_get;
     limit_except_get.main_ = v_str({"limit_except", "GET" });
@@ -231,27 +159,101 @@ TEST_F(LocationNodeTest, MultipleLimitExcept) {
     limit_except_post.main_ = v_str({"limit_except", "POST" });
     limit_except_post.directives_.push_back({"deny", "all"});
 
-    home.child_nodes_.push_back(limit_except_get);
-    home.child_nodes_.push_back(limit_except_post);
+    loc_n.child_nodes_.push_back(limit_except_get);
+    loc_n.child_nodes_.push_back(limit_except_post);
 
-    EXPECT_THROW(HandleLocationContext(home, conf_, conf_.GetRootIt()),
+    EXPECT_THROW(HandleLocationContext(loc_n, conf_, conf_.GetRootIt()),
                  ConfigFileSyntaxError);
 }
 
 TEST_F(LocationNodeTest, MultipleAddressesUnderTheSameParent) {
-    Node home1;
-    home1.main_ = v_str({"location", "/loc_defined_index_not_exist" });
-    home1.directives_.push_back({"index", "home.html"});
+    Node loc_n1;
+    loc_n1.main_ = v_str({"location", "/loc_defined_index_not_exist" });
+    loc_n1.directives_.push_back({"index", "index.html"});
 
-    Node home2;
-    home2.main_ = v_str({"location", "/loc_defined_index_not_exist" });
-    home2.directives_.push_back({"return", "301", "http://localhost:4280/somewhere"});
+    Node loc_n2;
+    loc_n2.main_ = v_str({"location", "/loc_defined_index_not_exist" });
+    loc_n2.directives_.push_back({"return", "301",
+                              "http://localhost:4280/somewhere"});
 
-    location_root_.child_nodes_.push_back(home2);
-    location_root_.child_nodes_.push_back(home1);
+    location_root_.child_nodes_.push_back(loc_n2);
+    location_root_.child_nodes_.push_back(loc_n1);
 
     EXPECT_THROW(HandleLocationContext(location_root_, conf_, conf_.GetRootIt()),
                  ConfigFileSyntaxError);
+}
+
+// -------------------------- test correctness of location node ----------------
+TEST_F(LocationNodeTest, IsLocationTest) {
+    Node loc_node;
+    loc_node.main_ = v_str({"location", "/loc_defined_index_not_exist" });
+    loc_node.directives_.push_back({"index", "index.html"});
+
+    Node limit_except_get;
+    limit_except_get.main_ = v_str({"limit_except", "GET" });
+    limit_except_get.directives_.push_back({"deny", "all"});
+
+    EXPECT_TRUE(IsLocation(loc_node));
+    EXPECT_FALSE(IsLocation(limit_except_get));
+}
+
+TEST_F(LocationNodeTest, IsCorrectLocationTestMoreThan2InMain) {
+    Node root;
+    root.main_ = v_str({"location", "/", "root" });
+    root.directives_.push_back({"index", "root.html"});
+
+    EXPECT_TRUE(IsLocation(root));
+    EXPECT_THROW(IsCorrectLocation(root), ConfigFileSyntaxError);
+}
+
+TEST_F(LocationNodeTest, IsCorrectLocationTestNoDirectives) {
+
+    Node loc_n;
+    loc_n.main_ = v_str({"location", "/loc_defined_index_not_exist" });
+
+    EXPECT_TRUE(IsLocation(loc_n));
+    EXPECT_THROW(IsCorrectLocation(loc_n), ConfigFileSyntaxError);
+}
+
+TEST_F(LocationNodeTest, IsCorrectLocationTestNotALocation) {
+
+    Node limit_except_get;
+    limit_except_get.main_ = v_str({"limit_except", "GET" });
+    limit_except_get.directives_.push_back({"deny", "all"});
+
+    EXPECT_NO_THROW(IsCorrectLocation(limit_except_get));
+    EXPECT_FALSE(IsCorrectLocation(limit_except_get));
+}
+
+TEST_F(LocationNodeTest, IsCorrectLocationTestGoodLocation) {
+
+    Node loc_n;
+    loc_n.main_ = v_str({"location", "/loc_defined_index_not_exist" });
+    loc_n.directives_.push_back({"index", "index.html"});
+
+    EXPECT_NO_THROW(IsCorrectLocation(loc_n));
+    EXPECT_TRUE(IsCorrectLocation(loc_n));
+}
+
+TEST_F(LocationNodeTest, RootsParentTest) {
+    EXPECT_NO_THROW(HandleLocationContext(location_root_, conf_,
+                                          conf_.GetRootIt()));
+    EXPECT_EQ(*conf_.GetRootIt(), conf_.GetRoot());
+    EXPECT_NO_THROW(
+            HandleLocationContext(location_root_, conf_, conf_.GetRootIt()));
+}
+// -------------------------- test correctness of limit_except node ------------
+TEST_F(LocationNodeTest, IsLimitTest) {
+    Node loc_n;
+    loc_n.main_ = v_str({"location", "/loc_defined_index_not_exist" });
+    loc_n.directives_.push_back({"index", "index.html"});
+
+    Node limit_except_get;
+    limit_except_get.main_ = v_str({"limit_except", "GET" });
+    limit_except_get.directives_.push_back({"deny", "all"});
+
+    EXPECT_FALSE(IsLimitExcept(loc_n));
+    EXPECT_TRUE(IsLimitExcept(limit_except_get));
 }
 
 //class ServerPreconfigTest  : public ::testing::Test, public Config {

@@ -46,7 +46,7 @@ public:
     static void         ThrowServerConfigError(const std::string &msg);
     void                UpdateHostname(const v_str &directives);
     Location            &GetRoot();
-    l_loc_it                GetRootIt();
+    l_loc_it            GetRootIt();
 
     bool operator==(const ServerConfiguration &rhs) const;
     ServerConfiguration& operator=(const ServerConfiguration& rhs);

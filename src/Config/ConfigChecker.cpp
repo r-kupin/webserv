@@ -31,9 +31,12 @@ Location &Config::AddOrUpdate(Location &child, Location &parent) {
 
 void
 Config::CheckParentDoesntHaveItAlready(Location &current, Location &parent) {
-    if (current.HasSameAddressAsOneOfSublocationsOf(parent))
-        ThrowSyntaxError("Each location needs unique address inside each "
-                         "context");
+    if (!current.HasSameAddressAs(parent) &&
+        current.HasSameAddressAsOneOfSublocationsOf(parent)) {
+// todo: or maybe we can update non-root locations?
+            ThrowSyntaxError("Each location needs unique address inside"
+                             "each context");
+    }
 }
 
 bool Config::NeedToAddCurrentToParent(l_loc_it &parent, Location &current,
@@ -45,13 +48,13 @@ bool Config::NeedToAddCurrentToParent(l_loc_it &parent, Location &current,
 
 void Config::HandleSublocation(ServerConfiguration &sc, l_loc_it &parent,
                                Location &current,
-                               std::vector<Node>::iterator &it) {
-    if (NeedToAddCurrentToParent(parent, current, it))
+                               std::vector<Node>::iterator &child) {
+    if (NeedToAddCurrentToParent(parent, current, child))
         parent->sublocations_.push_front(current);
     if (parent->HasSameAddressAs(current)) {
-        HandleLocationContext(*it, sc, parent);
+        HandleLocationContext(*child, sc, parent);
     } else {
-        HandleLocationContext(*it, sc, parent->sublocations_.begin());
+        HandleLocationContext(*child, sc, parent->sublocations_.begin());
     }
 }
 
@@ -67,12 +70,11 @@ void Config::HandleLocationContext(Node &loc_context,
     }
 
     CheckParentDoesntHaveItAlready(maybe_current, *parent);
-//    todo redefinition of non-parent - is it possible ?
     Location &current = AddOrUpdate(maybe_current, *parent);
 
     current.ProcessDirectives(loc_context.directives_);
     for (std::vector<Node>::iterator it = loc_context.child_nodes_.begin();
-    it != loc_context.child_nodes_.end(); ++it) {
+                                it != loc_context.child_nodes_.end(); ++it) {
         if (IsCorrectLimitExcept(*it, current)) {
             HandleLimitExceptContext(*it, current.limit_except_);
         } else if (IsCorrectLocation(*it)) {
@@ -99,6 +101,17 @@ void    Config::CheckServerSubnodes(Node &node, ServerConfiguration &current) {
     }
 }
 
+bool check_filesystem(const std::string &address,
+                      const std::string &def_res_address) {
+    std::ifstream file((def_res_address + address).c_str());
+    if (file.good()) {
+        file.close();
+        return true;
+    }
+    file.close();
+    return false;
+}
+
 /**
  * Checks server node_, and creates a server config based on the content of node_
  * 1. Making a set to keep track of the crucial parameters of the server. If
@@ -111,22 +124,19 @@ void    Config::CheckServerSubnodes(Node &node, ServerConfiguration &current) {
  * @param node of the server block we are currently checking
  * @return ready-to-use server configuration
  */
-ServerConfiguration Config::CheckServer(Node &node) {
+ServerConfiguration Config::CheckServer(Node &node,
+                    const std::string &resource_path) {
     ServerConfiguration current;
 
     current.CheckServerDirectives(node.directives_);
     CheckServerSubnodes(node, current);
-    for (std::list<ServerConfiguration>::iterator it = servers_.begin();
-                                            it != servers_.end(); ++it) {
+    for (l_srvconf_it_c it = servers_.begin(); it != servers_.end(); ++it) {
         if (it->port_ == current.port_)
             ThrowSyntaxError("Port needs to be unique amongst all servers");
     }
     current.GetRoot().UpdateSublocations();
-//    todo commnt for tests, uncomment for use
-//    std::ifstream check_root_exist(
-//                (kDefaultResPath + current.GetRoot().address_).c_str());
-//    if (!check_root_exist.good())
-//        ThrowSyntaxError("Root directory doesn't exist");
+    if (!check_filesystem(current.GetRoot().address_, resource_path))
+        ThrowSyntaxError("Root directory doesn't exist");
     return current;
 }
 
@@ -155,8 +165,8 @@ void Config::CreateSrvConfigs(Node& root) {
         if (root.child_nodes_[i].main_[0] == "server") {
             ServerConfiguration config = CheckServer(root.child_nodes_[i]);
             if (HasServerWithSameNameOrPort(config))
-                ThrowSyntaxError("Server name needs to be unique amongst all "
-                                 "servers");
+                ThrowSyntaxError("Server name and port needs to be unique "
+                                 "amongst all servers");
             servers_.push_back(config);
         } else {
             std::cout << "Found block " + root.child_nodes_[i].main_[0] + " " +

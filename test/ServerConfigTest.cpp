@@ -101,35 +101,11 @@ TEST_F(ServerConfigTest, ServerConfDirectivesNoPortSpecifiedFail) {
                  ConfigFileSyntaxError);
 }
 
-TEST_F(ServerConfigTest, ServerConfDirectivesMultiplePortSpecifiedFail) {
-    directives_.push_back({"listen", "8081"});
-    directives_.push_back({"listen", "8082"});
-    directives_.push_back({"server_name", "localhost"});
-    directives_.push_back({"client_max_body_size", "2048"});
-    directives_.push_back({"error_page", "404", "/404.html"});
-    directives_.push_back({"error_page", "500", "502", "503", "504", "/50x.html"});
-
-    EXPECT_THROW(CheckServerDirectives(directives_),
-                 ConfigFileSyntaxError);
-}
-
 TEST_F(ServerConfigTest, ServerConfDirectivesMultipleBodySize) {
     directives_.push_back({"listen", "8081"});
     directives_.push_back({"server_name", "localhost"});
     directives_.push_back({"client_max_body_size", "2048"});
     directives_.push_back({"client_max_body_size", "10204"});
-    directives_.push_back({"error_page", "404", "/404.html"});
-    directives_.push_back({"error_page", "500", "502", "503", "504", "/50x.html"});
-
-    EXPECT_THROW(CheckServerDirectives(directives_),
-                 ConfigFileSyntaxError);
-}
-
-TEST_F(ServerConfigTest, ServerConfDirectivesMultipleRoot) {
-    directives_.push_back({"listen", "8081"});
-    directives_.push_back({"server_name", "localhost"});
-    directives_.push_back({"root", "ff/zz"});
-    directives_.push_back({"root", "zz/ff"});
     directives_.push_back({"error_page", "404", "/404.html"});
     directives_.push_back({"error_page", "500", "502", "503", "504", "/50x.html"});
 

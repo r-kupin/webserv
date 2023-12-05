@@ -30,18 +30,31 @@ protected:
         server_.directives_.push_back(
                 v_str({"listen", "8182" }));
         server_.directives_.push_back(
-                v_str({"root", "/some/where/deep/inside" }));
+                v_str({"root", "/not/depends/on/config" }));
         server_.directives_.push_back(
                 v_str({"index", "index.html", "index.htm" }));
         server_.directives_.push_back(
                 v_str({"error_page", "401" , "err.html" }));
     }
 };
-
+// ------------ tests for server directives ----------------
 TEST_F(ServerNodeTest, AllNoChioldnodesOK) {
     EXPECT_NO_THROW(CheckServerSubnodes(server_, conf_));
+    EXPECT_NO_THROW(conf_.CheckServerDirectives(server_.directives_));
 }
 
+TEST_F(ServerNodeTest, ServetThrowsIfMultipleListen) {
+    server_.directives_.push_back({"listen", "8080"});
+    EXPECT_THROW(conf_.CheckServerDirectives(server_.directives_),
+                 ConfigFileSyntaxError);
+}
+
+TEST_F(ServerNodeTest, ServetThrowsIfMultipleRoots) {
+    server_.directives_.push_back({"root", "/not/not/depends/on/config"});
+    EXPECT_THROW(conf_.CheckServerDirectives(server_.directives_),
+                 ConfigFileSyntaxError);
+}
+// ------------ tests for server subnodes ----------------
 TEST_F(ServerNodeTest, LocationOK) {
     Node loc;
 
@@ -67,13 +80,13 @@ TEST_F(ServerNodeTest, LocationKO) {
 
 TEST_F(ServerNodeTest, MultipleLocationSameSeverKO) {
     Location loc = Location("/dup");
-    loc.root_ = "resources/locdefault";
+    loc.root_ = "/not/depends/on/config";
     loc.index_.push_back("/htmls/index.html");
     conf_.GetRoot().sublocations_.push_back(loc);
 
     Node loc_dup;
     loc_dup.main_ = v_str({"location", "/dup"});
-    loc_dup.directives_.push_back({"root", "resources/locdefault"});
+    loc_dup.directives_.push_back({"root", "/not/depends/on/config"});
     server_.child_nodes_.push_back(loc_dup);
 
     EXPECT_THROW(CheckServerSubnodes(server_, conf_),
@@ -99,20 +112,3 @@ TEST_F(ServerNodeTest, LocationThrowsAnException) {
     EXPECT_THROW(CheckServerSubnodes(server_, conf_), ConfigFileSyntaxError);
 
 }
-
-
-//TEST_F(ServerNodeTest, ComponentsTestAllPresent) {
-//    empty_server_.main_ = v_str ({"server"});
-//    empty_server_.directives_.push_back(
-//            v_str({ "server_name", "localhost" }));
-//    empty_server_.directives_.push_back(
-//            v_str({ "listen", "8080" }));
-//    empty_server_.directives_.push_back(
-//            v_str({ "root", "/some/where/deep/inside" }));
-//    empty_server_.directives_.push_back(
-//            v_str({ "index", "index.html", "index.htm" }));
-//    empty_server_.directives_.push_back(
-//            v_str({ "error_page", "401" , "err.html" }));
-//    root_.child_nodes_.push_back(empty_server_);
-//    EXPECT_NO_THROW(CheckComponents(root_));
-//}

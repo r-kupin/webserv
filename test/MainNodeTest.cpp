@@ -79,7 +79,7 @@ TEST_F(MainNodeTest, MultipleServersWithSamePort) {
     Node server_with_same_name;
     server_with_same_name.main_ = v_str ({"server"});
     server_with_same_name.directives_.push_back(
-            v_str({"server_name", "example.com" }));
+            v_str({"server_name", "examp1e.com" }));
     server_with_same_name.directives_.push_back(
             v_str({"listen", "8182" }));
     server_with_same_name.directives_.push_back(

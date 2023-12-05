@@ -54,11 +54,11 @@ public:
 
     Location();
     Location(const Location &);
-    explicit Location(const std::string &address);
 	Location(const std::string &address, l_loc_it parent);
+    explicit Location(const std::string &address);
 
     void                AddErrorPages(const v_str &directive);
-    const Location &    FindSublocationByAddress(const std::string & address) const;
+    const Location      &FindSublocationByAddress(const std::string & address) const;
     void                HandleLocationReturn(const v_str &directives_);
     bool                HasSameAddressAs(const Location &rhs) const;
     bool                HasSameAddressAsOneOfSublocationsOf(const Location &rhs) const;
@@ -69,17 +69,18 @@ public:
                                      const v_str &directive);
     static void         ThrowLocationError(const std::string &msg);
     void                HandleRoot(const v_str &directive);
-    std::ostream &      RecursivePrint(std::ostream &os,
-                                       const Location &location) const;
+    std::ostream        &RecursivePrint(std::ostream &os,
+                                        const Location &location) const;
     void                UpdateSublocations();
     const Location      &getParent() const;
-    bool                operator<(const Location &rhs) const;
-    bool                operator==(const Location &rhs) const;
-    Location&           operator=(const Location& rhs);
     bool                HasAsSublocation(Location &location);
     void                HandleIndex(const v_str &directives);
     void                HandleCode(const std::string &str);
     void                HandleAddress(const std::string &str);
+
+    bool                operator<(const Location &rhs) const;
+    bool                operator==(const Location &rhs) const;
+    Location&           operator=(const Location& rhs);
 };
 
 struct LocationByAddress {

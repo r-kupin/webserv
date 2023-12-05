@@ -82,7 +82,7 @@ Location::Location(const Location& other)
 
 Location::Location(const std::string &address, l_loc_it parent)
     : error_pages_(parent->error_pages_),
-    index_(parent->index_),
+    index_(parent->index_), // todo with parent root!
     index_defined_(false),
     return_code_(0),
     return_address_(parent->return_address_),
@@ -315,7 +315,6 @@ void Location::ProcessDirectives(std::vector<v_str> &directives) {
     for (size_t i = 0; i < directives.size(); ++i) {
         if (UMarkDefined("root", root, directives[i]))
             HandleRoot(directives[i]);
-// todo unique or not?
         if (MarkDefined("index", index, directives[i]))
             HandleIndex(directives[i]);
         if (UMarkDefined("return", ret, directives[i]))

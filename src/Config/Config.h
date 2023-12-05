@@ -22,9 +22,9 @@
 #include <list>
 #include "ConfigSubmodules.h"
 
-typedef const std::list<ServerConfiguration> l_srvconf;
+typedef const std::list<ServerConfiguration>            l_srvconf_c;
+typedef std::list<ServerConfiguration>::const_iterator  l_srvconf_it_c;
 
-typedef std::list<ServerConfiguration>::const_iterator l_srvconf_it_c;
 const static std::string kDefaultResPath = "resources/";
 const static std::string kDefaultConfig = "resources/default/nginx.conf";
 
@@ -40,12 +40,12 @@ public:
 
     //  Exposed to testing
     //  Test constructor only
-    explicit                            Config(const Node &confRoot);
+    explicit    Config(const Node &confRoot);
 
     ~Config();
 
     const std::string                       &getConfPath() const;
-    const std::list<ServerConfiguration>  &getServers() const;
+    const std::list<ServerConfiguration>    &getServers() const;
 
 protected:
 //  Config processing utils
@@ -62,15 +62,16 @@ protected:
     //  Limit_except subcontext
     void        HandleLimitExceptContext(Node &node, Limit &curr_limit) const;
     void        CheckServerSubnodes(Node &node, ServerConfiguration &current);
-    ServerConfiguration CheckServer(Node &node);
+    ServerConfiguration CheckServer(Node &node,
+                                    const std::string &resource_path = kDefaultResPath);
     static bool IsLocation(const Node &node);
     static bool IsLimitExcept(const Node &node);
     bool        IsCorrectLocation(const Node &node);
     bool        IsCorrectLimitExcept(Node &node, Location &current);
 private:
-    std::string conf_path_;
-    Node conf_root_;
-    std::list<ServerConfiguration> servers_;
+    std::string                     conf_path_;
+    Node                            conf_root_;
+    std::list<ServerConfiguration>  servers_;
 
 //  Parse config
     RawNode             ParseNode(std::ifstream &config,
@@ -84,7 +85,7 @@ private:
                                      std::ifstream &config) const;
     void                FinishSubNode(std::string &line, RawNode &current,
                                       std::ifstream &config) const;
-    static v_str    ParseDirective(std::string &line, char c);
+    static v_str        ParseDirective(std::string &line, char c);
     void                HandleLineLeftower(std::string &line_leftover,
                                            std::string &line) const;
     void                FinishMainNode(RawNode &current,
@@ -103,17 +104,16 @@ private:
                                          std::vector<Node>::iterator &it);
     void        HandleSublocation(ServerConfiguration &sc, l_loc_it &parent,
                                   Location &current,
-                                  std::vector<Node>::iterator &it);
-
-    void CheckHTTPMethodsLimitExcept(Node &node, Limit &curr_limit) const;
-
-    void CheckDirectivesLimitExcept(const Node &node, Limit &curr_limit) const;
-
-    void deny_address(const std::string &address, Limit &curr_limit) const;
-
-    void allow_address(const std::string &address, Limit &curr_limit) const;
-
-    bool HasServerWithSameNameOrPort(const ServerConfiguration &config);
+                                  std::vector<Node>::iterator &child);
+    void        CheckHTTPMethodsLimitExcept(Node &node,
+                                            Limit &curr_limit) const;
+    void        CheckDirectivesLimitExcept(const Node &node,
+                                           Limit &curr_limit) const;
+    void        DenyAddress(const std::string &address,
+                            Limit &curr_limit) const;
+    void        AllowAddress(const std::string &address,
+                             Limit &curr_limit) const;
+    bool        HasServerWithSameNameOrPort(const ServerConfiguration &config);
 };
 
 std::ostream    &operator<<(std::ostream &os, const Config &config);

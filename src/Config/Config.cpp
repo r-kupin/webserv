@@ -60,7 +60,7 @@ Config &Config::operator=(const Config &other) {
 }
 
 std::ostream &operator<<(std::ostream &os, const Config &config) {
-    l_srvconf &servers = config.getServers();
+    l_srvconf_c &servers = config.getServers();
 
     for (l_srvconf_it_c srv = servers.begin();
          srv != servers.end(); ++srv) {

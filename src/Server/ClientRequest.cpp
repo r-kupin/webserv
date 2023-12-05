@@ -101,12 +101,16 @@ bool        request_has_headers(const v_str& request) {
 }
 
 void ClientRequest::fill_headers(const v_str &request) {
-    for (size_t i = 1; !request[i].empty(); ++i) {
-        std::string name = request[i].substr(0, request[i].find_first_of(':'));
-        std::string value = request[i].substr(
-                request[i].find_first_of(": ") + 2);
-        if (!name.empty() && !value.empty())
-            headers_.insert(std::make_pair(name, value));
+    for (size_t i = 1; i < request.size(); ++i) {
+        if (!request[i].empty() && request[i].find(':') != std::string::npos) {
+            std::string name = request[i].
+                                    substr(0,
+                                           request[i].find_first_of(':'));
+            std::string value = request[i].
+                                substr(request[i].find_first_of(": ") + 2);
+            if (!name.empty() && !value.empty())
+                headers_.insert(std::make_pair(name, value));
+        }
     }
 }
 

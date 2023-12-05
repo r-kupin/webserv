@@ -90,10 +90,10 @@ Config::CheckDirectivesLimitExcept(const Node &node, Limit &curr_limit) const {
             curr_limit.allow_all_ = true;
         } else if (is_deny_address(node.directives_[i])) {
             for (size_t j = 1; j < node.directives_[i].size(); ++j)
-                deny_address(node.directives_[i][j], curr_limit);
+                DenyAddress(node.directives_[i][j], curr_limit);
         } else if (is_allow_address(node.directives_[i])) {
             for (size_t j = 1; j < node.directives_[i].size(); ++j)
-                allow_address(node.directives_[i][j], curr_limit);
+                AllowAddress(node.directives_[i][j], curr_limit);
         } else {
             ThrowSyntaxError("Limit_except context needs deny: all or address "
                              "or allow: all or address");
@@ -104,7 +104,7 @@ Config::CheckDirectivesLimitExcept(const Node &node, Limit &curr_limit) const {
                          "simultaneously");
 }
 
-void Config::deny_address(const std::string &address, Limit &curr_limit) const {
+void Config::DenyAddress(const std::string &address, Limit &curr_limit) const {
     if (!curr_limit.allow_.empty() &&
         std::find(curr_limit.allow_.begin(), curr_limit.allow_.end(),
                   address) != curr_limit.allow_.end()) {
@@ -113,7 +113,7 @@ void Config::deny_address(const std::string &address, Limit &curr_limit) const {
     curr_limit.deny_.push_back(address);
 }
 
-void Config::allow_address(const std::string &address, Limit &curr_limit)const {
+void Config::AllowAddress(const std::string &address, Limit &curr_limit)const {
     if (!curr_limit.deny_.empty() &&
         std::find(curr_limit.deny_.begin(),curr_limit.deny_.end(),
                   address) != curr_limit.deny_.end()) {
