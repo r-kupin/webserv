@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include "../src/Server/Server.h"
-#include "../src/Server/ServerExceptions.h"
+#include "../../../../src/Server/Server.h"
+#include "../../../../src/Server/ServerExceptions.h"
 
 class ClienRequestTest : public ::testing::Test {
 protected:
@@ -234,7 +234,7 @@ TEST_F(ClienRequestTest, SomeGarbage) {
 class RequestHandlingTest : public ::testing::Test, public Server {
 public:
     explicit RequestHandlingTest() : Server(
-            *Config("test_resources/test1/default/nginx.conf").getServers().begin()) {}
+            *Config("test_resources/test1/nginx.conf").getServers().begin()) {}
 };
 
 TEST_F(RequestHandlingTest, FindRootLocation) {
@@ -304,14 +304,10 @@ TEST_F(RequestHandlingTest, SublocationNotFound) {
 class LocationSynthesingTest : public ::testing::Test, public Server {
 public:
     explicit LocationSynthesingTest()
-    : Server(*Config("test_resources/test1/default/nginx.conf").
+    : Server(*Config("test_resources/test1/nginx.conf").
                                                     getServers().begin()) {};
 protected:
     int fd_;
-
-    virtual void TearDown() {
-        close(fd_);
-    }
 
     void pipe_reguest_to_fd(std::string & request) {
         int pipe_fd[2];
@@ -330,6 +326,7 @@ protected:
         fd_ = pipe_fd[0];
     }
 };
+
 
 TEST_F(LocationSynthesingTest, CheckFoundLocationPathDoesntExist) {
     std::string status;
@@ -374,7 +371,7 @@ TEST_F(LocationSynthesingTest,
 }
 
 TEST_F(LocationSynthesingTest,
-       SynthesiseFor_ExactMatch_DirectoryExist_IndexDefined_AndExist) {
+        SynthesiseFor_ExactMatch_DirectoryExist_IndexDefined_AndExist) {
     std::string loc = "/loc_defined_index_which_exist";
     std::string status;
     const Location &found = FindSublocation(loc,

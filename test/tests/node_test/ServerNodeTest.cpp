@@ -11,8 +11,41 @@
 /******************************************************************************/
 
 #include <gtest/gtest.h>
-#include "../src/Config/Config.h"
-#include "../src/Config/ConfigExceptions.h"
+#include "../../../src/Config/Config.h"
+#include "../../../src/Config/ConfigExceptions.h"
+
+class CheckServerTest : public ::testing::Test, public Config {
+public:
+    CheckServerTest() : Config() {};
+protected:
+    Node server_;
+    std::vector<ServerConfiguration> servers;
+
+    virtual void SetUp() {
+        servers = std::vector<ServerConfiguration>();
+
+        server_ = Node();
+        server_.main_ = v_str ({"server"});
+        server_.directives_.push_back(
+                v_str({"server_name", "localhost" }));
+        server_.directives_.push_back(
+                v_str({"root", "/some/where/deep/inside" }));
+        server_.directives_.push_back(
+                v_str({"index", "index.html", "index.htm" }));
+        server_.directives_.push_back(
+                v_str({"error_page", "401" , "err.html" }));
+    }
+};
+
+TEST_F(CheckServerTest, CheckServerTestHasNoPortKO) {
+    EXPECT_THROW(CheckServer(server_), ConfigFileSyntaxError);
+}
+
+TEST_F(CheckServerTest, CheckServerTestHasPortOK) {
+    server_.directives_.push_back({"listen", "8080"});
+    EXPECT_NO_THROW(CheckServer(server_));
+}
+
 
 class ServerNodeTest : public ::testing::Test, public Config {
 public:

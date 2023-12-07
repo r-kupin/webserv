@@ -56,36 +56,36 @@ m_codes_c Location::kHttpOkCodes = Location::initializeHttpOKCodes();
 m_codes_c Location::kHttpRedirectCodes = Location::initializeHttpRedirectCodes();
 
 Location::Location(const std::string &address)
-	: index_defined_(false), return_code_(0), address_(address), parent_(NULL) {
+	: index_defined_(false),
+    return_code_(0),
+    address_(address) {
     if (address_.find_first_of('?') != std::string::npos)
         throw LocationException();
 }
 
 Location::Location()
-    : index_defined_(false), return_code_(0), parent_(NULL) {}
+    : index_defined_(false),
+    return_code_(0) {}
 
 Location::Location(const Location& other)
-		: error_pages_(other.error_pages_),
-		  sublocations_(other.sublocations_),
-		  index_(other.index_),
-          index_defined_(other.index_defined_),
-		  limit_except_(other.limit_except_),
-          return_code_(other.return_code_),
-          return_address_(other.return_address_),
-		  root_(other.root_),
-		  address_(other.address_),
-		  full_address_(other.full_address_),
-          parent_(other.parent_) {}
+    : error_pages_(other.error_pages_),
+    sublocations_(other.sublocations_),
+    index_(other.index_),
+    index_defined_(other.index_defined_),
+    limit_except_(other.limit_except_),
+    return_code_(other.return_code_),
+    return_address_(other.return_address_),
+    root_(other.root_),
+    address_(other.address_),
+    full_address_(other.full_address_),
+    parent_(other.parent_) {}
 
 //Location::Location(const std::string &address)
 //    : return_code_(0), address_(address) {}
 
 Location::Location(const std::string &address, l_loc_it parent)
-    : error_pages_(parent->error_pages_),
-    index_(parent->index_), // todo with parent root!
-    index_defined_(false),
+    : index_defined_(false),
     return_code_(0),
-    return_address_(parent->return_address_),
     address_(address),
     full_address_(parent->full_address_ + address),
     parent_(parent) {
@@ -238,21 +238,19 @@ void Location::HandleLocationReturn(const v_str &directives_) {
     }
 }
 
-const Location & Location::FindSublocationByAddress(
-                                            const std::string &address) const {
+l_loc_c_it Location::FindSublocationByAddress(const std::string &address) const {
     if (address == "/")
-        return *this;
+        return parent_;
     LocationByAddress to_find(address);
-    const l_loc_c_it &it = std::find_if(
-                                        sublocations_.begin(),
-                                        sublocations_.end(), to_find);
+    l_loc_c_it it = std::find_if(sublocations_.begin(),
+                                 sublocations_.end(),
+                                 to_find);
     if (it == sublocations_.end())
         throw NotFoundException();
-    return *it;
+    return it;
 }
 
-
-/** todo location get's appended to root
+/**
  * from nginx docs:
  *  Syntax: 	root path;
  *  Default: 	root html;
@@ -309,6 +307,10 @@ bool Location::UMarkDefined(const std::string &key, bool &flag,
     return false;
 }
 
+/**
+ *  Updates some location parameters based on the directives
+ * @param directives
+ */
 void Location::ProcessDirectives(std::vector<v_str> &directives) {
     bool    root = false, index = false, ret = false, err = false;
 
@@ -431,8 +433,6 @@ void Location::UpdateSublocations() {
         if (root_[root_.size() - 1] == '/')
             root_ = root_.substr(0, root_.size() - 1);
         root_ += address_;
-        if (error_pages_.empty())
-            error_pages_ = parent_->error_pages_;
     }
     for (l_loc_it it = sublocations_.begin(); it != sublocations_.end(); ++it) {
         it->UpdateSublocations();

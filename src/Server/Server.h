@@ -65,7 +65,7 @@ protected:
     void SetSocket();
     const Location &    FindSublocation(const std::string &uri,
                                         const Location &start,
-                                        std::string &status);
+                                        std::string &status) const;
     ServerConfiguration &getConfig();
     int getSocket() const;
     int getEpollFd() const;

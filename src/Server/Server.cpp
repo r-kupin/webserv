@@ -331,7 +331,7 @@ std::string get_next_location_address(const std::string &uri) {
 // todo Handle requests fot files like /loc_defined_index_not_exist/pic.jpeg !!!
 const Location &Server::FindSublocation(const std::string &uri,
                                         const Location &start,
-                                        std::string &status) {
+                                        std::string &status) const {
     if (uri.empty() || uri[0] != '/') {
         status = "uri misconfigured";
         return start;
@@ -342,7 +342,7 @@ const Location &Server::FindSublocation(const std::string &uri,
             remainder = uri.substr(first.size());
         if (first != "/") {
             try {
-                const Location &found = start.FindSublocationByAddress(first);
+                const Location &found = *start.FindSublocationByAddress(first);
                 return FindSublocation(remainder, found, status);
             } catch (const NotFoundException &) {
                 status = "not found";

@@ -58,7 +58,7 @@ public:
     explicit Location(const std::string &address);
 
     void                AddErrorPages(const v_str &directive);
-    const Location      &FindSublocationByAddress(const std::string & address) const;
+    l_loc_c_it          FindSublocationByAddress(const std::string & address) const;
     void                HandleLocationReturn(const v_str &directives_);
     bool                HasSameAddressAs(const Location &rhs) const;
     bool                HasSameAddressAsOneOfSublocationsOf(const Location &rhs) const;

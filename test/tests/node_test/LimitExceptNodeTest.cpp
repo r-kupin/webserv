@@ -12,8 +12,8 @@
 
 #include <gtest/gtest.h>
 #include <algorithm>
-#include "../src/Config/Config.h"
-#include "../src/Config/ConfigExceptions.h"
+#include "../../../src/Config/Config.h"
+#include "../../../src/Config/ConfigExceptions.h"
 
 class LimitExceptNodeTest : public ::testing::Test, public Config {
 public:

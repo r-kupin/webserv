@@ -12,8 +12,8 @@
 
 #include <gtest/gtest.h>
 #include <algorithm>
-#include "../src/Config/Config.h"
-#include "../src/Config/ConfigExceptions.h"
+#include "../../../src/Config/Config.h"
+#include "../../../src/Config/ConfigExceptions.h"
 
 class LocationNodeTest  : public ::testing::Test, public Config {
 public:
@@ -96,7 +96,9 @@ TEST_F(LocationNodeTest, HomeInReDefinedRoot) {
 
     EXPECT_EQ(conf_.GetRoot().address_, "/");
     EXPECT_EQ(conf_.GetRoot().root_ , "resources/root_loc_default");
-    EXPECT_NE(std::find(conf_.GetRoot().index_.begin(), conf_.GetRoot().index_.end(),"/htmls/index.html"),
+    EXPECT_NE(std::find(conf_.GetRoot().index_.begin(),
+                        conf_.GetRoot().index_.end(),
+                        "/htmls/index.html"),
               conf_.GetRoot().index_.end());
 
     const std::set<ErrPage>::iterator &NotFoundErrPage =
@@ -113,7 +115,6 @@ TEST_F(LocationNodeTest, HomeInReDefinedRoot) {
     EXPECT_EQ(conf_.GetRoot().return_address_ , "");
 
     EXPECT_EQ(conf_.GetRoot().sublocations_.begin()->address_, "/loc_defined_index_not_exist");
-//    TODO test for append, but maybe need replace?
     EXPECT_NE(std::find(conf_.GetRoot().sublocations_.begin()->index_.begin(),
                         conf_.GetRoot().sublocations_.begin()->index_.end(),
                         "index.html"),

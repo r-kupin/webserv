@@ -95,14 +95,15 @@ ServerConfiguration::ServerConfiguration()
   server_name_("localhost") {
     Location root_loc("/");
     root_loc.root_ = "resources/root_loc_default";
-    root_loc.index_.push_back("/htmls/index.html");
-    root_loc.error_pages_.insert(ErrPage("/htmls/404.html", 404));
-    root_loc.error_pages_.insert(ErrPage("/htmls/403.html", 403));
+//    todo implement automatic default error pages generation
+//    root_loc.error_pages_.insert(ErrPage("/htmls/404.html", 404));
+//    root_loc.error_pages_.insert(ErrPage("/htmls/403.html", 403));
     root_loc.return_code_ = 0;
     root_loc.return_address_ = "";
     root_loc.full_address_ = "";
-    root_loc.parent_ = locations_.end();
     locations_.push_back(root_loc);
+//    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    locations_.begin()->parent_ = locations_.begin();
 }
 
 bool ServerConfiguration::operator==(const ServerConfiguration &rhs) const {

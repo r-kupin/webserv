@@ -12,9 +12,9 @@
 
 #include <gtest/gtest.h>
 #include <algorithm>
-#include "../src/Config/Config.h"
-#include "../src/Config/ConfigExceptions.h"
-#include "../src/Server/ServerExceptions.h"
+#include "../../../../src/Config/Config.h"
+#include "../../../../src/Config/ConfigExceptions.h"
+#include "../../../../src/Server/ServerExceptions.h"
 
 class ServerConfigTest : public ::testing::Test, public ServerConfiguration {
 public:
