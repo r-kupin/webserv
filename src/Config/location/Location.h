@@ -13,25 +13,21 @@
 #ifndef WEBSERV_LIB_LOCATION_H
 #define WEBSERV_LIB_LOCATION_H
 
-#include <string>
-#include <vector>
-#include <set>
-#include <ostream>
 #include <list>
 #include "ErrPage.h"
 #include "LimitExcept.h"
 
-class Location;
+struct Location;
+//-------------------static creation / initialization---------------------------
 
-typedef std::vector<std::string>                v_str;
-typedef std::list<std::string>                  l_str;
-typedef const std::map<int, std::string>        m_codes_c;
-typedef std::list<Location>::iterator           l_loc_it;
-typedef std::list<Location>::const_iterator     l_loc_c_it;
-typedef std::list<std::string>::const_iterator  l_str_c_it;
+typedef const std::map<int, std::string>                        m_codes_c;
+typedef std::list<Location>                                     l_loc;
+typedef std::list<Location>::iterator                           l_loc_it;
+typedef std::list<Location>::const_iterator                     l_loc_c_it;
+typedef std::list<std::string>                                  l_str;
+typedef std::list<std::string>::const_iterator                  l_str_c_it;
 
-class Location {
-public:
+struct Location {
     class LocationException : public std::exception {};
 
     static m_codes_c kHttpOkCodes;
@@ -40,7 +36,7 @@ public:
     static m_codes_c initializeHttpRedirectCodes();
 
     std::set<ErrPage>       error_pages_;
-    std::list<Location>     sublocations_;
+    l_loc                   sublocations_;
     l_str                   index_;
     bool                    index_defined_;
     Limit                   limit_except_;
@@ -54,35 +50,40 @@ public:
 
     Location();
     Location(const Location &);
-	Location(const std::string &address, l_loc_it parent);
+    Location(const std::string &address, l_loc_it parent);
     explicit Location(const std::string &address);
-
-    void                AddErrorPages(const v_str &directive);
-    l_loc_c_it          FindSublocationByAddress(const std::string & address) const;
-    void                HandleLocationReturn(const v_str &directives_);
-    bool                HasSameAddressAs(const Location &rhs) const;
-    bool                HasSameAddressAsOneOfSublocationsOf(const Location &rhs) const;
-    void                ProcessDirectives(std::vector<v_str> &directives);
+//-------------------satic utils------------------------------------------------
     static bool         MarkDefined(const std::string &key, bool &flag,
                                     const v_str &directive);
     static bool         UMarkDefined(const std::string &key, bool &flag,
                                      const v_str &directive);
-    static void         ThrowLocationError(const std::string &msg);
-    void                HandleRoot(const v_str &directive);
-    std::ostream        &RecursivePrint(std::ostream &os,
-                                        const Location &location) const;
-    void                UpdateSublocations();
-    const Location      &getParent() const;
+//-------------------functional stuff-------------------------------------------
+    l_loc_c_it          FindSublocationByAddress(const std::string & address) const;
+    bool                HasSameAddressAs(const Location &rhs) const;
+    bool                HasSameAddressAsOneOfSublocationsOf(const Location &rhs) const;
     bool                HasAsSublocation(Location &location);
+//-------------------setup address----------------------------------------------
+    void                HandleAddress(const std::string &str);
+//-------------------setup directives handlers----------------------------------
+    void                ProcessDirectives(const std::vector<v_str> &directives);
+    void                HandleLocationReturn(const v_str &directives_);
     void                HandleIndex(const v_str &directives);
     void                HandleCode(const std::string &str);
-    void                HandleAddress(const std::string &str);
-
+    void                HandleRoot(const v_str &directive);
+    void                AddErrorPages(const v_str &directive);
+//-------------------setup subcontexts handlers--------------------------------
+    void                HandleLimitExcept(const v_str &main,
+                                          const std::vector<v_str> &directives);
+    void                UpdateSublocations();
+//-------------------operator overloads & exceptions----------------------------
+    static void         ThrowLocationError(const std::string &msg);
+    std::ostream        &RecursivePrint(std::ostream &os,
+                                        const Location &location) const;
     bool                operator<(const Location &rhs) const;
     bool                operator==(const Location &rhs) const;
     Location&           operator=(const Location& rhs);
 };
-
+//-------------------sublocation search predicate class-------------------------
 struct LocationByAddress {
     std::string         targetAddress_;
     explicit            LocationByAddress(const std::string& targetAddress);

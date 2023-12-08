@@ -15,20 +15,6 @@
 #include "ConfigSubmodules.h"
 #include "ConfigExceptions.h"
 
-Limit::Limit() : deny_all_(false), allow_all_(false) {}
-
-bool Limit::operator==(const Limit &rhs) const {
-    return except_ == rhs.except_;
-}
-
-std::ostream &operator<<(std::ostream &os, const Limit &limit) {
-    for (std::_Rb_tree_const_iterator<Methods> iterator = limit.except_.begin();
-        iterator != limit.except_.end(); ++iterator) {
-        os << *iterator << " ";
-    }
-    return os;
-}
-
 void ServerConfiguration::UpdateHostname(const v_str &directives) {
     // TODO server names - hostnames ....
     if (default_hostname_) {

@@ -23,38 +23,43 @@ add_executable(webserv src/main.cpp
         src/Server/ClientRequest.cpp
         src/Server/ClientRequest.h
         src/Server/ClientRequest.cpp
-        src/Config/Location.h
-        src/Config/Location.h
-        src/Config/ErrPage.h
-        src/Config/LimitExcept.h
-        src/Config/Location.cpp
-        src/Config/ErrPage.cpp
+        src/Config/location/Location.h
+        src/Config/location/Location.h
+        src/Config/location/ErrPage.h
+        src/Config/location/LimitExcept.h
+        src/Config/location/Location.cpp
+        src/Config/location/ErrPage.cpp
         src/Server/ServerResponse.cpp
-        src/Server/ServerResponse.h )
+        src/Server/ServerResponse.h
+        src/Config/location/LocationLimitExcept.cpp
+        src/Config/location/LimitExcept.cpp)
 add_library(webserv_lib
         src/Config/Config.cpp
         src/Config/Config.h
         src/Server/Server.cpp
         src/Server/Server.h
-        src/Config/ConfigChecker.cpp
         src/Config/ConfigExceptions.h
         src/Config/ConfigParser.cpp
         src/Config/ChonfigProcessingUtils.cpp
+        src/Config/ConfigChecker.cpp
         src/Server/ServerManager.cpp
         src/Server/ServerManager.h
         src/Config/ConfigLocationChecker.cpp
         src/Config/ConfigSubmodules.h
         src/Config/ConfigSubmodules.cpp
+        src/Server/ServerExceptions.h
         src/Server/ClientRequest.cpp
         src/Server/ClientRequest.h
         src/Server/ClientRequest.cpp
-        src/Config/Location.h
-        src/Config/Location.h
-        src/Config/ErrPage.h
-        src/Config/LimitExcept.h
-        src/Config/Location.cpp
-        src/Config/ErrPage.cpp
+        src/Config/location/Location.h
+        src/Config/location/Location.h
+        src/Config/location/ErrPage.h
+        src/Config/location/LimitExcept.h
+        src/Config/location/Location.cpp
+        src/Config/location/ErrPage.cpp
         src/Server/ServerResponse.cpp
-        src/Server/ServerResponse.h )
+        src/Server/ServerResponse.h
+        src/Config/location/LocationLimitExcept.cpp
+        src/Config/location/LimitExcept.cpp)
 
 add_subdirectory(test)

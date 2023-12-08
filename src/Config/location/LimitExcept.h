@@ -20,16 +20,29 @@
 
 enum Methods {GET, POST, DELETE};
 
+typedef std::vector<std::string>                                v_str;
+typedef std::vector<std::string>::const_iterator                v_str_c_it;
+typedef std::vector<v_str>::const_iterator                      vstr_vstr_c_it;
+
 struct Limit {
+    class LimitExceptException : public std::exception {};
+
     std::set<Methods>           except_;
-    std::vector<std::string>    allow_;
-    std::vector<std::string>    deny_;
+    v_str                       allow_;
+    v_str                       deny_;
     bool                        deny_all_;
     bool                        allow_all_;
 
     Limit();
 
+    void    LimExDenyAddress(const std::string &address);
+    void    LimExAllowAddress(const std::string &address);
+    void    LimExHandleMethods(const v_str &main);
+    void    LimExHandleDirectives(const std::vector<v_str> &directives);
+
     bool operator==(const Limit &rhs) const;
+
+    void ThrowLimitExceptError(const std::string &msg) const;
 };
 std::ostream &operator<<(std::ostream &os, const Limit &limit);
 

@@ -18,7 +18,7 @@
 #include <netinet/in.h>
 #include <vector>
 #include <map>
-#include "../Config/LimitExcept.h"
+#include "../Config/location/LimitExcept.h"
 
 struct ClientRequest {
     Methods                             method_;

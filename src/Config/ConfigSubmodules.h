@@ -17,7 +17,7 @@
 #include <vector>
 #include <set>
 #include <ostream>
-#include "Location.h"
+#include "location/Location.h"
 
 /**
  * @brief server pre-configuration
@@ -50,27 +50,6 @@ public:
 
     bool operator==(const ServerConfiguration &rhs) const;
     ServerConfiguration& operator=(const ServerConfiguration& rhs);
-};
-
-/**
- * @brief struct for parsed NGINX block
- * @param main_ directive preceding the block
- * @param directives_ vector of directives (vectors of strings)
- * @param child_nodes_ nested blocks
- */
-struct Node {
-    v_str main_;
-    std::vector<v_str> directives_;
-    std::vector<Node> child_nodes_;
-};
-
-/**
- * @brief struct used only during parsing process - to keep redd
- * leftovers left after block parsing
- */
-struct RawNode {
-    Node node_;
-    std::string leftover_;
 };
 
 #endif //WEBSERV_LIB_CONFIGSUBMODULES_H

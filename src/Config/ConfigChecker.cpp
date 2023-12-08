@@ -76,7 +76,7 @@ void Config::HandleLocationContext(Node &loc_context,
     for (std::vector<Node>::iterator it = loc_context.child_nodes_.begin();
                                 it != loc_context.child_nodes_.end(); ++it) {
         if (IsCorrectLimitExcept(*it, current)) {
-            HandleLimitExceptContext(*it, current.limit_except_);
+            current.HandleLimitExcept(it->main_, it->directives_);
         } else if (IsCorrectLocation(*it)) {
             HandleSublocation(sc, parent, current, it);
         }

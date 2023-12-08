@@ -49,7 +49,6 @@ TEST_F(ProcessDerectivesTest, TestForRootRootRedefinition) {
     directives_2.push_back({"index", "index_2.html"});
     directives_2.push_back({"error_page", "403", "400", "416", "error2.html"});
 
-
 //-----------------------define root--------------------------------------------
     Location &root_loc = sc.GetRoot();
     EXPECT_NO_THROW(root_loc.ProcessDirectives(directives_));

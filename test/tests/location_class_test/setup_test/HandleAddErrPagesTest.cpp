@@ -2,9 +2,9 @@
 #include <algorithm>
 #include "../../../../src/Config/Config.h"
 
-class ErrorPagesAddingTest : public ::testing::Test, public Location {
+class HandleAddErrPagesTest : public ::testing::Test, public Location {
 public:
-    explicit ErrorPagesAddingTest()
+    explicit HandleAddErrPagesTest()
             : Location(),
               sc_root_(sc_.GetRoot()) {
         sc_root_.sublocations_.push_back(Location("/sub"));
@@ -16,7 +16,7 @@ protected:
     Location & sc_root_;
 };
 
-TEST_F(ErrorPagesAddingTest, AddErrPages) {
+TEST_F(HandleAddErrPagesTest, AddErrPages) {
     sc_root_.AddErrorPages(v_str({"error_page", "404", "/404.html"}));
     sc_root_.AddErrorPages(v_str({"error_page", "403", "/403.html"}));
 
@@ -26,7 +26,7 @@ TEST_F(ErrorPagesAddingTest, AddErrPages) {
             ErrPage("/404.html", 400)), sc_root_.error_pages_.end());
 }
 
-TEST_F(ErrorPagesAddingTest, UpdateErrPages) {
+TEST_F(HandleAddErrPagesTest, UpdateErrPages) {
     sc_root_.AddErrorPages(v_str({"error_page", "404", "/404.html"}));
 
     EXPECT_EQ(sc_root_.error_pages_.find(
@@ -38,7 +38,7 @@ TEST_F(ErrorPagesAddingTest, UpdateErrPages) {
             ErrPage("/404_new.html", 404))->address_, "/404_new.html");
 }
 
-TEST_F(ErrorPagesAddingTest, ErrPagesWrongDirective) {
+TEST_F(HandleAddErrPagesTest, ErrPagesWrongDirective) {
     EXPECT_THROW(sc_root_.AddErrorPages(v_str({"error_page", "404"})),
                  LocationException);
     EXPECT_THROW(sc_root_.AddErrorPages(v_str({"error_page", "304"})),

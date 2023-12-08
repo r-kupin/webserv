@@ -10,14 +10,13 @@
 /*                                                                            */
 /******************************************************************************/
 
-
 #include <cstdlib>
 #include <algorithm>
 #include <iostream>
 #include "Location.h"
-#include "../Server/ServerExceptions.h"
+#include "../../Server/ServerExceptions.h"
 
-
+//-------------------static creation / initialization---------------------------
 m_codes_c Location::initializeHttpRedirectCodes() {
     std::map<int, std::string> codes;
     codes.insert(std::make_pair(301, "Moved Permanently"));
@@ -80,9 +79,6 @@ Location::Location(const Location& other)
     full_address_(other.full_address_),
     parent_(other.parent_) {}
 
-//Location::Location(const std::string &address)
-//    : return_code_(0), address_(address) {}
-
 Location::Location(const std::string &address, l_loc_it parent)
     : index_defined_(false),
     return_code_(0),
@@ -93,28 +89,68 @@ Location::Location(const std::string &address, l_loc_it parent)
         throw LocationException();
 }
 
-bool Location::operator<(const Location &rhs) const {
-    return address_ < rhs.address_;
+//-------------------satic utils------------------------------------------------
+bool Location::MarkDefined(const std::string &key, bool &flag,
+                           const v_str &directive) {
+    if (directive[0] == key) {
+        if (directive.size() < 2) {
+            ThrowLocationError("definition has to contain at least key and 1 "
+                               "value");
+        } else {
+            flag = true;
+            return true;
+        }
+    }
+    return false;
 }
 
-bool Location::operator==(const Location &rhs) const {
-    if (!(error_pages_ == rhs.error_pages_))
-        return false;
-    if (!(limit_except_ == rhs.limit_except_))
-        return false;
-    if (return_code_ != rhs.return_code_)
-        return false;
-    if (index_ != rhs.index_)
-        return false;
-    if (return_address_ != rhs.return_address_)
-        return false;
-    if (root_ != rhs.root_)
-        return false;
-    if (address_ != rhs.address_)
-        return false;
-    if (sublocations_ != rhs.sublocations_)
-        return false;
-    return true;
+bool Location::UMarkDefined(const std::string &key, bool &flag,
+                            const v_str &directive) {
+    if (directive[0] == key) {
+        if (flag) {
+            ThrowLocationError("Redefinition of " + key + " is not allowed");
+        } else if (directive.size() < 2) {
+            ThrowLocationError("definition has to contain at least key and 1 "
+                               "value");
+        } else {
+            flag = true;
+            return true;
+        }
+    }
+    return false;
+}
+
+//-------------------local utils------------------------------------------------
+bool is_number(const std::string &str) {
+    return str.find_first_not_of("0123456789") == std::string::npos;
+}
+
+bool is_address(const std::string &str) {
+    return str.find_first_of('/') != std::string::npos;
+}
+
+//-------------------functional stuff-------------------------------------------
+l_loc_c_it Location::FindSublocationByAddress(const std::string &address) const {
+    if (address == "/")
+        return parent_;
+    LocationByAddress to_find(address);
+    l_loc_c_it it = std::find_if(sublocations_.begin(),
+                                 sublocations_.end(),
+                                 to_find);
+    if (it == sublocations_.end())
+        throw NotFoundException();
+    return it;
+}
+
+LocationByAddress::LocationByAddress(const std::string &targetAddress)
+        : targetAddress_(targetAddress) {}
+
+bool LocationByAddress::operator()(const Location &location) const {
+    return location.address_ == targetAddress_;
+}
+
+bool Location::HasSameAddressAs(const Location &rhs) const {
+    return address_ == rhs.address_;
 }
 
 bool Location::HasSameAddressAsOneOfSublocationsOf(const Location &rhs) const {
@@ -126,8 +162,45 @@ bool Location::HasSameAddressAsOneOfSublocationsOf(const Location &rhs) const {
     return false;
 }
 
-bool Location::HasSameAddressAs(const Location &rhs) const {
-    return address_ == rhs.address_;
+bool Location::HasAsSublocation(Location &location) {
+    for (l_loc_it it = sublocations_.begin(); it != sublocations_.end(); ++it) {
+        if (location.HasSameAddressAs(*it))
+            return true;
+    }
+    return false;
+}
+
+//-------------------setup address----------------------------------------------
+void Location::HandleAddress(const std::string &str) {
+    const std::string kAddressPrefix = "http://";
+    if (is_address(str)) {
+        if (return_address_ == "" &&
+            str.substr(0, kAddressPrefix.size()) == kAddressPrefix) {
+            return_address_ = str;
+        } else {
+            throw LocationException();
+        }
+    }
+}
+
+//-------------------setup directives handlers----------------------------------
+/**
+ *  Updates some location parameters based on the directives
+ * @param directives
+ */
+void Location::ProcessDirectives(const std::vector<v_str> &directives) {
+    bool    root = false, index = false, ret = false, err = false;
+
+    for (size_t i = 0; i < directives.size(); ++i) {
+        if (UMarkDefined("root", root, directives[i]))
+            HandleRoot(directives[i]);
+        if (MarkDefined("index", index, directives[i]))
+            HandleIndex(directives[i]);
+        if (UMarkDefined("return", ret, directives[i]))
+            HandleLocationReturn(directives[i]);
+        if (MarkDefined("error_page", err, directives[i]))
+            AddErrorPages(directives[i]);
+    }
 }
 
 void Location::AddErrorPages(const v_str &directive) {
@@ -156,26 +229,6 @@ void Location::AddErrorPages(const v_str &directive) {
     }
 }
 
-bool is_number(const std::string &str) {
-    return str.find_first_not_of("0123456789") == std::string::npos;
-}
-
-bool is_address(const std::string &str) {
-    return str.find_first_of('/') != std::string::npos;
-}
-
-void Location::HandleAddress(const std::string &str) {
-    const std::string kAddressPrefix = "http://";
-    if (is_address(str)) {
-        if (return_address_ == "" &&
-            str.substr(0, kAddressPrefix.size()) == kAddressPrefix) {
-            return_address_ = str;
-        } else {
-            throw LocationException();
-        }
-    }
-}
-
 void Location::HandleCode(const std::string &str) {
     if (is_number(str)) {
         int code = atoi(str.c_str());
@@ -186,6 +239,15 @@ void Location::HandleCode(const std::string &str) {
         }
         return_code_ = code;
     }
+}
+
+void Location::HandleIndex(const v_str &directives) {
+    if (!index_defined_) {
+        index_.clear();
+        index_defined_ = true;
+    }
+    for (size_t j = 1; j < directives.size(); ++j)
+        index_.push_back(directives[j]);
 }
 
 /**
@@ -238,18 +300,6 @@ void Location::HandleLocationReturn(const v_str &directives_) {
     }
 }
 
-l_loc_c_it Location::FindSublocationByAddress(const std::string &address) const {
-    if (address == "/")
-        return parent_;
-    LocationByAddress to_find(address);
-    l_loc_c_it it = std::find_if(sublocations_.begin(),
-                                 sublocations_.end(),
-                                 to_find);
-    if (it == sublocations_.end())
-        throw NotFoundException();
-    return it;
-}
-
 /**
  * from nginx docs:
  *  Syntax: 	root path;
@@ -277,74 +327,32 @@ void Location::HandleRoot(const v_str &directive) {
     }
 }
 
-bool Location::MarkDefined(const std::string &key, bool &flag,
-                                      const v_str &directive) {
-    if (directive[0] == key) {
-        if (directive.size() < 2) {
-            ThrowLocationError("definition has to contain at least key and 1 "
-                               "value");
-        } else {
-            flag = true;
-            return true;
-        }
-    }
-    return false;
+//-------------------setup subcontexts handlers---------------------------------
+
+void Location::HandleLimitExcept(const v_str &main,
+                                 const std::vector<v_str> &directives) {
+    limit_except_.LimExHandleMethods(main);
+    limit_except_.LimExHandleDirectives(directives);
 }
 
-bool Location::UMarkDefined(const std::string &key, bool &flag,
-                                       const v_str &directive) {
-    if (directive[0] == key) {
-        if (flag) {
-            ThrowLocationError("Redefinition of " + key + " is not allowed");
-        } else if (directive.size() < 2) {
-            ThrowLocationError("definition has to contain at least key and 1 "
-                               "value");
-        } else {
-            flag = true;
-            return true;
-        }
+// todo tests! check root inheritance!
+void Location::UpdateSublocations() {
+    if (address_ != "/") {
+        if (root_.empty())
+            root_ = parent_->root_;
+        if (root_[root_.size() - 1] == '/')
+            root_ = root_.substr(0, root_.size() - 1);
+        root_ += address_;
     }
-    return false;
-}
-
-/**
- *  Updates some location parameters based on the directives
- * @param directives
- */
-void Location::ProcessDirectives(std::vector<v_str> &directives) {
-    bool    root = false, index = false, ret = false, err = false;
-
-    for (size_t i = 0; i < directives.size(); ++i) {
-        if (UMarkDefined("root", root, directives[i]))
-            HandleRoot(directives[i]);
-        if (MarkDefined("index", index, directives[i]))
-            HandleIndex(directives[i]);
-        if (UMarkDefined("return", ret, directives[i]))
-            HandleLocationReturn(directives[i]);
-        if (MarkDefined("error_page", err, directives[i]))
-            AddErrorPages(directives[i]);
+    for (l_loc_it it = sublocations_.begin(); it != sublocations_.end(); ++it) {
+        it->UpdateSublocations();
     }
 }
 
-void Location::HandleIndex(const v_str &directives) {
-    if (!index_defined_) {
-        index_.clear();
-        index_defined_ = true;
-    }
-    for (size_t j = 1; j < directives.size(); ++j)
-        index_.push_back(directives[j]);
-}
-
+//-------------------operator overloads & exceptions----------------------------
 void Location::ThrowLocationError(const std::string &msg) {
-    std::cout << "Syntax error: " + msg << std::endl;
+    std::cout << "Location syntax error: " + msg << std::endl;
     throw LocationException();
-}
-
-LocationByAddress::LocationByAddress(const std::string &targetAddress)
-    : targetAddress_(targetAddress) {}
-
-bool LocationByAddress::operator()(const Location &location) const {
-    return location.address_ == targetAddress_;
 }
 
 std::ostream & Location::RecursivePrint(std::ostream &os, const Location &location) const {
@@ -411,30 +419,26 @@ Location &Location::operator=(const Location &rhs) {
     // Return a reference to this object
     return *this;}
 
-const Location &Location::getParent() const {
-    if (address_ == "/")
-        return *this;
-    return *parent_;
+bool Location::operator<(const Location &rhs) const {
+    return address_ < rhs.address_;
 }
 
-bool Location::HasAsSublocation(Location &location) {
-    for (l_loc_it it = sublocations_.begin(); it != sublocations_.end(); ++it) {
-        if (location.HasSameAddressAs(*it))
-            return true;
-    }
-    return false;
-}
-
-// todo tests! check root inheritance!
-void Location::UpdateSublocations() {
-    if (address_ != "/") {
-        if (root_.empty())
-            root_ = parent_->root_;
-        if (root_[root_.size() - 1] == '/')
-            root_ = root_.substr(0, root_.size() - 1);
-        root_ += address_;
-    }
-    for (l_loc_it it = sublocations_.begin(); it != sublocations_.end(); ++it) {
-        it->UpdateSublocations();
-    }
+bool Location::operator==(const Location &rhs) const {
+    if (!(error_pages_ == rhs.error_pages_))
+        return false;
+    if (!(limit_except_ == rhs.limit_except_))
+        return false;
+    if (return_code_ != rhs.return_code_)
+        return false;
+    if (index_ != rhs.index_)
+        return false;
+    if (return_address_ != rhs.return_address_)
+        return false;
+    if (root_ != rhs.root_)
+        return false;
+    if (address_ != rhs.address_)
+        return false;
+    if (sublocations_ != rhs.sublocations_)
+        return false;
+    return true;
 }

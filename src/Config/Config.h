@@ -28,6 +28,27 @@ typedef std::list<ServerConfiguration>::const_iterator  l_srvconf_it_c;
 const static std::string kDefaultResPath = "resources/";
 const static std::string kDefaultConfig = "resources/default/nginx.conf";
 
+/**
+ * @brief struct for parsed NGINX block
+ * @param main_ directive preceding the block
+ * @param directives_ vector of directives (vectors of strings)
+ * @param child_nodes_ nested blocks
+ */
+struct Node {
+    v_str main_;
+    std::vector<v_str> directives_;
+    std::vector<Node> child_nodes_;
+};
+
+/**
+ * @brief struct used only during parsing process - to keep redd
+ * leftovers left after block parsing
+ */
+struct RawNode {
+    Node node_;
+    std::string leftover_;
+};
+
 class Config {
 public:
 //  Exposed to use
@@ -60,7 +81,7 @@ protected:
                                       ServerConfiguration &sc,
                                       l_loc_it parent);
     //  Limit_except subcontext
-    void        HandleLimitExceptContext(Node &node, Limit &curr_limit) const;
+//    void        HandleLimitExceptContext(Node &node, Limit &curr_limit) const;
     void        CheckServerSubnodes(Node &node, ServerConfiguration &current);
     ServerConfiguration CheckServer(Node &node,
                                     const std::string &resource_path = kDefaultResPath);
