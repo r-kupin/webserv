@@ -11,8 +11,8 @@
 /******************************************************************************/
 
 #include <gtest/gtest.h>
-#include "../../../src/Config/Config.h"
-#include "../../../src/Config/ConfigExceptions.h"
+#include "../../../src/Config/config/Config.h"
+#include "../../../src/Config/config/ConfigExceptions.h"
 
 TEST(ConfigParsingTest, ConfigOpensExistentConf) {
     EXPECT_NO_THROW(Config("test_resources/correct_config.conf"));

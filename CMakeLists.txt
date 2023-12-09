@@ -6,14 +6,13 @@ add_compile_options(-gdwarf-4 -O1 -fno-limit-debug-info  -Wall -Wextra -Werror)
 set(CMAKE_CXX_STANDARD 98)
 
 add_executable(webserv src/main.cpp
-        src/Config/Config.cpp
-        src/Config/Config.h
+        src/Config/config/Config.cpp
+        src/Config/config/Config.h
         src/Server/Server.cpp
         src/Server/Server.h
-        src/Config/ConfigExceptions.h
-        src/Config/ConfigParser.cpp
-        src/Config/ChonfigProcessingUtils.cpp
-        src/Config/ConfigChecker.cpp
+        src/Config/config/ConfigExceptions.h
+        src/Config/config/ConfigParse.cpp
+        src/Config/config/ConfigCreate.cpp
         src/Server/ServerManager.cpp
         src/Server/ServerManager.h
         src/Config/server_configuration/ServerConfiguration.h
@@ -35,14 +34,13 @@ add_executable(webserv src/main.cpp
         src/Config/server_configuration/ServerConfigurationLocationHandler.cpp
         src/Config/Node.cpp)
 add_library(webserv_lib
-        src/Config/Config.cpp
-        src/Config/Config.h
+        src/Config/config/Config.cpp
+        src/Config/config/Config.h
         src/Server/Server.cpp
         src/Server/Server.h
-        src/Config/ConfigExceptions.h
-        src/Config/ConfigParser.cpp
-        src/Config/ChonfigProcessingUtils.cpp
-        src/Config/ConfigChecker.cpp
+        src/Config/config/ConfigExceptions.h
+        src/Config/config/ConfigParse.cpp
+        src/Config/config/ConfigCreate.cpp
         src/Server/ServerManager.cpp
         src/Server/ServerManager.h
         src/Config/server_configuration/ServerConfiguration.h

@@ -20,9 +20,8 @@
 #include <set>
 #include <ostream>
 #include <list>
-#include "server_configuration/ServerConfiguration.h"
+#include "../server_configuration/ServerConfiguration.h"
 
-typedef const std::list<ServerConfiguration>            l_srvconf_c;
 typedef std::list<ServerConfiguration>::const_iterator  l_srvconf_it_c;
 
 const static std::string kDefaultResPath = "resources/";
@@ -57,14 +56,11 @@ public:
     const std::list<ServerConfiguration>    &getServers() const;
 
 protected:
-//  Config processing utils
-    void        ExcludeComments(std::string &line) const;
-    void        TrimWhitespaces(std::string &line) const;
 //  Parsing config file to tree-like structure of nodes
     void        ParseConfig(std::ifstream &config);
 //  Parsing config file to tree-like structure of nodes
     void        CreateSrvConfigs(Node& root);
-    //      Location subcontext
+//  Location subcontext
     void        CheckServerSubnodes(const v_node &subcontexts, ServerConfiguration &current);
     ServerConfiguration CheckServer(Node &node,
                                     const std::string &resource_path = kDefaultResPath);
@@ -91,7 +87,6 @@ private:
     void                FinishMainNode(RawNode &current,
                                        std::ifstream &config) const;
 //  Global server check
-
     void        ThrowSyntaxError(const std::string &msg,
                                  std::ifstream &config) const;
     void        ThrowSyntaxError(const std::string &msg) const;

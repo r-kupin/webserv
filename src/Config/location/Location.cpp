@@ -399,43 +399,61 @@ bool Location::operator==(const Location &rhs) const {
     return true;
 }
 
+void ptint_err_pages(std::ostream &os, const Location &location) {
+    os << location.full_address_ << ":\t" << "Error Pages: " << std::endl;
+    for (s_err_c_it it = location.error_pages_.begin();
+         it != location.error_pages_.end(); ++it) {
+        os << location.full_address_ <<  ":\t\t" << *it << std::endl;
+    }
+}
+
+void print_return_info(std::ostream &os, const Location &location) {
+    os << location.full_address_ << ":\t" << "Return Code: " <<
+        location.return_code_ << std::endl;
+    os << location.full_address_ << ":\t" << "Return Address: " <<
+       location.return_address_ << std::endl;
+}
+
+void print_index(std::ostream &os, const Location &location) {
+    os << location.full_address_ << ":\t" << "Index: ";
+    for (l_str_c_it it = location.index_.begin();
+         it != location.index_.end(); ++it) {
+        os << *it << " ";
+    }
+    os << std::endl;
+}
+
+void print_root(std::ostream &os, const Location &location) {
+    os << location.full_address_ << ":\t" << "Root: " <<
+        location.root_ << std::endl;
+}
+
+void print_parent_info(std::ostream &os, const Location &location) {
+    os << location.address_ << ":\t" << "Parent: " <<
+        location.parent_->address_ << std::endl;
+}
+
+void print_sublocations(std::ostream &os, const Location &location) {
+    for (l_loc_c_it it = location.sublocations_.begin();
+         it != location.sublocations_.end(); ++it) {
+        os << *it;
+    }
+}
+
 std::ostream &operator<<(std::ostream &os, const Location &location) {
     os << std::endl << "Localion " << location.address_ << ":" <<
        std::endl;
-    if (!location.error_pages_.empty()) {
-        os << location.full_address_ << ":\t" << "Error Pages: " <<
-           std::endl;
-        for (s_err_c_it it = location.error_pages_.begin();
-             it != location.error_pages_.end(); ++it) {
-            os << location.full_address_ <<  ":\t\t" << *it << std::endl;
-        }
-    }
-    if (location.return_code_ > 0) {
-        os << location.full_address_ << ":\t" << "Return Code: " <<
-           location.return_code_ << std::endl;
-        os << location.full_address_ << ":\t" << "Return Address: " <<
-           location.return_address_ << std::endl;
-    }
-    if (!location.index_.empty()) {
-        os << location.full_address_ << ":\t" << "Index: ";
-        for (l_str_c_it it = location.index_.begin();
-             it != location.index_.end(); ++it) {
-            os << *it << " ";
-        }
-        os << std::endl;
-    }
+    if (!location.error_pages_.empty())
+        ptint_err_pages(os, location);
+    if (location.return_code_ > 0)
+        print_return_info(os, location);
+    if (!location.index_.empty())
+        print_index(os, location);
     if (!location.root_.empty())
-        os << location.full_address_ << ":\t" << "Root: " <<
-           location.root_ << std::endl;
-    if (location.address_ != "/") {
-        os << location.address_ << ":\t" << "Parent: " <<
-           location.parent_->address_ << std::endl;
-    }
-    if (!location.sublocations_.empty()) {
-        for (l_loc_c_it it = location.sublocations_.begin();
-             it != location.sublocations_.end(); ++it) {
-            os << *it;
-        }
-    }
+        print_root(os, location);
+    if (location.address_ != "/")
+        print_parent_info(os, location);
+    if (!location.sublocations_.empty())
+        print_sublocations(os, location);
     return os;
 }

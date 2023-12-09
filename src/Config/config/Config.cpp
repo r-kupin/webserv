@@ -53,6 +53,18 @@ Config::Config(const std::string &config_path)
     }
 }
 
+void    Config::ThrowSyntaxError(const std::string &msg,
+                                 std::ifstream &config) const {
+    config.close();
+    ThrowSyntaxError(msg);
+}
+
+void    Config::ThrowSyntaxError(const std::string &msg) const {
+    std::cout << "Syntax error: " + msg << std::endl;
+    throw ConfigFileSyntaxError();
+}
+
+
 Config &Config::operator=(const Config &other) {
     if (this == &other)
         return *this;
@@ -85,7 +97,3 @@ const char *ConfigFileSyntaxError::what() const throw() {
 const std::string &Config::getConfPath() const {
     return conf_path_;
 }
-
-//const std::vector<ServerConfiguration> &Config::getServers() const {
-//    return servers_;
-//}

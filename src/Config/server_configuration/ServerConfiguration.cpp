@@ -13,7 +13,7 @@
 #include <algorithm>
 #include <iostream>
 #include "ServerConfiguration.h"
-#include "../ConfigExceptions.h"
+#include "../config/ConfigExceptions.h"
 
 ServerConfiguration::ServerConfiguration()
 : default_hostname_(true),

@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include "../../../src/Config/Config.h"
-#include "../../../src/Config/ConfigExceptions.h"
+#include "../../../src/Config/config/Config.h"
+#include "../../../src/Config/config/ConfigExceptions.h"
 
 class HandleLocationContextTest  : public ::testing::Test, public Config {
 public:

@@ -17,7 +17,7 @@
 #include <sys/socket.h>
 #include <sys/epoll.h>
 #include <netdb.h>
-#include "../Config/Config.h"
+#include "../Config/config/Config.h"
 #include "ServerResponse.h"
 
 class Server {

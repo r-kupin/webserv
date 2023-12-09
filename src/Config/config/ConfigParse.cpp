@@ -12,6 +12,28 @@
 
 #include "Config.h"
 
+void    exclude_comments(std::string &line) {
+    if (!line.empty()) {
+        size_t comment_position = line.find('#');
+        if (comment_position != std::string::npos) {
+            line = line.substr(0, comment_position);
+        }
+    }
+}
+
+void    trim_whitespaces(std::string &line) {
+    if (!line.empty()) {
+        size_t whitespaces_before = line.find_first_not_of(" \t\n");
+        size_t whitespaces_after = line.find_last_not_of(" \t\n");
+        if (whitespaces_before != std::string::npos &&
+            whitespaces_after != std::string::npos )
+            line = line.substr(whitespaces_before,
+                               whitespaces_after - whitespaces_before + 1);
+        else
+            line = "";
+    }
+}
+
 bool is_min(size_t n, size_t a, size_t b) {
     if (n < a && n < b)
         return true;
@@ -104,8 +126,8 @@ Config::ParseNode(std::ifstream &config, std::string &line_leftover,
 void Config::PreprocessLine(std::string &line,
                        const std::string &line_leftover) const {
     line = line_leftover + " " + line;
-    ExcludeComments(line);
-    TrimWhitespaces(line);
+    exclude_comments(line);
+    trim_whitespaces(line);
 }
 
 /**

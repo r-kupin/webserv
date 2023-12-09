@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include <algorithm>
-#include "../../../../src/Config/Config.h"
+#include "../../../../src/Config/config/Config.h"
 
 class HandleAddErrPagesTest : public ::testing::Test, public Location {
 public:

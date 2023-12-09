@@ -12,8 +12,8 @@
 
 #include <gtest/gtest.h>
 #include <algorithm>
-#include "../../../../src/Config/Config.h"
-#include "../../../../src/Config/ConfigExceptions.h"
+#include "../../../../src/Config/config/Config.h"
+#include "../../../../src/Config/config/ConfigExceptions.h"
 #include "../../../../src/Server/ServerExceptions.h"
 
 class ServerConfigTest : public ::testing::Test, public ServerConfiguration {
