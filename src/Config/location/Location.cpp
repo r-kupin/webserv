@@ -162,12 +162,16 @@ bool Location::HasSameAddressAsOneOfSublocationsOf(const Location &rhs) const {
     return false;
 }
 
-bool Location::HasAsSublocation(Location &location) {
+bool Location::HasAsSublocation(const Location &location) {
     for (l_loc_it it = sublocations_.begin(); it != sublocations_.end(); ++it) {
         if (location.HasSameAddressAs(*it))
             return true;
     }
     return false;
+}
+
+bool Location::HasDefinedLimitExcept() const {
+    return !limit_except_.except_.empty();
 }
 
 //-------------------setup address----------------------------------------------
@@ -329,10 +333,9 @@ void Location::HandleRoot(const v_str &directive) {
 
 //-------------------setup subcontexts handlers---------------------------------
 
-void Location::HandleLimitExcept(const v_str &main,
-                                 const std::vector<v_str> &directives) {
-    limit_except_.LimExHandleMethods(main);
-    limit_except_.LimExHandleDirectives(directives);
+void Location::HandleLimitExcept(const Node &node) {
+    limit_except_.LimExHandleMethods(node.main_);
+    limit_except_.LimExHandleDirectives(node.directives_);
 }
 
 // todo tests! check root inheritance!

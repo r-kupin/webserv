@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include <algorithm>
-#include "../../../../src/Config/ConfigSubmodules.h"
+#include "../../../../src/Config/server_configuration/ServerConfiguration.h"
 
 class HandleLimitExceptTest  : public ::testing::Test, public Location {
 public:
@@ -13,35 +13,33 @@ public:
 protected:
     ServerConfiguration sc_;
     Location            &sc_root_;
-
-    v_str               main_;
-    std::vector<v_str>  directives_;
+    Node context_;
 };
 
 TEST_F(HandleLimitExceptTest, LimitExceptCorrectHTTPMethods) {
-    main_ = v_str({"limit_except", "GET" });
-    directives_.push_back(v_str({"deny", "all"}));
+    context_.main_ = v_str({"limit_except", "GET" });
+    context_.directives_.push_back(v_str({"deny", "all"}));
 
-    EXPECT_NO_THROW(sc_root_.HandleLimitExcept(main_, directives_));
+    EXPECT_NO_THROW(sc_root_.HandleLimitExcept(context_));
     EXPECT_TRUE(sc_root_.limit_except_.deny_all_);
     EXPECT_FALSE(sc_root_.limit_except_.allow_all_);
 }
 
 TEST_F(HandleLimitExceptTest, LimitExceptAllCorrectHTTPMethods) {
-    main_ = v_str({"limit_except", "GET", "POST", "DELETE" });
-    directives_.push_back(v_str({"allow", "all"}));
+    context_.main_ = v_str({"limit_except", "GET", "POST", "DELETE" });
+    context_.directives_.push_back(v_str({"allow", "all"}));
 
-    EXPECT_NO_THROW(sc_root_.HandleLimitExcept(main_, directives_));
+    EXPECT_NO_THROW(sc_root_.HandleLimitExcept(context_));
     EXPECT_FALSE(sc_root_.limit_except_.deny_all_);
     EXPECT_TRUE(sc_root_.limit_except_.allow_all_);
 }
 
 TEST_F(HandleLimitExceptTest, TwoDirectives) {
-    main_ = v_str({"limit_except", "GET" });
-    directives_.push_back({"deny", "all"});
-    directives_.push_back({"allow", "172.17.0.1"});
+    context_.main_ = v_str({"limit_except", "GET" });
+    context_.directives_.push_back({"deny", "all"});
+    context_.directives_.push_back({"allow", "172.17.0.1"});
 
-    EXPECT_NO_THROW(sc_root_.HandleLimitExcept(main_, directives_));
+    EXPECT_NO_THROW(sc_root_.HandleLimitExcept(context_));
     EXPECT_EQ(sc_root_.limit_except_.deny_all_, true);
     EXPECT_EQ(sc_root_.limit_except_.allow_all_, false);
     EXPECT_EQ(sc_root_.limit_except_.deny_.size(), 0);
@@ -50,11 +48,11 @@ TEST_F(HandleLimitExceptTest, TwoDirectives) {
 }
 
 TEST_F(HandleLimitExceptTest, TwoDirectives2) {
-    main_ = v_str({"limit_except", "GET" });
-    directives_.push_back({"allow", "all"});
-    directives_.push_back({"deny", "172.17.0.1"});
+    context_.main_ = v_str({"limit_except", "GET" });
+    context_.directives_.push_back({"allow", "all"});
+    context_.directives_.push_back({"deny", "172.17.0.1"});
 
-    EXPECT_NO_THROW(sc_root_.HandleLimitExcept(main_, directives_));
+    EXPECT_NO_THROW(sc_root_.HandleLimitExcept(context_));
     EXPECT_EQ(sc_root_.limit_except_.deny_all_, false);
     EXPECT_EQ(sc_root_.limit_except_.allow_all_, true);
     EXPECT_EQ(sc_root_.limit_except_.deny_.size(), 1);
@@ -63,10 +61,10 @@ TEST_F(HandleLimitExceptTest, TwoDirectives2) {
 }
 
 TEST_F(HandleLimitExceptTest, AmountOfReturnArgs2) {
-    main_ = v_str({"limit_except", "GET" });
-    directives_.push_back({"allow", "172.17.0.1", "172.17.0.2"});
+    context_.main_ = v_str({"limit_except", "GET" });
+    context_.directives_.push_back({"allow", "172.17.0.1", "172.17.0.2"});
 
-    EXPECT_NO_THROW(sc_root_.HandleLimitExcept(main_, directives_));
+    EXPECT_NO_THROW(sc_root_.HandleLimitExcept(context_));
     EXPECT_EQ(sc_root_.limit_except_.deny_all_, false);
     EXPECT_EQ(sc_root_.limit_except_.allow_all_, false);
     EXPECT_EQ(sc_root_.limit_except_.deny_.size(), 0);
@@ -80,89 +78,78 @@ TEST_F(HandleLimitExceptTest, AmountOfReturnArgs2) {
 }
 
 TEST_F(HandleLimitExceptTest, LimitExceptNoHTTPMethods) {
-    main_ = v_str({"limit_except" });
-    directives_.push_back(v_str({"deny", "all"}));
+    context_.main_ = v_str({"limit_except" });
+    context_.directives_.push_back(v_str({"deny", "all"}));
 
-    EXPECT_THROW(HandleLimitExcept(main_, directives_),
-                 Limit::LimitExceptException);
+    EXPECT_THROW(HandleLimitExcept(context_), Limit::LimitExceptException);
 }
 
 TEST_F(HandleLimitExceptTest, LimitExceptWrongHTTPMethods) {
-    main_ = v_str({"limit_except", "QWER" });
-    directives_.push_back(v_str({"deny", "all"}));
+    context_.main_ = v_str({"limit_except", "QWER" });
+    context_.directives_.push_back(v_str({"deny", "all"}));
 
-    EXPECT_THROW(HandleLimitExcept(main_, directives_),
-                 Limit::LimitExceptException);
+    EXPECT_THROW(HandleLimitExcept(context_), Limit::LimitExceptException);
 }
 
 TEST_F(HandleLimitExceptTest, LimitExceptCorrectAndWrongHTTPMethods) {
-    main_ = v_str({"limit_except", "GET", "QWER" });
-    directives_.push_back(v_str({"deny", "all"}));
+    context_.main_ = v_str({"limit_except", "GET", "QWER" });
+    context_.directives_.push_back(v_str({"deny", "all"}));
 
-    EXPECT_THROW(HandleLimitExcept(main_, directives_),
-                 Limit::LimitExceptException);
+    EXPECT_THROW(HandleLimitExcept(context_), Limit::LimitExceptException);
 }
 
 TEST_F(HandleLimitExceptTest, LimitExceptButContextIsEmpty) {
-    main_ = v_str({"limit_except", "GET", "POST", "DELETE" });
+    context_.main_ = v_str({"limit_except", "GET", "POST", "DELETE" });
 
-    EXPECT_THROW(HandleLimitExcept(main_, directives_),
-                 Limit::LimitExceptException);
+    EXPECT_THROW(HandleLimitExcept(context_), Limit::LimitExceptException);
 }
 
 TEST_F(HandleLimitExceptTest, LimitExceptButContextLacksEssentials) {
-    main_ = v_str({"limit_except", "GET", "POST", "DELETE" });
-    directives_.push_back(v_str({"blah", "whatever"}));
+    context_.main_ = v_str({"limit_except", "GET", "POST", "DELETE" });
+    context_.directives_.push_back(v_str({"blah", "whatever"}));
 
-    EXPECT_THROW(HandleLimitExcept(main_, directives_),
-                 Limit::LimitExceptException);
+    EXPECT_THROW(HandleLimitExcept(context_), Limit::LimitExceptException);
 }
 
 TEST_F(HandleLimitExceptTest, WrongMethodKO) {
-    main_ = v_str({"limit_except", "zz" });
-    directives_.push_back({"deny", "all"});
+    context_.main_ = v_str({"limit_except", "zz" });
+    context_.directives_.push_back({"deny", "all"});
 
-    EXPECT_THROW(HandleLimitExcept(main_, directives_),
-                 Limit::LimitExceptException);
+    EXPECT_THROW(HandleLimitExcept(context_), Limit::LimitExceptException);
 }
 
 TEST_F(HandleLimitExceptTest, RepeatableMethodsKO) {
-    main_ = v_str({"limit_except", "GET", "GET"});
-    directives_.push_back({"deny", "all"});
+    context_.main_ = v_str({"limit_except", "GET", "GET"});
+    context_.directives_.push_back({"deny", "all"});
 
-    EXPECT_THROW(HandleLimitExcept(main_, directives_),
-                 Limit::LimitExceptException);
+    EXPECT_THROW(HandleLimitExcept(context_), Limit::LimitExceptException);
 }
 
 TEST_F(HandleLimitExceptTest, NoMethodsKO) {
-    main_ = v_str({"limit_except"});
-    directives_.push_back({"deny", "all"});
+    context_.main_ = v_str({"limit_except"});
+    context_.directives_.push_back({"deny", "all"});
 
-    EXPECT_THROW(HandleLimitExcept(main_, directives_),
-                 Limit::LimitExceptException);
+    EXPECT_THROW(HandleLimitExcept(context_), Limit::LimitExceptException);
 }
 
 TEST_F(HandleLimitExceptTest, NoDirective) {
-    main_ = v_str({"limit_except", "GET" });
+    context_.main_ = v_str({"limit_except", "GET" });
 
-    EXPECT_THROW(HandleLimitExcept(main_, directives_),
-                 Limit::LimitExceptException);
+    EXPECT_THROW(HandleLimitExcept(context_), Limit::LimitExceptException);
 }
 
 TEST_F(HandleLimitExceptTest, WrongReturnCode) {
-    main_ = v_str({"limit_except", "GET" });
-    directives_.push_back({"return", "666"});
+    context_.main_ = v_str({"limit_except", "GET" });
+    context_.directives_.push_back({"return", "666"});
 
-    EXPECT_THROW(HandleLimitExcept(main_, directives_),
-                 Limit::LimitExceptException);
+    EXPECT_THROW(HandleLimitExcept(context_), Limit::LimitExceptException);
 }
 
 TEST_F(HandleLimitExceptTest, WrongAmountOfReturnArgs1) {
-    main_ = v_str({"limit_except", "GET" });
-    directives_.push_back({"deny"});
+    context_.main_ = v_str({"limit_except", "GET" });
+    context_.directives_.push_back({"deny"});
 
-    EXPECT_THROW(HandleLimitExcept(main_, directives_),
-                 Limit::LimitExceptException);
+    EXPECT_THROW(HandleLimitExcept(context_), Limit::LimitExceptException);
 }
 
 //

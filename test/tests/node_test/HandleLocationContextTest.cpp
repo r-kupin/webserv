@@ -2,9 +2,9 @@
 #include "../../../src/Config/Config.h"
 #include "../../../src/Config/ConfigExceptions.h"
 
-class LocationContextTest  : public ::testing::Test, public Config {
+class HandleLocationContextTest  : public ::testing::Test, public Config {
 public:
-    explicit LocationContextTest() : Config() {};
+    explicit HandleLocationContextTest() : Config() {};
 protected:
     Node root_;
     Node server_;
@@ -28,7 +28,7 @@ protected:
     }
 };
 
-TEST_F(LocationContextTest, ComponentsTestLocationBlockEmpty) {
+TEST_F(HandleLocationContextTest, ComponentsTestLocationBlockEmpty) {
     location_.main_ = v_str({"location", "/" });
     server_.child_nodes_.push_back(location_);
 
@@ -36,7 +36,7 @@ TEST_F(LocationContextTest, ComponentsTestLocationBlockEmpty) {
     EXPECT_THROW(CreateSrvConfigs(root_), ConfigFileSyntaxError);
 }
 
-TEST_F(LocationContextTest, ComponentsTestLocationBlockWithoutPath) {
+TEST_F(HandleLocationContextTest, ComponentsTestLocationBlockWithoutPath) {
     location_.main_ = v_str({"location"});
     location_.directives_.push_back(v_str({"root", "/some/where"}));
     server_.child_nodes_.push_back(location_);
@@ -45,7 +45,7 @@ TEST_F(LocationContextTest, ComponentsTestLocationBlockWithoutPath) {
     EXPECT_THROW(CreateSrvConfigs(root_), ConfigFileSyntaxError);
 }
 
-TEST_F(LocationContextTest, ComponentsTestAllRootInsideLocation) {
+TEST_F(HandleLocationContextTest, ComponentsTestAllRootInsideLocation) {
     location_.main_ = v_str({"location", "/" });
     location_.directives_.push_back(v_str({"root", "/some/where"}));
     server_.child_nodes_.push_back(location_);
@@ -54,7 +54,7 @@ TEST_F(LocationContextTest, ComponentsTestAllRootInsideLocation) {
     EXPECT_NO_THROW(CreateSrvConfigs(root_));
 }
 
-TEST_F(LocationContextTest, ComponentsTestAllIndexInsideLocation) {
+TEST_F(HandleLocationContextTest, ComponentsTestAllIndexInsideLocation) {
     location_.main_ = v_str({"location", "/" });
     location_.directives_.push_back(
             v_str({"index", "index.html", "index.htm" }));

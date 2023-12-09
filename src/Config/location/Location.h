@@ -61,7 +61,8 @@ struct Location {
     l_loc_c_it          FindSublocationByAddress(const std::string & address) const;
     bool                HasSameAddressAs(const Location &rhs) const;
     bool                HasSameAddressAsOneOfSublocationsOf(const Location &rhs) const;
-    bool                HasAsSublocation(Location &location);
+    bool                HasAsSublocation(const Location &location);
+    bool                HasDefinedLimitExcept() const;
 //-------------------setup address----------------------------------------------
     void                HandleAddress(const std::string &str);
 //-------------------setup directives handlers----------------------------------
@@ -72,8 +73,7 @@ struct Location {
     void                HandleRoot(const v_str &directive);
     void                AddErrorPages(const v_str &directive);
 //-------------------setup subcontexts handlers--------------------------------
-    void                HandleLimitExcept(const v_str &main,
-                                          const std::vector<v_str> &directives);
+    void                HandleLimitExcept(const Node &node);
     void                UpdateSublocations();
 //-------------------operator overloads & exceptions----------------------------
     static void         ThrowLocationError(const std::string &msg);

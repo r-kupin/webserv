@@ -15,7 +15,10 @@ add_executable(Google_Tests_run tests/config_file_test/ConfigParsingTest.cpp tes
         tests/location_class_test/setup_test/HandleUpdateIndexTest.cpp
         tests/location_class_test/setup_test/HandleReturnTest.cpp
         tests/location_class_test/setup_test/HandleAddErrPagesTest.cpp
-        tests/node_test/LocationContextTest.cpp
-        tests/location_class_test/setup_test/HandleLimitExceptTest.cpp)
+        tests/node_test/HandleLocationContextTest.cpp
+        tests/location_class_test/setup_test/HandleLimitExceptTest.cpp
+        tests/server_configuration_test/setup_test/HandleDirectivesTesh.cpp
+        tests/server_configuration_test/setup_test/HandleLocationTest.cpp
+        tests/server_configuration_test/setup_test/HandleSubcontextsTest.cpp)
 target_link_libraries(Google_Tests_run webserv_lib)
 target_link_libraries(Google_Tests_run gtest gtest_main)

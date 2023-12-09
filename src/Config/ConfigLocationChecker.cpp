@@ -13,37 +13,25 @@
 #include <algorithm>
 #include "Config.h"
 
-bool Config::IsLimitExcept(const Node &node) {
-    if (node.main_[0] == "limit_except")
-        return true;
-    return false;
-}
+//bool Config::IsCorrectLimitExcept(Node &node, Location &current) {
+//    if (IsLimitExcept(node)) {
+//        if (LimExIsDefined(current))
+//            ThrowSyntaxError("Limit_except context is already defined");
+//        return true;
+//    }
+//    return false;
+//}
 
-bool Config::IsCorrectLimitExcept(Node &node, Location &current) {
-    if (IsLimitExcept(node)) {
-        if (LimExIsDefined(current))
-            ThrowSyntaxError("Limit_except context is already defined");
-        return true;
-    }
-    return false;
-}
-
-bool Config::IsLocation(const Node &node) {
-    if (node.main_[0] == "location")
-        return true;
-    return false;
-}
-
-bool Config::IsCorrectLocation(const Node &node) {
-    if (IsLocation(node)) {
-        if (node.main_.size() != 2)
-            ThrowSyntaxError("Location path is incorrect or missing");
-        if (node.directives_.empty() && node.child_nodes_.empty())
-            ThrowSyntaxError("Location context can't be empty !");
-        return true;
-    }
-    return false;
-}
+//bool Config::IsCorrectLocation(const Node &node) {
+//    if (IsLocation(node)) {
+//        if (node.main_.size() != 2)
+//            ThrowSyntaxError("Location path is incorrect or missing");
+//        if (node.directives_.empty() && node.child_nodes_.empty())
+//            ThrowSyntaxError("Location context can't be empty !");
+//        return true;
+//    }
+//    return false;
+//}
 
 const std::list<ServerConfiguration> &Config::getServers() const {
     return servers_;

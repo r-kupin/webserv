@@ -20,25 +20,13 @@
 #include <set>
 #include <ostream>
 #include <list>
-#include "ConfigSubmodules.h"
+#include "server_configuration/ServerConfiguration.h"
 
 typedef const std::list<ServerConfiguration>            l_srvconf_c;
 typedef std::list<ServerConfiguration>::const_iterator  l_srvconf_it_c;
 
 const static std::string kDefaultResPath = "resources/";
 const static std::string kDefaultConfig = "resources/default/nginx.conf";
-
-/**
- * @brief struct for parsed NGINX block
- * @param main_ directive preceding the block
- * @param directives_ vector of directives (vectors of strings)
- * @param child_nodes_ nested blocks
- */
-struct Node {
-    v_str main_;
-    std::vector<v_str> directives_;
-    std::vector<Node> child_nodes_;
-};
 
 /**
  * @brief struct used only during parsing process - to keep redd
@@ -82,7 +70,7 @@ protected:
                                       l_loc_it parent);
     //  Limit_except subcontext
 //    void        HandleLimitExceptContext(Node &node, Limit &curr_limit) const;
-    void        CheckServerSubnodes(Node &node, ServerConfiguration &current);
+    void        CheckServerSubnodes(const v_node &subcontexts, ServerConfiguration &current);
     ServerConfiguration CheckServer(Node &node,
                                     const std::string &resource_path = kDefaultResPath);
     static bool IsLocation(const Node &node);
@@ -116,24 +104,7 @@ private:
     void        ThrowSyntaxError(const std::string &msg,
                                  std::ifstream &config) const;
     void        ThrowSyntaxError(const std::string &msg) const;
-    bool        LimExIsDefined(const Location &location);
-    bool        WillHaveSameAddressAs(Node &node, Location &location);
-    Location    &AddOrUpdate(Location &child, Location &parent);
-    void        CheckParentDoesntHaveItAlready(Location &current,
-                                               Location &parent);
-    bool        NeedToAddCurrentToParent(l_loc_it &parent, Location &current,
-                                         std::vector<Node>::iterator &it);
-    void        HandleSublocation(ServerConfiguration &sc, l_loc_it &parent,
-                                  Location &current,
-                                  std::vector<Node>::iterator &child);
-    void        CheckHTTPMethodsLimitExcept(Node &node,
-                                            Limit &curr_limit) const;
-    void        CheckDirectivesLimitExcept(const Node &node,
-                                           Limit &curr_limit) const;
-    void        DenyAddress(const std::string &address,
-                            Limit &curr_limit) const;
-    void        AllowAddress(const std::string &address,
-                             Limit &curr_limit) const;
+
     bool        HasServerWithSameNameOrPort(const ServerConfiguration &config);
 };
 

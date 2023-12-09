@@ -17,8 +17,8 @@ add_executable(webserv src/main.cpp
         src/Server/ServerManager.cpp
         src/Server/ServerManager.h
         src/Config/ConfigLocationChecker.cpp
-        src/Config/ConfigSubmodules.h
-        src/Config/ConfigSubmodules.cpp
+        src/Config/server_configuration/ServerConfiguration.h
+        src/Config/server_configuration/ServerConfiguration.cpp
         src/Server/ServerExceptions.h
         src/Server/ClientRequest.cpp
         src/Server/ClientRequest.h
@@ -31,8 +31,10 @@ add_executable(webserv src/main.cpp
         src/Config/location/ErrPage.cpp
         src/Server/ServerResponse.cpp
         src/Server/ServerResponse.h
-        src/Config/location/LocationLimitExcept.cpp
-        src/Config/location/LimitExcept.cpp)
+        src/Config/location/LimitExcept.cpp
+        src/Config/Node.h
+        src/Config/server_configuration/ServerConfigurationLocationHandler.cpp
+        src/Config/Node.cpp)
 add_library(webserv_lib
         src/Config/Config.cpp
         src/Config/Config.h
@@ -45,8 +47,8 @@ add_library(webserv_lib
         src/Server/ServerManager.cpp
         src/Server/ServerManager.h
         src/Config/ConfigLocationChecker.cpp
-        src/Config/ConfigSubmodules.h
-        src/Config/ConfigSubmodules.cpp
+        src/Config/server_configuration/ServerConfiguration.h
+        src/Config/server_configuration/ServerConfiguration.cpp
         src/Server/ServerExceptions.h
         src/Server/ClientRequest.cpp
         src/Server/ClientRequest.h
@@ -59,7 +61,9 @@ add_library(webserv_lib
         src/Config/location/ErrPage.cpp
         src/Server/ServerResponse.cpp
         src/Server/ServerResponse.h
-        src/Config/location/LocationLimitExcept.cpp
-        src/Config/location/LimitExcept.cpp)
+        src/Config/location/LimitExcept.cpp
+        src/Config/Node.h
+        src/Config/server_configuration/ServerConfigurationLocationHandler.cpp
+        src/Config/Node.cpp)
 
 add_subdirectory(test)

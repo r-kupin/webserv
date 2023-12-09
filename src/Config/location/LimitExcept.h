@@ -17,12 +17,11 @@
 #include <vector>
 #include <set>
 #include <ostream>
+#include "../Node.h"
 
 enum Methods {GET, POST, DELETE};
 
-typedef std::vector<std::string>                                v_str;
-typedef std::vector<std::string>::const_iterator                v_str_c_it;
-typedef std::vector<v_str>::const_iterator                      vstr_vstr_c_it;
+
 
 struct Limit {
     class LimitExceptException : public std::exception {};

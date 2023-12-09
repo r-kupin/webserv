@@ -15,88 +15,16 @@
 #include <algorithm>
 #include "Config.h"
 
-bool Config::LimExIsDefined(const Location &location) {
-    if (location.limit_except_.except_.empty())
-        return false;
-    return true;
-}
-
-bool Config::WillHaveSameAddressAs(Node &node, Location &location) {
-    return node.main_[1] == location.address_;
-}
-
-Location &Config::AddOrUpdate(Location &child, Location &parent) {
-    return (child.HasSameAddressAs(parent)) ? parent : child;
-}
-
-void
-Config::CheckParentDoesntHaveItAlready(Location &current, Location &parent) {
-    if (!current.HasSameAddressAs(parent) &&
-        current.HasSameAddressAsOneOfSublocationsOf(parent)) {
-// todo: or maybe we can update non-root locations?
-            ThrowSyntaxError("Each location needs unique address inside"
-                             "each context");
-    }
-}
-
-bool Config::NeedToAddCurrentToParent(l_loc_it &parent, Location &current,
-                                      std::vector<Node>::iterator &it) {
-    return !WillHaveSameAddressAs(*it, current) &&
-           parent->address_ != current.address_ &&
-           !parent->HasAsSublocation(current);
-}
-
-void Config::HandleSublocation(ServerConfiguration &sc, l_loc_it &parent,
-                               Location &current,
-                               std::vector<Node>::iterator &child) {
-    if (NeedToAddCurrentToParent(parent, current, child))
-        parent->sublocations_.push_front(current);
-    if (parent->HasSameAddressAs(current)) {
-        HandleLocationContext(*child, sc, parent);
-    } else {
-        HandleLocationContext(*child, sc, parent->sublocations_.begin());
-    }
-}
-
-void Config::HandleLocationContext(Node &loc_context,
-                                   ServerConfiguration &sc,
-                                   l_loc_it parent) {
-    Location maybe_current;
-
-    try {
-        maybe_current = Location(loc_context.main_[1], parent);
-    } catch (Location::LocationException &) {
-        ThrowSyntaxError("Location address contains invalid characters");
-    }
-
-    CheckParentDoesntHaveItAlready(maybe_current, *parent);
-    Location &current = AddOrUpdate(maybe_current, *parent);
-
-    current.ProcessDirectives(loc_context.directives_);
-    for (std::vector<Node>::iterator it = loc_context.child_nodes_.begin();
-                                it != loc_context.child_nodes_.end(); ++it) {
-        if (IsCorrectLimitExcept(*it, current)) {
-            current.HandleLimitExcept(it->main_, it->directives_);
-        } else if (IsCorrectLocation(*it)) {
-            HandleSublocation(sc, parent, current, it);
-        }
-    }
-    if (!parent->HasSameAddressAs(current) &&
-        !parent->HasAsSublocation(current))
-        parent->sublocations_.push_front(current);
-}
-
-void    Config::CheckServerSubnodes(Node &node, ServerConfiguration &current) {
-    for (size_t i = 0; i < node.child_nodes_.size(); i++) {
-        if (IsCorrectLocation(node.child_nodes_[i])) {
-            try {
-                HandleLocationContext(node.child_nodes_[i], current,
-                                      current.locations_.begin());
-            } catch (const std::exception &) {
-                ThrowSyntaxError("Location block is corrupted");
-            }
-        } else if (node.child_nodes_[i].main_[0] == "limit_except") {
+void    Config::CheckServerSubnodes(const v_node &subcontexts,
+                                    ServerConfiguration &current) {
+    for (v_node_c_it it = subcontexts.begin(); it != subcontexts.end(); ++it) {
+        if (it->IsLocation()) {
+            current.HandleLocationContext(*it);
+        } else if (it->IsLimitExcept()) {
             ThrowSyntaxError("limit_except block is not allowed here");
+        } else {
+            ThrowSyntaxError("Only location blocks are allowed inside a server "
+                             "context, everything else will be ignored");
         }
     }
 }
@@ -129,7 +57,7 @@ ServerConfiguration Config::CheckServer(Node &node,
     ServerConfiguration current;
 
     current.CheckServerDirectives(node.directives_);
-    CheckServerSubnodes(node, current);
+    CheckServerSubnodes(node.child_nodes_, current);
     for (l_srvconf_it_c it = servers_.begin(); it != servers_.end(); ++it) {
         if (it->port_ == current.port_)
             ThrowSyntaxError("Port needs to be unique amongst all servers");
