@@ -19,9 +19,11 @@
 #include <ostream>
 #include "../location/Location.h"
 
-/**
- * @brief server pre-configuration
- */
+class ServerConfiguration;
+
+typedef std::list<ServerConfiguration>::const_iterator  l_sc_c_it;
+typedef std::set<std::string>::const_iterator           s_str_c_it;
+
 class ServerConfiguration {
 public:
     bool                    default_hostname_;
@@ -41,7 +43,7 @@ public:
                                      const v_str &directive);
 //-------------------setup directives handlers----------------------------------
     void                UpdateIndex(const v_str &directive);
-    void                CheckServerDirectives(std::vector<v_str> &directives);
+    void                ProcessDirectives(std::vector<v_str> &directives);
     void                UpdateHostname(const v_str &directives);
 //-------------------setup subcontexts handlers---------------------------------
     void                HandleLocationContext(const Node &context);
@@ -54,11 +56,14 @@ public:
                                              Location &current);
 //-------------------operator overloads & exceptions----------------------------
     static void         ThrowServerConfigError(const std::string &msg);
+    const Location      &GetConstRoot() const;
     Location            &GetRoot();
     l_loc_it            GetRootIt();
 
     bool operator==(const ServerConfiguration &rhs) const;
     ServerConfiguration& operator=(const ServerConfiguration& rhs);
 };
+
+std::ostream &operator<<(std::ostream &os, const ServerConfiguration &config);
 
 #endif //WEBSERV_LIB_SERVERCONFIGURATION_H

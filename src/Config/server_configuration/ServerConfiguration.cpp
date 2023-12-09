@@ -41,13 +41,15 @@ server_name_(other.server_name_),
 server_names_(other.server_names_),
 locations_(other.locations_) {}
 //-------------------satic utils------------------------------------------------
-bool        ServerConfiguration::MarkDefined(const std::string &key, bool &flag,
-                                      const v_str &directive) {
+bool        ServerConfiguration::MarkDefined(const std::string &key,
+                                             bool &flag,
+                                             const v_str &directive) {
     if (directive[0] == key && directive.size() > 1) {
         flag = true;
         return true;
     }
-    return false;}
+    return false;
+}
 
 bool        ServerConfiguration::UMarkDefined(const std::string &key, bool &flag,
                                        const v_str &directive) {
@@ -77,7 +79,7 @@ void        ServerConfiguration::UpdateIndex(const v_str &directive) {
         GetRoot().index_.push_back(directive[i]);
 }
 
-void        ServerConfiguration::CheckServerDirectives(
+void        ServerConfiguration::ProcessDirectives(
                                               std::vector<v_str> &directives) {
     bool srv_name = false;
     bool cl_max_bd_size = false;
@@ -116,7 +118,11 @@ void        ServerConfiguration::ThrowServerConfigError(const std::string &msg) 
     throw ConfigFileSyntaxError();
 }
 
-Location    &ServerConfiguration::GetRoot() {
+Location        &ServerConfiguration::GetRoot() {
+    return locations_.front();
+}
+
+const Location  &ServerConfiguration::GetConstRoot() const {
     return locations_.front();
 }
 
@@ -137,11 +143,9 @@ bool        ServerConfiguration::operator==(
         return false;
     if (server_names_ != rhs.server_names_)
         return false;
-
     // Compare root location
     if (!(locations_ == rhs.locations_))
         return false;
-
     return true;
 }
 
@@ -151,7 +155,6 @@ ServerConfiguration &ServerConfiguration::operator=(
         // Self-assignment, no need to do anything
         return *this;
     }
-
     // Copy data members from rhs to this object
     default_hostname_ = rhs.default_hostname_;
     port_ = rhs.port_;
@@ -165,6 +168,21 @@ ServerConfiguration &ServerConfiguration::operator=(
     return *this;
 }
 
+std::ostream &operator<<(std::ostream &os, const ServerConfiguration &config) {
+    os << "server: " << std::endl;
+    os << "hostname: " << config.server_name_ << std::endl;
+    for (s_str_c_it it = config.server_names_.begin();
+        it != config.server_names_.end(); ++it) {
+        os << "name: " << *it << std::endl;
+    }
+    os << "port: " << config.port_ << std::endl;
+    if (config.client_max_body_size_) {
+        os << "client_max_body_size_: " << config.client_max_body_size_ <<
+        std::endl;
+    }
+    os << config.GetConstRoot() << std::endl;
+    return os;
+}
 
 //
 //void      ServerConfiguration::InheritanceErrPagesRoot(l_loc_it parent,

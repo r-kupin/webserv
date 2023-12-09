@@ -56,7 +56,7 @@ ServerConfiguration Config::CheckServer(Node &node,
                     const std::string &resource_path) {
     ServerConfiguration current;
 
-    current.CheckServerDirectives(node.directives_);
+    current.ProcessDirectives(node.directives_);
     CheckServerSubnodes(node.child_nodes_, current);
     for (l_srvconf_it_c it = servers_.begin(); it != servers_.end(); ++it) {
         if (it->port_ == current.port_)

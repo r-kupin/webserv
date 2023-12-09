@@ -16,7 +16,6 @@ add_executable(webserv src/main.cpp
         src/Config/ConfigChecker.cpp
         src/Server/ServerManager.cpp
         src/Server/ServerManager.h
-        src/Config/ConfigLocationChecker.cpp
         src/Config/server_configuration/ServerConfiguration.h
         src/Config/server_configuration/ServerConfiguration.cpp
         src/Server/ServerExceptions.h
@@ -46,7 +45,6 @@ add_library(webserv_lib
         src/Config/ConfigChecker.cpp
         src/Server/ServerManager.cpp
         src/Server/ServerManager.h
-        src/Config/ConfigLocationChecker.cpp
         src/Config/server_configuration/ServerConfiguration.h
         src/Config/server_configuration/ServerConfiguration.cpp
         src/Server/ServerExceptions.h

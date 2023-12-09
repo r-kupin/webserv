@@ -60,28 +60,19 @@ Config &Config::operator=(const Config &other) {
 }
 
 std::ostream &operator<<(std::ostream &os, const Config &config) {
-    l_srvconf_c &servers = config.getServers();
-
-    for (l_srvconf_it_c srv = servers.begin();
-         srv != servers.end(); ++srv) {
-        os << "server: " << std::endl;
-        os << "hostname: " << srv->server_name_ << std::endl;
-        for (std::set<std::string>::iterator it = srv->server_names_.begin();
-             it != srv->server_names_.end(); ++it) {
-            os << "name: " << *it << std::endl;
-        }
-        os << "port: " << srv->port_ << std::endl;
-        if (srv->client_max_body_size_) {
-            os << "client_max_body_size_: " << srv->client_max_body_size_ <<
-               std::endl;
-        }
-        srv->locations_.begin()->RecursivePrint(os, *srv->locations_.begin());
-        os << std::endl;
+//    todo: print sonfig-level directives info
+    for (l_sc_c_it it = config.getServers().begin();
+        it != config.getServers().end(); ++it) {
+        os << *it << std::endl;
     }
     return os;
 }
 
 Config::~Config() {}
+
+const std::list<ServerConfiguration> &Config::getServers() const {
+    return servers_;
+}
 
 const char *ConfigFileNotFound::what() const throw() {
     return "Config file not found";

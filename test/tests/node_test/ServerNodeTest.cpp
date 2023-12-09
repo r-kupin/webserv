@@ -73,18 +73,18 @@ protected:
 // ------------ tests for server directives ----------------
 TEST_F(ServerNodeTest, AllNoChioldnodesOK) {
     EXPECT_NO_THROW(CheckServerSubnodes(server_, conf_));
-    EXPECT_NO_THROW(conf_.CheckServerDirectives(server_.directives_));
+    EXPECT_NO_THROW(conf_.ProcessDirectives(server_.directives_));
 }
 
 TEST_F(ServerNodeTest, ServetThrowsIfMultipleListen) {
     server_.directives_.push_back({"listen", "8080"});
-    EXPECT_THROW(conf_.CheckServerDirectives(server_.directives_),
+    EXPECT_THROW(conf_.ProcessDirectives(server_.directives_),
                  ConfigFileSyntaxError);
 }
 
 TEST_F(ServerNodeTest, ServetThrowsIfMultipleRoots) {
     server_.directives_.push_back({"root", "/not/not/depends/on/config"});
-    EXPECT_THROW(conf_.CheckServerDirectives(server_.directives_),
+    EXPECT_THROW(conf_.ProcessDirectives(server_.directives_),
                  ConfigFileSyntaxError);
 }
 // ------------ tests for server subnodes ----------------

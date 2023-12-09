@@ -14,6 +14,7 @@
 #define WEBSERV_LIB_LOCATION_H
 
 #include <list>
+#include <ostream>
 #include "ErrPage.h"
 #include "LimitExcept.h"
 
@@ -21,6 +22,8 @@ struct Location;
 //-------------------static creation / initialization---------------------------
 
 typedef const std::map<int, std::string>                        m_codes_c;
+typedef std::set<ErrPage>                                       s_err;
+typedef std::set<ErrPage>::const_iterator                       s_err_c_it;
 typedef std::list<Location>                                     l_loc;
 typedef std::list<Location>::iterator                           l_loc_it;
 typedef std::list<Location>::const_iterator                     l_loc_c_it;
@@ -77,12 +80,11 @@ struct Location {
     void                UpdateSublocations();
 //-------------------operator overloads & exceptions----------------------------
     static void         ThrowLocationError(const std::string &msg);
-    std::ostream        &RecursivePrint(std::ostream &os,
-                                        const Location &location) const;
     bool                operator<(const Location &rhs) const;
     bool                operator==(const Location &rhs) const;
     Location&           operator=(const Location& rhs);
 };
+std::ostream &operator<<(std::ostream &os, const Location &location);
 //-------------------sublocation search predicate class-------------------------
 struct LocationByAddress {
     std::string         targetAddress_;

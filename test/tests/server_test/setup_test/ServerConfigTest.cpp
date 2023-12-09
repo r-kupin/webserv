@@ -60,7 +60,7 @@ TEST_F(ServerConfigTest, ServerConfDirectivesSuccess) {
     directives_.push_back({"error_page", "404", "/404.html"});
     directives_.push_back({"error_page", "500", "502", "503", "504", "/50x.html"});
 
-    EXPECT_NO_THROW(CheckServerDirectives(directives_));
+    EXPECT_NO_THROW(ProcessDirectives(directives_));
 
     EXPECT_EQ(port_, 8080);
     EXPECT_EQ(port_str_, "8080");
@@ -88,7 +88,7 @@ TEST_F(ServerConfigTest, ServerConfDirectivesSuccess) {
 TEST_F(ServerConfigTest, ServerConfDirectivesPortOnlySuccess) {
     directives_.push_back({"listen", "8080"});
 
-    EXPECT_NO_THROW(CheckServerDirectives(directives_));
+    EXPECT_NO_THROW(ProcessDirectives(directives_));
 }
 
 TEST_F(ServerConfigTest, ServerConfDirectivesNoPortSpecifiedFail) {
@@ -97,7 +97,7 @@ TEST_F(ServerConfigTest, ServerConfDirectivesNoPortSpecifiedFail) {
     directives_.push_back({"error_page", "404", "/404.html"});
     directives_.push_back({"error_page", "500", "502", "503", "504", "/50x.html"});
 
-    EXPECT_THROW(CheckServerDirectives(directives_),
+    EXPECT_THROW(ProcessDirectives(directives_),
                  ConfigFileSyntaxError);
 }
 
@@ -109,6 +109,6 @@ TEST_F(ServerConfigTest, ServerConfDirectivesMultipleBodySize) {
     directives_.push_back({"error_page", "404", "/404.html"});
     directives_.push_back({"error_page", "500", "502", "503", "504", "/50x.html"});
 
-    EXPECT_THROW(CheckServerDirectives(directives_),
+    EXPECT_THROW(ProcessDirectives(directives_),
                  ConfigFileSyntaxError);
 }

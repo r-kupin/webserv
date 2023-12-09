@@ -65,18 +65,9 @@ protected:
 //  Parsing config file to tree-like structure of nodes
     void        CreateSrvConfigs(Node& root);
     //      Location subcontext
-    void        HandleLocationContext(Node &loc_context,
-                                      ServerConfiguration &sc,
-                                      l_loc_it parent);
-    //  Limit_except subcontext
-//    void        HandleLimitExceptContext(Node &node, Limit &curr_limit) const;
     void        CheckServerSubnodes(const v_node &subcontexts, ServerConfiguration &current);
     ServerConfiguration CheckServer(Node &node,
                                     const std::string &resource_path = kDefaultResPath);
-    static bool IsLocation(const Node &node);
-    static bool IsLimitExcept(const Node &node);
-    bool        IsCorrectLocation(const Node &node);
-    bool        IsCorrectLimitExcept(Node &node, Location &current);
 private:
     std::string                     conf_path_;
     Node                            conf_root_;
