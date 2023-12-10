@@ -18,22 +18,25 @@ add_executable(webserv src/main.cpp
         src/Config/server_configuration/ServerConfiguration.h
         src/Config/server_configuration/ServerConfiguration.cpp
         src/Server/ServerExceptions.h
-        src/Server/ClientRequest.cpp
-        src/Server/ClientRequest.h
-        src/Server/ClientRequest.cpp
+        src/Server/request/ClientRequest.cpp
+        src/Server/request/ClientRequest.h
+        src/Server/request/ClientRequest.cpp
         src/Config/location/Location.h
         src/Config/location/Location.h
         src/Config/location/ErrPage.h
         src/Config/location/LimitExcept.h
         src/Config/location/Location.cpp
         src/Config/location/ErrPage.cpp
-        src/Server/ServerResponse.cpp
-        src/Server/ServerResponse.h
+        src/Server/response/ServerResponse.cpp
+        src/Server/response/ServerResponse.h
         src/Config/location/LimitExcept.cpp
         src/Config/Node.h
         src/Config/server_configuration/ServerConfigurationLocationHandler.cpp
         src/Config/Node.cpp
-        src/Config/location/LocationHandleReturn.cpp)
+        src/Config/location/LocationHandleReturn.cpp
+        src/Server/ServerInit.cpp
+        src/Server/ServerLocationSearcher.cpp
+        src/Server/ServerLocationSynthesizer.cpp)
 add_library(webserv_lib
         src/Config/config/Config.cpp
         src/Config/config/Config.h
@@ -47,21 +50,24 @@ add_library(webserv_lib
         src/Config/server_configuration/ServerConfiguration.h
         src/Config/server_configuration/ServerConfiguration.cpp
         src/Server/ServerExceptions.h
-        src/Server/ClientRequest.cpp
-        src/Server/ClientRequest.h
-        src/Server/ClientRequest.cpp
+        src/Server/request/ClientRequest.cpp
+        src/Server/request/ClientRequest.h
+        src/Server/request/ClientRequest.cpp
         src/Config/location/Location.h
         src/Config/location/Location.h
         src/Config/location/ErrPage.h
         src/Config/location/LimitExcept.h
         src/Config/location/Location.cpp
         src/Config/location/ErrPage.cpp
-        src/Server/ServerResponse.cpp
-        src/Server/ServerResponse.h
+        src/Server/response/ServerResponse.cpp
+        src/Server/response/ServerResponse.h
         src/Config/location/LimitExcept.cpp
         src/Config/Node.h
         src/Config/server_configuration/ServerConfigurationLocationHandler.cpp
         src/Config/Node.cpp
-        src/Config/location/LocationHandleReturn.cpp)
+        src/Config/location/LocationHandleReturn.cpp
+        src/Server/ServerInit.cpp
+        src/Server/ServerLocationSearcher.cpp
+        src/Server/ServerLocationSynthesizer.cpp)
 
 add_subdirectory(test)

@@ -18,12 +18,13 @@
 #include <netinet/in.h>
 #include <vector>
 #include <map>
-#include "../Config/location/LimitExcept.h"
+#include "../../Config/location/LimitExcept.h"
 
 struct ClientRequest {
     Methods                             method_;
     std::string                         address_;
     std::string                         last_step_uri_;
+    std::string                         body_; //todo
     std::map<std::string, std::string>  params_;
     std::map<std::string, std::string>  headers_;
 

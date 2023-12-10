@@ -13,7 +13,7 @@
 #include <csignal>
 #include <iostream>
 #include "ClientRequest.h"
-#include "ServerExceptions.h"
+#include "../ServerExceptions.h"
 
 const int BUFFER_SIZE = 1024;
 

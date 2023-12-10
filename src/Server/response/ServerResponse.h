@@ -15,8 +15,8 @@
 
 
 #include <fstream>
-#include "ClientRequest.h"
-#include "../Config/location/Location.h"
+#include "../request/ClientRequest.h"
+#include "../../Config/location/Location.h"
 
 const static std::string&  kHttpVersion = "HTTP/1.1";
 const static std::string&  kHttpPostfix = "\r\n\r\n";

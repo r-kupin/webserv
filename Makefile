@@ -4,41 +4,52 @@ ASAN = $(NAME)_asan
 TEST = $(NAME)_test
 
 SRCS = src/main.cpp \
-		src/Config/Config.cpp \
+		src/Server/response/ServerResponse.cpp \
+		src/Server/ServerInit.cpp \
 		src/Server/Server.cpp \
-		src/Config/ConfigParser.cpp \
-		src/Config/ChonfigProcessingUtils.cpp \
-		src/Config/ConfigChecker.cpp \
+		src/Server/ServerLocationSynthesizer.cpp \
+		src/Server/request/ClientRequest.cpp \
+		src/Server/ServerLocationSearcher.cpp \
 		src/Server/ServerManager.cpp \
-		src/Config/ConfigLocationChecker.cpp \
-		src/Config/ConfigSubmodules.cpp \
-		src/Server/ClientRequest.cpp \
-		src/Config/Location.cpp \
-		src/Config/ErrPage.cpp \
-		src/Server/ServerResponse.cpp
-LIB_SRCS = src/Config/Config.cpp \
-            src/Config/Config.cpp \
-			src/Server/Server.cpp \
-			src/Config/ConfigParser.cpp \
-			src/Config/ChonfigProcessingUtils.cpp \
-			src/Config/ConfigChecker.cpp \
-			src/Server/ServerManager.cpp \
-			src/Config/ConfigLocationChecker.cpp \
-			src/Config/ConfigSubmodules.cpp \
-			src/Server/ClientRequest.cpp \
-			src/Config/Location.cpp \
-			src/Config/ErrPage.cpp \
-			src/Server/ServerResponse.cpp
-TEST_SRCS = test/ConfigParsingTest.cpp \
-			test/ConfigProcessingTest.cpp \
-			test/LocationNodeTest.cpp \
-			test/LocationTest.cpp \
-			test/ServerConfigTest.cpp \
-			test/LimitExceptNodeTest.cpp \
-			test/MainNodeTest.cpp \
-			test/ServerNodeTest.cpp \
-			test/CheckServerTest.cpp \
-            test/ServerTest.cpp
+		src/Logger.cpp \
+		src/Config/config/ConfigCreate.cpp \
+		src/Config/config/Config.cpp \
+		src/Config/config/ConfigParse.cpp \
+		src/Config/Node.cpp \
+		src/Config/server_configuration/ServerConfiguration.cpp \
+		src/Config/server_configuration/ServerConfigurationLocationHandler.cpp \
+		src/Config/location/ErrPage.cpp \
+		src/Config/location/Location.cpp \
+		src/Config/location/LocationHandleReturn.cpp \
+		src/Config/location/LimitExcept.cpp
+LIB_SRCS = src/Server/response/ServerResponse.cpp \
+        src/Server/ServerInit.cpp \
+        src/Server/Server.cpp \
+        src/Server/ServerLocationSynthesizer.cpp \
+        src/Server/request/ClientRequest.cpp \
+        src/Server/ServerLocationSearcher.cpp \
+        src/Server/ServerManager.cpp \
+        src/Logger.cpp \
+        src/Config/config/ConfigCreate.cpp \
+        src/Config/config/Config.cpp \
+        src/Config/config/ConfigParse.cpp \
+        src/Config/Node.cpp \
+        src/Config/server_configuration/ServerConfiguration.cpp \
+        src/Config/server_configuration/ServerConfigurationLocationHandler.cpp \
+        src/Config/location/ErrPage.cpp \
+        src/Config/location/Location.cpp \
+        src/Config/location/LocationHandleReturn.cpp \
+        src/Config/location/LimitExcept.cpp
+TEST_SRCS = tests/server_test/setup_test/ServerConfigTest.cpp \
+		tests/server_test/functionality_test/ServerTest.cpp \
+		tests/config_test/location_class_test/setup_test/HandleReturnTest.cpp \
+		tests/config_test/location_class_test/setup_test/HandleAddErrPagesTest.cpp \
+		tests/config_test/location_class_test/setup_test/HandleUpdateIndexTest.cpp \
+		tests/config_test/location_class_test/setup_test/LocationMarkDirectiveTest.cpp \
+		tests/config_test/location_class_test/setup_test/HandleLimitExceptTest.cpp \
+		tests/config_test/location_class_test/setup_test/LocationProcessDirectivesTest.cpp \
+		tests/config_test/location_class_test/setup_test/LocationConstructorTest.cpp \
+        tests/config_test/location_class_test/functionality_test/LocationFindSublocationTest.cpp
 
 TEST_LIB_DIR = test/lib
 TEST_LIB_INCL_DIR = $(TEST_LIB_DIR)/googletest/include

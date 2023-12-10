@@ -15,7 +15,7 @@
 #include <iostream>
 #include "ServerResponse.h"
 
-#include "ServerExceptions.h"
+#include "../ServerExceptions.h"
 
 ServerResponse::ServerResponse() {}
 

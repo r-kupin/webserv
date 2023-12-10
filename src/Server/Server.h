@@ -18,7 +18,7 @@
 #include <sys/epoll.h>
 #include <netdb.h>
 #include "../Config/config/Config.h"
-#include "ServerResponse.h"
+#include "response/ServerResponse.h"
 
 class Server {
 public:
