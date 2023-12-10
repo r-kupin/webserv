@@ -88,6 +88,8 @@ void        ServerConfiguration::ProcessDirectives(
     bool root = false;
     bool port = false;
 
+    if (directives.empty())
+        ThrowServerConfigError("Server block can't be empty!");
     for (size_t i = 0; i < directives.size(); i++) {
         if (MarkDefined("server_name", srv_name, directives[i])) {
             UpdateHostname(directives[i]);
@@ -115,7 +117,7 @@ void        ServerConfiguration::HandleLocationContext(const Node &context) {
 //-------------------operator overloads & exceptions----------------------------
 void        ServerConfiguration::ThrowServerConfigError(const std::string &msg) {
     std::cout << "Server config syntax error: " + msg << std::endl;
-    throw ConfigFileSyntaxError();
+    throw ServerConfigurationException();
 }
 
 Location        &ServerConfiguration::GetRoot() {
@@ -183,6 +185,8 @@ std::ostream &operator<<(std::ostream &os, const ServerConfiguration &config) {
     os << config.GetConstRoot() << std::endl;
     return os;
 }
+
+
 
 //
 //void      ServerConfiguration::InheritanceErrPagesRoot(l_loc_it parent,

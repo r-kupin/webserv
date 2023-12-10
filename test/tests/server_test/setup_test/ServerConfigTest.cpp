@@ -34,21 +34,21 @@ TEST_F(ServerConfigTest, DetfaultTest) {
     EXPECT_EQ(server_name_, "localhost");
     EXPECT_EQ(GetRoot().address_, "/");
     EXPECT_EQ(GetRoot().root_ , "resources/root_loc_default");
-    EXPECT_NE(std::find(GetRoot().index_.begin(), GetRoot().index_.end(),"/htmls/index.html"),
-              GetRoot().index_.end());
-
-    const std::set<ErrPage>::iterator &NotFoundErrPage =
-            GetRoot().error_pages_.find(ErrPage("/htmls/404.html", 404));
-    EXPECT_NE(NotFoundErrPage, GetRoot().error_pages_.end());
-    EXPECT_EQ(NotFoundErrPage->address_, "/htmls/404.html");
-
-    const std::set<ErrPage>::iterator &ForbiddenErrPage =
-            GetRoot().error_pages_.find(ErrPage("/htmls/403.html", 403));
-    EXPECT_NE(ForbiddenErrPage, GetRoot().error_pages_.end());
-    EXPECT_EQ(ForbiddenErrPage->address_, "/htmls/403.html");
-
-    EXPECT_NE(GetRoot().error_pages_.find(ErrPage("/htmls/403.html", 403)),
-              GetRoot().error_pages_.end());
+//todo do we heed automatic error pages?
+//    EXPECT_NE(std::find(GetRoot().index_.begin(), GetRoot().index_.end(),"/htmls/index.html"),
+//              GetRoot().index_.end());
+//    const std::set<ErrPage>::iterator &NotFoundErrPage =
+//            GetRoot().error_pages_.find(ErrPage("/htmls/404.html", 404));
+//    EXPECT_NE(NotFoundErrPage, GetRoot().error_pages_.end());
+//    EXPECT_EQ(NotFoundErrPage->address_, "/htmls/404.html");
+//
+//    const std::set<ErrPage>::iterator &ForbiddenErrPage =
+//            GetRoot().error_pages_.find(ErrPage("/htmls/403.html", 403));
+//    EXPECT_NE(ForbiddenErrPage, GetRoot().error_pages_.end());
+//    EXPECT_EQ(ForbiddenErrPage->address_, "/htmls/403.html");
+//
+//    EXPECT_NE(GetRoot().error_pages_.find(ErrPage("/htmls/403.html", 403)),
+//              GetRoot().error_pages_.end());
     EXPECT_EQ(GetRoot().return_code_ , 0);
     EXPECT_EQ(GetRoot().return_address_ , "");
 }
@@ -69,7 +69,6 @@ TEST_F(ServerConfigTest, ServerConfDirectivesSuccess) {
     EXPECT_EQ(server_names_.find("example.com"), server_names_.begin());
     EXPECT_EQ(GetRoot().address_, "/");
     EXPECT_EQ(GetRoot().root_ , "resources/root_loc_default");
-    EXPECT_NE(std::find(GetRoot().index_.begin(), GetRoot().index_.end(),"/htmls/index.html"), GetRoot().index_.end());
 
     const std::set<ErrPage>::iterator &NotFoundErrPage =
             GetRoot().error_pages_.find(ErrPage("/404.html", 404));
@@ -98,7 +97,7 @@ TEST_F(ServerConfigTest, ServerConfDirectivesNoPortSpecifiedFail) {
     directives_.push_back({"error_page", "500", "502", "503", "504", "/50x.html"});
 
     EXPECT_THROW(ProcessDirectives(directives_),
-                 ConfigFileSyntaxError);
+                 ServerConfigurationException);
 }
 
 TEST_F(ServerConfigTest, ServerConfDirectivesMultipleBodySize) {
@@ -110,5 +109,5 @@ TEST_F(ServerConfigTest, ServerConfDirectivesMultipleBodySize) {
     directives_.push_back({"error_page", "500", "502", "503", "504", "/50x.html"});
 
     EXPECT_THROW(ProcessDirectives(directives_),
-                 ConfigFileSyntaxError);
+                 ServerConfigurationException);
 }

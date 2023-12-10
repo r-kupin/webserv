@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include <algorithm>
-#include "../../../../src/Config/server_configuration/ServerConfiguration.h"
+#include "../../../../../src/Config/server_configuration/ServerConfiguration.h"
 
 class HandleLimitExceptTest  : public ::testing::Test, public Location {
 public:
@@ -151,15 +151,3 @@ TEST_F(HandleLimitExceptTest, WrongAmountOfReturnArgs1) {
 
     EXPECT_THROW(HandleLimitExcept(context_), Limit::LimitExceptException);
 }
-
-//
-//TEST_F(HandleLimitExceptTest, LimitExceptWrongInServerContext) {
-//    Node limit_except;
-//
-//    limit_except.main_ = v_str({"limit_except", "GET", "POST" });
-//    limit_except.directives_.push_back(v_str({"deny", "all"}));
-//
-//    server_.child_nodes_.push_back(limit_except);
-//    root_.child_nodes_.push_back(server_);
-//    EXPECT_THROW(CreateSrvConfigs(root_), ConfigFileSyntaxError);
-//}

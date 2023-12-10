@@ -22,7 +22,6 @@ struct Location;
 //-------------------static creation / initialization---------------------------
 
 typedef const std::map<int, std::string>                        m_codes_c;
-typedef std::set<ErrPage>                                       s_err;
 typedef std::set<ErrPage>::const_iterator                       s_err_c_it;
 typedef std::list<Location>                                     l_loc;
 typedef std::list<Location>::iterator                           l_loc_it;
@@ -71,6 +70,8 @@ struct Location {
 //-------------------setup directives handlers----------------------------------
     void                ProcessDirectives(const std::vector<v_str> &directives);
     void                HandleLocationReturn(const v_str &directives_);
+    void                Handle1ArgReturn(const v_str &directives_);
+    void                Handle2ArgReturn(const v_str &directives_);
     void                HandleIndex(const v_str &directives);
     void                HandleCode(const std::string &str);
     void                HandleRoot(const v_str &directive);

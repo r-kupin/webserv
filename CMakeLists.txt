@@ -32,7 +32,8 @@ add_executable(webserv src/main.cpp
         src/Config/location/LimitExcept.cpp
         src/Config/Node.h
         src/Config/server_configuration/ServerConfigurationLocationHandler.cpp
-        src/Config/Node.cpp)
+        src/Config/Node.cpp
+        src/Config/location/LocationHandleReturn.cpp)
 add_library(webserv_lib
         src/Config/config/Config.cpp
         src/Config/config/Config.h
@@ -60,6 +61,7 @@ add_library(webserv_lib
         src/Config/location/LimitExcept.cpp
         src/Config/Node.h
         src/Config/server_configuration/ServerConfigurationLocationHandler.cpp
-        src/Config/Node.cpp)
+        src/Config/Node.cpp
+        src/Config/location/LocationHandleReturn.cpp)
 
 add_subdirectory(test)

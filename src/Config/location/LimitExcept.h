@@ -21,8 +21,6 @@
 
 enum Methods {GET, POST, DELETE};
 
-
-
 struct Limit {
     class LimitExceptException : public std::exception {};
 

@@ -26,6 +26,8 @@ typedef std::set<std::string>::const_iterator           s_str_c_it;
 
 class ServerConfiguration {
 public:
+    class ServerConfigurationException : public std::exception {};
+
     bool                    default_hostname_;
     int                     port_;
     std::string             port_str_;

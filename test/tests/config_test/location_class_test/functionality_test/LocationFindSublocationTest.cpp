@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <algorithm>
-#include "../../../../src/Config/config/Config.h"
-#include "../../../../src/Server/ServerExceptions.h"
+#include "../../../../../src/Config/config/Config.h"
+#include "../../../../../src/Server/ServerExceptions.h"
 
 class FindSublocationTest : public ::testing::Test, public Location {
 public:

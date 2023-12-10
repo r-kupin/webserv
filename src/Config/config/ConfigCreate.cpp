@@ -19,7 +19,11 @@ void    Config::CheckServerSubnodes(const v_node &subcontexts,
                                     ServerConfiguration &current) {
     for (v_node_c_it it = subcontexts.begin(); it != subcontexts.end(); ++it) {
         if (it->IsLocation()) {
-            current.HandleLocationContext(*it);
+            try {
+                current.HandleLocationContext(*it);
+            } catch (const std::exception &ServerConfigError) {
+                ThrowSyntaxError("Location context misconfigured!");
+            }
         } else if (it->IsLimitExcept()) {
             ThrowSyntaxError("limit_except block is not allowed here");
         } else {
@@ -55,14 +59,13 @@ bool check_filesystem(const std::string &address,
 ServerConfiguration Config::CheckServer(Node &node,
                     const std::string &resource_path) {
     ServerConfiguration current;
-
-    current.ProcessDirectives(node.directives_);
-    CheckServerSubnodes(node.child_nodes_, current);
-    for (l_srvconf_it_c it = servers_.begin(); it != servers_.end(); ++it) {
-        if (it->port_ == current.port_)
-            ThrowSyntaxError("Port needs to be unique amongst all servers");
+    try {
+        current.ProcessDirectives(node.directives_);
+        CheckServerSubnodes(node.child_nodes_, current);
+        current.GetRoot().UpdateSublocations();
+    } catch (const std::exception &ServerConfigError) {
+        ThrowSyntaxError("Server context misconfigured!");
     }
-    current.GetRoot().UpdateSublocations();
     if (!check_filesystem(current.GetRoot().address_, resource_path))
         ThrowSyntaxError("Root directory doesn't exist");
     return current;

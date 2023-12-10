@@ -12,7 +12,7 @@
 
 #include <gtest/gtest.h>
 #include <algorithm>
-#include "../../../../src/Config/config/Config.h"
+#include "../../../../../src/Config/config/Config.h"
 
 TEST(LocationTest, MarkDefinedNonMarked) {
     bool unmarked = false;

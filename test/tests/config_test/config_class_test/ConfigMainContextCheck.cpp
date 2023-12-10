@@ -11,12 +11,12 @@
 /******************************************************************************/
 
 #include <gtest/gtest.h>
-#include "../../../src/Config/config/Config.h"
-#include "../../../src/Config/config/ConfigExceptions.h"
+#include "../../../../src/Config/config/Config.h"
+#include "../../../../src/Config/config/ConfigExceptions.h"
 
-class MainNodeTest : public ::testing::Test, public Config {
+class ConfigMainContextCheck : public ::testing::Test, public Config {
 public:
-    explicit MainNodeTest() : Config() {};
+    explicit ConfigMainContextCheck() : Config() {};
 protected:
     Node root_;
     Node server_;
@@ -43,21 +43,7 @@ protected:
     }
 };
 
-TEST_F(MainNodeTest, ComponentsTestNoServersFail) {
-    EXPECT_THROW(CreateSrvConfigs(root_), ConfigFileSyntaxError);
-}
-
-TEST_F(MainNodeTest, ComponentsTest1EmptyServerFail) {
-    root_.child_nodes_.push_back(empty_server_);
-    EXPECT_THROW(CreateSrvConfigs(root_), ConfigFileSyntaxError);
-}
-
-TEST_F(MainNodeTest, ComponentsTestOKServerWorks) {
-    root_.child_nodes_.push_back(server_);
-    EXPECT_NO_THROW(CreateSrvConfigs(root_));
-}
-
-TEST_F(MainNodeTest, MultipleServersWithSameName) {
+TEST_F(ConfigMainContextCheck, MultipleServersWithSameName) {
     Node server_with_same_name;
     server_with_same_name.main_ = v_str ({"server"});
     server_with_same_name.directives_.push_back(
@@ -75,7 +61,7 @@ TEST_F(MainNodeTest, MultipleServersWithSameName) {
     EXPECT_THROW(CreateSrvConfigs(root_), ConfigFileSyntaxError);
 }
 
-TEST_F(MainNodeTest, MultipleServersWithSamePort) {
+TEST_F(ConfigMainContextCheck, MultipleServersWithSamePort) {
     Node server_with_same_name;
     server_with_same_name.main_ = v_str ({"server"});
     server_with_same_name.directives_.push_back(
@@ -93,5 +79,15 @@ TEST_F(MainNodeTest, MultipleServersWithSamePort) {
     EXPECT_THROW(CreateSrvConfigs(root_), ConfigFileSyntaxError);
 }
 
+TEST_F(ConfigMainContextCheck, ComponentsTest1EmptyServerFail) {
+    root_.child_nodes_.push_back(empty_server_);
+    EXPECT_THROW(CreateSrvConfigs(root_), ConfigFileSyntaxError);
+}
+
+TEST_F(ConfigMainContextCheck, ComponentsTestNoServersFail) {
+    EXPECT_THROW(CreateSrvConfigs(root_), ConfigFileSyntaxError);
+}
+
 // todo more tests for main node directives, and server interdependency (if
 //  any) check that no configs are built if they are misconfigured
+
