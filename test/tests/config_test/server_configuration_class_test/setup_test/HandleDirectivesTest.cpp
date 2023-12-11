@@ -22,6 +22,7 @@ TEST_F(HandleDirectivesTest, ComponentsTestOKServerWorks) {
     context_.directives_.push_back(v_str({"server_name", "example.com"}));
     context_.directives_.push_back(v_str({"listen", "8182"}));
     context_.directives_.push_back(v_str({"root", "/not/depends/on/config"}));
+    context_.directives_.push_back(v_str({"client_max_body_size", "2048"}));
     context_.directives_.push_back(v_str({"index", "index.html", "index.php"}));
     context_.directives_.push_back(v_str({"error_page", "401", "err.html"}));
 
@@ -45,7 +46,8 @@ TEST_F(HandleDirectivesTest, ComponentsTestOKServerWorks) {
 
 TEST_F(HandleDirectivesTest, CheckServerTestHasNoPortKO) {
     context_.directives_.push_back({"root", "/not/depends/on/config"});
-    EXPECT_THROW(ProcessDirectives(context_.directives_), ServerConfigurationException);
+    EXPECT_THROW(ProcessDirectives(context_.directives_),
+                 ServerConfigurationException);
 }
 
 TEST_F(HandleDirectivesTest, CheckServerTestHasOnlyPortOK) {
@@ -56,11 +58,26 @@ TEST_F(HandleDirectivesTest, CheckServerTestHasOnlyPortOK) {
 TEST_F(HandleDirectivesTest, ServetThrowsIfMultipleListen) {
     context_.directives_.push_back({"listen", "8080"});
     context_.directives_.push_back({"listen", "8081"});
-    EXPECT_THROW(ProcessDirectives(context_.directives_), ServerConfigurationException);
+    EXPECT_THROW(ProcessDirectives(context_.directives_),
+                 ServerConfigurationException);
 }
 
 TEST_F(HandleDirectivesTest, ServetThrowsIfMultipleRoots) {
     context_.directives_.push_back({"root", "/not/not/depends/on/config"});
     context_.directives_.push_back({"root", "/other/not/depends/on/config"});
-    EXPECT_THROW(ProcessDirectives(context_.directives_), ServerConfigurationException);
+    EXPECT_THROW(ProcessDirectives(context_.directives_),
+                 ServerConfigurationException);
+}
+
+TEST_F(HandleDirectivesTest, ServerConfDirectivesMultipleBodySize) {
+    context_.directives_.push_back({"listen", "8081"});
+    context_.directives_.push_back({"server_name", "localhost"});
+    context_.directives_.push_back({"client_max_body_size", "2048"});
+    context_.directives_.push_back({"client_max_body_size", "10204"});
+    context_.directives_.push_back({"error_page", "404", "/404.html"});
+    context_.directives_.push_back({"error_page", "500", "502", "503", "504",
+                                    "/50x.html"});
+
+    EXPECT_THROW(ProcessDirectives(context_.directives_),
+                 ServerConfigurationException);
 }

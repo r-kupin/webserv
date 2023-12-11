@@ -94,9 +94,9 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
-#include <cstring>
 #include <algorithm>
 #include "ServerExceptions.h"
+#include "request/RequestExceptions.h"
 
 //const int BUFFER_SIZE = 1024;
 //const int MAX_EVENTS = 10;
@@ -110,7 +110,6 @@ Server::Server(const Server &other)
  Server::Server(const ServerConfiguration &config)
 : config_(config), socket_(0), epoll_fd_(0) {}
 
-
 /**
  *  TODO MAX_CLIENTS
  */
@@ -120,14 +119,20 @@ void Server::Start() {
     while (true) {
         struct sockaddr_in client_addr;
         socklen_t client_len = sizeof(client_addr);
-        int client_sock = accept(socket_, (struct sockaddr *) &client_addr,
+        int client_sock = accept(socket_,
+                                 (struct sockaddr *) &client_addr,
                                  &client_len); // may be [MAX_CLIENTS]
-        if (client_sock < 0) {
-            printf("Error accepting connection: %s\n", strerror(errno));
-            continue;
-        }
+        CheckRequest(client_sock, client_addr);
+    }
+    close(socket_);
+}
+
+void Server::CheckRequest(int client_sock, const sockaddr_in &client_addr) {
+    if (client_sock < 0) {
+        std::cout << "Error accepting connection! " << std::endl;
+    } else {
         std::cout << "Accepted client connection from " <<
-                                   client_addr.sin_addr.s_addr << std::endl;
+                                    client_addr.sin_addr.s_addr << std::endl;
         try {
             HandleClientRequest(client_sock);
         } catch (ReadFromSocketFailedException) {
@@ -135,7 +140,6 @@ void Server::Start() {
         }
         close(client_sock);
     }
-    close(socket_);
 }
 
 void Server::HandleClientRequest(int client_sock) {
@@ -215,54 +219,6 @@ const epoll_event &Server::getEvent() const {
     return event_;
 }
 
-const char *SocketOpeningFailureException::what() const throw() {
-    return exception::what();
-}
-
-const char *SocketBindingFailureException::what() const throw() {
-    return exception::what();
-}
-
-const char *SocketListeningFailureException::what() const throw() {
-    return exception::what();
-}
-
-const char *AddrinfoCreationFailed::what() const throw() {
-    return exception::what();
-}
-
-const char *SocketSetOptionsFailureException::what() const throw() {
-    return exception::what();
-}
-
-const char *EpollCreationFailed::what() const throw() {
-    return exception::what();
-}
-
-const char *EpollAddFailed::what() const throw() {
-    return exception::what();
-}
-
-const char *ReadFromSocketFailedException::what() const throw() {
-    return exception::what();
-}
-
-const char *UnsupportedClientMethodException::what() const throw() {
-    return exception::what();
-}
-
-const char *HTTPVersionNotSupportedException::what() const throw() {
-    return exception::what();
-}
-
-const char *NotFoundException::what() const throw() {
-    return exception::what();
-}
-
-const char *BadURI::what() const throw() {
-    return exception::what();
-}
-
 
 //       ClientRequest request(client_sock);
 //         int http_code;
@@ -332,3 +288,4 @@ const char *BadURI::what() const throw() {
 //             // Update the remaining file size
 //             fileSize -= bytesSent;
 //         }
+

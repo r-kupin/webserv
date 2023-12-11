@@ -36,7 +36,10 @@ add_executable(webserv src/main.cpp
         src/Config/location/LocationHandleReturn.cpp
         src/Server/ServerInit.cpp
         src/Server/ServerLocationSearcher.cpp
-        src/Server/ServerLocationSynthesizer.cpp)
+        src/Server/ServerLocationSynthesizer.cpp
+        src/Server/ServerExceptions.cpp
+        src/Server/request/RequestExceptions.h
+        src/Server/request/RequestExceptions.cpp)
 add_library(webserv_lib
         src/Config/config/Config.cpp
         src/Config/config/Config.h
@@ -68,6 +71,9 @@ add_library(webserv_lib
         src/Config/location/LocationHandleReturn.cpp
         src/Server/ServerInit.cpp
         src/Server/ServerLocationSearcher.cpp
-        src/Server/ServerLocationSynthesizer.cpp)
+        src/Server/ServerLocationSynthesizer.cpp
+        src/Server/ServerExceptions.cpp
+        src/Server/request/RequestExceptions.h
+        src/Server/request/RequestExceptions.cpp)
 
 add_subdirectory(test)

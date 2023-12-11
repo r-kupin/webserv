@@ -33,19 +33,16 @@ bool Server::CheckLimitedAccess(const Location &found, Methods method) const {
  * @return not-exact copy of a location found
  */
 Location Server::SynthesizeHandlingLocation(const ClientRequest& request) {
-    std::string status;
-    const Location &found = FindSublocation(request.address_,
-                                            config_.GetRoot(),
-                                            status);
-    Location synth(found);
-    if (status == "found") {
-        synth = SynthFoundExact(request, found, synth);
-    } else if (status == "not found") {
-        synth = SynthForNotFound(request, found, synth);
-    } else if (status == "request misconfigured") {
+    LocationSearchResult res = FindLocation(request.getAddress());
+
+    Location synth(res.location_);
+    if (res.status_ == "found") {
+        synth = SynthFoundExact(request, res.location_, synth);
+    } else if (res.status_ == "not found") {
+        synth = SynthForNotFound(request, res.location_, synth);
+    } else if (res.status_ == "request misconfigured") {
         synth.return_code_ = 400;
     }
-
     return synth;
 }
 
@@ -55,7 +52,7 @@ Location &Server::SynthFoundExact(const ClientRequest &request,
                                   const std::string &def_res_address) const {
     // literal match between uri and location hierarchy
     if (CheckFilesystem(found.root_, def_res_address) &&
-        CheckLimitedAccess(found, request.method_)) {
+        CheckLimitedAccess(found, request.getMethod())) {
         if (found.index_defined_) {
             // Index is defined explicitly in config
             l_str_c_it index = FindIndexToSend(found, def_res_address);
@@ -97,14 +94,14 @@ Location &Server::SynthForNotFound(const ClientRequest &request,
     // No literal match. Found location will be the closest one.
     // Maybe request asks for a file?
     if (CheckFilesystem(found.root_, def_res_address) &&
-        CheckLimitedAccess(found, request.method_)) {
+        CheckLimitedAccess(found, request.getMethod())) {
         // closest location exists and allows access
-        if (found.full_address_ + request.last_step_uri_ ==
-            request.address_) { // request asks for a file or subdirectory
-            if (CheckFilesystem(found.root_ + request.last_step_uri_,
+        if (found.full_address_ + request.getLastStepUri() ==
+            request.getAddress()) { // request asks for a file or subdirectory
+            if (CheckFilesystem(found.root_ + request.getLastStepUri(),
                                 def_res_address)) {
                 synth.return_code_ = 200;
-                synth.root_ += request.last_step_uri_;
+                synth.root_ += request.getLastStepUri();
             } else {
                 synth.return_code_ = 404;
             }

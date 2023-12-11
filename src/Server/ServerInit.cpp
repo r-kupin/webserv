@@ -4,6 +4,8 @@
 #include <cstring>
 #include <algorithm>
 #include "ServerExceptions.h"
+#include "Server.h"
+
 
 void Server::Init() {
     try {
