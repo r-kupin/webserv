@@ -28,5 +28,6 @@ add_executable(Google_Tests_run
         tests/server_test/request_test/RequestLineLevelTest.cpp
         tests/server_test/request_test/URLLevelTest.cpp
 )
+
 target_link_libraries(Google_Tests_run webserv_lib)
 target_link_libraries(Google_Tests_run gtest gtest_main)

@@ -69,14 +69,13 @@ protected:
     void        CheckURL(const std::string &url);
     bool        HasQuery(const std::string& url);
     bool        HasFragment(const std::string& url);
-
     std::string ExtractAddr(const std::string& url);
     std::string ExtractQuerry(const std::string &url);
     void        FillUrlParams(const std::string &url);
     std::string ExtractFragment(const std::string& url);
-//-------------------address-level----------------------------------------------
     std::string ExtractLastAddrStep(const std::string& address);
 
+    void ThrowException(const std::string& msg, const std::string &e) const;
     Methods                             method_;
     std::string                         addr_;
     std::string                         addr_last_step_;
@@ -85,7 +84,7 @@ protected:
     std::map<std::string, std::string>  params_;
     std::map<std::string, std::string>  headers_;
 
-    void ThrowException(const std::string& msg, const std::string &e) const;
+
 };
 
 

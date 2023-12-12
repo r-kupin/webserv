@@ -2,6 +2,14 @@
 #include <algorithm>
 #include "ClientRequest.h"
 
+void ClientRequest::CheckURL(const std::string &url) {
+    if (url.empty())
+        ThrowException("url can't be empty", "BadURL");
+    if((HasQuery(url) || HasFragment(url)) && method_ != GET)
+        ThrowException("url parameters and #fragment are allowed only with "
+                       "GET request", "BadRequestException");
+}
+
 std::string ClientRequest::ExtractLastAddrStep(const std::string& address) {
     unsigned long separator = address.find_last_of('/');
 

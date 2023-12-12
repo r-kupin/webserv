@@ -49,27 +49,6 @@ void ClientRequest::Init(int client_sock) {
         body_ = ExtractBody(request);
 }
 
-void ClientRequest::CheckURL(const std::string &url) {
-    if (url.empty())
-        ThrowException("url can't be empty", "BadURL");
-    if((HasQuery(url) || HasFragment(url)) && method_ != GET)
-        ThrowException("url parameters and #fragment are allowed only with "
-                       "GET request", "BadRequestException");
-}
-
-void ClientRequest::CheckRequest(const v_str &request) {
-    method_ = ExtractMethod(request[0]);
-    if (request[0].find("HTTP/1.1") == std::string::npos)
-        ThrowException("HTTP/1.1 is the only supported protocol",
-                       "BadRequestException");
-    if((method_ == POST || method_ == DELETE) && !HasBody(request))
-        ThrowException("POST and DELETE methods should contain body",
-                       "BadRequestException");
-    if(method_ == GET && HasBody(request))
-        ThrowException("only POST and DELETE methods can have a body",
-                       "BadRequestException");
-}
-
 /**
  * The recv() function offers some additional features specific to socket
  * operations, such as the ability to specify flags for advanced socket
@@ -105,11 +84,6 @@ v_str ClientRequest::ReadFromSocket(int socket) {
         if (bytesRead < BUFFER_SIZE - 1)
             return request;
     }
-}
-
-bool ClientRequest::HasBody(const v_str &request) {
-    return *std::find(request.begin(), request.end(), "") !=
-           *request.rbegin();
 }
 
 Methods ClientRequest::getMethod() const {

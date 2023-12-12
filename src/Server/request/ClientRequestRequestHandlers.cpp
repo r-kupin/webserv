@@ -16,9 +16,27 @@ Methods ClientRequest::ExtractMethod(const std::string &request) {
     }
 }
 
+void ClientRequest::CheckRequest(const v_str &request) {
+    method_ = ExtractMethod(request[0]);
+    if (request[0].find("HTTP/1.1") == std::string::npos)
+        ThrowException("HTTP/1.1 is the only supported protocol",
+                       "BadRequestException");
+    if((method_ == POST || method_ == DELETE) && !HasBody(request))
+        ThrowException("POST and DELETE methods should contain body",
+                       "BadRequestException");
+    if(method_ == GET && HasBody(request))
+        ThrowException("only POST and DELETE methods can have a body",
+                       "BadRequestException");
+}
+
 std::string ClientRequest::ExtractUrl(const std::string& request) {
     std::string uri = request.substr(request.find_first_of(' ') + 1);
     return (uri.substr(0, uri.find_first_of(' ')));
+}
+
+bool ClientRequest::HasBody(const v_str &request) {
+    return *std::find(request.begin(), request.end(), "") !=
+           *request.rbegin();
 }
 
 std::string ClientRequest::ExtractBody(const v_str &request) {
