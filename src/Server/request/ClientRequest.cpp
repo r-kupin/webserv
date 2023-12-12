@@ -34,78 +34,40 @@ const std::string & sanitize_input(const std::string &input) {
 
 void ClientRequest::Init(int client_sock) {
     v_str request = ReadFromSocket(client_sock) ;
-    std::string uri = ExtractUri(request[0]);
-    method_ = ExtractMethod(request[0]);
-    if (uri.empty() || (method_ != GET && (HasQuery(uri) || HasFragment(uri))))
-        throw BadURI();
-    if (HasFragment(uri) || HasQuery(uri))
-        addr_ = ExtractAddr(uri);
-    else
-        addr_ = uri;
-    last_step_uri_ = ExtractLastAddrStep(addr_);
-    if (request[0].find("HTTP/1.1") == std::string::npos) {
-        throw HTTPVersionNotSupportedException();
-    }
-    if (request.size() > 1)
+    CheckRequest(request);
+    std::string url = ExtractUrl(request[0]);
+    CheckURL(url);
+    addr_ = ExtractAddr(url);
+    addr_last_step_ = ExtractLastAddrStep(addr_);
+    if (HasFragment(url))
+        fragment_ = ExtractFragment(url);
+    if (HasQuery(url))
+        FillUrlParams(url);
+    if (HasHeaders(request))
         FillHeaders(request);
-    if (HasFragment(uri))
-        fragment_ = uri.substr(uri.find_first_of('#') + 1);
-    if (HasQuery(uri))
-        FillUriParams(uri);
-    if (method_ != GET) {
-        if (HasBody(request))
-            body_ = request.back();
-        else
-            throw BadRequestException();
-    }
+    if (HasBody(request))
+        body_ = ExtractBody(request);
 }
 
-void ClientRequest::FillHeaders(const v_str &request) {
-    for (size_t i = 1; i < request.size(); ++i) {
-        if (!request[i].empty() && request[i].find(':') != std::string::npos) {
-            std::string name = request[i].
-                    substr(0,
-                           request[i].find_first_of(':'));
-            std::string value = request[i].
-                    substr(request[i].find_first_of(": ") + 2);
-            if (!name.empty() && !value.empty())
-                headers_.insert(std::make_pair(name, value));
-        }
-    }
+void ClientRequest::CheckURL(const std::string &url) {
+    if (url.empty())
+        ThrowException("url can't be empty", "BadURL");
+    if((HasQuery(url) || HasFragment(url)) && method_ != GET)
+        ThrowException("url parameters and #fragment are allowed only with "
+                       "GET request", "BadRequestException");
 }
 
-void ClientRequest::FillUriParams(const std::string &uri) {
-    unsigned long param_separator = uri.find_first_of('?');
-    unsigned long fragm_separator = uri.find_first_of('#');
-    std::string query;
-    if (HasFragment(uri))
-        query = uri.substr(param_separator + 1,
-                           fragm_separator - param_separator - 1);
-    else
-        query = uri.substr(param_separator + 1);
-    for (size_t separator = query.find_first_of('&');
-         separator != std::string::npos;
-         separator = query.find_first_of('&')) {
-        std::string pair = query.substr(0, separator);
-        if (pair.empty())
-            return;
-        std::string name = pair.substr(0, query.find_first_of('='));
-        std::string value = pair.substr(query.find_first_of('=') + 1);
-        if (!name.empty() && !value.empty())
-            params_.insert(std::make_pair(name, value));
-        query = query.substr(pair.size() + 1);
-    }
-    if (!query.empty()) {
-        unsigned long separator = query.find_first_of('=');
-        if (separator != std::string::npos &&
-            separator != 0 &&
-            separator != query.size() - 1) {
-            std::string name = query.substr(0, separator);
-            std::string value = query.substr(separator + 1);
-            if (!name.empty() && !value.empty())
-                params_.insert(std::make_pair(name, value));
-        }
-    }
+void ClientRequest::CheckRequest(const v_str &request) {
+    method_ = ExtractMethod(request[0]);
+    if (request[0].find("HTTP/1.1") == std::string::npos)
+        ThrowException("HTTP/1.1 is the only supported protocol",
+                       "BadRequestException");
+    if((method_ == POST || method_ == DELETE) && !HasBody(request))
+        ThrowException("POST and DELETE methods should contain body",
+                       "BadRequestException");
+    if(method_ == GET && HasBody(request))
+        ThrowException("only POST and DELETE methods can have a body",
+                       "BadRequestException");
 }
 
 /**
@@ -145,80 +107,6 @@ v_str ClientRequest::ReadFromSocket(int socket) {
     }
 }
 
-Methods ClientRequest::ExtractMethod(const std::string &request) {
-    if (request.find("POST") != std::string::npos) {
-        return POST;
-    } else if (request.find("GET") != std::string::npos) {
-        return GET;
-    } else if (request.find("DELETE") != std::string::npos) {
-        return DELETE;
-    } else {
-        throw UnsupportedClientMethodException();
-    }
-}
-
-std::string ClientRequest::ExtractUri(const std::string& request) {
-    std::string uri = request.substr(request.find_first_of(' ') + 1);
-    return (uri.substr(0, uri.find_first_of(' ')));
-}
-std::string ClientRequest::ExtractLastAddrStep(const std::string& uri) {
-    unsigned long separator = uri.find_last_of('/');
-    if (separator == std::string::npos)
-        throw BadURI();
-    return (uri.substr(separator + 1));
-}
-
-std::string ClientRequest::ExtractAddr(const std::string& uri) {
-    unsigned long param_separator = uri.find_first_of('?');
-    unsigned long fragm_separator = uri.find_first_of('#');
-    if (param_separator == std::string::npos &&
-        fragm_separator == std::string::npos) {
-        return uri;
-    } else {
-        if (param_separator == std::string::npos)
-            return (uri.substr(0, fragm_separator));
-        else if (fragm_separator == std::string::npos)
-            return (uri.substr(0, param_separator));
-    }
-    return (uri.substr(0, param_separator));
-}
-
-
-bool        ClientRequest::HasQuery(const std::string& uri) {
-    unsigned long param_separator = uri.find_first_of('?');
-    unsigned long fragm_separator = uri.find_first_of('#');
-
-    if (param_separator == std::string::npos &&
-        fragm_separator == std::string::npos) {
-        return false;
-    } else {
-        if (param_separator == std::string::npos)
-            return false;
-        else if (fragm_separator == std::string::npos)
-            return param_separator != uri.size() - 1;
-        else if (param_separator > fragm_separator)
-            throw BadURI(); // fragment should FOLLOW query, not precede it
-    }
-    return fragm_separator - param_separator > 3;
-}
-
-bool ClientRequest::HasFragment(const std::string &uri) {
-    unsigned long param_separator = uri.find_first_of('?');
-    unsigned long fragm_separator = uri.find_first_of('#');
-    if (param_separator == std::string::npos &&
-        fragm_separator == std::string::npos) {
-        return false;
-    } else {
-        if (param_separator == std::string::npos)
-            return fragm_separator != uri.size() - 1;
-        else if (fragm_separator == std::string::npos)
-            return false;
-        else if (param_separator > fragm_separator)
-            throw BadURI(); // fragment should FOLLOW query, not precede it
-    }
-    return fragm_separator != uri.size() - 1;
-}
-
 bool ClientRequest::HasBody(const v_str &request) {
     return *std::find(request.begin(), request.end(), "") !=
            *request.rbegin();
@@ -233,7 +121,7 @@ const std::string &ClientRequest::getAddress() const {
 }
 
 const std::string &ClientRequest::getLastStepUri() const {
-    return last_step_uri_;
+    return addr_last_step_;
 }
 
 const std::string &ClientRequest::getBody() const {

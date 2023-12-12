@@ -23,10 +23,10 @@ add_executable(Google_Tests_run
         tests/config_test/server_configuration_class_test/setup_test/HandleDirectivesTest.cpp
         tests/config_test/server_configuration_class_test/setup_test/HandleLocationTest.cpp
         tests/config_test/server_configuration_class_test/functionality_test/CheckCorrectLocationContextTest.cpp
-        tests/server_test/request_test/RequestParsingTest.cpp
-        tests/server_test/request_test/InitTest.cpp
-        tests/server_test/request_test/ReadFromFDTest.cpp
-        tests/server_test/request_test/ExtractDataFromRequest.cpp
+        tests/server_test/request_test/SocketLevelTest.cpp
+        tests/server_test/request_test/ParsedRequestLevelTest.cpp
+        tests/server_test/request_test/RequestLineLevelTest.cpp
+        tests/server_test/request_test/URLLevelTest.cpp
 )
 target_link_libraries(Google_Tests_run webserv_lib)
 target_link_libraries(Google_Tests_run gtest gtest_main)

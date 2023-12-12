@@ -27,9 +27,9 @@ public:
     const char *what() const throw();
 };
 
-class BadURI : public ClientRequest::RequestException {
+class BadURL : public ClientRequest::RequestException {
 public:
-    BadURI() : ClientRequest::RequestException() {}
+    BadURL() : ClientRequest::RequestException() {}
 
     const char *what() const throw();
 };

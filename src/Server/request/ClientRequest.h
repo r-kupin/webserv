@@ -53,26 +53,39 @@ public:
     const std::map<std::string, std::string> &getHeaders() const;
 protected:
     ClientRequest();
-
+//-------------------socket-level-----------------------------------------------
     void        Init(int client_sock);
     v_str       ReadFromSocket(int socket);
-    Methods     ExtractMethod(const std::string &request);
-    std::string ExtractUri(const std::string& request);
-    std::string ExtractAddr(const std::string& uri);
-    std::string ExtractLastAddrStep(const std::string& uri);
-    void        FillHeaders(const v_str &request);
-    void        FillUriParams(const std::string &uri);
-    bool        HasQuery(const std::string& uri);
-    bool        HasFragment(const std::string& uri);
+//-------------------vector-of-stringgs parsed inpul level----------------------
+    void        CheckRequest(const v_str &request);
+    bool        HasHeaders(const v_str &request);
     bool        HasBody(const v_str &request);
+    void        FillHeaders(const v_str &request);
+    std::string ExtractBody(const v_str &request);
+//-------------------request main line level------------------------------------
+    std::string ExtractUrl(const std::string& request);
+    Methods     ExtractMethod(const std::string &request);
+//-------------------URL level--------------------------------------------------
+    void        CheckURL(const std::string &url);
+    bool        HasQuery(const std::string& url);
+    bool        HasFragment(const std::string& url);
+
+    std::string ExtractAddr(const std::string& url);
+    std::string ExtractQuerry(const std::string &url);
+    void        FillUrlParams(const std::string &url);
+    std::string ExtractFragment(const std::string& url);
+//-------------------address-level----------------------------------------------
+    std::string ExtractLastAddrStep(const std::string& address);
 
     Methods                             method_;
     std::string                         addr_;
-    std::string                         last_step_uri_;
-    std::string                         body_; //todo
+    std::string                         addr_last_step_;
+    std::string                         body_;
     std::string                         fragment_;
     std::map<std::string, std::string>  params_;
     std::map<std::string, std::string>  headers_;
+
+    void ThrowException(const std::string& msg, const std::string &e) const;
 };
 
 
