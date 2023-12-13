@@ -47,30 +47,31 @@ protected:
     void    HandleClientRequest(int client_sock);
     void    CheckRequest(int client_sock, const sockaddr_in &client_addr);
 //-------------------search location--------------------------------------------
-    struct LocationSearchResult {
-        LocationSearchResult(const Location &, const std::string &);
+    struct LocSearchResult {
+        LocSearchResult(const Location &, const std::string &);
 
         const Location & location_;
         std::string status_;
     };
-    Server::LocationSearchResult    FindLocation(const std::string &uri) const;
+    Server::LocSearchResult FindLocation(const std::string &uri) const;
 //-------------------assemble handling location---------------------------------
-    Location                    SynthesizeHandlingLocation(const ClientRequest&);
-    Location &
-    SynthFoundExact(const ClientRequest &request, const Location &found,
-                    Location &synth,
-                    const std::string &def_res_address = kDefaultResPath) const;
-    Location &
-    SynthForNotFound(const ClientRequest &request,
-                     const Location &found,
-                     Location &synth,
-                     const std::string &def_res_address = kDefaultResPath)const;
-    l_str_c_it
-    FindIndexToSend(const Location &found,
-                    const std::string &def_res_address) const;
-    bool CheckLimitedAccess(const Location &found, Methods method) const ;
-    bool CheckFilesystem(const std::string &address,
-                         const std::string &def_res_address) const ;
+    Location                SynthesizeHandlingLocation(const ClientRequest&);
+    Location &              SynthFoundExact(const ClientRequest &request,
+                                            const Location &found,
+                                            Location &synth,
+                                            const std::string &def_res_address =
+                                                        kDefaultResPath) const;
+    Location &              SynthForNotFound(const ClientRequest &request,
+                                             const Location &found,
+                                             Location &synth,
+                                             const std::string &def_res_address =
+                                                         kDefaultResPath)const;
+    l_str_c_it              FindIndexToSend(const Location &found,
+                                            const std::string &def_res_address) const;
+    bool                    CheckLimitedAccess(const Location &found,
+                                               Methods method) const ;
+    bool                    CheckFilesystem(const std::string &address,
+                                            const std::string &def_res_address) const ;
 //-------------------getters & stuff--------------------------------------------
     void SetSocket();
     ServerConfiguration &getConfig();

@@ -72,7 +72,7 @@ Config &Config::operator=(const Config &other) {
 }
 
 std::ostream &operator<<(std::ostream &os, const Config &config) {
-//    todo: print sonfig-level directives info
+//    todo: print config-level directives info
     for (l_sc_c_it it = config.getServers().begin();
         it != config.getServers().end(); ++it) {
         os << *it << std::endl;

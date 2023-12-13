@@ -27,6 +27,7 @@ add_executable(Google_Tests_run
         tests/server_test/request_test/ParsedRequestLevelTest.cpp
         tests/server_test/request_test/RequestLineLevelTest.cpp
         tests/server_test/request_test/URLLevelTest.cpp
+        tests/server_test/functionality_test/LocationSearchTest.cpp
 )
 
 target_link_libraries(Google_Tests_run webserv_lib)

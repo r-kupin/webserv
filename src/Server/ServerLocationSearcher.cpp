@@ -35,14 +35,14 @@ const Location &recursive_search(const std::string &uri, const Location &start,
     return start;
 }
 
-Server::LocationSearchResult   Server::FindLocation(const std::string &uri) const {
+Server::LocSearchResult   Server::FindLocation(const std::string &uri) const {
     std::string status;
 
-    return LocationSearchResult(
+    return LocSearchResult(
             recursive_search(uri, config_.GetConstRoot(), status),
             status);
 }
 
-Server::LocationSearchResult::LocationSearchResult(const Location &location,
-                                                   const std::string &status)
+Server::LocSearchResult::LocSearchResult(const Location &location,
+                                         const std::string &status)
 : location_(location), status_(status) {}

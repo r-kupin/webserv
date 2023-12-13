@@ -135,18 +135,18 @@ void Server::CheckRequest(int client_sock, const sockaddr_in &client_addr) {
                                     client_addr.sin_addr.s_addr << std::endl;
         try {
             HandleClientRequest(client_sock);
-        } catch (ReadFromSocketFailedException) {
-            std::cout << "Read from socket failed!" << std::endl;
+        } catch (const ClientRequest::RequestException &) {
+            std::cout << "Read from client socket failed!" << std::endl;
+        } catch (const ServerResponse::ResponseException &) {
+            std::cout << "Response creation failed!" << std::endl;
         }
         close(client_sock);
     }
 }
 
 void Server::HandleClientRequest(int client_sock) {
-     try {
-         ClientRequest request(client_sock);
-         ServerResponse response(request,
-                                 SynthesizeHandlingLocation(request));
+    ClientRequest request(client_sock);
+    ServerResponse response(request,SynthesizeHandlingLocation(request));
 //         response.SendResponse(client_sock);
 
 
@@ -163,16 +163,7 @@ void Server::HandleClientRequest(int client_sock) {
 //         std::string filepath;
 //         if ()
 //         = kDefaultResPath +
-     } catch (const ReadFromSocketFailedException &) {
-         std::cout << "Read from client socket failed!" << std::endl;
-     } catch (const UnsupportedClientMethodException &) {
-         std::cout << "Read from client socket failed!" << std::endl;
-     } catch (const HTTPVersionNotSupportedException &) {
-         std::cout << "Read from client socket failed!" << std::endl;
-     } catch (const NotFoundException &) {
-//         return 404
-         std::cout << "Not Found!" << std::endl;
-     }
+
 
 //     // Open file corresponding to requested URI
 //     std::string filepath = "resources/default/htmls";

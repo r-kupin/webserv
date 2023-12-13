@@ -22,10 +22,13 @@ const static std::string&  kHttpVersion = "HTTP/1.1";
 const static std::string&  kHttpPostfix = "\r\n\r\n";
 const static size_t        kBufferSize = 1024;
 
-struct ServerResponse {
-    ServerResponse(const ClientRequest &request,
-                   const Location &root);
+class ServerResponse {
+public:
+    class ResponseException : public std::exception {};
+
     ServerResponse();
+    ServerResponse(const ServerResponse &);
+    ServerResponse(const ClientRequest &request, const Location &root);
 
     ~ServerResponse();
 
