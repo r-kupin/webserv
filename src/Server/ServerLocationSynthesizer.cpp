@@ -32,7 +32,7 @@ bool Server::CheckLimitedAccess(const Location &found, Methods method) const {
  * @param request
  * @return not-exact copy of a location found
  */
-Location Server::SynthesizeHandlingLocation(const ClientRequest& request) {
+Location Server::SynthesizeHandlingLocation(const ClientRequest &request) {
     LocSearchResult res = FindLocation(request.getAddress());
 
     Location synth(res.location_);

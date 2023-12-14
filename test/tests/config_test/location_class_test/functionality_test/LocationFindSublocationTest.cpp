@@ -3,18 +3,27 @@
 #include "../../../../../src/Config/config/Config.h"
 #include "../../../../../src/Server/ServerExceptions.h"
 
-class FindSublocationTest : public ::testing::Test, public Location {
+class FindSublocationTest : public ::testing::Test, public ServerConfiguration {
 public:
-    explicit FindSublocationTest()
-    : Location(),
-      sc_root_(sc_.GetRoot()) {
-        sc_root_.sublocations_.push_back(Location("/sub"));
-        sc_root_.sublocations_.begin()->index_.push_back("sub_index.html");
-        sc_root_.sublocations_.begin()->parent_ = sc_.GetRootIt();
+    explicit FindSublocationTest() : ServerConfiguration() {
+        l_loc_it root = locations_.begin();
+
+        root->sublocations_.push_back(Location("/sub1"));
+        l_loc_it sub1 = root->sublocations_.begin();
+        sub1->index_.push_back("sub_index.html");
+        sub1->parent_ = root;
+
+        root->sublocations_.push_back(Location("/sub2"));
+        l_loc_it sub2 = root->sublocations_.begin().;
+        sub2->index_.push_back("sub_index.html");
+        sub2->parent_ = locations_.begin();
+        sub2->sublocations_.push_back(Location("/sub3"));
+        Location & sub3 = root.sublocations_.front();
+        sub2.index_.push_back("sub_index.html");
+        sub2.parent_ = locations_.begin();
     };
 protected:
-    ServerConfiguration sc_;
-    Location & sc_root_;
+    std::list<Location> imaginary_config_;
 };
 
 TEST_F(FindSublocationTest, NonExistingFindSublocationByAddressTest) {

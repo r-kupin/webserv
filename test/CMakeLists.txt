@@ -8,7 +8,6 @@ include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
 # 'Google_Tests_run' is the target name
 # 'test1.cpp tests2.cpp' are source files with lib
 add_executable(Google_Tests_run
-        tests/server_test/functionality_test/ServerTest.cpp
         tests/config_test/location_class_test/setup_test/HandleReturnTest.cpp
         tests/config_test/location_class_test/setup_test/HandleAddErrPagesTest.cpp
         tests/config_test/location_class_test/setup_test/HandleUpdateIndexTest.cpp
@@ -28,6 +27,8 @@ add_executable(Google_Tests_run
         tests/server_test/request_test/RequestLineLevelTest.cpp
         tests/server_test/request_test/URLLevelTest.cpp
         tests/server_test/functionality_test/LocationSearchTest.cpp
+        tests/server_test/functionality_test/LocationSynthesingTest.cpp
+        tests/server_test/functionality_test/ServerTest.cpp
 )
 
 target_link_libraries(Google_Tests_run webserv_lib)

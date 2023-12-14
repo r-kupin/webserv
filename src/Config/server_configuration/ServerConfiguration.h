@@ -61,6 +61,8 @@ public:
     const Location      &GetConstRoot() const;
     Location            &GetRoot();
     l_loc_it            GetRootIt();
+    int                 GetPort() const;
+    const std::string   &GetPortStr() const;
 
     bool operator==(const ServerConfiguration &rhs) const;
     ServerConfiguration& operator=(const ServerConfiguration& rhs);

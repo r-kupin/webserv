@@ -74,9 +74,10 @@ void        ServerConfiguration::ApplyLocationContext(const Node &context,
                                                       l_loc_it parent,
                                                       Location &current) {
     CheckLocationContextIsCorrect(context);
-    if (need_to_add_current_to_parent_first(parent, current, context))
+    if (need_to_add_current_to_parent_first(parent, current, context)) {
         parent->sublocations_.push_front(current);
-    if (parent->HasSameAddressAs(current)) {
+        parent->sublocations_.begin()->parent_ = parent;
+    } if (parent->HasSameAddressAs(current)) {
         RecurseLocations(context, parent);
     } else {
         RecurseLocations(context, parent->sublocations_.begin());
@@ -106,6 +107,16 @@ void        ServerConfiguration::RecurseLocations(const Node &context,
         }
     }
     if (!parent->HasSameAddressAs(current) &&
-        !parent->HasAsSublocation(current))
+        !parent->HasAsSublocation(current)) {
         parent->sublocations_.push_front(current);
+        parent->sublocations_.begin()->parent_ = parent;
+    }
+}
+
+int ServerConfiguration::GetPort() const {
+    return port_;
+}
+
+const std::string &ServerConfiguration::GetPortStr() const {
+    return port_str_;
 }

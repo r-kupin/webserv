@@ -1,43 +1,41 @@
 #include <gtest/gtest.h>
 #include "../../../../src/Server/Server.h"
-#include "../../../../src/Server/ServerExceptions.h"
 
-class RequestHandlingTest : public ::testing::Test, public Server {
+class SimpleConfigLocationSearchTest : public ::testing::Test, public Server {
 public:
-    explicit RequestHandlingTest() : Server(
-            *Config("test_resources/simple/nginx.conf").getServers().begin()) {}
+    explicit SimpleConfigLocationSearchTest()
+    : Server(Config("test_resources/simple/nginx.conf").
+                                                        getServers().front()){}
+protected:
+    std::string uri_;
 };
 
-TEST_F(RequestHandlingTest, FindRootLocation) {
-    std::string uri = "/";
-    const LocSearchResult &result = FindLocation(uri);
+TEST_F(SimpleConfigLocationSearchTest, FindRootLocation) {
+    uri_ = "/";
+    const LocSearchResult &result = FindLocation(uri_);
     EXPECT_EQ(result.location_, getConfig().GetRoot());
     EXPECT_EQ(result.status_, "found");
 }
-// to synthesizer! not here!
-//TEST_F(RequestHandlingTest,
-//        location_not_defined_directory_does_not_exists) {
-//    std::string uri = "/loc_X";
-//
-//    LocSearchResult res = FindLocation(uri);
-//    EXPECT_EQ(res.location_, getConfig().GetRoot());
-//    EXPECT_EQ(res.status_, "not found");
-//}
-//
-//TEST_F(RequestHandlingTest,
-//       location_defined_directory_does_not_exists_index_file_not_defined) {
-//    std::string uri = "/loc_1X";
-//
-//    LocSearchResult res = FindLocation(uri);
-//    EXPECT_EQ(res.location_, getConfig().GetRoot());
-//    EXPECT_EQ(res.status_, "not found");
-//}
-//
-//TEST_F(RequestHandlingTest,
-//       location_defined_directory_does_not_exists_index_file_defined) {
-//    std::string uri = "/loc_2X";
-//
-//    LocSearchResult res = FindLocation(uri);
-//    EXPECT_EQ(res.location_, getConfig().GetRoot());
-//    EXPECT_EQ(res.status_, "not found");
-//}
+
+TEST_F(SimpleConfigLocationSearchTest, FindDefinedLocation) {
+    uri_ = "/loc_1";
+    const LocSearchResult &result = FindLocation(uri_);
+    EXPECT_EQ(result.location_.address_, uri_);
+    EXPECT_EQ(result.location_.parent_->address_, "/");
+    EXPECT_EQ(result.status_, "found");
+}
+
+TEST_F(SimpleConfigLocationSearchTest, FindUnDefinedRootSubLocation) {
+    uri_ = "/loc_XXX";
+    const LocSearchResult &result = FindLocation(uri_);
+    EXPECT_EQ(result.location_, getConfig().GetRoot());
+    EXPECT_EQ(result.status_, "not found");
+}
+
+TEST_F(SimpleConfigLocationSearchTest, FindUnDefinedSubLocationOfNonRoot) {
+    uri_ = "loc_1/loc_XXX";
+    const LocSearchResult &result = FindLocation(uri_);
+    EXPECT_EQ(result.location_.address_, "/loc_1");
+    EXPECT_EQ(result.location_.parent_->address_, "/");
+    EXPECT_EQ(result.status_, "not found");
+}

@@ -44,18 +44,25 @@ protected:
     void    CreateEpoll();
     void    AddEpollInstance();
 //-------------------request handling-------------------------------------------
+    void    Start(int port);
     void    HandleClientRequest(int client_sock);
     void    CheckRequest(int client_sock, const sockaddr_in &client_addr);
 //-------------------search location--------------------------------------------
     struct LocSearchResult {
-        LocSearchResult(const Location &, const std::string &);
+        LocSearchResult(const Location &location, const std::string &status,
+                        const std::string &initialUri,
+                        const std::string &leftowerUri);
 
-        const Location & location_;
-        std::string status_;
+        const Location  &location_;
+        std::string     status_;
+        std::string     initial_uri_;
+        std::string     leftower_uri_;
     };
     Server::LocSearchResult FindLocation(const std::string &uri) const;
+    Server::LocSearchResult FindLocation(const std::string &uri,
+                                         const ServerConfiguration &conf) const;
 //-------------------assemble handling location---------------------------------
-    Location                SynthesizeHandlingLocation(const ClientRequest&);
+    Location SynthesizeHandlingLocation(const ClientRequest &);
     Location &              SynthFoundExact(const ClientRequest &request,
                                             const Location &found,
                                             Location &synth,

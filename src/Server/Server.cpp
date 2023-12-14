@@ -101,7 +101,8 @@
 //const int BUFFER_SIZE = 1024;
 //const int MAX_EVENTS = 10;
 
-Server::Server() {}
+Server::Server()
+: socket_(0), epoll_fd_(0) {}
 
 Server::Server(const Server &other)
 : config_(other.config_), socket_(other.socket_), epoll_fd_(other.epoll_fd_),
@@ -115,7 +116,11 @@ Server::Server(const Server &other)
  */
 void Server::Start() {
     Init();
-    std::cout << "started server at " << config_.port_ << " port" << std::endl;
+    Start(config_.GetPort());
+}
+
+void Server::Start(int port) {
+    std::cout << "started server at " << port << " port" << std::endl;
     while (true) {
         struct sockaddr_in client_addr;
         socklen_t client_len = sizeof(client_addr);
@@ -146,7 +151,7 @@ void Server::CheckRequest(int client_sock, const sockaddr_in &client_addr) {
 
 void Server::HandleClientRequest(int client_sock) {
     ClientRequest request(client_sock);
-    ServerResponse response(request,SynthesizeHandlingLocation(request));
+    ServerResponse response(request, SynthesizeHandlingLocation(request));
 //         response.SendResponse(client_sock);
 
 
