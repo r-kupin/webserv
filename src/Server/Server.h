@@ -17,8 +17,8 @@
 #include <sys/socket.h>
 #include <sys/epoll.h>
 #include <netdb.h>
-#include "../Config/Config.h"
-#include "ServerResponse.h"
+#include "../Config/config/Config.h"
+#include "response/ServerResponse.h"
 
 class Server {
 public:
@@ -34,54 +34,55 @@ public:
 
     void Start();
 protected:
-    void PresetAddress(addrinfo **addr);
-    void CreateSocket(addrinfo *res);
-    void BindSocket(addrinfo *res);
-    void ListenSocket();
-    void SetSocketOptions(addrinfo *res) const;
-    void CreateEpoll();
-    void AddEpollInstance();
-    void HandleClientRequest(int i);
-    bool CheckLimitedAccess(const Location &found, Methods method) const ;
-    bool CheckFilesystem(const std::string &address,
-                         const std::string &def_res_address) const ;
+//-------------------initialisation: open sockets, create epoll...--------------
+    void    Init();
+    void    PresetAddress(addrinfo **addr);
+    void    CreateSocket(addrinfo *res);
+    void    SetSocketOptions(addrinfo *res) const;
+    void    BindSocket(addrinfo *res);
+    void    ListenSocket();
+    void    CreateEpoll();
+    void    AddEpollInstance();
+//-------------------request handling-------------------------------------------
+    void    HandleClientRequest(int client_sock);
+    void    CheckRequest(int client_sock, const sockaddr_in &client_addr);
+//-------------------search location--------------------------------------------
+    struct LocSearchResult {
+        LocSearchResult(const Location &, const std::string &);
 
-
-    Location SynthesizeHandlingLocation(const ClientRequest&);
-
-    Location &
-    SynthFoundExact(const ClientRequest &request,
-                    const Location &found,
-                    Location &synth,
-                    const std::string &def_res_address = kDefaultResPath) const;
-
-
-    Location &
-    SynthForNotFound(const ClientRequest &request,
-                     const Location &found,
-                     Location &synth,
-                     const std::string &def_res_address = kDefaultResPath)const;
-
+        const Location & location_;
+        std::string status_;
+    };
+    Server::LocSearchResult FindLocation(const std::string &uri) const;
+//-------------------assemble handling location---------------------------------
+    Location                SynthesizeHandlingLocation(const ClientRequest&);
+    Location &              SynthFoundExact(const ClientRequest &request,
+                                            const Location &found,
+                                            Location &synth,
+                                            const std::string &def_res_address =
+                                                        kDefaultResPath) const;
+    Location &              SynthForNotFound(const ClientRequest &request,
+                                             const Location &found,
+                                             Location &synth,
+                                             const std::string &def_res_address =
+                                                         kDefaultResPath)const;
+    l_str_c_it              FindIndexToSend(const Location &found,
+                                            const std::string &def_res_address) const;
+    bool                    CheckLimitedAccess(const Location &found,
+                                               Methods method) const ;
+    bool                    CheckFilesystem(const std::string &address,
+                                            const std::string &def_res_address) const ;
+//-------------------getters & stuff--------------------------------------------
     void SetSocket();
-    const Location &    FindSublocation(const std::string &uri,
-                                        const Location &start,
-                                        std::string &status) const;
     ServerConfiguration &getConfig();
     int getSocket() const;
     int getEpollFd() const;
     const epoll_event &getEvent() const;
-
 private:
     ServerConfiguration config_;
     int socket_;
     int epoll_fd_;
     epoll_event event_;
-
-    void Init();
-
-    l_str_c_it
-    FindIndexToSend(const Location &found,
-                    const std::string &def_res_address) const;
 };
 
 

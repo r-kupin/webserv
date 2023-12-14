@@ -17,7 +17,6 @@
 #include "ServerExceptions.h"
 
 typedef std::vector<Server> v_servers;
-typedef std::list<ServerConfiguration> l_sconfigs;
 
 class ServerManager {
 public:
@@ -32,6 +31,7 @@ public:
 
     void RunAll();
 private:
+
     v_servers servers_;
 };
 

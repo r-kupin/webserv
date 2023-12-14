@@ -29,7 +29,7 @@
 */
 #include <iostream>
 #include <cassert>
-#include "Config/ConfigExceptions.h"
+#include "Config/config/ConfigExceptions.h"
 #include "Server/ServerManager.h"
 
 Config try_open_default_config() {
@@ -74,8 +74,8 @@ int main(int ac, char** av) {
         std::cout << "Config is on path " + conf.getConfPath() +
                     " is loaded.  Creating servers.." << std::endl;
         std::cout << conf << std::endl;
-//        ServerManager server_manager(conf);
-//        server_manager.RunAll();
+        ServerManager server_manager(conf);
+        server_manager.RunAll();
     } catch (const Config::ConfigException& e) {
         std::cout << "No config is loaded, startup failed!" << std::endl;
         return (1);
