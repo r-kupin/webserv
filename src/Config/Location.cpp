@@ -312,7 +312,10 @@ bool Location::UMarkDefined(const std::string &key, bool &flag,
  * @param directives
  */
 void Location::ProcessDirectives(std::vector<v_str> &directives) {
-    bool    root = false, index = false, ret = false, err = false;
+    bool    root = false,
+            index = false,
+            ret = false,
+            err = false;
 
     for (size_t i = 0; i < directives.size(); ++i) {
         if (UMarkDefined("root", root, directives[i]))
@@ -394,7 +397,6 @@ Location &Location::operator=(const Location &rhs) {
     if (this == &rhs) {
         return *this; // Handle self-assignment
     }
-
     // Copy the data members from rhs to this object
     error_pages_ = rhs.error_pages_;
     sublocations_ = rhs.sublocations_;

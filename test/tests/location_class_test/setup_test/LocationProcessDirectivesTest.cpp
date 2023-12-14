@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
 #include <algorithm>
 #include "../../../../src/Config/Config.h"
-#include "../../../../src/Server/ServerExceptions.h"
 
 class ProcessDerectivesTest : public ::testing::Test, public Location {
 public:

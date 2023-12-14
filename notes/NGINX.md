@@ -43,3 +43,23 @@ uri ends:
 /`location`
 /`location`/
 /`location`/`file.txt`
+
+#set( $allSpaces = "                                                    ")
+#set( $neededSpaces = 51 - $FILENAME.length())
+#set( $spaces = $allSpaces.substring(0, $neededSpaces))
+#set( $FILENAME__________________________________________ = ${FILENAME} + $spaces)
+#set( $f_time = $HOUR+ ":" + $MINUTE + ":" + $SECOND)
+#set( $f_date = $YEAR+ "/" + $MONTH + "/" + $DAY)
+#set( $CREATEDAT_________ = $f_date + " " + $f_time)
+/******************************************************************************/
+/*                                                                            */
+/*                                                         :::      ::::::::  */
+/*    $FILENAME__________________________________________:+:      :+:    :+:  */
+/*                                                     +:+ +:+         +:+    */
+/*    By: rokupin <rokupin@student.42.fr>            +#+  +:+       +#+       */
+/*                                                 +#+#+#+#+#+   +#+          */
+/*    Created: $CREATEDAT_________ by rokupin           #+#    #+#            */
+#[[/*                                                     ###   ########.fr      */]]#
+#[[/*                                                                            */]]#
+/******************************************************************************/
+
