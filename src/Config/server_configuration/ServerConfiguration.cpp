@@ -28,7 +28,6 @@ server_name_("localhost") {
     root_loc.return_address_ = "";
     root_loc.full_address_ = "";
     locations_.push_back(root_loc);
-//    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     locations_.begin()->parent_ = locations_.begin();
 }
 
@@ -129,6 +128,10 @@ const Location  &ServerConfiguration::GetConstRoot() const {
 }
 
 l_loc_it    ServerConfiguration::GetRootIt() {
+    return locations_.begin();
+}
+
+l_loc_c_it ServerConfiguration::GetConstRootIt() const {
     return locations_.begin();
 }
 

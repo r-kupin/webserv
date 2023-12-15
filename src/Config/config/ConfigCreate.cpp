@@ -56,9 +56,8 @@ bool check_filesystem(const std::string &address,
  * @param node of the server block we are currently checking
  * @return ready-to-use server configuration
  */
-ServerConfiguration Config::CheckServer(Node &node,
-                    const std::string &resource_path) {
-    ServerConfiguration current;
+void Config::CheckServer(Node &node, ServerConfiguration &current,
+                         const std::string &resource_path) {
     try {
         current.ProcessDirectives(node.directives_);
         CheckServerSubnodes(node.child_nodes_, current);
@@ -68,15 +67,16 @@ ServerConfiguration Config::CheckServer(Node &node,
     }
     if (!check_filesystem(current.GetRoot().address_, resource_path))
         ThrowSyntaxError("Root directory doesn't exist");
-    return current;
 }
 
 bool Config::HasServerWithSameNameOrPort(const ServerConfiguration &config) {
     for (l_srvconf_it_c it = servers_.begin(); it != servers_.end(); ++it) {
-        if (it->server_name_ == config.server_name_)
-            return true;
-        if (it->port_ == config.port_)
-            return true;
+        if (it != servers_.begin()) {
+            if (it->server_name_ == config.server_name_)
+                return true;
+            if (it->port_ == config.port_)
+                return true;
+        }
     }
     return false;
 }
@@ -94,11 +94,11 @@ void Config::CreateSrvConfigs(Node& root) {
     }
     for (size_t i = 0; i < root.child_nodes_.size(); i++) {
         if (root.child_nodes_[i].main_[0] == "server") {
-            ServerConfiguration config = CheckServer(root.child_nodes_[i]);
-            if (HasServerWithSameNameOrPort(config))
+            servers_.push_front(ServerConfiguration());
+            CheckServer(root.child_nodes_[i], servers_.front());
+            if (HasServerWithSameNameOrPort(servers_.front()))
                 ThrowSyntaxError("Server name and port needs to be unique "
                                  "amongst all servers");
-            servers_.push_back(config);
         } else {
             std::cout << "Found block " + root.child_nodes_[i].main_[0] + " " +
                          "inside main context" << std::endl;

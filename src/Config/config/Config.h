@@ -62,8 +62,8 @@ protected:
     void        CreateSrvConfigs(Node& root);
 //  Location subcontext
     void        CheckServerSubnodes(const v_node &subcontexts, ServerConfiguration &current);
-    ServerConfiguration CheckServer(Node &node,
-                                    const std::string &resource_path = kDefaultResPath);
+    void        CheckServer(Node &node, ServerConfiguration &current,
+                     const std::string &resource_path = kDefaultResPath);
 private:
     std::string                     conf_path_;
     Node                            conf_root_;

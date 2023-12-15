@@ -14,7 +14,7 @@
 #include "../../../../src/Server/Server.h"
 #include "../../../../src/Server/ServerExceptions.h"
 
-class ServerTest : public ::testing::Test, public Server {
-public:
-    explicit ServerTest() : Server() {}
-};
+//class ServerTest : public ::testing::Test, public Server {
+//public:
+//    explicit ServerTest() : Server() {}
+//};

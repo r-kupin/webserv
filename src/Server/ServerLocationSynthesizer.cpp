@@ -35,11 +35,11 @@ bool Server::CheckLimitedAccess(const Location &found, Methods method) const {
 Location Server::SynthesizeHandlingLocation(const ClientRequest &request) {
     LocSearchResult res = FindLocation(request.getAddress());
 
-    Location synth(res.location_);
+    Location synth(*res.location_);
     if (res.status_ == "found") {
-        synth = SynthFoundExact(request, res.location_, synth);
+        synth = SynthFoundExact(request, *res.location_, synth);
     } else if (res.status_ == "not found") {
-        synth = SynthForNotFound(request, res.location_, synth);
+        synth = SynthForNotFound(request, *res.location_, synth);
     } else if (res.status_ == "request misconfigured") {
         synth.return_code_ = 400;
     }

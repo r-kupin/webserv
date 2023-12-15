@@ -100,7 +100,7 @@
 
 //const int BUFFER_SIZE = 1024;
 //const int MAX_EVENTS = 10;
-
+//
 Server::Server()
 : socket_(0), epoll_fd_(0) {}
 
@@ -199,7 +199,12 @@ Server &Server::operator=(const Server &other) {
 
 Server::~Server() {}
 
-ServerConfiguration &Server::getConfig() {
+
+void Server::SetConfig(const ServerConfiguration &config) {
+    config_ = config;
+}
+
+const ServerConfiguration & Server::getConfig() {
     return config_;
 }
 

@@ -61,6 +61,7 @@ public:
     const Location      &GetConstRoot() const;
     Location            &GetRoot();
     l_loc_it            GetRootIt();
+    l_loc_c_it          GetConstRootIt() const;
     int                 GetPort() const;
     const std::string   &GetPortStr() const;
 

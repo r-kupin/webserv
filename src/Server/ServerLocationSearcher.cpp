@@ -11,19 +11,19 @@ std::string get_next_location_address(const std::string &uri) {
 }
 
 // todo Handle requests fot files like /loc_defined_index_not_exist/pic.jpeg !!!
-const Location &recursive_search(const std::string &uri, const Location &start,
-                                 std::string &status) {
+l_loc_c_it recursive_search(const std::string &uri, l_loc_c_it start,
+                            std::string &status) {
     if (uri.empty() || uri[0] != '/') {
         status = "uri misconfigured";
         return start;
-    } else if (uri != start.address_) {
+    } else if (uri != start->address_) {
         std::string first = get_next_location_address(uri);
         std::string remainder = "/";
         if (first != uri)
             remainder = uri.substr(first.size());
         if (first != "/") {
             try {
-                const Location &found = *start.FindSublocationByAddress(first);
+                l_loc_c_it found = start->FindSublocationByAddress(first);
                 return recursive_search(remainder, found, status);
             } catch (const NotFoundException &) {
                 status = "not found";
@@ -42,17 +42,17 @@ Server::LocSearchResult Server::FindLocation(const std::string &uri) const {
 Server::LocSearchResult Server::FindLocation(const std::string &uri,
                                              const ServerConfiguration &conf) const {
     std::string status, leftower;
-    const Location &res = recursive_search(uri, conf.GetConstRoot(), status);
+    l_loc_c_it res = recursive_search(uri, conf.GetConstRootIt(), status);
 
     if (status == "found") {
         leftower = "";
     } else {
-        leftower = uri.substr(res.full_address_.size());
+        leftower = uri.substr(res->full_address_.size());
     }
     return LocSearchResult(res, status, uri, leftower);
 }
 
-Server::LocSearchResult::LocSearchResult(const Location &location,
+Server::LocSearchResult::LocSearchResult(l_loc_c_it location,
                                          const std::string &status,
                                          const std::string &initialUri,
                                          const std::string &leftowerUri)

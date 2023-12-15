@@ -5,54 +5,56 @@
 
 class FindSublocationTest : public ::testing::Test, public ServerConfiguration {
 public:
-    explicit FindSublocationTest() : ServerConfiguration() {
-        l_loc_it root = locations_.begin();
+    explicit FindSublocationTest() : ServerConfiguration(), root_(GetRootIt()) {
+        root_->sublocations_.push_front(Location("/sub1"));
+        sub1_ = root_->sublocations_.begin();
+        sub1_->index_.push_back("sub1_index.html");
+        sub1_->parent_ = root_;
 
-        root->sublocations_.push_back(Location("/sub1"));
-        l_loc_it sub1 = root->sublocations_.begin();
-        sub1->index_.push_back("sub_index.html");
-        sub1->parent_ = root;
+        root_->sublocations_.push_front(Location("/sub2"));
+        sub2_ = root_->sublocations_.begin();
+        sub2_->index_.push_back("sub2_index.html");
+        sub2_->parent_ = root_;
 
-        root->sublocations_.push_back(Location("/sub2"));
-        l_loc_it sub2 = root->sublocations_.begin().;
-        sub2->index_.push_back("sub_index.html");
-        sub2->parent_ = locations_.begin();
-        sub2->sublocations_.push_back(Location("/sub3"));
-        Location & sub3 = root.sublocations_.front();
-        sub2.index_.push_back("sub_index.html");
-        sub2.parent_ = locations_.begin();
+        sub2_->sublocations_.push_front(Location("/sub3"));
+        sub3_ = sub2_->sublocations_.begin();
+        sub3_->index_.push_back("sub3_index.html");
+        sub3_->parent_ = sub2_;
     };
 protected:
-    std::list<Location> imaginary_config_;
+    l_loc_it root_;
+    l_loc_it sub1_;
+    l_loc_it sub2_;
+    l_loc_it sub3_;
 };
 
 TEST_F(FindSublocationTest, NonExistingFindSublocationByAddressTest) {
-    EXPECT_THROW(sc_root_.FindSublocationByAddress(""), NotFoundException);
+    EXPECT_THROW(root_->FindSublocationByAddress(""), NotFoundException);
 }
 
 TEST_F(FindSublocationTest, RootFindSublocationByAddressTest) {
-    const Location & loc = *sc_root_.FindSublocationByAddress("/");
-
-    EXPECT_EQ(loc.address_, "/");
+    EXPECT_EQ(*root_->FindSublocationByAddress("/"), *root_);
 }
 
 TEST_F(FindSublocationTest, ExistingFindSublocationByAddressTest) {
-    const Location & loc = *sc_root_.FindSublocationByAddress("/sub");
+    const l_loc_c_it &found = root_->FindSublocationByAddress("/sub1");
 
-    EXPECT_EQ(loc.address_, "/sub");
-    EXPECT_EQ(*loc.index_.begin(), "sub_index.html");
-    EXPECT_EQ(*loc.parent_, sc_root_);
-    EXPECT_EQ(*loc.parent_, *sc_.GetRootIt());
+    EXPECT_EQ(*found, *sub1_);
+    EXPECT_EQ(*found->parent_, *root_);
 }
 
-TEST_F(FindSublocationTest, HasSameAddressAsOneOfSublocationsOf) {
-    Location loc1("/loc1");
-    loc1.index_.push_back("loc1_index.html");
-    sc_root_.sublocations_.push_back(loc1);
+TEST_F(FindSublocationTest, ExistingFindAnotherSublocationByAddressTest) {
+    const l_loc_c_it &found = root_->FindSublocationByAddress("/sub2");
 
-    Location loc2("/loc2");
-    loc2.index_.push_back("loc2_index.html");
+    EXPECT_EQ(*found, *sub2_);
+    EXPECT_EQ(*found->parent_, *root_);
+}
 
-    EXPECT_TRUE(loc1.HasSameAddressAsOneOfSublocationsOf(sc_root_));
-    EXPECT_FALSE(loc2.HasSameAddressAsOneOfSublocationsOf(sc_root_));
+TEST_F(FindSublocationTest, ExistingFindSubSublocationByAddressTest) {
+    const l_loc_c_it &found = sub2_->FindSublocationByAddress("/sub3");
+
+    EXPECT_EQ(*found, *sub3_);
+    EXPECT_EQ(*found->parent_, *sub2_);
+    EXPECT_EQ(*found->parent_->parent_, *root_);
+    EXPECT_EQ(*found->parent_->parent_->parent_->parent_, *root_);
 }

@@ -49,11 +49,11 @@ protected:
     void    CheckRequest(int client_sock, const sockaddr_in &client_addr);
 //-------------------search location--------------------------------------------
     struct LocSearchResult {
-        LocSearchResult(const Location &location, const std::string &status,
+        LocSearchResult(l_loc_c_it location, const std::string &status,
                         const std::string &initialUri,
                         const std::string &leftowerUri);
 
-        const Location  &location_;
+        l_loc_c_it      location_;
         std::string     status_;
         std::string     initial_uri_;
         std::string     leftower_uri_;
@@ -62,7 +62,7 @@ protected:
     Server::LocSearchResult FindLocation(const std::string &uri,
                                          const ServerConfiguration &conf) const;
 //-------------------assemble handling location---------------------------------
-    Location SynthesizeHandlingLocation(const ClientRequest &);
+    Location                SynthesizeHandlingLocation(const ClientRequest &);
     Location &              SynthFoundExact(const ClientRequest &request,
                                             const Location &found,
                                             Location &synth,
@@ -81,7 +81,8 @@ protected:
                                             const std::string &def_res_address) const ;
 //-------------------getters & stuff--------------------------------------------
     void SetSocket();
-    ServerConfiguration &getConfig();
+    const ServerConfiguration & getConfig();
+    void SetConfig(const ServerConfiguration &config);
     int getSocket() const;
     int getEpollFd() const;
     const epoll_event &getEvent() const;
