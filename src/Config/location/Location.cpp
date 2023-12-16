@@ -119,6 +119,26 @@ bool Location::UMarkDefined(const std::string &key, bool &flag,
     return false;
 }
 //-------------------functional stuff-------------------------------------------
+bool Location::HasAsSublocation(const std::string &address) const {
+    LocationByAddress to_find(address);
+    l_loc_c_it it = std::find_if(sublocations_.begin(),
+                                 sublocations_.end(),
+                                 to_find);
+    return it != sublocations_.end();
+}
+
+bool Location::HasAsSublocation(const Location &location) const {
+    return HasAsSublocation(location.address_);
+}
+
+bool Location::HasSameAddressAsOneOfSublocationsOf(const Location &rhs) const {
+    return rhs.HasAsSublocation(address_);
+}
+
+bool Location::HasSameAddressAs(const Location &rhs) const {
+    return address_ == rhs.address_;
+}
+
 l_loc_c_it Location::FindSublocationByAddress(const std::string &address) const {
     if (address == "/")
         return parent_;
@@ -138,27 +158,6 @@ bool LocationByAddress::operator()(const Location &location) const {
     return location.address_ == targetAddress_;
 }
 
-bool Location::HasSameAddressAs(const Location &rhs) const {
-    return address_ == rhs.address_;
-}
-
-bool Location::HasSameAddressAsOneOfSublocationsOf(const Location &rhs) const {
-    for (l_loc_c_it it = rhs.sublocations_.begin();
-         it != rhs.sublocations_.end(); ++it) {
-        if (it->HasSameAddressAs(*this))
-            return true;
-    }
-    return false;
-}
-
-bool Location::HasAsSublocation(const Location &location) {
-    for (l_loc_it it = sublocations_.begin(); it != sublocations_.end(); ++it) {
-        if (location.HasSameAddressAs(*it))
-            return true;
-    }
-    return false;
-}
-
 bool Location::HasDefinedLimitExcept() const {
     return !limit_except_.except_.empty();
 }
@@ -166,7 +165,7 @@ bool Location::HasDefinedLimitExcept() const {
 //-------------------setup directives handlers----------------------------------
 /**
  *  Updates some location parameters based on the directives
- * @param directives
+ *  @param directives
  */
 void Location::ProcessDirectives(const std::vector<v_str> &directives) {
     bool root = false;

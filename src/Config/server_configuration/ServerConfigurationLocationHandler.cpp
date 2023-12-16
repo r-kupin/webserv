@@ -2,39 +2,6 @@
 #include <iostream>
 #include "ServerConfiguration.h"
 
-//server {
-//        listen 4280;
-//        root /var/www/html;
-//        server_name localhost;
-//
-//        location /i {
-//                index iindex.html;
-//                index index.html;
-//                root /var/www/html/gg/ff;
-//        }
-//
-//        # this overrides existing
-//                location /home {
-//                        # if there are home_index.html - 403
-//                        index home_index.html;
-//                }
-//
-//        # This will result an error
-//        #       location /home {
-//        #               index home_index.html;
-//        #       }
-//
-//
-//        location / {
-//                # this gets resolved first
-//                location /home {
-//                        index home_index.html other_home_index.html;
-//                }
-//
-//        }
-//
-//}
-
 Location    &add_or_update(Location &child, Location &parent) {
     return (child.HasSameAddressAs(parent)) ? parent : child;
 }

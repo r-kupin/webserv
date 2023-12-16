@@ -14,7 +14,7 @@ bool Node::IsLocation() const {
 
 // todo more checks
 bool Node::LocationContextHasPropperAddress() const {
-    return main_.size() == 2;
+    return main_.size() == 2 && main_[1][0] == '/';
 }
 
 bool Node::LocationContextIsNotEmpty() const {

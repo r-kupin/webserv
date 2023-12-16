@@ -63,7 +63,8 @@ struct Location {
     l_loc_c_it          FindSublocationByAddress(const std::string & address) const;
     bool                HasSameAddressAs(const Location &rhs) const;
     bool                HasSameAddressAsOneOfSublocationsOf(const Location &rhs) const;
-    bool                HasAsSublocation(const Location &location);
+    bool                HasAsSublocation(const std::string &address) const;
+    bool                HasAsSublocation(const Location &location) const;
     bool                HasDefinedLimitExcept() const;
 //-------------------setup address----------------------------------------------
     void                HandleAddress(const std::string &str);
@@ -89,6 +90,7 @@ std::ostream &operator<<(std::ostream &os, const Location &location);
 //-------------------sublocation search predicate class-------------------------
 struct LocationByAddress {
     std::string         targetAddress_;
+
     explicit            LocationByAddress(const std::string& targetAddress);
     bool                operator()(const Location& location) const;
 };

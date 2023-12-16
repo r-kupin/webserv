@@ -27,6 +27,7 @@ struct Node {
     bool IsLimitExcept() const;
     bool LocationContextHasPropperAddress() const;
     bool LocationContextIsNotEmpty() const;
+
     const std::string & LocationContextGetAddress() const;
 };
 
