@@ -46,14 +46,17 @@ struct Location {
     std::string             return_address_;
     std::string             return_custom_message_;
     std::string             root_;
-    std::string             address_;
     std::string             full_address_;
+    std::string             address_;
     l_loc_it                parent_;
 
     Location();
     Location(const Location &);
     Location(const std::string &address, l_loc_it parent);
     explicit Location(const std::string &address);
+//-------------------constructor checks-----------------------------------------
+    std::string         HandleAddressInConstructor(const std::string &address) const;
+    std::string         GetParticularAddress(const std::string &address) const;
 //-------------------satic utils------------------------------------------------
     static bool         MarkDefined(const std::string &key, bool &flag,
                                     const v_str &directive);

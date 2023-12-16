@@ -54,14 +54,6 @@ m_codes_c Location::initializeHttpOKCodes() {
 m_codes_c Location::kHttpOkCodes = Location::initializeHttpOKCodes();
 m_codes_c Location::kHttpRedirectCodes = Location::initializeHttpRedirectCodes();
 
-Location::Location(const std::string &address)
-	: index_defined_(false),
-    return_code_(0),
-    address_(address) {
-    if (address_.find_first_of('?') != std::string::npos)
-        ThrowLocationError("? sign is not allowed in location address");
-}
-
 Location::Location()
     : index_defined_(false),
     return_code_(0) {}
@@ -75,19 +67,53 @@ Location::Location(const Location& other)
     return_code_(other.return_code_),
     return_address_(other.return_address_),
     root_(other.root_),
-    address_(other.address_),
     full_address_(other.full_address_),
+    address_(other.address_),
     parent_(other.parent_) {}
 
+Location::Location(const std::string &address)
+    : index_defined_(false),
+    return_code_(0),
+    address_(address) {}
+
+// we can't delegate constructors, what an idiotism
 Location::Location(const std::string &address, l_loc_it parent)
     : index_defined_(false),
     return_code_(0),
-    address_(address),
-    full_address_(parent->full_address_ + address),
-    parent_(parent) {
-    if (address_.find_first_of('?') != std::string::npos)
+    full_address_(HandleAddressInConstructor(address)),
+    address_(GetParticularAddress(full_address_)),
+    parent_(parent) {}
+
+//-------------------constructor checks-----------------------------------------
+std::string Location::HandleAddressInConstructor(const std::string &address) const {
+    if (address.find_first_of('?') != std::string::npos)
         ThrowLocationError("? sign is not allowed in location address");
+    if (address.find_first_of('/') != 0)
+        ThrowLocationError("prefixed locations should be addressed with /");
+    std::string new_address = address;
+    for (size_t i = 0; i < new_address.size(); ++i) {
+        int consecutive_slashes = 0;
+        while (new_address[i] == '/' && i < new_address.size()) {
+            consecutive_slashes++;
+            i++;
+        }
+        if (consecutive_slashes > 1) {
+            new_address =
+                    new_address.substr(0, i - consecutive_slashes + 1) +
+                    new_address.substr(i);
+        }
+    }
+    if (new_address != "/" && new_address[new_address.size() - 1] == '/')
+        new_address = new_address.substr(0, new_address.size() - 1);
+    return new_address;
 }
+
+std::string Location::GetParticularAddress(const std::string &address) const {
+    if (address == "/")
+        return address;
+    return address.substr(address.find_last_of('/'));
+}
+
 //-------------------satic utils------------------------------------------------
 bool Location::MarkDefined(const std::string &key, bool &flag,
                            const v_str &directive) {
@@ -120,10 +146,9 @@ bool Location::UMarkDefined(const std::string &key, bool &flag,
 }
 //-------------------functional stuff-------------------------------------------
 bool Location::HasAsSublocation(const std::string &address) const {
-    LocationByAddress to_find(address);
     l_loc_c_it it = std::find_if(sublocations_.begin(),
                                  sublocations_.end(),
-                                 to_find);
+                                 LocationByAddress(address));
     return it != sublocations_.end();
 }
 
@@ -145,7 +170,7 @@ l_loc_c_it Location::FindSublocationByAddress(const std::string &address) const 
     LocationByAddress to_find(address);
     l_loc_c_it it = std::find_if(sublocations_.begin(),
                                  sublocations_.end(),
-                                 to_find);
+                                 LocationByAddress(address));
     if (it == sublocations_.end())
         throw NotFoundException();
     return it;
