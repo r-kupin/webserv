@@ -74,7 +74,8 @@ Location::Location(const Location& other)
 Location::Location(const std::string &address)
     : index_defined_(false),
     return_code_(0),
-    address_(address) {}
+    full_address_(HandleAddressInConstructor(address)),
+    address_(GetParticularAddress(full_address_)) {}
 
 // we can't delegate constructors, what an idiotism
 Location::Location(const std::string &address, l_loc_it parent)
@@ -86,6 +87,8 @@ Location::Location(const std::string &address, l_loc_it parent)
 
 //-------------------constructor checks-----------------------------------------
 std::string Location::HandleAddressInConstructor(const std::string &address) const {
+    if (address == "/")
+        return "/";
     if (address.find_first_of('?') != std::string::npos)
         ThrowLocationError("? sign is not allowed in location address");
     if (address.find_first_of('/') != 0)

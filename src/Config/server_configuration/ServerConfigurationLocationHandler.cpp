@@ -87,3 +87,32 @@ int ServerConfiguration::GetPort() const {
 const std::string &ServerConfiguration::GetPortStr() const {
     return port_str_;
 }
+
+//void        ServerConfiguration::RecurseLocations(const Node &context,
+//                                                  l_loc_it parent) {
+//    CheckLocationContextIsCorrect(context);
+//    Location maybe_current;
+//    try {
+//        maybe_current = Location(context.LocationContextGetAddress(), parent);
+//    } catch (Location::LocationException &) {
+//        ThrowServerConfigError("Location address contains invalid characters");
+//    }
+//    if(parent_have_it_already(maybe_current, *parent))
+//        ThrowServerConfigError("Each location needs unique address inside "
+//                               "each context");
+//    Location &current = add_or_update(maybe_current, *parent);
+//    current.ProcessDirectives(context.directives_);
+//    for (v_node_c_it it = context.child_nodes_.begin();
+//         it != context.child_nodes_.end(); ++it) {
+//        if (it->IsLimitExcept()) {
+//            ApplyLimitExceptContext(*it, current);
+//        } else if (it->IsLocation()) {
+//            ApplyLocationContext(*it, parent, current);
+//        }
+//    }
+//    if (!parent->HasSameAddressAs(current) &&
+//        !parent->HasAsSublocation(current)) {
+//        parent->sublocations_.push_front(current);
+//        parent->sublocations_.begin()->parent_ = parent;
+//    }
+//}
