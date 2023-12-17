@@ -49,21 +49,28 @@ struct Location {
     std::string             full_address_;
     std::string             address_;
     l_loc_it                parent_;
+    bool                    ghost_;
 
     Location();
+    Location(bool ghost, const std::string &address);
     Location(const Location &);
     Location(const std::string &address, l_loc_it parent);
     explicit Location(const std::string &address);
-//-------------------constructor checks-----------------------------------------
-    std::string         HandleAddressInConstructor(const std::string &address) const;
-    std::string         GetParticularAddress(const std::string &address) const;
+
+    static Location     GhostLocation(const std::string &address);
+    static Location     RootLocation(const std::string &address);
 //-------------------satic utils------------------------------------------------
     static bool         MarkDefined(const std::string &key, bool &flag,
                                     const v_str &directive);
     static bool         UMarkDefined(const std::string &key, bool &flag,
                                      const v_str &directive);
+    static std::string  HandleAddressInConstructor(const std::string &address);
+    static std::string  GetParticularAddress(const std::string &address);
+    static std::string  SupressConsecutiveSlashes(const std::string &address);
+    static v_str        SplitAddress(const std::string &address);
 //-------------------functional stuff-------------------------------------------
-    l_loc_c_it          FindSublocationByAddress(const std::string & address) const;
+    l_loc_c_it          FindConstSublocationByAddress(const std::string & address) const;
+    l_loc_it            FindSublocationByAddress(const std::string &address);
     bool                HasSameAddressAs(const Location &rhs) const;
     bool                HasSameAddressAsOneOfSublocationsOf(const Location &rhs) const;
     bool                HasAsSublocation(const std::string &address) const;
@@ -84,7 +91,7 @@ struct Location {
     void                HandleLimitExcept(const Node &node);
     void                UpdateSublocations();
 //-------------------operator overloads & exceptions----------------------------
-    static void         ThrowLocationError(const std::string &msg);
+    static void         ThrowLocationException(const std::string &msg);
     bool                operator<(const Location &rhs) const;
     bool                operator==(const Location &rhs) const;
     Location&           operator=(const Location& rhs);

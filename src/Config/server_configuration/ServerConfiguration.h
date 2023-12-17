@@ -43,6 +43,21 @@ public:
                                     const v_str &directive);
     static bool         UMarkDefined(const std::string &key, bool &flag,
                                      const v_str &directive);
+//-------------------Location search--------------------------------------------
+    struct LocSearchResult {
+        LocSearchResult(l_loc_it location, const std::string &status,
+                        const std::string &initialUri,
+                        const std::string &leftowerUri)
+                        : location_(location),
+                          status_(status),
+                          full_address_(initialUri),
+                          leftower_address_(leftowerUri) {};
+        l_loc_it        location_;
+        std::string     status_;
+        std::string     full_address_;
+        std::string     leftower_address_;
+    };
+    LocSearchResult    FindLocation(const std::string &address);
 //-------------------setup directives handlers----------------------------------
     void                UpdateIndex(const v_str &directive);
     void                ProcessDirectives(std::vector<v_str> &directives);
@@ -67,6 +82,12 @@ public:
 
     bool operator==(const ServerConfiguration &rhs) const;
     ServerConfiguration& operator=(const ServerConfiguration& rhs);
+
+    void
+    RecurseLocations(const Node &context, l_loc_it parent,
+                     Location maybe_current);
+
+    void OverrideLocation(const Node &context, l_loc_it current);
 };
 
 std::ostream &operator<<(std::ostream &os, const ServerConfiguration &config);

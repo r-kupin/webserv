@@ -38,7 +38,7 @@ void Location::HandleLocationReturn(const v_str &directives_) {
     } else if (directives_.size() == 3 && is_number(directives_[1])) {
         Handle2ArgReturn(directives_);
     } else {
-        ThrowLocationError("Return directive is wrong");
+        ThrowLocationException("Return directive is wrong");
     }
 }
 
@@ -47,12 +47,12 @@ void Location::Handle2ArgReturn(const v_str &directives_) {
     if (is_address(directives_[2])) {
         if (kHttpRedirectCodes.find(return_code_) ==
             kHttpRedirectCodes.end())
-            ThrowLocationError("Return directive is wrong");
+            ThrowLocationException("Return directive is wrong");
         HandleAddress(directives_[2]);
     } else {
         if (kHttpRedirectCodes.find(return_code_) !=
             kHttpRedirectCodes.end())
-            ThrowLocationError("Return directive is wrong");
+            ThrowLocationException("Return directive is wrong");
         return_custom_message_ = directives_[2];
     }
 }
@@ -63,7 +63,7 @@ void Location::Handle1ArgReturn(const v_str &directives_) {
     } else if (is_number(directives_[1])) {
         HandleCode(directives_[1]);
     } else {
-        ThrowLocationError("Return directive is wrong");
+        ThrowLocationException("Return directive is wrong");
     }
 }
 
@@ -74,7 +74,7 @@ void Location::HandleCode(const std::string &str) {
         if ((kHttpOkCodes.find(code) == kHttpOkCodes.end() &&
              ErrPage::kHttpErrCodes.find(code) == ErrPage::kHttpErrCodes.end()) ||
             return_code_ > 100) {
-            ThrowLocationError("Return code is wrong");
+            ThrowLocationException("Return code is wrong");
         }
         return_code_ = code;
     }
@@ -88,8 +88,8 @@ void Location::HandleAddress(const std::string &str) {
             str.substr(0, kAddressPrefix.size()) == kAddressPrefix) {
             return_address_ = str;
         } else {
-            ThrowLocationError("Return address is already defined or "
-                               "misconfigured");
+            ThrowLocationException("Return address is already defined or "
+                                   "misconfigured");
         }
     }
 }

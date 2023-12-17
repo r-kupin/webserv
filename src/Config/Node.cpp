@@ -24,3 +24,17 @@ bool Node::LocationContextIsNotEmpty() const {
 const std::string & Node::LocationContextGetAddress() const {
     return main_[1];
 }
+
+bool Node::LocationContextDoesntHaveSubcontextsWithSameAddress() const {
+    for (size_t i = 0; i < child_nodes_.size(); ++i) {
+        if (child_nodes_[i].IsLocation()) {
+            std::string address = child_nodes_[i].LocationContextGetAddress();
+            for (size_t j = i + 1; j < child_nodes_.size(); ++j) {
+                if (child_nodes_[j].IsLocation() &&
+                    child_nodes_[j].LocationContextGetAddress() == address)
+                    return false;
+            }
+        }
+    }
+    return true;
+}

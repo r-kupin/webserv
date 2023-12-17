@@ -1,6 +1,6 @@
 #include <iostream>
 #include <algorithm>
-#include "ServerExceptions.h"
+#include "Server.h"
 
 std::string get_next_location_address(const std::string &uri) {
     std::string current = uri;
@@ -23,9 +23,9 @@ l_loc_c_it recursive_search(const std::string &uri, l_loc_c_it start,
             remainder = uri.substr(first.size());
         if (first != "/") {
             try {
-                l_loc_c_it found = start->FindSublocationByAddress(first);
+                l_loc_c_it found = start->FindConstSublocationByAddress(first);
                 return recursive_search(remainder, found, status);
-            } catch (const NotFoundException &) {
+            } catch (const Location::LocationException &) {
                 status = "not found";
                 return start;
             }

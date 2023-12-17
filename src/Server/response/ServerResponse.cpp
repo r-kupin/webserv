@@ -73,7 +73,7 @@ ServerResponse::ServerResponse(const ClientRequest &request,
 ////    bool path_exists = false;
 ////    bool location_defined = false;
 ////    bool loc_defined_index_which_exist = false;
-////     const Location & main = recursive_search(uri, root, path_exists,
+////     const Location & main = sc_recursive_search(uri, root, path_exists,
 ////                                         location_defined, loc_defined_index_which_exist,
 ////                                         request);
 ////    (void)main;

@@ -56,7 +56,13 @@ m_codes_c Location::kHttpRedirectCodes = Location::initializeHttpRedirectCodes()
 
 Location::Location()
     : index_defined_(false),
-    return_code_(0) {}
+    return_code_(0),
+    ghost_(false) {}
+
+Location::Location(bool ghost, const std::string &address) :
+full_address_(HandleAddressInConstructor(address)),
+address_(GetParticularAddress(address)),
+ghost_(ghost) {}
 
 Location::Location(const Location& other)
     : error_pages_(other.error_pages_),
@@ -74,22 +80,79 @@ Location::Location(const Location& other)
 Location::Location(const std::string &address)
     : index_defined_(false),
     return_code_(0),
-    address_(address) {}
+    full_address_(HandleAddressInConstructor(address)),
+    address_(GetParticularAddress(address)),
+    ghost_(false) {}
 
 // we can't delegate constructors, what an idiotism
 Location::Location(const std::string &address, l_loc_it parent)
     : index_defined_(false),
     return_code_(0),
     full_address_(HandleAddressInConstructor(address)),
-    address_(GetParticularAddress(full_address_)),
-    parent_(parent) {}
+    address_(GetParticularAddress(address)),
+    parent_(parent),
+    ghost_(false) {}
 
-//-------------------constructor checks-----------------------------------------
-std::string Location::HandleAddressInConstructor(const std::string &address) const {
+
+Location Location::GhostLocation(const std::string &address) {
+    return Location(true, address);
+}
+//
+//Location Location::RootLocation(const std::string &address) {
+//    return Location();
+//}
+
+//-------------------satic utils------------------------------------------------
+bool Location::MarkDefined(const std::string &key, bool &flag,
+                           const v_str &directive) {
+    if (directive[0] == key) {
+        if (directive.size() < 2) {
+            ThrowLocationException(
+                    "definition has to contain at least key and 1 "
+                    "value");
+        } else {
+            flag = true;
+            return true;
+        }
+    }
+    return false;
+}
+
+bool Location::UMarkDefined(const std::string &key, bool &flag,
+                            const v_str &directive) {
+    if (directive[0] == key) {
+        if (flag) {
+            ThrowLocationException("Redefinition of " + key + " is not allowed");
+        } else if (directive.size() < 2) {
+            ThrowLocationException(
+                    "definition has to contain at least key and 1 "
+                    "value");
+        } else {
+            flag = true;
+            return true;
+        }
+    }
+    return false;
+}
+
+std::string Location::HandleAddressInConstructor(const std::string &address) {
+    if (address == "/")
+        return "";
     if (address.find_first_of('?') != std::string::npos)
-        ThrowLocationError("? sign is not allowed in location address");
+        ThrowLocationException("? sign is not allowed in location address");
     if (address.find_first_of('/') != 0)
-        ThrowLocationError("prefixed locations should be addressed with /");
+        ThrowLocationException("prefixed locations should be addressed with /");
+    return SupressConsecutiveSlashes(address);
+}
+
+std::string Location::GetParticularAddress(const std::string &address) {
+    if (address == "/")
+        return address;
+    std::string part_addr = SupressConsecutiveSlashes(address);
+    return part_addr.substr(part_addr.find_last_of('/'));
+}
+
+std::string Location::SupressConsecutiveSlashes(const std::string &address) {
     std::string new_address = address;
     for (size_t i = 0; i < new_address.size(); ++i) {
         int consecutive_slashes = 0;
@@ -108,41 +171,22 @@ std::string Location::HandleAddressInConstructor(const std::string &address) con
     return new_address;
 }
 
-std::string Location::GetParticularAddress(const std::string &address) const {
-    if (address == "/")
-        return address;
-    return address.substr(address.find_last_of('/'));
-}
-
-//-------------------satic utils------------------------------------------------
-bool Location::MarkDefined(const std::string &key, bool &flag,
-                           const v_str &directive) {
-    if (directive[0] == key) {
-        if (directive.size() < 2) {
-            ThrowLocationError("definition has to contain at least key and 1 "
-                               "value");
-        } else {
-            flag = true;
-            return true;
+v_str Location::SplitAddress(const std::string &address) {
+    v_str result;
+    if (address != "/") {
+        std::string clean_address = SupressConsecutiveSlashes(address);
+        std::string::size_type start = clean_address.find_last_of('/');
+        while (!clean_address.empty()) {
+            std::string step = clean_address.substr(start);
+            result.push_back(step);
+            clean_address = clean_address.substr(0, start);
+            start = clean_address.find_last_of('/');
         }
+        std::reverse(result.begin(), result.end());
+    } else {
+        result.push_back("/");
     }
-    return false;
-}
-
-bool Location::UMarkDefined(const std::string &key, bool &flag,
-                            const v_str &directive) {
-    if (directive[0] == key) {
-        if (flag) {
-            ThrowLocationError("Redefinition of " + key + " is not allowed");
-        } else if (directive.size() < 2) {
-            ThrowLocationError("definition has to contain at least key and 1 "
-                               "value");
-        } else {
-            flag = true;
-            return true;
-        }
-    }
-    return false;
+    return result;
 }
 //-------------------functional stuff-------------------------------------------
 bool Location::HasAsSublocation(const std::string &address) const {
@@ -164,7 +208,7 @@ bool Location::HasSameAddressAs(const Location &rhs) const {
     return address_ == rhs.address_;
 }
 
-l_loc_c_it Location::FindSublocationByAddress(const std::string &address) const {
+l_loc_c_it Location::FindConstSublocationByAddress(const std::string &address) const {
     if (address == "/")
         return parent_;
     LocationByAddress to_find(address);
@@ -172,7 +216,19 @@ l_loc_c_it Location::FindSublocationByAddress(const std::string &address) const 
                                  sublocations_.end(),
                                  LocationByAddress(address));
     if (it == sublocations_.end())
-        throw NotFoundException();
+        ThrowLocationException("Sublocation not found");
+    return it;
+}
+
+l_loc_it Location::FindSublocationByAddress(const std::string &address) {
+    if (address == "/")
+        return parent_;
+    LocationByAddress to_find(address);
+    l_loc_it it = std::find_if(sublocations_.begin(),
+                                 sublocations_.end(),
+                                 LocationByAddress(address));
+    if (it == sublocations_.end())
+        ThrowLocationException("Sublocation not found");
     return it;
 }
 
@@ -220,7 +276,7 @@ void Location::AddErrorPages(const v_str &directive) {
             code = std::atoi(directive[i].c_str());
             if (ErrPage::kHttpErrCodes.find(code) ==
                 ErrPage::kHttpErrCodes.end()) {
-                ThrowLocationError("Error code is wrong");
+                ThrowLocationException("Error code is wrong");
             }
             ErrPage err_page(address, code);
             const std::set<ErrPage>::iterator &iterator =
@@ -233,7 +289,7 @@ void Location::AddErrorPages(const v_str &directive) {
             }
         }
     } else {
-        ThrowLocationError("Error page directive is wrong");
+        ThrowLocationException("Error page directive is wrong");
     }
 }
 
@@ -269,7 +325,7 @@ void Location::HandleRoot(const v_str &directive) {
     if (directive.size() == 2) {
         root_ = directive[1];
     } else {
-        ThrowLocationError("Root directive is wrong");
+        ThrowLocationException("Root directive is wrong");
     }
 }
 //-------------------setup subcontexts handlers---------------------------------
@@ -292,7 +348,7 @@ void Location::UpdateSublocations() {
     }
 }
 //-------------------operator overloads & exceptions----------------------------
-void Location::ThrowLocationError(const std::string &msg) {
+void Location::ThrowLocationException(const std::string &msg) {
     std::cout << "Location syntax error: " + msg << std::endl;
     throw LocationException();
 }

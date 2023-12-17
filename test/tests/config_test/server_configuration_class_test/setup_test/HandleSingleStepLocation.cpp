@@ -1,10 +1,22 @@
+/******************************************************************************/
+/*                                                                            */
+/*                                                         :::      ::::::::  */
+/*    HandleSingleStepLocation.cpp                       :+:      :+:    :+:  */
+/*                                                     +:+ +:+         +:+    */
+/*    By: rokupin <rokupin@student.42.fr>            +#+  +:+       +#+       */
+/*                                                 +#+#+#+#+#+   +#+          */
+/*    Created: 2023/12/17 14:11:46 by rokupin           #+#    #+#            */
+/*                                                     ###   ########.fr      */
+/*                                                                            */
+/******************************************************************************/
+
 #include <gtest/gtest.h>
 #include <algorithm>
 #include "../../../../../src/Config/server_configuration/ServerConfiguration.h"
 
-class HandleLocationTest  : public ::testing::Test, public ServerConfiguration {
+class HandleSingleStepLocation  : public ::testing::Test, public ServerConfiguration {
 public:
-    explicit HandleLocationTest() : ServerConfiguration() {};
+    explicit HandleSingleStepLocation() : ServerConfiguration() {};
 protected:
     Node context_;
     Node location_root_;
@@ -22,8 +34,8 @@ protected:
     }
 };
 
-TEST_F(HandleLocationTest, RootSubnodeParentTest) {
-    context_.main_ = v_str({"location", "/loc_defined_index_not_exist" });
+TEST_F(HandleSingleStepLocation, RootSubnodeParentTest) {
+    context_.main_ = v_str({"location", "/loc_X" });
     context_.directives_.push_back({"index", "index.html"});
 
     Node limit_except_get;
@@ -41,15 +53,15 @@ TEST_F(HandleLocationTest, RootSubnodeParentTest) {
 
     Location loc_loc = GetRoot().sublocations_.back();
 
-    EXPECT_EQ(loc_loc.address_, "/loc_defined_index_not_exist");
+    EXPECT_EQ(loc_loc.address_, "/loc_X");
     EXPECT_NE(std::find(loc_loc.index_.begin(),
                         loc_loc.index_.end(),
                         "index.html"),
               loc_loc.index_.end());
 }
 
-TEST_F(HandleLocationTest, WithLimitExcept) {
-    context_.main_ = v_str({"location", "/loc_defined_index_not_exist" });
+TEST_F(HandleSingleStepLocation, WithLimitExcept) {
+    context_.main_ = v_str({"location", "/loc_X" });
     context_.directives_.push_back({"index", "index.html"});
 
     Node limit_except_get;
@@ -64,9 +76,9 @@ TEST_F(HandleLocationTest, WithLimitExcept) {
     EXPECT_EQ(loc_loc.limit_except_.except_, std::set<Methods>({GET}));
 }
 
-TEST_F(HandleLocationTest, HomeInReDefinedRoot) {
+TEST_F(HandleSingleStepLocation, HomeInReDefinedRoot) {
 
-    context_.main_ = v_str({"location", "/loc_defined_index_not_exist" });
+    context_.main_ = v_str({"location", "/loc_X" });
     context_.directives_.push_back({"index", "index.html"});
 
     location_root_.child_nodes_.push_back(context_);
@@ -89,15 +101,15 @@ TEST_F(HandleLocationTest, HomeInReDefinedRoot) {
     EXPECT_EQ(GetRoot().return_code_ , 0);
     EXPECT_EQ(GetRoot().return_address_ , "");
 
-    EXPECT_EQ(GetRoot().sublocations_.begin()->address_, "/loc_defined_index_not_exist");
+    EXPECT_EQ(GetRoot().sublocations_.begin()->address_, "/loc_X");
     EXPECT_NE(std::find(GetRoot().sublocations_.begin()->index_.begin(),
                         GetRoot().sublocations_.begin()->index_.end(),
                         "index.html"),
               GetRoot().sublocations_.begin()->index_.end());
 }
 
-TEST_F(HandleLocationTest, MultipleLimitExcept) {
-    context_.main_ = v_str({"location", "/loc_defined_index_not_exist" });
+TEST_F(HandleSingleStepLocation, MultipleLimitExcept) {
+    context_.main_ = v_str({"location", "/loc_X" });
     context_.directives_.push_back({"index", "index.html"});
 
     Node limit_except_get;
@@ -114,13 +126,13 @@ TEST_F(HandleLocationTest, MultipleLimitExcept) {
     EXPECT_THROW(HandleLocationContext(context_), ServerConfigurationException);
 }
 
-TEST_F(HandleLocationTest, MultipleAddressesUnderTheSameParent) {
+TEST_F(HandleSingleStepLocation, MultipleAddressesUnderTheSameParent) {
     Node loc_n1;
-    loc_n1.main_ = v_str({"location", "/loc_defined_index_not_exist" });
+    loc_n1.main_ = v_str({"location", "/loc_X" });
     loc_n1.directives_.push_back({"index", "index.html"});
 
     Node loc_n2;
-    loc_n2.main_ = v_str({"location", "/loc_defined_index_not_exist" });
+    loc_n2.main_ = v_str({"location", "/loc_X" });
     loc_n2.directives_.push_back({"return", "301",
                                   "http://localhost:4280/somewhere"});
 

@@ -26,6 +26,9 @@ void ServerConfiguration::CheckLocationContextIsCorrect(const Node &context) {
         ThrowServerConfigError("Location path is incorrect or missing");
     if (!context.LocationContextIsNotEmpty())
         ThrowServerConfigError("Location context can't be empty !");
+    if (!context.LocationContextDoesntHaveSubcontextsWithSameAddress())
+        ThrowServerConfigError("Location context can't have subcontexts with "
+                               "same address");
 }
 
 void        ServerConfiguration::ApplyLimitExceptContext(const Node &context,
@@ -80,10 +83,55 @@ void        ServerConfiguration::RecurseLocations(const Node &context,
     }
 }
 
-int ServerConfiguration::GetPort() const {
-    return port_;
+void        ServerConfiguration::RecurseLocations(const Node &context,
+                                                  l_loc_it parent,
+                                                  Location current) {
+    current.ProcessDirectives(context.directives_);
+    for (v_node_c_it it = context.child_nodes_.begin();
+         it != context.child_nodes_.end(); ++it) {
+        if (it->IsLimitExcept()) {
+            ApplyLimitExceptContext(*it, current);
+        } else if (it->IsLocation()) {
+            HandleLocationContext(*it);
+        }
+    }
+    parent->sublocations_.push_front(current);
+    parent->sublocations_.begin()->parent_ = parent;
 }
 
-const std::string &ServerConfiguration::GetPortStr() const {
-    return port_str_;
+void        ServerConfiguration::OverrideLocation(const Node &context,
+                                                  l_loc_it current) {
+   current->ProcessDirectives(context.directives_);
+    for (v_node_c_it it = context.child_nodes_.begin();
+         it != context.child_nodes_.end(); ++it) {
+        if (it->IsLimitExcept()) {
+            ApplyLimitExceptContext(*it, *current);
+        } else if (it->IsLocation()) {
+            HandleLocationContext(*it);
+        }
+    }
+}
+
+void        ServerConfiguration::HandleLocationContext(const Node &context) {
+    LocSearchResult result = FindLocation(context.main_[1]);
+    CheckLocationContextIsCorrect(context);
+    if (result.status_ == "found") {
+        std::cout << "overriding " + result.full_address_ << std::endl;
+        OverrideLocation(context, result.location_);
+    } else if (result.status_ == "not found") {
+//        only last step is missing
+        v_str nonexisting_path = Location::SplitAddress(result.leftower_address_);
+        l_loc_it parent = result.location_;
+//        create ghosts
+        for (v_str_c_it it = nonexisting_path.begin();
+            *it != nonexisting_path.back(); ++it) {
+            parent->sublocations_.push_front(
+                    Location::GhostLocation(*it)); //todo: check parent!!
+            parent->sublocations_.begin()->parent_ = parent;
+            parent = parent->sublocations_.begin();
+        }
+        RecurseLocations(context, parent, Location(result.full_address_, parent));
+    } else {
+        ThrowServerConfigError("Location address contains invalid characters");
+    }
 }

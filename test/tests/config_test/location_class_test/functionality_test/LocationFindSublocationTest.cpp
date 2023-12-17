@@ -29,29 +29,29 @@ protected:
 };
 
 TEST_F(FindSublocationTest, NonExistingFindSublocationByAddressTest) {
-    EXPECT_THROW(root_->FindSublocationByAddress(""), NotFoundException);
+    EXPECT_THROW(root_->FindConstSublocationByAddress(""), Location::LocationException);
 }
 
 TEST_F(FindSublocationTest, RootFindSublocationByAddressTest) {
-    EXPECT_EQ(*root_->FindSublocationByAddress("/"), *root_);
+    EXPECT_EQ(*root_->FindConstSublocationByAddress("/"), *root_);
 }
 
 TEST_F(FindSublocationTest, ExistingFindSublocationByAddressTest) {
-    const l_loc_c_it &found = root_->FindSublocationByAddress("/sub1");
+    const l_loc_c_it &found = root_->FindConstSublocationByAddress("/sub1");
 
     EXPECT_EQ(*found, *sub1_);
     EXPECT_EQ(*found->parent_, *root_);
 }
 
 TEST_F(FindSublocationTest, ExistingFindAnotherSublocationByAddressTest) {
-    const l_loc_c_it &found = root_->FindSublocationByAddress("/sub2");
+    const l_loc_c_it &found = root_->FindConstSublocationByAddress("/sub2");
 
     EXPECT_EQ(*found, *sub2_);
     EXPECT_EQ(*found->parent_, *root_);
 }
 
 TEST_F(FindSublocationTest, ExistingFindSubSublocationByAddressTest) {
-    const l_loc_c_it &found = sub2_->FindSublocationByAddress("/sub3");
+    const l_loc_c_it &found = sub2_->FindConstSublocationByAddress("/sub3");
 
     EXPECT_EQ(*found, *sub3_);
     EXPECT_EQ(*found->parent_, *sub2_);

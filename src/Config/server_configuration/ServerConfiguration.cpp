@@ -13,7 +13,6 @@
 #include <algorithm>
 #include <iostream>
 #include "ServerConfiguration.h"
-#include "../config/ConfigExceptions.h"
 
 ServerConfiguration::ServerConfiguration()
 : default_hostname_(true),
@@ -109,10 +108,6 @@ void        ServerConfiguration::ProcessDirectives(
     if (!port)
         ThrowServerConfigError("Port needs to be specified explicitly!");
 }
-//-------------------setup subcontexts handlers---------------------------------
-void        ServerConfiguration::HandleLocationContext(const Node &context) {
-    RecurseLocations(context, GetRootIt());
-}
 //-------------------operator overloads & exceptions----------------------------
 void        ServerConfiguration::ThrowServerConfigError(const std::string &msg) {
     std::cout << "Server config syntax error: " + msg << std::endl;
@@ -133,6 +128,14 @@ l_loc_it    ServerConfiguration::GetRootIt() {
 
 l_loc_c_it ServerConfiguration::GetConstRootIt() const {
     return locations_.begin();
+}
+
+int ServerConfiguration::GetPort() const {
+    return port_;
+}
+
+const std::string &ServerConfiguration::GetPortStr() const {
+    return port_str_;
 }
 
 bool        ServerConfiguration::operator==(

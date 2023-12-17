@@ -14,13 +14,13 @@ add_executable(Google_Tests_run
         tests/config_test/location_class_test/setup_test/LocationMarkDirectiveTest.cpp
         tests/config_test/location_class_test/setup_test/HandleLimitExceptTest.cpp
         tests/config_test/location_class_test/setup_test/LocationProcessDirectivesTest.cpp
-        tests/config_test/location_class_test/setup_test/LocationConstructorTest.cpp
+        tests/config_test/location_class_test/setup_test/LocationStaticToolsTest.cpp
         tests/config_test/location_class_test/functionality_test/LocationFindSublocationTest.cpp
         tests/config_test/config_class_test/ConfigServerSubcontextsHandlingTest.cpp
         tests/config_test/config_class_test/ConfigMainContextCheck.cpp
         tests/config_test/config_class_test/ConfigFileCheckTest.cpp
         tests/config_test/server_configuration_class_test/setup_test/HandleDirectivesTest.cpp
-        tests/config_test/server_configuration_class_test/setup_test/HandleLocationTest.cpp
+        tests/config_test/server_configuration_class_test/setup_test/HandleSingleStepLocation.cpp
         tests/config_test/server_configuration_class_test/functionality_test/CheckCorrectLocationContextTest.cpp
         tests/server_test/request_test/SocketLevelTest.cpp
         tests/server_test/request_test/ParsedRequestLevelTest.cpp
@@ -29,6 +29,7 @@ add_executable(Google_Tests_run
         tests/server_test/functionality_test/LocationSearchTest.cpp
         tests/server_test/functionality_test/LocationSynthesingTest.cpp
         tests/server_test/functionality_test/ServerTest.cpp
+        tests/config_test/server_configuration_class_test/setup_test/HandleMultistepLocation.cpp
 )
 
 target_link_libraries(Google_Tests_run webserv_lib)
