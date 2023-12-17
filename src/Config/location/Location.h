@@ -87,7 +87,7 @@ struct Location {
     void                HandleCode(const std::string &str);
     void                HandleRoot(const v_str &directive);
     void                AddErrorPages(const v_str &directive);
-//-------------------setup subcontexts handlers--------------------------------
+//-------------------setup subcontexts handlers---------------------------------
     void                HandleLimitExcept(const Node &node);
     void                UpdateSublocations();
 //-------------------operator overloads & exceptions----------------------------
