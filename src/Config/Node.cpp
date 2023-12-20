@@ -25,7 +25,7 @@ const std::string & Node::LocationContextGetAddress() const {
     return main_[1];
 }
 
-bool Node::LocationContextDoesntHaveSubcontextsWithSameAddress() const {
+bool Node::ContextDoesntHaveSubLocationsWithSameAddress() const {
     for (size_t i = 0; i < child_nodes_.size(); ++i) {
         if (child_nodes_[i].IsLocation()) {
             std::string address = child_nodes_[i].LocationContextGetAddress();

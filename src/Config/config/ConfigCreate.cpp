@@ -17,12 +17,19 @@
 
 void    Config::CheckServerSubnodes(const v_node &subcontexts,
                                     ServerConfiguration &current) {
+    std::set<std::string> address_set;
     for (v_node_c_it it = subcontexts.begin(); it != subcontexts.end(); ++it) {
         if (it->IsLocation()) {
-            try {
-                current.HandleLocationContext(*it);
-            } catch (const std::exception &ServerConfigError) {
-                ThrowSyntaxError("Location context misconfigured!");
+            if (address_set.find(it->LocationContextGetAddress()) == address_set.end()) {
+                address_set.insert(it->LocationContextGetAddress());
+                try {
+                    current.HandleLocationContext(*it);
+                } catch (const std::exception &ServerConfigError) {
+                    ThrowSyntaxError("Location context misconfigured!");
+                }
+            } else {
+                ThrowSyntaxError("Server context can't have subcontexts with "
+                                 "same address");
             }
         } else if (it->IsLimitExcept()) {
             ThrowSyntaxError("limit_except block is not allowed here");
@@ -31,17 +38,6 @@ void    Config::CheckServerSubnodes(const v_node &subcontexts,
                              "context, everything else will be ignored");
         }
     }
-}
-
-bool check_filesystem(const std::string &address,
-                      const std::string &def_res_address) {
-    std::ifstream file((def_res_address + address).c_str());
-    if (file.good()) {
-        file.close();
-        return true;
-    }
-    file.close();
-    return false;
 }
 
 /**
@@ -56,8 +52,7 @@ bool check_filesystem(const std::string &address,
  * @param node of the server block we are currently checking
  * @return ready-to-use server configuration
  */
-void Config::CheckServer(Node &node, ServerConfiguration &current,
-                         const std::string &resource_path) {
+void Config::CheckServer(Node &node, ServerConfiguration &current) {
     try {
         current.ProcessDirectives(node.directives_);
         CheckServerSubnodes(node.child_nodes_, current);
@@ -65,9 +60,6 @@ void Config::CheckServer(Node &node, ServerConfiguration &current,
     } catch (const std::exception &ServerConfigError) {
         ThrowSyntaxError("Server context misconfigured!");
     }
-    (void )resource_path;
-//    if (!check_filesystem(current.GetRoot().address_, resource_path))
-//        ThrowSyntaxError("Root directory doesn't exist");
 }
 
 bool Config::HasServerWithSameNameOrPort(const ServerConfiguration &config) {

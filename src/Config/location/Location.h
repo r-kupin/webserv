@@ -68,6 +68,8 @@ struct Location {
     static std::string  GetParticularAddress(const std::string &address);
     static std::string  SupressConsecutiveSlashes(const std::string &address);
     static v_str        SplitAddress(const std::string &address);
+    static void CheckSublocationsAddress(const std::string &address,
+                                         const std::string &parent_address);
 //-------------------functional stuff-------------------------------------------
     l_loc_c_it          FindConstSublocationByAddress(const std::string & address) const;
     l_loc_it            FindSublocationByAddress(const std::string &address);

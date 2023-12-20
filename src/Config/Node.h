@@ -32,7 +32,7 @@ struct Node {
     bool IsLimitExcept() const;
     bool LocationContextHasPropperAddress() const;
     bool LocationContextIsNotEmpty() const;
-    bool LocationContextDoesntHaveSubcontextsWithSameAddress() const;
+    bool ContextDoesntHaveSubLocationsWithSameAddress() const;
 
     const std::string & LocationContextGetAddress() const;
 };

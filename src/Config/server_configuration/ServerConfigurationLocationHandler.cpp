@@ -26,7 +26,7 @@ void ServerConfiguration::CheckLocationContextIsCorrect(const Node &context) {
         ThrowServerConfigError("Location path is incorrect or missing");
     if (!context.LocationContextIsNotEmpty())
         ThrowServerConfigError("Location context can't be empty !");
-    if (!context.LocationContextDoesntHaveSubcontextsWithSameAddress())
+    if (!context.ContextDoesntHaveSubLocationsWithSameAddress())
         ThrowServerConfigError("Location context can't have subcontexts with "
                                "same address");
 }
@@ -85,7 +85,6 @@ void        ServerConfiguration::RecurseLocations(const Node &context,
 
 
 
-
 void        ServerConfiguration::RecurseLocations(const Node &context,
                                                   l_loc_it parent,
                                                   Location current) {
@@ -99,6 +98,8 @@ void        ServerConfiguration::RecurseLocations(const Node &context,
         if (it->IsLimitExcept()) {
             current_ptr->HandleLimitExcept(*it);
         } else if (it->IsLocation()) {
+            Location::CheckSublocationsAddress(it->LocationContextGetAddress(),
+                                               current_ptr->full_address_);
             HandleLocationContext(*it);
         }
     }
@@ -113,6 +114,8 @@ void        ServerConfiguration::OverrideLocation(const Node &context,
         if (it->IsLimitExcept()) {
             current->HandleLimitExcept(*it);
         } else if (it->IsLocation()) {
+            Location::CheckSublocationsAddress(it->LocationContextGetAddress(),
+                                               current->full_address_);
             HandleLocationContext(*it);
         }
     }

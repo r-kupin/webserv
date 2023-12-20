@@ -59,8 +59,13 @@ TEST(ConfigParsingTest, ConfigFailsMultipleServersSamePort) {
 TEST(ConfigParsingTest, ConfigThrowsNonExistentConf) {
     EXPECT_THROW(Config("asd"), ConfigFileNotFound);
 }
-//todo multiple locations same path
-//TEST(ConfigParsingTest, ConfigFailsMultipleLocationsSamePath) {
-//    EXPECT_THROW(Config("test_resources/test_config_samples/corrupted_config_multiple_locations_for_one_path.conf"),
-//                 ConfigFileSyntaxError);
-//}
+
+TEST(ConfigParsingTest, ConfigFailsMultipleLocationsSamePath) {
+    EXPECT_THROW(Config("test_resources/test_config_samples/corrupted_config_multiple_locations_for_one_path.conf"),
+                 ConfigFileSyntaxError);
+}
+
+TEST(ConfigParsingTest, ConfigFailsLocationWithWrongPath) {
+    EXPECT_THROW(Config("test_resources/test_config_samples/corrupted_config_sublocation_without_absolute_path.conf"),
+                 ConfigFileSyntaxError);
+}

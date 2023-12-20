@@ -85,6 +85,10 @@ Location::Location(const std::string &address)
     address_(GetParticularAddress(address)),
     ghost_(false) {}
 
+bool startsWith(const std::string& str, const std::string& prefix) {
+    return str.compare(0, prefix.length(), prefix) == 0;
+}
+
 // we can't delegate constructors, what an idiotism
 Location::Location(const std::string &address, l_loc_it parent)
     : index_defined_(false),
@@ -92,7 +96,13 @@ Location::Location(const std::string &address, l_loc_it parent)
     full_address_(HandleAddressInConstructor(address)),
     address_(GetParticularAddress(address)),
     parent_(parent),
-    ghost_(false) {}
+    ghost_(false) {
+    if (parent->address_ != "/" &&
+        (parent->full_address_ + address_ != full_address_ )) {
+        ThrowLocationException("Full location address should start with parent "
+                               "full address");
+    }
+}
 
 
 Location Location::GhostLocation(const std::string &address) {
@@ -188,6 +198,20 @@ v_str Location::SplitAddress(const std::string &address) {
         result.push_back("/");
     }
     return result;
+}
+
+void Location::CheckSublocationsAddress(const std::string &address,
+                                        const std::string &parent_address) {
+    if (address.find_first_of('?') != std::string::npos)
+        ThrowLocationException("? sign is not allowed in location address");
+    if (address.find_first_of('/') != 0)
+        ThrowLocationException("prefixed locations should be addressed with /");
+    std::string full_address = SupressConsecutiveSlashes(address);
+    std::string part_address = GetParticularAddress(full_address);
+    if (!parent_address.empty() && (parent_address + part_address != full_address)) {
+        ThrowLocationException("Full location address should start with parent "
+                               "full address");
+    }
 }
 //-------------------functional stuff-------------------------------------------
 bool Location::HasAsSublocation(const std::string &address) const {
