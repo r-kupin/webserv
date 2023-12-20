@@ -25,7 +25,7 @@
 ////    std::string uri = "/loc_X";
 ////
 ////    LocSearchResult res = FindLocation(uri);
-////    EXPECT_EQ(res.location_, getConfig().GetRoot());
+////    EXPECT_EQ(res.location_, GetConfig().GetRoot());
 ////    EXPECT_EQ(res.status_, "not found");
 ////}
 ////
@@ -34,7 +34,7 @@
 ////    std::string uri = "/loc_1X";
 ////
 ////    LocSearchResult res = FindLocation(uri);
-////    EXPECT_EQ(res.location_, getConfig().GetRoot());
+////    EXPECT_EQ(res.location_, GetConfig().GetRoot());
 ////    EXPECT_EQ(res.status_, "not found");
 ////}
 ////
@@ -43,14 +43,14 @@
 ////    std::string uri = "/loc_2X";
 ////
 ////    LocSearchResult res = FindLocation(uri);
-////    EXPECT_EQ(res.location_, getConfig().GetRoot());
+////    EXPECT_EQ(res.location_, GetConfig().GetRoot());
 ////    EXPECT_EQ(res.status_, "not found");
 ////}
 //
 //TEST_F(LocationSynthesingTest, CheckFoundLocationPathDoesntExist) {
 //    std::string status;
 //    const Location &found = RecursiveSearch("/loc_defined_index_which_exist",
-//                                            getConfig().GetRoot(),
+//                                            GetConfig().GetRoot(),
 //                                            status);
 //    // root = example/htmls/loc_defined_index_which_exist
 //    // path = test_resources/test1/example/htmls/loc_defined_index_which_exist/loc_defined_index_which_exist
@@ -61,7 +61,7 @@
 //TEST_F(LocationSynthesingTest, CheckFoundLocationAccessLimitation) {
 //    std::string status;
 //    const Location &found = RecursiveSearch("/uploads/something/whatever",
-//                                            getConfig().GetRoot(),
+//                                            GetConfig().GetRoot(),
 //                                            status);
 //    EXPECT_TRUE(CheckLimitedAccess(found, Methods::GET));
 //    EXPECT_FALSE(CheckLimitedAccess(found, Methods::POST));
@@ -75,7 +75,7 @@
 //    std::string loc = "/loc_defined_index_not_exist";
 //    std::string status;
 //    const Location &found = RecursiveSearch(loc,
-//                                            getConfig().GetRoot(),
+//                                            GetConfig().GetRoot(),
 //                                            status);
 //
 //    std::string request = "GET " + loc + " HTTP/1.1\n\r";
@@ -94,7 +94,7 @@
 //    std::string loc = "/loc_defined_index_which_exist";
 //    std::string status;
 //    const Location &found = RecursiveSearch(loc,
-//                                            getConfig().GetRoot(),
+//                                            GetConfig().GetRoot(),
 //                                            status);
 //
 //    std::string request = "GET " + loc + " HTTP/1.1\n\r";

@@ -22,13 +22,12 @@ l_loc_c_it recursive_search(const std::string &uri, l_loc_c_it start,
         if (first != uri)
             remainder = uri.substr(first.size());
         if (first != "/") {
-            try {
-                l_loc_c_it found = start->FindConstSublocationByAddress(first);
-                return recursive_search(remainder, found, status);
-            } catch (const Location::LocationException &) {
+            l_loc_c_it found = start->FindConstSublocationByAddress(first);
+            if (found == start->sublocations_.end()) {
                 status = "not found";
                 return start;
             }
+            return recursive_search(remainder, found, status);
         }
     }
     status = "found";

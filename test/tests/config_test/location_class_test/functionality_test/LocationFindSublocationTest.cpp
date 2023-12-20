@@ -28,10 +28,6 @@ protected:
     l_loc_it sub3_;
 };
 
-TEST_F(FindSublocationTest, NonExistingFindSublocationByAddressTest) {
-    EXPECT_THROW(root_->FindConstSublocationByAddress(""), Location::LocationException);
-}
-
 TEST_F(FindSublocationTest, RootFindSublocationByAddressTest) {
     EXPECT_EQ(*root_->FindConstSublocationByAddress("/"), *root_);
 }

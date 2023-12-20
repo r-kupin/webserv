@@ -23,6 +23,11 @@ struct Node {
     std::vector<v_str> directives_;
     v_node child_nodes_;
 
+    Node();
+
+    Node(const v_str &main, const std::vector<v_str> &directives,
+         const v_node &childNodes);
+
     bool IsLocation() const;
     bool IsLimitExcept() const;
     bool LocationContextHasPropperAddress() const;

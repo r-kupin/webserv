@@ -123,7 +123,7 @@ TEST_F(HandleSingleStepLocation, MultipleLimitExcept) {
     context_.child_nodes_.push_back(limit_except_get);
     context_.child_nodes_.push_back(limit_except_post);
 
-    EXPECT_THROW(HandleLocationContext(context_), ServerConfigurationException);
+    EXPECT_THROW(HandleLocationContext(context_), Location::LocationException);
 }
 
 TEST_F(HandleSingleStepLocation, MultipleAddressesUnderTheSameParent) {

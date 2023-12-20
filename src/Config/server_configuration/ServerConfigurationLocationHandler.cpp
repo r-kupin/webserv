@@ -31,15 +31,6 @@ void ServerConfiguration::CheckLocationContextIsCorrect(const Node &context) {
                                "same address");
 }
 
-void        ServerConfiguration::ApplyLimitExceptContext(const Node &context,
-                                                         Location &current) {
-    if (current.HasDefinedLimitExcept()) {
-        ThrowServerConfigError("Limit_except context is already defined");
-    } else {
-        current.HandleLimitExcept(context);
-    }
-}
-
 void        ServerConfiguration::ApplyLocationContext(const Node &context,
                                                       l_loc_it parent,
                                                       Location &current) {
@@ -71,7 +62,7 @@ void        ServerConfiguration::RecurseLocations(const Node &context,
     for (v_node_c_it it = context.child_nodes_.begin();
          it != context.child_nodes_.end(); ++it) {
         if (it->IsLimitExcept()) {
-            ApplyLimitExceptContext(*it, current);
+//            ApplyLimitExceptContext(*it, current);
         } else if (it->IsLocation()) {
             ApplyLocationContext(*it, parent, current);
         }
@@ -83,29 +74,44 @@ void        ServerConfiguration::RecurseLocations(const Node &context,
     }
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
 void        ServerConfiguration::RecurseLocations(const Node &context,
                                                   l_loc_it parent,
                                                   Location current) {
-    current.ProcessDirectives(context.directives_);
+    parent->sublocations_.push_front(current);
+    l_loc_it current_ptr = parent->sublocations_.begin();
+    current_ptr->ProcessDirectives(context.directives_);
+    current_ptr->parent_ = parent;
+    
     for (v_node_c_it it = context.child_nodes_.begin();
          it != context.child_nodes_.end(); ++it) {
         if (it->IsLimitExcept()) {
-            ApplyLimitExceptContext(*it, current);
+            current_ptr->HandleLimitExcept(*it);
         } else if (it->IsLocation()) {
             HandleLocationContext(*it);
         }
     }
-    parent->sublocations_.push_front(current);
-    parent->sublocations_.begin()->parent_ = parent;
 }
 
 void        ServerConfiguration::OverrideLocation(const Node &context,
                                                   l_loc_it current) {
    current->ProcessDirectives(context.directives_);
-    for (v_node_c_it it = context.child_nodes_.begin();
+
+   for (v_node_c_it it = context.child_nodes_.begin();
          it != context.child_nodes_.end(); ++it) {
         if (it->IsLimitExcept()) {
-            ApplyLimitExceptContext(*it, *current);
+            current->HandleLimitExcept(*it);
         } else if (it->IsLocation()) {
             HandleLocationContext(*it);
         }

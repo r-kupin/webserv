@@ -204,7 +204,7 @@ void Server::SetConfig(const ServerConfiguration &config) {
     config_ = config;
 }
 
-const ServerConfiguration & Server::getConfig() {
+const ServerConfiguration & Server::GetConfig() {
     return config_;
 }
 

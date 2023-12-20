@@ -33,13 +33,12 @@ l_loc_it sc_recursive_search(const std::string &addr, l_loc_it start,
         if (first != addr)
             remainder = addr.substr(first.size());
         if (first != "/") {
-            try {
-                l_loc_it found = start->FindSublocationByAddress(first);
-                return sc_recursive_search(remainder, found, status);
-            } catch (const Location::LocationException &) {
+            l_loc_it found = start->FindSublocationByAddress(first);
+            if (found == start->sublocations_.end()) {
                 status = "not found";
                 return start;
             }
+            return sc_recursive_search(remainder, found, status);
         }
     }
     status = "found";

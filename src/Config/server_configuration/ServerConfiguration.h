@@ -66,8 +66,6 @@ public:
     void                HandleLocationContext(const Node &context);
     void                RecurseLocations(const Node &context, l_loc_it parent);
     void                CheckLocationContextIsCorrect(const Node &context);
-    void                ApplyLimitExceptContext(const Node &context,
-                                                Location &current);
     void                ApplyLocationContext(const Node &context,
                                              l_loc_it parent,
                                              Location &current);

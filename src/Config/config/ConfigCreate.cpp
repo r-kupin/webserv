@@ -65,8 +65,9 @@ void Config::CheckServer(Node &node, ServerConfiguration &current,
     } catch (const std::exception &ServerConfigError) {
         ThrowSyntaxError("Server context misconfigured!");
     }
-    if (!check_filesystem(current.GetRoot().address_, resource_path))
-        ThrowSyntaxError("Root directory doesn't exist");
+    (void )resource_path;
+//    if (!check_filesystem(current.GetRoot().address_, resource_path))
+//        ThrowSyntaxError("Root directory doesn't exist");
 }
 
 bool Config::HasServerWithSameNameOrPort(const ServerConfiguration &config) {

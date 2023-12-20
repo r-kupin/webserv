@@ -38,3 +38,9 @@ bool Node::LocationContextDoesntHaveSubcontextsWithSameAddress() const {
     }
     return true;
 }
+
+Node::Node(const v_str &main, const std::vector<v_str> &directives,
+           const v_node &childNodes) : main_(main), directives_(directives),
+                                       child_nodes_(childNodes) {}
+
+Node::Node() {}

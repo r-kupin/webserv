@@ -75,7 +75,8 @@ Location::Location(const Location& other)
     root_(other.root_),
     full_address_(other.full_address_),
     address_(other.address_),
-    parent_(other.parent_) {}
+    parent_(other.parent_),
+    ghost_(other.ghost_){}
 
 Location::Location(const std::string &address)
     : index_defined_(false),
@@ -215,8 +216,6 @@ l_loc_c_it Location::FindConstSublocationByAddress(const std::string &address) c
     l_loc_c_it it = std::find_if(sublocations_.begin(),
                                  sublocations_.end(),
                                  LocationByAddress(address));
-    if (it == sublocations_.end())
-        ThrowLocationException("Sublocation not found");
     return it;
 }
 
@@ -227,8 +226,6 @@ l_loc_it Location::FindSublocationByAddress(const std::string &address) {
     l_loc_it it = std::find_if(sublocations_.begin(),
                                  sublocations_.end(),
                                  LocationByAddress(address));
-    if (it == sublocations_.end())
-        ThrowLocationException("Sublocation not found");
     return it;
 }
 
@@ -299,7 +296,7 @@ void Location::HandleIndex(const v_str &directives) {
         index_defined_ = true;
     }
     for (size_t j = 1; j < directives.size(); ++j)
-        index_.push_back(directives[j]);
+        index_.push_front(directives[j]);
 }
 
 /**
@@ -330,8 +327,12 @@ void Location::HandleRoot(const v_str &directive) {
 }
 //-------------------setup subcontexts handlers---------------------------------
 void Location::HandleLimitExcept(const Node &node) {
-    limit_except_.LimExHandleMethods(node.main_);
-    limit_except_.LimExHandleDirectives(node.directives_);
+    if (HasDefinedLimitExcept()) {
+        ThrowLocationException("Multiple definition of limit_except");
+    } else {
+        limit_except_.LimExHandleMethods(node.main_);
+        limit_except_.LimExHandleDirectives(node.directives_);
+    }
 }
 
 // todo tests! check root inheritance!

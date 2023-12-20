@@ -81,7 +81,7 @@ protected:
                                             const std::string &def_res_address) const ;
 //-------------------getters & stuff--------------------------------------------
     void SetSocket();
-    const ServerConfiguration & getConfig();
+    const ServerConfiguration & GetConfig();
     void SetConfig(const ServerConfiguration &config);
     int getSocket() const;
     int getEpollFd() const;

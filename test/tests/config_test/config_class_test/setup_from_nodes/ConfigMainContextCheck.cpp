@@ -11,8 +11,8 @@
 /******************************************************************************/
 
 #include <gtest/gtest.h>
-#include "../../../../src/Config/config/Config.h"
-#include "../../../../src/Config/config/ConfigExceptions.h"
+#include "../../../../../src/Config/config/Config.h"
+#include "../../../../../src/Config/config/ConfigExceptions.h"
 
 class ConfigMainContextCheck : public ::testing::Test, public Config {
 public:
