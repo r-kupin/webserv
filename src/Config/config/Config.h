@@ -22,8 +22,6 @@
 #include <list>
 #include "../server_configuration/ServerConfiguration.h"
 
-typedef std::list<ServerConfiguration>::const_iterator  l_srvconf_it_c;
-
 const static std::string kDefaultResPath = "resources/";
 const static std::string kDefaultConfig = "resources/default/nginx.conf";
 
@@ -38,38 +36,21 @@ struct RawNode {
 
 class Config {
 public:
-//  Exposed to use
     class ConfigException : public std::exception {};
 
     Config();
     Config(const Config &);
     Config(const std::string &);
-    Config &operator=(const Config &);
-
-    //  Exposed to testing
-    //  Test constructor only
     explicit    Config(const Node &confRoot);
+    Config &operator=(const Config &);
 
     ~Config();
 
-    const std::string                       &getConfPath() const;
-    const std::list<ServerConfiguration>    &getConstServers() const;
-
+    const std::string   &getConfPath() const;
+    const l_sc          &getConstServers() const;
 protected:
-//  Parsing config file to tree-like structure of nodes
-    void        ParseConfig(std::ifstream &config);
-//  Parsing config file to tree-like structure of nodes
-    void        CreateSrvConfigs(Node& root);
-//  Location subcontext
-    void        CheckServerSubnodes(const v_node &subcontexts, ServerConfiguration &current);
-    void        CheckServer(Node &node, ServerConfiguration &current);
-    std::list<ServerConfiguration>    &getServers();
-private:
-    std::string                     conf_path_;
-    Node                            conf_root_;
-    std::list<ServerConfiguration>  servers_;
-
-//  Parse config
+//-------------------parsing config filestream to the tree of nodes-------------
+    void                ParseConfig(std::ifstream &config);
     RawNode             ParseNode(std::ifstream &config,
                                   std::string &line_leftover,
                                   const v_str &main_directive) const;
@@ -86,12 +67,24 @@ private:
                                            std::string &line) const;
     void                FinishMainNode(RawNode &current,
                                        std::ifstream &config) const;
-//  Global server check
-    void        ThrowSyntaxError(const std::string &msg,
-                                 std::ifstream &config) const;
-    void        ThrowSyntaxError(const std::string &msg) const;
-
-    bool        HasServerWithSameNameOrPort(const ServerConfiguration &config);
+//-------------------creating the list of server configurations-----------------
+    void                CreateSrvConfigs(Node& root);
+    void                CheckServer(Node &node, ServerConfiguration &current);
+    bool                HasServerWithSameNameOrPort(const ServerConfiguration &config);
+    void                CheckServerSubnodes(const v_node &subcontexts,
+                                            ServerConfiguration &current);
+    void                CheckLocationContextInServer(ServerConfiguration &current,
+                                                     std::set<std::string> &address_set,
+                                                     v_node_c_it &it) const;
+//-------------------getters, exceptions, etc-----------------------------------
+    l_sc                &getServers();
+    void                ThrowSyntaxError(const std::string &msg,
+                                                     std::ifstream &config) const;
+    void                ThrowSyntaxError(const std::string &msg) const;
+private:
+    std::string         conf_path_;
+    Node                conf_root_;
+    l_sc                servers_;
 };
 
 std::ostream    &operator<<(std::ostream &os, const Config &config);

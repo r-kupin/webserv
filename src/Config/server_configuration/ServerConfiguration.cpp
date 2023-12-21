@@ -192,8 +192,25 @@ std::ostream &operator<<(std::ostream &os, const ServerConfiguration &config) {
     return os;
 }
 
+ServerConfiguration::LocSearchResult::LocSearchResult(
+                                            const l_loc_it &location,
+                                            const std::string &status,
+                                            const std::string &fullAddress,
+                                            const std::string &leftowerAddress)
+        : location_(location),
+        status_(status),
+        full_address_(fullAddress),
+        leftower_address_(leftowerAddress) {}
 
-
+ServerConfiguration::LocConstSearchResult::LocConstSearchResult(
+                                            const l_loc_c_it &location,
+                                            const std::string &status,
+                                            const std::string &fullAddress,
+                                            const std::string &leftowerAddress)
+        : location_(location),
+        status_(status),
+        full_address_(fullAddress),
+        leftower_address_(leftowerAddress) {}
 //
 //void      ServerConfiguration::InheritanceErrPagesRoot(l_loc_it parent,
 //                                                  std::list<Location> &kids) {
@@ -209,3 +226,4 @@ std::ostream &operator<<(std::ostream &os, const ServerConfiguration &config) {
 //            InheritanceErrPagesRoot(it, it->sublocations_);
 //    }
 //}
+

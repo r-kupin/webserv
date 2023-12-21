@@ -21,6 +21,7 @@
 
 class ServerConfiguration;
 
+typedef std::list<ServerConfiguration>                  l_sc;
 typedef std::list<ServerConfiguration>::const_iterator  l_sc_c_it;
 typedef std::set<std::string>::const_iterator           s_str_c_it;
 
@@ -45,30 +46,39 @@ public:
                                      const v_str &directive);
 //-------------------Location search--------------------------------------------
     struct LocSearchResult {
-        LocSearchResult(l_loc_it location, const std::string &status,
-                        const std::string &initialUri,
-                        const std::string &leftowerUri)
-                        : location_(location),
-                          status_(status),
-                          full_address_(initialUri),
-                          leftower_address_(leftowerUri) {};
+        LocSearchResult(const l_loc_it &location, const std::string &status,
+                        const std::string &fullAddress,
+                        const std::string &leftowerAddress);
+
         l_loc_it        location_;
         std::string     status_;
         std::string     full_address_;
         std::string     leftower_address_;
     };
-    LocSearchResult    FindLocation(const std::string &address);
+    struct LocConstSearchResult {
+        LocConstSearchResult(const l_loc_c_it &location,
+                             const std::string &status,
+                             const std::string &fullAddress,
+                             const std::string &leftowerAddress);
+
+        l_loc_c_it      location_;
+        std::string     status_;
+        std::string     full_address_;
+        std::string     leftower_address_;
+    };
+    LocSearchResult         FindLocation(const std::string &address);
+    LocConstSearchResult    FindConstLocation(const std::string &address) const;
 //-------------------setup directives handlers----------------------------------
     void                UpdateIndex(const v_str &directive);
     void                ProcessDirectives(std::vector<v_str> &directives);
     void                UpdateHostname(const v_str &directives);
 //-------------------setup subcontexts handlers---------------------------------
     void                HandleLocationContext(const Node &context);
-    void                RecurseLocations(const Node &context, l_loc_it parent);
     void                CheckLocationContextIsCorrect(const Node &context);
-    void                ApplyLocationContext(const Node &context,
-                                             l_loc_it parent,
-                                             Location &current);
+    void                RecurseLocations(const Node &context, l_loc_it parent,
+                                         const Location& maybe_current);
+    void                OverrideLocation(const Node &context, l_loc_it current);
+    void                AddNew(const Node &context, const LocSearchResult &result);
 //-------------------operator overloads & exceptions----------------------------
     static void         ThrowServerConfigError(const std::string &msg);
     const Location      &GetConstRoot() const;
@@ -80,12 +90,6 @@ public:
 
     bool operator==(const ServerConfiguration &rhs) const;
     ServerConfiguration& operator=(const ServerConfiguration& rhs);
-
-    void
-    RecurseLocations(const Node &context, l_loc_it parent,
-                     Location maybe_current);
-
-    void OverrideLocation(const Node &context, l_loc_it current);
 };
 
 std::ostream &operator<<(std::ostream &os, const ServerConfiguration &config);

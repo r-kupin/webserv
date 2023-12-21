@@ -35,7 +35,6 @@ add_executable(webserv src/main.cpp
         src/Config/Node.cpp
         src/Config/location/LocationHandleReturn.cpp
         src/Server/ServerInit.cpp
-        src/Server/ServerLocationSearcher.cpp
         src/Server/ServerLocationSynthesizer.cpp
         src/Server/ServerExceptions.cpp
         src/Server/request/RequestExceptions.h
@@ -74,7 +73,6 @@ add_library(webserv_lib
         src/Config/Node.cpp
         src/Config/location/LocationHandleReturn.cpp
         src/Server/ServerInit.cpp
-        src/Server/ServerLocationSearcher.cpp
         src/Server/ServerLocationSynthesizer.cpp
         src/Server/ServerExceptions.cpp
         src/Server/request/RequestExceptions.h

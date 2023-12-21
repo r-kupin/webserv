@@ -82,11 +82,11 @@ std::ostream &operator<<(std::ostream &os, const Config &config) {
 
 Config::~Config() {}
 
-const std::list<ServerConfiguration> &Config::getConstServers() const {
+const l_sc &Config::getConstServers() const {
     return servers_;
 }
 
-std::list<ServerConfiguration> &Config::getServers() {
+l_sc &Config::getServers() {
     return servers_;
 }
 

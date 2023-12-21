@@ -47,20 +47,6 @@ protected:
     void    Start(int port);
     void    HandleClientRequest(int client_sock);
     void    CheckRequest(int client_sock, const sockaddr_in &client_addr);
-//-------------------search location--------------------------------------------
-    struct LocSearchResult {
-        LocSearchResult(l_loc_c_it location, const std::string &status,
-                        const std::string &initialUri,
-                        const std::string &leftowerUri);
-
-        l_loc_c_it      location_;
-        std::string     status_;
-        std::string     initial_uri_;
-        std::string     leftower_uri_;
-    };
-    Server::LocSearchResult FindConstLocation(const std::string &uri) const;
-    Server::LocSearchResult FindConstLocation(const std::string &uri,
-                                              const ServerConfiguration &conf) const;
 //-------------------assemble handling location---------------------------------
     Location                SynthesizeHandlingLocation(const ClientRequest &);
     Location &              SynthFoundExact(const ClientRequest &request,
