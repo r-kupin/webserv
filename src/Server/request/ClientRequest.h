@@ -42,7 +42,7 @@
 class ClientRequest {
 public:
     class RequestException : public std::exception {};
-
+    ClientRequest();
     explicit    ClientRequest(int client_sock);
 
     Methods getMethod() const;
@@ -52,7 +52,6 @@ public:
     const std::map<std::string, std::string> &getParams() const;
     const std::map<std::string, std::string> &getHeaders() const;
 protected:
-    ClientRequest();
 //-------------------socket-level-----------------------------------------------
     void        Init(int client_sock);
     v_str       ReadFromSocket(int socket);

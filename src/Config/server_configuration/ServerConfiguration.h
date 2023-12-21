@@ -55,6 +55,7 @@ public:
         std::string     full_address_;
         std::string     leftower_address_;
     };
+
     struct LocConstSearchResult {
         LocConstSearchResult(const l_loc_c_it &location,
                              const std::string &status,
@@ -66,6 +67,7 @@ public:
         std::string     full_address_;
         std::string     leftower_address_;
     };
+
     LocSearchResult         FindLocation(const std::string &address);
     LocConstSearchResult    FindConstLocation(const std::string &address) const;
 //-------------------setup directives handlers----------------------------------

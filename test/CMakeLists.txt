@@ -26,12 +26,14 @@ add_executable(Google_Tests_run
         tests/server_test/request_test/ParsedRequestLevelTest.cpp
         tests/server_test/request_test/RequestLineLevelTest.cpp
         tests/server_test/request_test/URLLevelTest.cpp
-        tests/server_test/functionality_test/LocationSynthesingTest.cpp
+        tests/server_test/functionality_test/LocationSyntFoundExact.cpp
         tests/server_test/functionality_test/ServerTest.cpp
         tests/config_test/server_configuration_class_test/setup_test/HandleMultistepLocation.cpp
         tests/config_test/config_class_test/setup_from_file_config/ConfigSetupFromFileTest.cpp
         tests/config_test/server_configuration_class_test/functionality_test/SimpleConfigLocationSearchTest.cpp
-        tests/config_test/server_configuration_class_test/functionality_test/NestedConfigLocationSearchTest.cpp)
+        tests/config_test/server_configuration_class_test/functionality_test/NestedConfigLocationSearchTest.cpp
+        tests/server_test/functionality_test/LocationSynthTest.cpp
+        tests/server_test/functionality_test/LocationSynthUtilsTest.cpp)
 
 target_link_libraries(Google_Tests_run webserv_lib)
 target_link_libraries(Google_Tests_run gtest gtest_main)

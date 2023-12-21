@@ -35,14 +35,16 @@ add_executable(webserv src/main.cpp
         src/Config/Node.cpp
         src/Config/location/LocationHandleReturn.cpp
         src/Server/ServerInit.cpp
-        src/Server/ServerLocationSynthesizer.cpp
         src/Server/ServerExceptions.cpp
         src/Server/request/RequestExceptions.h
         src/Server/request/RequestExceptions.cpp
         src/Server/request/ClientRequestURLHandlers.cpp
         src/Server/request/ClientRequestRequestHandlers.cpp
         src/Server/request/ClientRequestURLParamsHandlers.cpp
-        src/Config/server_configuration/ServerConfigurationLocationSearch.cpp)
+        src/Config/server_configuration/ServerConfigurationLocationSearch.cpp
+        src/Server/location_synth/SynthFoundExact.cpp
+        src/Server/location_synth/SynthNotFound.cpp
+        src/Server/location_synth/LocationSynth.cpp)
 add_library(webserv_lib
         src/Config/config/Config.cpp
         src/Config/config/Config.h
@@ -73,13 +75,15 @@ add_library(webserv_lib
         src/Config/Node.cpp
         src/Config/location/LocationHandleReturn.cpp
         src/Server/ServerInit.cpp
-        src/Server/ServerLocationSynthesizer.cpp
         src/Server/ServerExceptions.cpp
         src/Server/request/RequestExceptions.h
         src/Server/request/RequestExceptions.cpp
         src/Server/request/ClientRequestURLHandlers.cpp
         src/Server/request/ClientRequestRequestHandlers.cpp
         src/Server/request/ClientRequestURLParamsHandlers.cpp
-        src/Config/server_configuration/ServerConfigurationLocationSearch.cpp)
+        src/Config/server_configuration/ServerConfigurationLocationSearch.cpp
+        src/Server/location_synth/SynthFoundExact.cpp
+        src/Server/location_synth/SynthNotFound.cpp
+        src/Server/location_synth/LocationSynth.cpp)
 
 add_subdirectory(test)

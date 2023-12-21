@@ -24,6 +24,7 @@ void ServerConfiguration::CheckLocationContextIsCorrect(const Node &context) {
                                "same address");
 }
 
+// todo: check overriding location with adding new subs
 void        ServerConfiguration::OverrideLocation(const Node &context,
                                                   l_loc_it current) {
     current->ProcessDirectives(context.directives_);
@@ -49,7 +50,7 @@ void ServerConfiguration::AddNew(const Node &context,
     for (v_str_c_it it = nonexisting_path.begin();
          *it != nonexisting_path.back(); ++it) {
         parent->sublocations_.push_front(
-                Location::GhostLocation(*it)); //todo: check parent!!
+                Location::GhostLocation(*it));
         parent->sublocations_.begin()->parent_ = parent;
         parent = parent->sublocations_.begin();
     }

@@ -58,7 +58,6 @@ struct Location {
     explicit Location(const std::string &address);
 
     static Location     GhostLocation(const std::string &address);
-    static Location     RootLocation(const std::string &address);
 //-------------------satic utils------------------------------------------------
     static bool         MarkDefined(const std::string &key, bool &flag,
                                     const v_str &directive);

@@ -1,53 +1,58 @@
-///******************************************************************************/
-///*                                                                            */
-///*                                                         :::      ::::::::  */
-///*    LocationSynthesingTest.cpp                         :+:      :+:    :+:  */
-///*                                                     +:+ +:+         +:+    */
-///*    By: rokupin <rokupin@student.42.fr>            +#+  +:+       +#+       */
-///*                                                 +#+#+#+#+#+   +#+          */
-///*    Created: 2023/12/14 17:39:52 by rokupin           #+#    #+#            */
-///*                                                     ###   ########.fr      */
-///*                                                                            */
-///******************************************************************************/
+/******************************************************************************/
+/*                                                                            */
+/*                                                         :::      ::::::::  */
+/*    LocationSyntFoundExact.cpp                         :+:      :+:    :+:  */
+/*                                                     +:+ +:+         +:+    */
+/*    By: rokupin <rokupin@student.42.fr>            +#+  +:+       +#+       */
+/*                                                 +#+#+#+#+#+   +#+          */
+/*    Created: 2023/12/14 17:39:52 by rokupin           #+#    #+#            */
+/*                                                     ###   ########.fr      */
+/*                                                                            */
+/******************************************************************************/
+
+#include <gtest/gtest.h>
+#include "../../../../src/Server/Server.h"
+
+class LocationSyntFoundExact : public ::testing::Test, public Server {
+public:
+    explicit LocationSyntFoundExact()
+    : Server(Config("test_resources/nested_locations/nginx.conf").getConstServers().front()) {};
+protected:
+    ClientRequest cl_req;
+};
+
+
+
 //
-//#include <gtest/gtest.h>
-//#include "../../../../src/Server/Server.h"
 //
-//class LocationSynthesingTest : public ::testing::Test, public Server {
-//public:
-//    explicit LocationSynthesingTest() : Server() {};
-//protected:
+//TEST_F(LocationSynthTest,
+//        location_not_defined_directory_does_not_exists) {
+//    std::string uri = "/loc_X";
 //
-//};
+//    LocSearchResult res = FindConstLocation(uri);
+//    EXPECT_EQ(res.location_, GetConfig().GetRoot());
+//    EXPECT_EQ(res.status_, "not found");
+//}
 //
-////TEST_F(LocationSynthTest,
-////        location_not_defined_directory_does_not_exists) {
-////    std::string uri = "/loc_X";
-////
-////    LocSearchResult res = FindConstLocation(uri);
-////    EXPECT_EQ(res.location_, GetConfig().GetRoot());
-////    EXPECT_EQ(res.status_, "not found");
-////}
-////
-////TEST_F(LocationSynthTest,
-////       location_defined_directory_does_not_exists_index_file_not_defined) {
-////    std::string uri = "/loc_1X";
-////
-////    LocSearchResult res = FindConstLocation(uri);
-////    EXPECT_EQ(res.location_, GetConfig().GetRoot());
-////    EXPECT_EQ(res.status_, "not found");
-////}
-////
-////TEST_F(LocationSynthTest,
-////       location_defined_directory_does_not_exists_index_file_defined) {
-////    std::string uri = "/loc_2X";
-////
-////    LocSearchResult res = FindConstLocation(uri);
-////    EXPECT_EQ(res.location_, GetConfig().GetRoot());
-////    EXPECT_EQ(res.status_, "not found");
-////}
+//TEST_F(LocationSynthTest,
+//       location_defined_directory_does_not_exists_index_file_not_defined) {
+//    std::string uri = "/loc_1X";
 //
-//TEST_F(LocationSynthesingTest, CheckFoundLocationPathDoesntExist) {
+//    LocSearchResult res = FindConstLocation(uri);
+//    EXPECT_EQ(res.location_, GetConfig().GetRoot());
+//    EXPECT_EQ(res.status_, "not found");
+//}
+//
+//TEST_F(LocationSynthTest,
+//       location_defined_directory_does_not_exists_index_file_defined) {
+//    std::string uri = "/loc_2X";
+//
+//    LocSearchResult res = FindConstLocation(uri);
+//    EXPECT_EQ(res.location_, GetConfig().GetRoot());
+//    EXPECT_EQ(res.status_, "not found");
+//}
+//
+//TEST_F(LocationSyntFoundExact, CheckFoundLocationPathDoesntExist) {
 //    std::string status;
 //    const Location &found = RecursiveSearch("/loc_defined_index_which_exist",
 //                                            GetConfig().GetRoot(),
@@ -58,7 +63,7 @@
 //    EXPECT_FALSE(CheckFilesystem(found.root_, "test_resources/test2/"));
 //}
 //
-//TEST_F(LocationSynthesingTest, CheckFoundLocationAccessLimitation) {
+//TEST_F(LocationSyntFoundExact, CheckFoundLocationAccessLimitation) {
 //    std::string status;
 //    const Location &found = RecursiveSearch("/uploads/something/whatever",
 //                                            GetConfig().GetRoot(),
@@ -70,7 +75,7 @@
 //    EXPECT_FALSE(CheckLimitedAccess(*found.parent_, Methods::POST));
 //}
 //
-//TEST_F(LocationSynthesingTest,
+//TEST_F(LocationSyntFoundExact,
 //       SynthesiseFor_ExactMatch_DirectoryExist_IndexDefinedButDontExist) {
 //    std::string loc = "/loc_defined_index_not_exist";
 //    std::string status;
@@ -89,7 +94,7 @@
 //    EXPECT_EQ(synth.return_code_, 403);
 //}
 //
-//TEST_F(LocationSynthesingTest,
+//TEST_F(LocationSyntFoundExact,
 //       SynthesiseFor_ExactMatch_DirectoryExist_IndexDefined_AndExist) {
 //    std::string loc = "/loc_defined_index_which_exist";
 //    std::string status;
