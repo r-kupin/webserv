@@ -34,12 +34,12 @@ l_loc_c_it recursive_search(const std::string &uri, l_loc_c_it start,
     return start;
 }
 
-Server::LocSearchResult Server::FindLocation(const std::string &uri) const {
-    return FindLocation(uri, config_);
+Server::LocSearchResult Server::FindConstLocation(const std::string &uri) const {
+    return FindConstLocation(uri, config_);
 }
 
-Server::LocSearchResult Server::FindLocation(const std::string &uri,
-                                             const ServerConfiguration &conf) const {
+Server::LocSearchResult Server::FindConstLocation(const std::string &uri,
+                                                  const ServerConfiguration &conf) const {
     std::string status, leftower;
     l_loc_c_it res = recursive_search(uri, conf.GetConstRootIt(), status);
 

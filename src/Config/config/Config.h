@@ -53,7 +53,7 @@ public:
     ~Config();
 
     const std::string                       &getConfPath() const;
-    const std::list<ServerConfiguration>    &getServers() const;
+    const std::list<ServerConfiguration>    &getConstServers() const;
 
 protected:
 //  Parsing config file to tree-like structure of nodes
@@ -63,6 +63,7 @@ protected:
 //  Location subcontext
     void        CheckServerSubnodes(const v_node &subcontexts, ServerConfiguration &current);
     void        CheckServer(Node &node, ServerConfiguration &current);
+    std::list<ServerConfiguration>    &getServers();
 private:
     std::string                     conf_path_;
     Node                            conf_root_;

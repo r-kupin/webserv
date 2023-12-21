@@ -21,7 +21,7 @@ protected:
 };
 
 TEST_F(ConfigSetupFromFileSimpleTest, TestAllComponents) {
-    const ServerConfiguration & current = getServers().front();
+    const ServerConfiguration & current = getConstServers().front();
 
     EXPECT_EQ(current.port_, 4280);
     EXPECT_EQ(current.port_str_, "4280");
@@ -80,7 +80,7 @@ protected:
 };
 
 TEST_F(ConfigSetupFromFileNestedTest, TestAllComponents) {
-    const ServerConfiguration & current = getServers().front();
+    const ServerConfiguration & current = getConstServers().front();
 
     EXPECT_EQ(current.port_, 4280);
     EXPECT_EQ(current.port_str_, "4280");
@@ -100,7 +100,7 @@ TEST_F(ConfigSetupFromFileNestedTest, TestAllComponents) {
     EXPECT_EQ(*loc_1.parent_, root);
     EXPECT_EQ(*loc_1.index_.begin(), "loc_1_index.html");
     EXPECT_EQ(loc_1.error_pages_.size(), 2);
-    EXPECT_EQ(loc_1.sublocations_.size(), 1);
+    EXPECT_EQ(loc_1.sublocations_.size(), 2);
     EXPECT_FALSE(loc_1.ghost_);
 
     it++;
@@ -118,7 +118,7 @@ TEST_F(ConfigSetupFromFileNestedTest, TestAllComponents) {
     EXPECT_EQ(loc_5.sublocations_.size(), 1);
     EXPECT_TRUE(loc_5.ghost_);
 //-------------------in "/loc_1"------------------------------------------------
-    const Location & loc_3 = *loc_1.sublocations_.begin();
+    const Location & loc_3 = loc_1.sublocations_.back();
     EXPECT_EQ(loc_3.address_, "/loc_3");
     EXPECT_EQ(loc_3.full_address_, "/loc_1/loc_3");
     EXPECT_EQ(*loc_3.parent_, loc_1);
@@ -127,6 +127,16 @@ TEST_F(ConfigSetupFromFileNestedTest, TestAllComponents) {
     EXPECT_EQ(loc_3.error_pages_.size(), 2);
     EXPECT_EQ(loc_3.sublocations_.size(), 0);
     EXPECT_FALSE(loc_3.ghost_);
+
+    const Location & loc_2 = loc_1.sublocations_.front();
+    EXPECT_EQ(loc_2.address_, "/loc_2");
+    EXPECT_EQ(loc_2.full_address_, "/loc_1/loc_2");
+    EXPECT_EQ(*loc_2.parent_, loc_1);
+    EXPECT_EQ(*loc_2.parent_->parent_, root);
+    EXPECT_EQ(*loc_2.index_.begin(), "loc_2_in_loc_1_index.html");
+    EXPECT_EQ(loc_2.error_pages_.size(), 2);
+    EXPECT_EQ(loc_2.sublocations_.size(), 0);
+    EXPECT_FALSE(loc_2.ghost_);
 //-------------------in "/loc_5"------------------------------------------------
     const Location & loc_7 = *loc_5.sublocations_.begin();
     EXPECT_EQ(loc_7.address_, "/loc_7");

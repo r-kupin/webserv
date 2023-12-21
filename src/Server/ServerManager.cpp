@@ -28,8 +28,8 @@ ServerManager::~ServerManager() {}
 
 ServerManager::ServerManager(const Config &config) {
     for (std::_List_const_iterator<ServerConfiguration> it =
-                                                    config.getServers().begin();
-         it != config.getServers().end(); ++it) {
+            config.getConstServers().begin();
+         it != config.getConstServers().end(); ++it) {
         servers_.push_back(Server(*it));
     }
 }

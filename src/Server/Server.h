@@ -58,9 +58,9 @@ protected:
         std::string     initial_uri_;
         std::string     leftower_uri_;
     };
-    Server::LocSearchResult FindLocation(const std::string &uri) const;
-    Server::LocSearchResult FindLocation(const std::string &uri,
-                                         const ServerConfiguration &conf) const;
+    Server::LocSearchResult FindConstLocation(const std::string &uri) const;
+    Server::LocSearchResult FindConstLocation(const std::string &uri,
+                                              const ServerConfiguration &conf) const;
 //-------------------assemble handling location---------------------------------
     Location                SynthesizeHandlingLocation(const ClientRequest &);
     Location &              SynthFoundExact(const ClientRequest &request,

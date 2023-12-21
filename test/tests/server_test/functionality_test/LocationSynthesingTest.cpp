@@ -24,7 +24,7 @@
 ////        location_not_defined_directory_does_not_exists) {
 ////    std::string uri = "/loc_X";
 ////
-////    LocSearchResult res = FindLocation(uri);
+////    LocSearchResult res = FindConstLocation(uri);
 ////    EXPECT_EQ(res.location_, GetConfig().GetRoot());
 ////    EXPECT_EQ(res.status_, "not found");
 ////}
@@ -33,7 +33,7 @@
 ////       location_defined_directory_does_not_exists_index_file_not_defined) {
 ////    std::string uri = "/loc_1X";
 ////
-////    LocSearchResult res = FindLocation(uri);
+////    LocSearchResult res = FindConstLocation(uri);
 ////    EXPECT_EQ(res.location_, GetConfig().GetRoot());
 ////    EXPECT_EQ(res.status_, "not found");
 ////}
@@ -42,7 +42,7 @@
 ////       location_defined_directory_does_not_exists_index_file_defined) {
 ////    std::string uri = "/loc_2X";
 ////
-////    LocSearchResult res = FindLocation(uri);
+////    LocSearchResult res = FindConstLocation(uri);
 ////    EXPECT_EQ(res.location_, GetConfig().GetRoot());
 ////    EXPECT_EQ(res.status_, "not found");
 ////}

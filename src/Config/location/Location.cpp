@@ -85,11 +85,6 @@ Location::Location(const std::string &address)
     address_(GetParticularAddress(address)),
     ghost_(false) {}
 
-bool startsWith(const std::string& str, const std::string& prefix) {
-    return str.compare(0, prefix.length(), prefix) == 0;
-}
-
-// we can't delegate constructors, what an idiotism
 Location::Location(const std::string &address, l_loc_it parent)
     : index_defined_(false),
     return_code_(0),
@@ -103,7 +98,6 @@ Location::Location(const std::string &address, l_loc_it parent)
                                "full address");
     }
 }
-
 
 Location Location::GhostLocation(const std::string &address) {
     return Location(true, address);
