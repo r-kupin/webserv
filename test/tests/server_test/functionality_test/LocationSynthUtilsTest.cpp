@@ -33,18 +33,82 @@ TEST_F(LocationSynthUtilsCheckFilesystem, CheckFilesystemNotExist) {
     EXPECT_FALSE(CheckFilesystem("/loc_1/loc_4/X",def_res_address_));
 }
 
+// todo: more tests with ip addressess
+
 class LocationSynthUtilsCheckLimitExcept : public ::testing::Test, public Server {
 public:
     LocationSynthUtilsCheckLimitExcept()
-    : Server(Config("test_resources/nested_locations/nginx.conf").getConstServers().front()) {};
+    : Server(), conf_(const_cast<ServerConfiguration&>(GetConfig())) {};
+protected:
+    ServerConfiguration &conf_;
+    
+    virtual void SetUp() {
+        conf_.HandleLocationContext(
+                Node(
+                        v_str({"location", "/loc_2"}),
+                        std::vector<Node>({
+                            Node(v_str({"limit_except", "POST"}),
+                                 std::vector<v_str>({
+                                     v_str({"allow", "all"})}))
+                        })
+                )
+        );
+        conf_.HandleLocationContext(
+                Node(
+                        v_str({"location", "/loc_2/subloc_2"}),
+                        std::vector<v_str>({
+                            v_str({ "index", "index.html" })
+                        })
+                )
+        );
+
+        conf_.HandleLocationContext(
+                Node(
+                        v_str({"location", "/loc_3"}),
+                        std::vector<v_str>({
+                            v_str({ "index", "index.html" })
+                        })
+                )
+        );
+        conf_.HandleLocationContext(
+                Node(
+                        v_str({"location", "/loc_3/subloc_3"}),
+                        std::vector<v_str>({
+                            v_str({ "index", "index.html" })
+                        })
+                )
+        );
+
+    }
 };
-//
-//TEST_F(LocationSynthUtilsCheckLimitExcept, CheckLimitExcept) {
-//
-//
-//    EXPECT_TRUE(CheckLimitedAccess(found, Methods::GET));
-//    EXPECT_FALSE(CheckLimitedAccess(found, Methods::POST));
-//
-//    EXPECT_TRUE(CheckLimitedAccess(*found.parent_, Methods::GET));
-//    EXPECT_FALSE(CheckLimitedAccess(*found.parent_, Methods::POST));
-//}
+
+TEST_F(LocationSynthUtilsCheckLimitExcept, CheckDenyAll) {
+    conf_.HandleLocationContext(
+            Node(
+                    v_str({"location", "/loc_1"}),
+                    std::vector<v_str>(),
+                    std::vector<Node>({
+                        Node(v_str({"limit_except", "POST"}),
+                             std::vector<v_str>({
+                                 v_str({"deny", "all"})}))
+                    })
+            )
+    );
+    conf_.HandleLocationContext(
+            Node(
+                    v_str({"location", "/loc_1/subloc_1"}),
+                    std::vector<v_str>({
+                        v_str({ "index", "index.html" })
+                    })
+            )
+    );
+
+    auto deny_all_location = conf_.FindLocation("/loc_1").location_;
+    auto deny_all_sublocation = conf_.FindLocation("/loc_1/subloc_1").location_;
+
+    EXPECT_FALSE(CheckLimitedAccess(*deny_all_location, Methods::POST));
+    EXPECT_FALSE(CheckLimitedAccess(*deny_all_sublocation, Methods::POST));
+
+    EXPECT_TRUE(CheckLimitedAccess(*deny_all_location, Methods::GET));
+    EXPECT_TRUE(CheckLimitedAccess(*deny_all_sublocation, Methods::GET));
+}

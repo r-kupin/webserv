@@ -1,5 +1,5 @@
 The naive re-implementation of nginx web server.
-Intended to be used with `webserv.conf` which address is given a s argument or with the default config, located at `resources/default`.
+Intended to be used with `webserv.conf_` which address is given a s argument or with the default config, located at `resources/default`.
 # Init
 ## Arg check
 In order to work, server needs a config, which should be passed as a one optional argument. If such argument is present, server will try to create a `Config` object which is intended to store `Node`s, each one dedicated to a particular parameter.

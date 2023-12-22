@@ -44,3 +44,10 @@ Node::Node(const v_str &main, const std::vector<v_str> &directives,
                                        child_nodes_(childNodes) {}
 
 Node::Node() {}
+
+Node::Node(const v_str &main, const std::vector<v_str> &directives) : main_(
+        main), directives_(directives) {}
+
+Node::Node(const v_str &main, const v_node &childNodes) : main_(main),
+                                                          child_nodes_(
+                                                                  childNodes) {}

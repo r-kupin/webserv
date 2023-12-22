@@ -24,7 +24,8 @@ struct Node {
     v_node child_nodes_;
 
     Node();
-
+    Node(const v_str &main, const std::vector<v_str> &directives);
+    Node(const v_str &main, const v_node &childNodes);
     Node(const v_str &main, const std::vector<v_str> &directives,
          const v_node &childNodes);
 
