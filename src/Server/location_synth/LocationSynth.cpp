@@ -27,9 +27,9 @@ Location Server::SynthesizeHandlingLocation(const ClientRequest &request) {
 
     Location synth(*res.location_);
     if (res.status_ == "found") {
-        synth = SynthFoundExact(request, *res.location_, synth);
+        synth = SynthFoundExact(request, res.location_, synth);
     } else if (res.status_ == "not found") {
-        synth = SynthForNotFound(request, *res.location_, synth);
+        synth = SynthForNotFound(request, res.location_, synth);
     } else if (res.status_ == "request misconfigured") {
         synth.return_code_ = 400;
     }
@@ -49,13 +49,14 @@ bool Server::CheckFilesystem(const std::string &address,
 }
 
 //todo check allow and deny of the requester address
-bool Server::CheckLimitedAccess(const Location &found, Methods method) const {
-    if (found.limit_except_.except_.empty() ||
-        found.limit_except_.except_.find(method) !=
-        found.limit_except_.except_.end()) {
-        if (found.address_ == "/")
-            return true;
-        else return CheckLimitedAccess(*found.parent_, method);
+//todo distinguish between 403, 404 and 405
+bool Server::AccessForbudden(l_loc_c_it found, Methods method) const {
+    if (found->limit_except_.except_.empty() ||
+        found->limit_except_.except_.find(method) !=
+            found->limit_except_.except_.end()) {
+        if (found->address_ == "/")
+            return false;
+        else return AccessForbudden(found->parent_, method);
     }
-    return false;
+    return true;
 }

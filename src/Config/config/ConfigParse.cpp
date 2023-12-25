@@ -171,8 +171,6 @@ Config::Config(const Node &confRoot)
 void Config::FinishSubNode(std::string &line,
                            RawNode &current,
                            std::ifstream &config) const {
-    if (current.node_.child_nodes_.empty() && current.node_.directives_.empty())
-        ThrowSyntaxError("found an empty block!", config);
     if (current.node_.main_[0] == "main")
         ThrowSyntaxError("found unexpected '}' !", config);
     size_t before_brace = line.find_first_not_of(" \t}");

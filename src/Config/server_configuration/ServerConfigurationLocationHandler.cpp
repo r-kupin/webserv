@@ -17,8 +17,6 @@ void        ServerConfiguration::HandleLocationContext(const Node &context) {
 void ServerConfiguration::CheckLocationContextIsCorrect(const Node &context) {
     if (!context.LocationContextHasPropperAddress())
         ThrowServerConfigError("Location path is incorrect or missing");
-    if (!context.LocationContextIsNotEmpty())
-        ThrowServerConfigError("Location context can't be empty !");
     if (!context.ContextDoesntHaveSubLocationsWithSameAddress())
         ThrowServerConfigError("Location context can't have subcontexts with "
                                "same address");

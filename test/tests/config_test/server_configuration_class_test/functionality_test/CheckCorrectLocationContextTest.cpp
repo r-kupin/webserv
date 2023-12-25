@@ -10,12 +10,6 @@ protected:
     Node context_;
 };
 
-TEST_F(CheckCorrectLocationContextTest, ComponentsTestLocationBlockEmpty) {
-    context_.main_ = v_str({"location", "/" });
-
-    EXPECT_THROW(CheckLocationContextIsCorrect(context_), ServerConfigurationException);
-}
-
 TEST_F(CheckCorrectLocationContextTest, ComponentsTestLocationBlockWithoutPath) {
     context_.main_ = v_str({"location"});
     context_.directives_.push_back(v_str({"root", "/some/where"}));

@@ -16,17 +16,17 @@
 
 
 Location &Server::SynthForNotFound(const ClientRequest &request,
-                                   const Location &found,
+                                   l_loc_c_it found,
                                    Location &synth,
                                    const std::string &def_res_address) const {
     // No literal match. Found location will be the closest one.
     // Maybe request asks for a file?
-    if (CheckFilesystem(found.root_, def_res_address) &&
-        CheckLimitedAccess(found, request.getMethod())) {
+    if (CheckFilesystem(found->root_, def_res_address) &&
+            AccessForbudden(found, request.getMethod())) {
         // closest location exists and allows access
-        if (found.full_address_ + request.getLastStepUri() ==
+        if (found->full_address_ + request.getLastStepUri() ==
             request.getAddress()) { // request asks for a file or subdirectory
-            if (CheckFilesystem(found.root_ + request.getLastStepUri(),
+            if (CheckFilesystem(found->root_ + request.getLastStepUri(),
                                 def_res_address)) {
                 synth.return_code_ = 200;
                 synth.root_ += request.getLastStepUri();

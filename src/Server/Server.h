@@ -50,19 +50,19 @@ protected:
 //-------------------assemble handling location---------------------------------
     Location                SynthesizeHandlingLocation(const ClientRequest &);
     Location &              SynthFoundExact(const ClientRequest &request,
-                                            const Location &found,
+                                            l_loc_c_it found,
                                             Location &synth,
                                             const std::string &def_res_address =
                                                         kDefaultResPath) const;
     Location &              SynthForNotFound(const ClientRequest &request,
-                                             const Location &found,
+                                             l_loc_c_it found,
                                              Location &synth,
                                              const std::string &def_res_address =
-                                                         kDefaultResPath)const;
-    l_str_c_it              FindIndexToSend(const Location &found,
+                                                         kDefaultResPath) const;
+    l_str_c_it              FindIndexToSend(l_loc_c_it found,
                                             const std::string &def_res_address) const;
-    bool                    CheckLimitedAccess(const Location &found,
-                                               Methods method) const ;
+    bool                    AccessForbudden(l_loc_c_it found,
+                                            Methods method) const ;
     bool                    CheckFilesystem(const std::string &address,
                                             const std::string &def_res_address) const ;
 //-------------------getters & stuff--------------------------------------------

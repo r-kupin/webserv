@@ -35,80 +35,69 @@ TEST_F(LocationSynthUtilsCheckFilesystem, CheckFilesystemNotExist) {
 
 // todo: more tests with ip addressess
 
-class LocationSynthUtilsCheckLimitExcept : public ::testing::Test, public Server {
+static Config conf_get("test_resources/limit_except/nginx_get.conf");
+
+class LocationSynthUtilsCheckLimitExceptGet : public ::testing::Test, public Server {
 public:
-    LocationSynthUtilsCheckLimitExcept()
-    : Server(), conf_(const_cast<ServerConfiguration&>(GetConfig())) {};
+    LocationSynthUtilsCheckLimitExceptGet() : Server(conf_get.getConstServers().front()) {};
 protected:
-    ServerConfiguration &conf_;
-    
-    virtual void SetUp() {
-        conf_.HandleLocationContext(
-                Node(
-                        v_str({"location", "/loc_2"}),
-                        std::vector<Node>({
-                            Node(v_str({"limit_except", "POST"}),
-                                 std::vector<v_str>({
-                                     v_str({"allow", "all"})}))
-                        })
-                )
-        );
-        conf_.HandleLocationContext(
-                Node(
-                        v_str({"location", "/loc_2/subloc_2"}),
-                        std::vector<v_str>({
-                            v_str({ "index", "index.html" })
-                        })
-                )
-        );
-
-        conf_.HandleLocationContext(
-                Node(
-                        v_str({"location", "/loc_3"}),
-                        std::vector<v_str>({
-                            v_str({ "index", "index.html" })
-                        })
-                )
-        );
-        conf_.HandleLocationContext(
-                Node(
-                        v_str({"location", "/loc_3/subloc_3"}),
-                        std::vector<v_str>({
-                            v_str({ "index", "index.html" })
-                        })
-                )
-        );
-
-    }
 };
 
-TEST_F(LocationSynthUtilsCheckLimitExcept, CheckDenyAll) {
-    conf_.HandleLocationContext(
-            Node(
-                    v_str({"location", "/loc_1"}),
-                    std::vector<v_str>(),
-                    std::vector<Node>({
-                        Node(v_str({"limit_except", "POST"}),
-                             std::vector<v_str>({
-                                 v_str({"deny", "all"})}))
-                    })
-            )
-    );
-    conf_.HandleLocationContext(
-            Node(
-                    v_str({"location", "/loc_1/subloc_1"}),
-                    std::vector<v_str>({
-                        v_str({ "index", "index.html" })
-                    })
-            )
-    );
+TEST_F(LocationSynthUtilsCheckLimitExceptGet, GET) {
+    auto loc_1 = GetConfig().FindConstLocation("/loc_1").location_;
+    auto loc_1_1 = GetConfig().FindConstLocation("/loc_1/loc_1_1").location_;
 
-    auto deny_all_location = conf_.FindLocation("/loc_1").location_;
-    auto deny_all_sublocation = conf_.FindLocation("/loc_1/subloc_1").location_;
+    auto loc_2 = GetConfig().FindConstLocation("/loc_2").location_;
+    auto loc_2_2 = GetConfig().FindConstLocation("/loc_2/loc_2_2").location_;
 
-    EXPECT_FALSE(CheckLimitedAccess(*deny_all_location, Methods::POST));
-    EXPECT_FALSE(CheckLimitedAccess(*deny_all_sublocation, Methods::POST));
+    auto loc_3 = GetConfig().FindConstLocation("/loc_3").location_;
+    auto loc_3_3 = GetConfig().FindConstLocation("/loc_3/loc_3_3").location_;
 
-    EXPECT_TRUE(CheckLimitedAccess(*deny_all_location, Methods::GET));
-    EXPECT_TRUE(CheckLimitedAccess(*deny_all_sublocation, Methods::GET));
+    EXPECT_FALSE(AccessForbudden(loc_1, GET));
+    EXPECT_FALSE(AccessForbudden(loc_1_1, GET));
+    EXPECT_FALSE(AccessForbudden(loc_2, GET));
+    EXPECT_FALSE(AccessForbudden(loc_2_2, GET));
+    EXPECT_FALSE(AccessForbudden(loc_3, GET));
+    EXPECT_FALSE(AccessForbudden(loc_3_3, GET));
+
+    EXPECT_TRUE(AccessForbudden(loc_1, POST));
+    EXPECT_TRUE(AccessForbudden(loc_1_1, POST));
+    EXPECT_TRUE(AccessForbudden(loc_2, POST));
+    EXPECT_TRUE(AccessForbudden(loc_2_2, POST));
+    EXPECT_TRUE(AccessForbudden(loc_3, POST));
+    EXPECT_TRUE(AccessForbudden(loc_3_3, POST));
+}
+
+static Config conf_post("test_resources/limit_except/nginx_post.conf");
+
+class LocationSynthUtilsCheckLimitExceptPost : public ::testing::Test, public
+        Server {
+public:
+    LocationSynthUtilsCheckLimitExceptPost() : Server(conf_post.getConstServers().front()) {};
+protected:
+};
+
+TEST_F(LocationSynthUtilsCheckLimitExceptPost, POST) {
+    auto loc_1 = GetConfig().FindConstLocation("/loc_1").location_;
+    auto loc_1_1 = GetConfig().FindConstLocation("/loc_1/loc_1_1").location_;
+
+    auto loc_2 = GetConfig().FindConstLocation("/loc_2").location_;
+    auto loc_2_2 = GetConfig().FindConstLocation("/loc_2/loc_2_2").location_;
+
+    auto loc_3 = GetConfig().FindConstLocation("/loc_3").location_;
+    auto loc_3_3 = GetConfig().FindConstLocation("/loc_3/loc_3_3").location_;
+
+    EXPECT_TRUE(AccessForbudden(loc_1, GET));
+    EXPECT_TRUE(AccessForbudden(loc_1_1, GET));
+    EXPECT_TRUE(AccessForbudden(loc_2, GET));
+    EXPECT_TRUE(AccessForbudden(loc_2_2, GET));
+    EXPECT_TRUE(AccessForbudden(loc_3, GET));
+    EXPECT_TRUE(AccessForbudden(loc_3_3, GET));
+
+    EXPECT_TRUE(AccessForbudden(loc_1, POST));
+    EXPECT_TRUE(AccessForbudden(loc_1_1, POST));
+    EXPECT_TRUE(AccessForbudden(loc_2, POST));
+    EXPECT_TRUE(AccessForbudden(loc_2_2, POST));
+    EXPECT_TRUE(AccessForbudden(loc_3, POST));
+    EXPECT_TRUE(AccessForbudden(loc_3_3, POST));
 }
