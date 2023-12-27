@@ -40,7 +40,6 @@ static Config conf_get("test_resources/limit_except/nginx_get.conf");
 class LocationSynthUtilsCheckLimitExceptGet : public ::testing::Test, public Server {
 public:
     LocationSynthUtilsCheckLimitExceptGet() : Server(conf_get.getConstServers().front()) {};
-protected:
 };
 
 TEST_F(LocationSynthUtilsCheckLimitExceptGet, GET) {
@@ -53,19 +52,29 @@ TEST_F(LocationSynthUtilsCheckLimitExceptGet, GET) {
     auto loc_3 = GetConfig().FindConstLocation("/loc_3").location_;
     auto loc_3_3 = GetConfig().FindConstLocation("/loc_3/loc_3_3").location_;
 
-    EXPECT_FALSE(AccessForbudden(loc_1, GET));
-    EXPECT_FALSE(AccessForbudden(loc_1_1, GET));
-    EXPECT_FALSE(AccessForbudden(loc_2, GET));
-    EXPECT_FALSE(AccessForbudden(loc_2_2, GET));
-    EXPECT_FALSE(AccessForbudden(loc_3, GET));
-    EXPECT_FALSE(AccessForbudden(loc_3_3, GET));
+    auto loc_4 = GetConfig().FindConstLocation("/loc_4").location_;
+    auto loc_4_4 = GetConfig().FindConstLocation("/loc_4/loc_4_4").location_;
 
-    EXPECT_TRUE(AccessForbudden(loc_1, POST));
-    EXPECT_TRUE(AccessForbudden(loc_1_1, POST));
-    EXPECT_TRUE(AccessForbudden(loc_2, POST));
-    EXPECT_TRUE(AccessForbudden(loc_2_2, POST));
-    EXPECT_TRUE(AccessForbudden(loc_3, POST));
-    EXPECT_TRUE(AccessForbudden(loc_3_3, POST));
+    EXPECT_FALSE(AccessForbidden(loc_1, GET));
+    EXPECT_FALSE(AccessForbidden(loc_1_1, GET));
+    EXPECT_FALSE(AccessForbidden(loc_2, GET));
+    EXPECT_FALSE(AccessForbidden(loc_2_2, GET));
+    EXPECT_FALSE(AccessForbidden(loc_3, GET));
+    EXPECT_FALSE(AccessForbidden(loc_3_3, GET));
+    EXPECT_FALSE(AccessForbidden(loc_4, GET));
+    EXPECT_FALSE(AccessForbidden(loc_4_4, GET));
+
+    EXPECT_TRUE(AccessForbidden(loc_1, POST));
+    EXPECT_FALSE(AccessForbidden(loc_1_1, POST));
+
+    EXPECT_TRUE(AccessForbidden(loc_2, POST));
+    EXPECT_FALSE(AccessForbidden(loc_2_2, POST));
+
+    EXPECT_FALSE(AccessForbidden(loc_3, POST));
+    EXPECT_FALSE(AccessForbidden(loc_3_3, POST));
+
+    EXPECT_TRUE(AccessForbidden(loc_4, POST));
+    EXPECT_FALSE(AccessForbidden(loc_4_4, POST));
 }
 
 static Config conf_post("test_resources/limit_except/nginx_post.conf");
@@ -87,17 +96,27 @@ TEST_F(LocationSynthUtilsCheckLimitExceptPost, POST) {
     auto loc_3 = GetConfig().FindConstLocation("/loc_3").location_;
     auto loc_3_3 = GetConfig().FindConstLocation("/loc_3/loc_3_3").location_;
 
-    EXPECT_TRUE(AccessForbudden(loc_1, GET));
-    EXPECT_TRUE(AccessForbudden(loc_1_1, GET));
-    EXPECT_TRUE(AccessForbudden(loc_2, GET));
-    EXPECT_TRUE(AccessForbudden(loc_2_2, GET));
-    EXPECT_TRUE(AccessForbudden(loc_3, GET));
-    EXPECT_TRUE(AccessForbudden(loc_3_3, GET));
+    auto loc_4 = GetConfig().FindConstLocation("/loc_4").location_;
+    auto loc_4_4 = GetConfig().FindConstLocation("/loc_4/loc_4_4").location_;
 
-    EXPECT_TRUE(AccessForbudden(loc_1, POST));
-    EXPECT_TRUE(AccessForbudden(loc_1_1, POST));
-    EXPECT_TRUE(AccessForbudden(loc_2, POST));
-    EXPECT_TRUE(AccessForbudden(loc_2_2, POST));
-    EXPECT_TRUE(AccessForbudden(loc_3, POST));
-    EXPECT_TRUE(AccessForbudden(loc_3_3, POST));
+    EXPECT_TRUE(AccessForbidden(loc_1, GET));
+    EXPECT_FALSE(AccessForbidden(loc_1_1, GET));
+
+    EXPECT_TRUE(AccessForbidden(loc_2, GET));
+    EXPECT_FALSE(AccessForbidden(loc_2_2, GET));
+
+    EXPECT_FALSE(AccessForbidden(loc_3, GET));
+    EXPECT_FALSE(AccessForbidden(loc_3_3, GET));
+
+    EXPECT_TRUE(AccessForbidden(loc_4, GET));
+    EXPECT_FALSE(AccessForbidden(loc_4_4, GET));
+
+    EXPECT_FALSE(AccessForbidden(loc_1, POST));
+    EXPECT_FALSE(AccessForbidden(loc_1_1, POST));
+    EXPECT_FALSE(AccessForbidden(loc_2, POST));
+    EXPECT_FALSE(AccessForbidden(loc_2_2, POST));
+    EXPECT_FALSE(AccessForbidden(loc_3, POST));
+    EXPECT_FALSE(AccessForbidden(loc_3_3, POST));
+    EXPECT_FALSE(AccessForbidden(loc_4, POST));
+    EXPECT_FALSE(AccessForbidden(loc_4_4, POST));
 }

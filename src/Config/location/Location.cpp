@@ -208,24 +208,6 @@ void Location::CheckSublocationsAddress(const std::string &address,
     }
 }
 //-------------------functional stuff-------------------------------------------
-bool Location::HasAsSublocation(const std::string &address) const {
-    l_loc_c_it it = std::find_if(sublocations_.begin(),
-                                 sublocations_.end(),
-                                 LocationByAddress(address));
-    return it != sublocations_.end();
-}
-
-bool Location::HasAsSublocation(const Location &location) const {
-    return HasAsSublocation(location.address_);
-}
-
-bool Location::HasSameAddressAsOneOfSublocationsOf(const Location &rhs) const {
-    return rhs.HasAsSublocation(address_);
-}
-
-bool Location::HasSameAddressAs(const Location &rhs) const {
-    return address_ == rhs.address_;
-}
 
 l_loc_c_it Location::FindConstSublocationByAddress(const std::string &address) const {
     if (address == "/")

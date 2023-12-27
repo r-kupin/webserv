@@ -30,6 +30,7 @@ bool is_address(const std::string &str) {
  *  If return has 2 arguments, it is should be a return code and address or
  * custom message !! depending on the return code !!
  *  There can't be more than 2 args, and code can't be the second arg.
+ *  The redirect, if only address specified, is done with 302 code
  */
 void Location::HandleLocationReturn(const v_str &directives_) {
     if (directives_.size() == 2 &&

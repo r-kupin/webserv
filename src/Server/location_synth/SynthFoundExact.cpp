@@ -18,25 +18,40 @@ Location &Server::SynthFoundExact(const ClientRequest &request,
                                   Location &synth,
                                   const std::string &def_res_address) const {
     // literal match between uri and location hierarchy
-    if (CheckFilesystem(found->root_, def_res_address) &&
-            AccessForbudden(found, request.getMethod())) {
-        if (found->index_defined_) {
-            // Index is defined explicitly in config
-            l_str_c_it index = FindIndexToSend(found, def_res_address);
-            if (index != found->index_.end()) { // index is found
-                synth.return_code_ = 200;
-                synth.index_.clear();
-                synth.index_.push_back(*index);
-            } else { // index is defined but doesn't exist
-                synth.return_code_ = 403;
-            }
-        } else {
-//          // todo find parent's index
-            synth.return_code_ = 200;
-        }
+    if (AccessForbidden(found, request.getMethod())) {
+        std::cout << "access forbidden by rule" << std::endl;
+        synth.return_code_ = 403;
     } else {
-        // todo if return code is overridden - handle here or somewhere else?
-        synth.return_code_ = 404; // Not Found
+        if (found->return_code_ == 0) {
+            // no return code is defined
+            if (found->return_address_.empty()) {
+                // no address-only return directive
+                if (CheckFilesystem(found->root_, def_res_address)) {
+                    // root directory exists
+                    if (found->index_defined_) {
+                        // Index is defined explicitly in config
+                        l_str_c_it index = FindIndexToSend(found, def_res_address);
+                        if (index != found->index_.end()) {
+                            // index is found
+                            synth.return_code_ = 200;
+                            synth.index_.clear();
+                            synth.index_.push_back(*index);
+                        } else {
+                            // index is defined but doesn't exist
+                            synth.return_code_ = 403;
+                        }
+                    } else {
+                        // index isn't defined explicitly - check for index.html
+                    }
+                } else {
+                    // root directory doesn't exist
+                    synth.return_code_ = 404; // Not Found
+                }
+            } else {
+                // has a address-only "return" directive
+                synth.return_code_ = 302;
+            }
+        }
     }
     return synth;
 }

@@ -22,7 +22,7 @@ Location &Server::SynthForNotFound(const ClientRequest &request,
     // No literal match. Found location will be the closest one.
     // Maybe request asks for a file?
     if (CheckFilesystem(found->root_, def_res_address) &&
-            AccessForbudden(found, request.getMethod())) {
+            AccessForbidden(found, request.getMethod())) {
         // closest location exists and allows access
         if (found->full_address_ + request.getLastStepUri() ==
             request.getAddress()) { // request asks for a file or subdirectory

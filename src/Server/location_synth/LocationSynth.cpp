@@ -48,15 +48,14 @@ bool Server::CheckFilesystem(const std::string &address,
     return false;
 }
 
-//todo check allow and deny of the requester address
-//todo distinguish between 403, 404 and 405
-bool Server::AccessForbudden(l_loc_c_it found, Methods method) const {
+bool Server::AccessForbidden(l_loc_c_it found, Methods method) const {
     if (found->limit_except_.except_.empty() ||
         found->limit_except_.except_.find(method) !=
-            found->limit_except_.except_.end()) {
-        if (found->address_ == "/")
-            return false;
-        else return AccessForbudden(found->parent_, method);
+            found->limit_except_.except_.end() ||
+        (found->limit_except_.except_.find(method) ==
+            found->limit_except_.except_.end() &&
+        found->limit_except_.allow_all_)) {
+        return false;
     }
     return true;
 }

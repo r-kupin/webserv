@@ -61,7 +61,7 @@ protected:
                                                          kDefaultResPath) const;
     l_str_c_it              FindIndexToSend(l_loc_c_it found,
                                             const std::string &def_res_address) const;
-    bool                    AccessForbudden(l_loc_c_it found,
+    bool                    AccessForbidden(l_loc_c_it found,
                                             Methods method) const ;
     bool                    CheckFilesystem(const std::string &address,
                                             const std::string &def_res_address) const ;
