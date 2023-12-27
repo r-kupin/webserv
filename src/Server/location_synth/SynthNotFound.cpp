@@ -19,21 +19,32 @@ Location &Server::SynthForNotFound(const ClientRequest &request,
                                    l_loc_c_it found,
                                    Location &synth,
                                    const std::string &def_res_address) const {
-    // No literal match. Found location will be the closest one.
-    // Maybe request asks for a file?
-    if (CheckFilesystem(found->root_, def_res_address) &&
-            AccessForbidden(found, request.getMethod())) {
-        // closest location exists and allows access
-        if (found->full_address_ + request.getLastStepUri() ==
-            request.getAddress()) { // request asks for a file or subdirectory
-            if (CheckFilesystem(found->root_ + request.getLastStepUri(),
-                                def_res_address)) {
-                synth.return_code_ = 200;
-                synth.root_ += request.getLastStepUri();
-            } else {
-                synth.return_code_ = 404;
-            }
-        }
-    }
+    (void)request;
+    (void)found;
+    (void)def_res_address;
+    synth.return_code_ = 501;
     return synth;
 }
+
+//Location &Server::SynthForNotFound(const ClientRequest &request,
+//                                   l_loc_c_it found,
+//                                   Location &synth,
+//                                   const std::string &def_res_address) const {
+//    // No literal match. Found location will be the closest one.
+//    // Maybe request asks for a file?
+//    if (CheckFilesystem(found->root_, def_res_address) &&
+//            AccessForbidden(found, request.getMethod())) {
+//        // closest location exists and allows access
+//        if (found->full_address_ + request.getLastStepUri() ==
+//            request.getAddress()) { // request asks for a file or subdirectory
+//            if (CheckFilesystem(found->root_ + request.getLastStepUri(),
+//                                def_res_address)) {
+//                synth.return_code_ = 200;
+//                synth.root_ += request.getLastStepUri();
+//            } else {
+//                synth.return_code_ = 404;
+//            }
+//        }
+//    }
+//    return synth;
+//}

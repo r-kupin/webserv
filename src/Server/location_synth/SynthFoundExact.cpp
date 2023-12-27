@@ -19,6 +19,7 @@ Location &Server::SynthFoundExact(const ClientRequest &request,
                                   const std::string &def_res_address) const {
     // literal match between uri and location hierarchy
     if (AccessForbidden(found, request.getMethod())) {
+        // limit-except forbids access
         std::cout << "access forbidden by rule" << std::endl;
         synth.return_code_ = 403;
     } else {
@@ -41,14 +42,23 @@ Location &Server::SynthFoundExact(const ClientRequest &request,
                             synth.return_code_ = 403;
                         }
                     } else {
-                        // index isn't defined explicitly - check for index.html
+                        // index isn't defined explicitly
+                        if (CheckFilesystem(found->root_ + "/index.html",
+                                            def_res_address)) {
+                            // index.html file present
+                            synth.return_code_ = 200;
+                        } else {
+                            synth.return_code_ = 403;
+                        }
                     }
                 } else {
                     // root directory doesn't exist
+                    std::cout << "open() \"" + def_res_address + found->root_ +
+                    "\" failed" << std::endl;
                     synth.return_code_ = 404; // Not Found
                 }
             } else {
-                // has a address-only "return" directive
+                // has an address-only "return" directive
                 synth.return_code_ = 302;
             }
         }
@@ -56,6 +66,7 @@ Location &Server::SynthFoundExact(const ClientRequest &request,
     return synth;
 }
 
+//todo: test me next!!!!
 l_str_c_it Server::FindIndexToSend(l_loc_c_it found,
                                    const std::string &def_res_address) const {
     l_str_c_it it = found->index_.begin();
