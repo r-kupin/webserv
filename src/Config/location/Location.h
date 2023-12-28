@@ -21,7 +21,6 @@
 struct Location;
 //-------------------static creation / initialization---------------------------
 
-typedef const std::map<int, std::string>                        m_codes_c;
 typedef std::set<ErrPage>::const_iterator                       s_err_c_it;
 typedef std::list<Location>                                     l_loc;
 typedef std::list<Location>::iterator                           l_loc_it;
@@ -32,10 +31,10 @@ typedef std::list<std::string>::const_iterator                  l_str_c_it;
 struct Location {
     class LocationException : public std::exception {};
 
-    static m_codes_c kHttpOkCodes;
-    static m_codes_c kHttpRedirectCodes;
-    static m_codes_c initializeHttpOKCodes();
-    static m_codes_c initializeHttpRedirectCodes();
+    static const m_codes kHttpOkCodes;
+    static const m_codes kHttpRedirectCodes;
+    static const m_codes initializeHttpOKCodes();
+    static const m_codes initializeHttpRedirectCodes();
 
     std::set<ErrPage>       error_pages_;
     l_loc                   sublocations_;
@@ -43,7 +42,8 @@ struct Location {
     bool                    index_defined_;
     Limit                   limit_except_;
     int                     return_code_;
-    std::string             return_address_;
+    std::string             return_internal_address_;
+    std::string             return_external_address_;
     std::string             return_custom_message_;
     std::string             root_;
     std::string             full_address_;
@@ -72,6 +72,8 @@ struct Location {
 //-------------------functional stuff-------------------------------------------
     l_loc_c_it          FindConstSublocationByAddress(const std::string & address) const;
     l_loc_it            FindSublocationByAddress(const std::string &address);
+    s_err_c_it          FindErrPageForCode(int code) const;
+    bool                HasErrPageForCode(int code) const;
     bool                HasDefinedLimitExcept() const;
 //-------------------setup address----------------------------------------------
     void                HandleAddress(const std::string &str);

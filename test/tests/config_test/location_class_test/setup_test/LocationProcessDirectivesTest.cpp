@@ -29,7 +29,7 @@ TEST_F(ProcessDerectivesTest, TestForNewLocation) {
     EXPECT_EQ(*loc.index_.begin(), "nonexistent_index.html");
 
     EXPECT_EQ(loc.return_code_, 301);
-    EXPECT_EQ(loc.return_address_, "http://localhost:4280/somewhere");
+    EXPECT_EQ(loc.return_external_address_, "http://localhost:4280/somewhere");
 
     EXPECT_NE(loc.error_pages_.find(ErrPage("error.html", 403)),
               loc.error_pages_.end());

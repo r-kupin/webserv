@@ -2,13 +2,24 @@
 #include "Location.h"
 #include "../../Server/ServerExceptions.h"
 
+const static std::string kAddressPrefix = "http://";
+
 bool is_number(const std::string &str) {
     return str.find_first_not_of("0123456789") == std::string::npos;
 }
 
-bool is_address(const std::string &str) {
-    return str.find_first_of('/') != std::string::npos;
+bool is_internal_address(const std::string &str) {
+    return str.at(0) == '/';
 }
+
+bool is_external_address(const std::string &str) {
+    return str.substr(0, kAddressPrefix.size()) == kAddressPrefix;
+}
+
+bool is_address(const std::string &str) {
+    return is_internal_address(str) || is_external_address(str);
+}
+
 /**
  * from nginx docs:
  *  	return code [text];
@@ -61,6 +72,7 @@ void Location::Handle2ArgReturn(const v_str &directives_) {
 void Location::Handle1ArgReturn(const v_str &directives_) {
     if (is_address(directives_[1])) {
         HandleAddress(directives_[1]);
+        return_code_ = 302;
     } else if (is_number(directives_[1])) {
         HandleCode(directives_[1]);
     } else {
@@ -68,13 +80,11 @@ void Location::Handle1ArgReturn(const v_str &directives_) {
     }
 }
 
-
 void Location::HandleCode(const std::string &str) {
     if (is_number(str)) {
         int code = atoi(str.c_str());
         if ((kHttpOkCodes.find(code) == kHttpOkCodes.end() &&
-             ErrPage::kHttpErrCodes.find(code) == ErrPage::kHttpErrCodes.end()) ||
-            return_code_ > 100) {
+             ErrPage::kHttpErrCodes.find(code) == ErrPage::kHttpErrCodes.end())) {
             ThrowLocationException("Return code is wrong");
         }
         return_code_ = code;
@@ -82,12 +92,13 @@ void Location::HandleCode(const std::string &str) {
 }
 
 void Location::HandleAddress(const std::string &str) {
-    const std::string kAddressPrefix = "http://";
-
     if (is_address(str)) {
-        if (return_address_ == "" &&
-            str.substr(0, kAddressPrefix.size()) == kAddressPrefix) {
-            return_address_ = str;
+        if (return_internal_address_.empty() && return_external_address_.empty()) {
+            if (is_internal_address(str)) {
+                return_internal_address_ = str;
+            } else if (is_external_address(str)) {
+                return_external_address_ = str;
+            }
         } else {
             ThrowLocationException("Return address is already defined or "
                                    "misconfigured");

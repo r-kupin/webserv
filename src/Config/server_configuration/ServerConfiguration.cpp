@@ -24,7 +24,7 @@ server_name_("localhost") {
 //    root_loc.error_pages_.insert(ErrPage("/htmls/404.html", 404));
 //    root_loc.error_pages_.insert(ErrPage("/htmls/403.html", 403));
     root_loc.return_code_ = 0;
-    root_loc.return_address_ = "";
+    root_loc.return_internal_address_ = "";
     root_loc.full_address_ = "";
     locations_.push_back(root_loc);
     locations_.begin()->parent_ = locations_.begin();
@@ -71,12 +71,6 @@ void        ServerConfiguration::UpdateHostname(const v_str &directives) {
         server_names_.insert(directives[i]);
 }
 
-void        ServerConfiguration::UpdateIndex(const v_str &directive) {
-    GetRoot().index_defined_ = true;
-    for (size_t i = 1; i < directive.size(); ++i)
-        GetRoot().index_.push_back(directive[i]);
-}
-
 void        ServerConfiguration::ProcessDirectives(
                                               std::vector<v_str> &directives) {
     bool srv_name = false;
@@ -88,22 +82,26 @@ void        ServerConfiguration::ProcessDirectives(
 
     if (directives.empty())
         ThrowServerConfigError("Server block can't be empty!");
-    for (size_t i = 0; i < directives.size(); i++) {
-        if (MarkDefined("server_name", srv_name, directives[i])) {
-            UpdateHostname(directives[i]);
-        } else if (UMarkDefined("listen", port, directives[i])) {
-            port_ = atoi(directives[i][1].c_str());
-            port_str_ = directives[i][1];
-        } else if (UMarkDefined("client_max_body_size", cl_max_bd_size,
-                                directives[i])) {
-            client_max_body_size_ = atoi(directives[i][1].c_str());
-        } else if (UMarkDefined("root", root, directives[i])) {
-            GetRoot().root_ = directives[i][1];
-        } else if (MarkDefined("index", index, directives[i])) {
-            UpdateIndex(directives[i]);
-        } else if (MarkDefined("error_page", err, directives[i])) {
-            GetRoot().AddErrorPages(directives[i]);
+    try {
+        for (size_t i = 0; i < directives.size(); i++) {
+            if (MarkDefined("server_name", srv_name, directives[i])) {
+                UpdateHostname(directives[i]);
+            } else if (UMarkDefined("listen", port, directives[i])) {
+                port_ = atoi(directives[i][1].c_str());
+                port_str_ = directives[i][1];
+            } else if (UMarkDefined("client_max_body_size", cl_max_bd_size,
+                                    directives[i])) {
+                client_max_body_size_ = atoi(directives[i][1].c_str());
+            } else if (UMarkDefined("root", root, directives[i])) {
+                GetRoot().root_ = directives[i][1];
+            } else if (MarkDefined("index", index, directives[i])) {
+                GetRoot().HandleIndex(directives[i]);
+            } else if (MarkDefined("error_page", err, directives[i])) {
+                GetRoot().AddErrorPages(directives[i]);
+            }
         }
+    } catch (const Location::LocationException &) {
+        ThrowServerConfigError("Root-related directives are misconfigured");
     }
     if (!port)
         ThrowServerConfigError("Port needs to be specified explicitly!");

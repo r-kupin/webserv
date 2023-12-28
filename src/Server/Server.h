@@ -33,6 +33,7 @@ public:
     ~Server();
 
     void Start();
+
 protected:
 //-------------------initialisation: open sockets, create epoll...--------------
     void    Init();
@@ -49,22 +50,23 @@ protected:
     void    CheckRequest(int client_sock, const sockaddr_in &client_addr);
 //-------------------assemble handling location---------------------------------
     Location                SynthesizeHandlingLocation(const ClientRequest &);
-    Location &              SynthFoundExact(const ClientRequest &request,
-                                            l_loc_c_it found,
-                                            Location &synth,
-                                            const std::string &def_res_address =
-                                                        kDefaultResPath) const;
+    Location                &SynthFoundExact(const ClientRequest &request,
+                                             l_loc_c_it found,
+                                             Location &synth) const;
     Location &              SynthForNotFound(const ClientRequest &request,
                                              l_loc_c_it found,
                                              Location &synth,
                                              const std::string &def_res_address =
                                                          kDefaultResPath) const;
-    l_str_c_it              FindIndexToSend(l_loc_c_it found,
-                                            const std::string &def_res_address) const;
+    void                    HandleExplicitIndex(l_loc_c_it &found,
+                                                Location &synth) const;
+    void                    HandleImplicitIndex(const l_loc_c_it &found,
+                                                Location &synth) const;
+    void                    SynthNoRedirectionDefined(l_loc_c_it &found,
+                                                      Location &synth) const;
+    l_str_c_it              FindIndexToSend(l_loc_c_it found) const;
     bool                    AccessForbidden(l_loc_c_it found,
-                                            Methods method) const ;
-    bool                    CheckFilesystem(const std::string &address,
-                                            const std::string &def_res_address) const ;
+                                            Methods method) const;
 //-------------------getters & stuff--------------------------------------------
     void SetSocket();
     const ServerConfiguration & GetConfig();
@@ -72,11 +74,13 @@ protected:
     int getSocket() const;
     int getEpollFd() const;
     const epoll_event &getEvent() const;
+
 private:
     ServerConfiguration config_;
     int socket_;
     int epoll_fd_;
     epoll_event event_;
+
 };
 
 

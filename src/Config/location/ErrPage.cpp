@@ -13,8 +13,8 @@
 #include "ErrPage.h"
 
 
-const std::map<int, std::string> ErrPage::initializeHttpErrCodes() {
-    std::map<int, std::string> codes;
+const m_codes ErrPage::initializeHttpErrCodes() {
+    m_codes codes;
     codes.insert(std::make_pair(400, "Bad Request"));
     codes.insert(std::make_pair(401, "Unauthorized"));
     codes.insert(std::make_pair(402, "Payment Required"));
@@ -59,7 +59,7 @@ const std::map<int, std::string> ErrPage::initializeHttpErrCodes() {
     return codes;
 }
 
-const std::map<int, std::string> ErrPage::kHttpErrCodes =
+const m_codes ErrPage::kHttpErrCodes =
         ErrPage::initializeHttpErrCodes();
 
 

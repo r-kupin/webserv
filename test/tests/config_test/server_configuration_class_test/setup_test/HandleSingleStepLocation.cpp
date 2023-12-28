@@ -99,7 +99,7 @@ TEST_F(HandleSingleStepLocation, HomeInReDefinedRoot) {
     EXPECT_EQ(InternalServerError->address_, "/50x.html");
 
     EXPECT_EQ(GetRoot().return_code_ , 0);
-    EXPECT_EQ(GetRoot().return_address_ , "");
+    EXPECT_EQ(GetRoot().return_internal_address_ , "");
 
     EXPECT_EQ(GetRoot().sublocations_.begin()->address_, "/loc_X");
     EXPECT_NE(std::find(GetRoot().sublocations_.begin()->index_.begin(),

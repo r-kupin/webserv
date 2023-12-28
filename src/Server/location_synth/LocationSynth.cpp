@@ -36,18 +36,6 @@ Location Server::SynthesizeHandlingLocation(const ClientRequest &request) {
     return synth;
 }
 
-
-bool Server::CheckFilesystem(const std::string &address,
-                             const std::string &def_res_address) const {
-    std::ifstream file((def_res_address + address).c_str());
-    if (file.good()) {
-        file.close();
-        return true;
-    }
-    file.close();
-    return false;
-}
-
 bool Server::AccessForbidden(l_loc_c_it found, Methods method) const {
     if (found->limit_except_.except_.empty() ||
         found->limit_except_.except_.find(method) !=

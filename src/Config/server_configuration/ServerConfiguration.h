@@ -71,7 +71,6 @@ public:
     LocSearchResult         FindLocation(const std::string &address);
     LocConstSearchResult    FindConstLocation(const std::string &address) const;
 //-------------------setup directives handlers----------------------------------
-    void                UpdateIndex(const v_str &directive);
     void                ProcessDirectives(std::vector<v_str> &directives);
     void                UpdateHostname(const v_str &directives);
 //-------------------setup subcontexts handlers---------------------------------

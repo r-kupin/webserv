@@ -25,6 +25,7 @@ void ServerConfiguration::CheckLocationContextIsCorrect(const Node &context) {
 // todo: check overriding location with adding new subs
 void        ServerConfiguration::OverrideLocation(const Node &context,
                                                   l_loc_it current) {
+    current->index_defined_ = false;
     current->ProcessDirectives(context.directives_);
 
     for (v_node_c_it it = context.child_nodes_.begin();

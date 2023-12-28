@@ -17,8 +17,8 @@
 #include "../../Server/ServerExceptions.h"
 
 //-------------------static creation / initialization---------------------------
-m_codes_c Location::initializeHttpRedirectCodes() {
-    std::map<int, std::string> codes;
+const m_codes Location::initializeHttpRedirectCodes() {
+    m_codes codes;
     codes.insert(std::make_pair(301, "Moved Permanently"));
     codes.insert(std::make_pair(302, "Found"));
     codes.insert(std::make_pair(303, "See Other"));
@@ -28,8 +28,8 @@ m_codes_c Location::initializeHttpRedirectCodes() {
     return codes;
 }
 
-m_codes_c Location::initializeHttpOKCodes() {
-    std::map<int, std::string> codes;
+const m_codes Location::initializeHttpOKCodes() {
+    m_codes codes;
     codes.insert(std::make_pair(100, "Continue"));
     codes.insert(std::make_pair(101, "Switching Protocols"));
     codes.insert(std::make_pair(200, "OK"));
@@ -51,32 +51,32 @@ m_codes_c Location::initializeHttpOKCodes() {
     return codes;
 }
 
-m_codes_c Location::kHttpOkCodes = Location::initializeHttpOKCodes();
-m_codes_c Location::kHttpRedirectCodes = Location::initializeHttpRedirectCodes();
+const m_codes Location::kHttpOkCodes = Location::initializeHttpOKCodes();
+const m_codes Location::kHttpRedirectCodes = Location::initializeHttpRedirectCodes();
 
 Location::Location()
     : index_defined_(false),
     return_code_(0),
     ghost_(false) {}
 
-Location::Location(bool ghost, const std::string &address) :
-full_address_(HandleAddressInConstructor(address)),
-address_(GetParticularAddress(address)),
-ghost_(ghost) {}
+Location::Location(bool ghost, const std::string &address)
+    : full_address_(HandleAddressInConstructor(address)),
+    address_(GetParticularAddress(address)),
+    ghost_(ghost) {}
 
 Location::Location(const Location& other)
     : error_pages_(other.error_pages_),
-    sublocations_(other.sublocations_),
-    index_(other.index_),
-    index_defined_(other.index_defined_),
-    limit_except_(other.limit_except_),
-    return_code_(other.return_code_),
-    return_address_(other.return_address_),
-    root_(other.root_),
-    full_address_(other.full_address_),
-    address_(other.address_),
-    parent_(other.parent_),
-    ghost_(other.ghost_){}
+      sublocations_(other.sublocations_),
+      index_(other.index_),
+      index_defined_(other.index_defined_),
+      limit_except_(other.limit_except_),
+      return_code_(other.return_code_),
+      return_internal_address_(other.return_internal_address_),
+      root_(other.root_),
+      full_address_(other.full_address_),
+      address_(other.address_),
+      parent_(other.parent_),
+      ghost_(other.ghost_){}
 
 Location::Location(const std::string &address)
     : index_defined_(false),
@@ -208,6 +208,17 @@ void Location::CheckSublocationsAddress(const std::string &address,
     }
 }
 //-------------------functional stuff-------------------------------------------
+bool Location::HasDefinedLimitExcept() const {
+    return !limit_except_.except_.empty();
+}
+
+s_err_c_it Location::FindErrPageForCode(int code) const {
+    return error_pages_.find(ErrPage(code));
+}
+
+bool Location::HasErrPageForCode(int code) const {
+    return FindErrPageForCode(code) != error_pages_.end();
+}
 
 l_loc_c_it Location::FindConstSublocationByAddress(const std::string &address) const {
     if (address == "/")
@@ -235,11 +246,6 @@ LocationByAddress::LocationByAddress(const std::string &targetAddress)
 bool LocationByAddress::operator()(const Location &location) const {
     return location.address_ == targetAddress_;
 }
-
-bool Location::HasDefinedLimitExcept() const {
-    return !limit_except_.except_.empty();
-}
-
 //-------------------setup directives handlers----------------------------------
 /**
  *  Updates some location parameters based on the directives
@@ -290,13 +296,54 @@ void Location::AddErrorPages(const v_str &directive) {
     }
 }
 
+/**
+ * from nginx docs:
+ *  Directives
+ *  Syntax: 	index file ...;
+ *  Default: 	index index.html;
+ *  Context: 	http, server, location
+ *
+ *      Defines files that will be used as an index. The file name can contain
+ *  variables. Files are checked in the specified order. The last element of
+ *  the list can be a file with an absolute path.
+ *  Example:
+ *      index index.$geo.html index.0.html /index.html;
+ *  It should be noted that using an index file causes an internal redirect,
+ *  and the request can be processed in a different location. For example,
+ *  with the following configuration:
+ *
+ *  location = / {
+ *      index index.html;
+ *  }
+ *  location / {
+ *      ...
+ *  }
+ *  a “/” request will actually be processed in the second location as
+ *  “/index.html”.
+ */
 void Location::HandleIndex(const v_str &directives) {
-    if (!index_defined_) {
-        index_.clear();
+    if (index_defined_) {
+        for (size_t j = 1; j < directives.size(); ++j) {
+            if (directives[j][0] == '/' && j != directives.size() - 1) {
+                ThrowLocationException(
+                        "Only the ast element of the list can be a "
+                        "file with an absolute path");
+            } else {
+                index_.push_back(directives[j]);
+            }
+        }
+    } else {
         index_defined_ = true;
+        for (size_t j = directives.size() - 1; j >= 1; --j) {
+            if (directives[j][0] == '/' && j != directives.size() - 1) {
+                ThrowLocationException(
+                        "Only the ast element of the list can be a "
+                        "file with an absolute path");
+            } else {
+                index_.push_front(directives[j]);
+            }
+        }
     }
-    for (size_t j = 1; j < directives.size(); ++j)
-        index_.push_front(directives[j]);
 }
 
 /**
@@ -365,7 +412,7 @@ Location &Location::operator=(const Location &rhs) {
     index_defined_ = rhs.index_defined_;
     limit_except_ = rhs.limit_except_;
     return_code_ = rhs.return_code_;
-    return_address_ = rhs.return_address_;
+    return_internal_address_ = rhs.return_internal_address_;
     root_ = rhs.root_;
     address_ = rhs.address_;
     full_address_ = rhs.full_address_;
@@ -386,7 +433,7 @@ bool Location::operator==(const Location &rhs) const {
         return false;
     if (index_ != rhs.index_)
         return false;
-    if (return_address_ != rhs.return_address_)
+    if (return_internal_address_ != rhs.return_internal_address_)
         return false;
     if (root_ != rhs.root_)
         return false;
@@ -409,7 +456,7 @@ void print_return_info(std::ostream &os, const Location &location) {
     os << location.full_address_ << ":\t" << "Return Code: " <<
         location.return_code_ << std::endl;
     os << location.full_address_ << ":\t" << "Return Address: " <<
-       location.return_address_ << std::endl;
+       location.return_internal_address_ << std::endl;
 }
 
 void print_index(std::ostream &os, const Location &location) {

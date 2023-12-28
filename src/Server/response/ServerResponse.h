@@ -22,36 +22,38 @@ const static std::string&  kHttpVersion = "HTTP/1.1";
 const static std::string&  kHttpPostfix = "\r\n\r\n";
 const static size_t        kBufferSize = 1024;
 
+typedef std::list<std::pair<std::string, std::string>> l_str_str;
+
 class ServerResponse {
 public:
     class ResponseException : public std::exception {};
 
     ServerResponse();
     ServerResponse(const ServerResponse &);
-    ServerResponse(const ClientRequest &request, const Location &root);
+    ServerResponse(const ClientRequest &request, const Location &synth);
 
     ~ServerResponse();
 
 	ServerResponse	&operator=(const ServerResponse &);
 
-    std::string		GetHeader();
+//-------------------satic utils------------------------------------------------
+    static bool     IsErrorCode(int code);
+    static bool     IsRedirectCode(int code);
+    static bool     IsOKCode(int code);
+    static bool     CheckFilesystem(const std::string &address);
+//-------------------init-------------------------------------------------------
+    std::string     ComposeTop(const Location &location);
+    std::string     NiceTimestamp();
+//-------------------functional stuff-------------------------------------------
     void			SendResponse(int dest);
 
-    bool location_defined_;
-    bool location_root_path_exists_;
-    bool location_root_has_index_;
 
-//    const ClientRequest &	request_;
-//	std::string 			address_;
-//	std::string				querry_parameters_;
-//    bool					http_is_error_;
-//	bool					request_static_;
-//
-//	int						http_code_;
-//	std::string				http_code_description_;
-//    std::string				response_filename_;
-//    std::ifstream			response_file_stream_;
-    std::map<std::string, std::string> headers_;
+
+    std::string		GetHeader();
+
+    std::string				            top_;
+    std::string                         body_buffer_;
+    l_str_str                           headers_;
 
     static ServerResponse
     CreateResponse(const ClientRequest &request, const Location &root);
@@ -66,6 +68,8 @@ protected:
 	std::ifstream   TryOpenFile(const std::string &filename);
 
     bool StrEndsWithSlash(std::string uri);
+
+
 };
 
 

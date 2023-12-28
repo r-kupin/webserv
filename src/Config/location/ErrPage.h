@@ -19,8 +19,10 @@
 #include <ostream>
 #include <map>
 
+typedef std::map<int, std::string>  m_codes;
+
 struct ErrPage {
-    static const std::map<int, std::string> kHttpErrCodes;
+    static const m_codes kHttpErrCodes;
 
     std::string address_;
     int code_;
@@ -31,7 +33,7 @@ struct ErrPage {
     bool operator<(const ErrPage &rhs) const;
     bool operator==(const ErrPage &rhs) const;
 
-    static const std::map<int, std::string> initializeHttpErrCodes();
+    static const m_codes initializeHttpErrCodes();
 };
 std::ostream &operator<<(std::ostream &os, const ErrPage &page);
 

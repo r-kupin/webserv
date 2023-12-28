@@ -21,22 +21,19 @@ protected:
 };
 
 TEST_F(LocationSynthUtilsCheckFilesystem, CheckFilesystemExist) {
-    EXPECT_TRUE(CheckFilesystem("/", def_res_address_));
-    EXPECT_TRUE(CheckFilesystem("/loc_1", def_res_address_));
-    EXPECT_TRUE(CheckFilesystem("/loc_1/loc_3/loc_3_in_loc_1_404.html",
-                                                            def_res_address_));
+    EXPECT_TRUE(ServerResponse::CheckFilesystem(def_res_address_ + "/"));
+    EXPECT_TRUE(ServerResponse::CheckFilesystem(def_res_address_ + "/loc_1"));
+    EXPECT_TRUE(ServerResponse::CheckFilesystem(def_res_address_ + "/loc_1/loc_3/loc_3_in_loc_1_404.html"));
 }
 
 TEST_F(LocationSynthUtilsCheckFilesystem, CheckFilesystemNotExist) {
-    EXPECT_FALSE(CheckFilesystem("/X", def_res_address_));
-    EXPECT_FALSE(CheckFilesystem("/loc_1/X", def_res_address_));
-    EXPECT_FALSE(CheckFilesystem("/loc_1/loc_4/X",def_res_address_));
+    EXPECT_FALSE(ServerResponse::CheckFilesystem(def_res_address_ + "/X"));
+    EXPECT_FALSE(ServerResponse::CheckFilesystem(def_res_address_ + "/loc_1/X"));
+    EXPECT_FALSE(ServerResponse::CheckFilesystem(def_res_address_ + "/loc_1/loc_4/X"));
 }
 
 // todo: more tests with ip addressess
-
 static Config conf_get("test_resources/limit_except/nginx_get.conf");
-
 class LocationSynthUtilsCheckLimitExceptGet : public ::testing::Test, public Server {
 public:
     LocationSynthUtilsCheckLimitExceptGet() : Server(conf_get.getConstServers().front()) {};
@@ -78,12 +75,10 @@ TEST_F(LocationSynthUtilsCheckLimitExceptGet, GET) {
 }
 
 static Config conf_post("test_resources/limit_except/nginx_post.conf");
-
 class LocationSynthUtilsCheckLimitExceptPost : public ::testing::Test, public
         Server {
 public:
     LocationSynthUtilsCheckLimitExceptPost() : Server(conf_post.getConstServers().front()) {};
-protected:
 };
 
 TEST_F(LocationSynthUtilsCheckLimitExceptPost, POST) {

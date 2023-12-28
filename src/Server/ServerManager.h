@@ -20,7 +20,7 @@ typedef std::vector<Server> v_servers;
 
 class ServerManager {
 public:
-    const std::map<int, std::string> kHttpCodes;
+    const m_codes kHttpCodes;
 
     ServerManager();
     ServerManager(const ServerManager &);

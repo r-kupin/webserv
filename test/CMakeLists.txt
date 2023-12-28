@@ -33,7 +33,9 @@ add_executable(Google_Tests_run
         tests/config_test/server_configuration_class_test/functionality_test/SimpleConfigLocationSearchTest.cpp
         tests/config_test/server_configuration_class_test/functionality_test/NestedConfigLocationSearchTest.cpp
         tests/server_test/functionality_test/LocationSynthTest.cpp
-        tests/server_test/functionality_test/LocationSynthUtilsTest.cpp)
+        tests/server_test/functionality_test/LocationSynthUtilsTest.cpp
+        tests/server_test/functionality_test/LocationSynthFoundExactTest.cpp
+)
 
 target_link_libraries(Google_Tests_run webserv_lib)
 target_link_libraries(Google_Tests_run gtest gtest_main)

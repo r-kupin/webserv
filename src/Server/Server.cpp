@@ -97,6 +97,8 @@
 #include <algorithm>
 #include "ServerExceptions.h"
 #include "request/RequestExceptions.h"
+#include "Server.h"
+
 
 //const int BUFFER_SIZE = 1024;
 //const int MAX_EVENTS = 10;
@@ -152,7 +154,7 @@ void Server::CheckRequest(int client_sock, const sockaddr_in &client_addr) {
 void Server::HandleClientRequest(int client_sock) {
     ClientRequest request(client_sock);
     ServerResponse response(request, SynthesizeHandlingLocation(request));
-//         response.SendResponse(client_sock);
+    response.SendResponse(client_sock);
 
 
 //         if (it == config_.locations_.end()) {

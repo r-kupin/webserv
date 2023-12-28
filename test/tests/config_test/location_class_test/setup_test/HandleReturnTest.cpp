@@ -21,7 +21,17 @@ TEST_F(ReturnHandlerTest, RedirectCodeAndAddress) {
     redirect_sub.HandleLocationReturn(v_str({"return", "301",
                                              "http://localhost:4280/goto"}));
     EXPECT_EQ(redirect_sub.return_code_, 301);
-    EXPECT_EQ(redirect_sub.return_address_, "http://localhost:4280/goto");
+    EXPECT_EQ(redirect_sub.return_external_address_,
+              "http://localhost:4280/goto");
+    EXPECT_EQ(redirect_sub.return_custom_message_, "");
+}
+
+TEST_F(ReturnHandlerTest, RedirectCodeAndInternalAddress) {
+    Location redirect_sub("/redirect");
+    redirect_sub.HandleLocationReturn(v_str({"return", "301",
+                                             "/goto"}));
+    EXPECT_EQ(redirect_sub.return_code_, 301);
+    EXPECT_EQ(redirect_sub.return_internal_address_, "/goto");
     EXPECT_EQ(redirect_sub.return_custom_message_, "");
 }
 
@@ -29,7 +39,7 @@ TEST_F(ReturnHandlerTest, RedirectOnlyCode) {
     Location redirect_sub("/redirect");
     redirect_sub.HandleLocationReturn(v_str({"return", "301"}));
     EXPECT_EQ(redirect_sub.return_code_, 301);
-    EXPECT_EQ(redirect_sub.return_address_, "");
+    EXPECT_EQ(redirect_sub.return_external_address_, "");
     EXPECT_EQ(redirect_sub.return_custom_message_, "");
 }
 
@@ -37,8 +47,16 @@ TEST_F(ReturnHandlerTest, RedirectOnlyAddress) {
     Location redirect_sub("/redirect");
     redirect_sub.HandleLocationReturn(v_str({"return",
                                              "http://localhost:4280/goto"}));
-//  todo  EXPECT_EQ(redirect_sub.return_code_, ???? );
-    EXPECT_EQ(redirect_sub.return_address_, "http://localhost:4280/goto");
+    EXPECT_EQ(redirect_sub.return_code_, 302);
+    EXPECT_EQ(redirect_sub.return_external_address_, "http://localhost:4280/goto");
+    EXPECT_EQ(redirect_sub.return_custom_message_, "");
+}
+
+TEST_F(ReturnHandlerTest, RedirectOnlyInternalAddress) {
+    Location redirect_sub("/redirect");
+    redirect_sub.HandleLocationReturn(v_str({"return", "/goto"}));
+    EXPECT_EQ(redirect_sub.return_code_, 302);
+    EXPECT_EQ(redirect_sub.return_internal_address_, "/goto");
     EXPECT_EQ(redirect_sub.return_custom_message_, "");
 }
 

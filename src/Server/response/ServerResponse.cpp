@@ -10,9 +10,10 @@
 /*                                                                            */
 /******************************************************************************/
 
-//TODO !!! Root & exception pages inheritance !!!
-
 #include <iostream>
+#include <sstream>
+#include <ctime>
+#include <iomanip>
 #include "ServerResponse.h"
 
 #include "../ServerExceptions.h"
@@ -20,9 +21,85 @@
 ServerResponse::ServerResponse() {}
 
 ServerResponse::ServerResponse(const ClientRequest &request,
-                               const Location &root) {
-    (void) request;
-    (void) root;
+                               const Location &synth) {
+    top_ = ComposeTop(synth);
+
+    headers_.push_back(std::make_pair("Server", "webserv"));
+    headers_.push_back(std::make_pair("Date", NiceTimestamp()));
+
+
+    if (IsErrorCode(synth.return_code_)) {
+        if (synth.HasErrPageForCode(synth.return_code_) &&
+            CheckFilesystem(synth.root_ + "/" +
+                    synth.FindErrPageForCode(synth.return_code_)->address_)) {
+//            read error page file to the buffer
+        } else {
+//            auto-generate error page
+        }
+    } else if (IsRedirectCode(synth.return_code_)) {
+//            set redirection headers and auto-generate redirect page
+    } else {
+//            read index file to buffer
+    }
+    headers_.push_back(std::make_pair("Connection", "keep-alive"));
+}
+
+bool ServerResponse::IsErrorCode(int code) {
+    return ErrPage::kHttpErrCodes.find(code) != ErrPage::kHttpErrCodes.end();
+}
+
+bool ServerResponse::IsRedirectCode(int code) {
+    return Location::kHttpRedirectCodes.find(code) !=
+            Location::kHttpRedirectCodes.end();
+}
+
+bool ServerResponse::IsOKCode(int code) {
+    return Location::kHttpOkCodes.find(code) != Location::kHttpOkCodes.end();
+}
+
+bool ServerResponse::CheckFilesystem(const std::string &address) {
+    std::ifstream file(address.c_str());
+    if (file.good()) {
+        file.close();
+        return true;
+    }
+    file.close();
+    return false;
+}
+
+std::string ServerResponse::ComposeTop(const Location &location) {
+    std::ostringstream oss;
+
+    oss << kHttpVersion << " " << location.return_code_ << " ";
+    if (!location.return_custom_message_.empty()) {
+        oss << location.return_custom_message_;
+    } else if (IsErrorCode(location.return_code_)) {
+        oss << ErrPage::kHttpErrCodes.find(location.return_code_)->second;
+    } else {
+        oss << Location::kHttpOkCodes.find(location.return_code_)->second;
+    }
+    return oss.str();
+}
+
+std::string ServerResponse::NiceTimestamp() {
+    time_t timestamp = std::time(NULL);
+    struct tm *timeinfo = gmtime(&timestamp);
+
+    if (timeinfo == NULL) {
+        return "timestamp conversion failed...";
+    }
+
+    char buffer[80];
+    strftime(buffer, sizeof(buffer), "%a, %d %b %Y %H:%M:%S GMT", timeinfo);
+
+    return buffer;
+}
+
+void ServerResponse::SendResponse(int dest) {
+//    send top
+//    send headers
+//    send emptyline
+//    send body buffer
 }
 
 //bool CanProceedWith(const Location &location, const ClientRequest &request) {
@@ -190,6 +267,7 @@ ServerResponse &ServerResponse::operator=(const ServerResponse &other) {
 }
 
 ServerResponse::~ServerResponse() {}
+
 
 //
 //std::string ServerResponse::GetHeader() {
