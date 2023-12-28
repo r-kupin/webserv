@@ -22,6 +22,7 @@ ServerResponse::ServerResponse() {}
 
 ServerResponse::ServerResponse(const ClientRequest &request,
                                const Location &synth) {
+    (void) request;
     top_ = ComposeTop(synth);
 
     headers_.push_back(std::make_pair("Server", "webserv"));
@@ -96,6 +97,7 @@ std::string ServerResponse::NiceTimestamp() {
 }
 
 void ServerResponse::SendResponse(int dest) {
+    (void)dest;
 //    send top
 //    send headers
 //    send emptyline

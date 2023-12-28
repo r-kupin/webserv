@@ -22,7 +22,7 @@ const static std::string&  kHttpVersion = "HTTP/1.1";
 const static std::string&  kHttpPostfix = "\r\n\r\n";
 const static size_t        kBufferSize = 1024;
 
-typedef std::list<std::pair<std::string, std::string>> l_str_str;
+typedef std::list<std::pair<std::string, std::string> > l_str_str;
 
 class ServerResponse {
 public:
