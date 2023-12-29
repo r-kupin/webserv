@@ -10,127 +10,74 @@
 /*                                                                            */
 /******************************************************************************/
 
-#include <iostream>
 #include <sstream>
-#include <ctime>
-#include <iomanip>
+#include <iostream>
 #include "ServerResponse.h"
 
 ServerResponse::ServerResponse() {}
 
 ServerResponse::ServerResponse(const ClientRequest &request,
-                               const Location &synth) {
+                               const Location &synth,
+                               const std::string &server_name, int port)
+    : server_name_(server_name), port_(port) {
     (void) request;
-    top_ = ComposeTop(synth);
+    ComposeResponse(synth);
+}
 
+void ServerResponse::ComposeResponse(const Location &synth) {
+    top_header_ = ComposeTop(synth);
     headers_.push_back(std::make_pair("Server", "webserv"));
     headers_.push_back(std::make_pair("Date", NiceTimestamp()));
-
-
     if (IsErrorCode(synth.return_code_)) {
-        if (synth.HasErrPageForCode(synth.return_code_)) {
-            GetDefinedErrorPage(synth);
-        } else {
-            body_buffer_ = GeneratePage(synth.return_code_);
-        }
+        HandleError(synth);
     } else if (IsRedirectCode(synth.return_code_)) {
-        body_buffer_ = GeneratePage(synth.return_code_);
-        if (!synth.return_external_address_.empty())
-            headers_.push_back(std::make_pair("Location", synth.return_external_address_));
-        else if (!synth.return_internal_address_.empty()) // localhost:port/ !
-            headers_.push_back(std::make_pair("Location", synth.return_internal_address_));
+        HandleRedirect(synth);
     } else {
-        body_buffer_ = FileToString(synth.root_ + "/" + synth.index_.front());
+        body_str_ = FileToString(synth.root_ + "/" + synth.index_.front());
+        AddContentRelatedHeaders();
     }
-
     headers_.push_back(std::make_pair("Connection", "keep-alive"));
+}
+
+void ServerResponse::HandleRedirect(const Location &synth) {
+    body_str_ = GeneratePage(synth.return_code_);
+    AddContentRelatedHeaders();
+    if (!synth.return_external_address_.empty()) {
+        headers_.push_back(
+                std::make_pair("Location", synth.return_external_address_));
+    } else if (!synth.return_internal_address_.empty()) {
+        headers_.push_back(std::make_pair("Location",
+                               "http://" + server_name_ + ":" +
+                               IntToString(port_) +
+                               synth.return_internal_address_));
+    }
+}
+
+void ServerResponse::HandleError(const Location &synth) {
+    if (synth.HasErrPageForCode(synth.return_code_)) {
+        GetDefinedErrorPage(synth);
+    } else {
+        body_str_ = GeneratePage(synth.return_code_);
+    }
+    AddContentRelatedHeaders();
+}
+
+void ServerResponse::AddContentRelatedHeaders() {
+    headers_.push_back(std::make_pair("Content-Type", "text/html"));
+    headers_.push_back(std::make_pair("Content-Length",
+                                      IntToString(body_str_.size())));
 }
 
 void ServerResponse::GetDefinedErrorPage(const Location &synth) {
     std::string address = synth.root_ + "/" +
                         synth.FindErrPageForCode(synth.return_code_)->address_;
     if (CheckFilesystem(address)) {
-        body_buffer_ = FileToString(address);
+        body_str_ = FileToString(address);
     } else {
-        body_buffer_ = GeneratePage(synth.return_code_);
+        body_str_ = GeneratePage(synth.return_code_);
     }
 }
 
-bool ServerResponse::IsErrorCode(int code) {
-    return ErrPage::kHttpErrCodes.find(code) != ErrPage::kHttpErrCodes.end();
-}
-
-bool ServerResponse::IsOKCode(int code) {
-    return Location::kHttpOkCodes.find(code) != Location::kHttpOkCodes.end();
-}
-
-bool ServerResponse::IsRedirectCode(int code) {
-    return Location::kHttpRedirectCodes.find(code) !=
-            Location::kHttpRedirectCodes.end();
-}
-
-const std::string    &ServerResponse::GetCodeDescription(int code) {
-    if (IsErrorCode(code)) {
-        return ErrPage::kHttpErrCodes.find(code)->second;
-    } else if (IsOKCode(code)) {
-        return Location::kHttpOkCodes.find(code)->second;
-    }
-    throw ResponseException();
-}
-
-bool ServerResponse::CheckFilesystem(const std::string &address) {
-    std::ifstream file(address.c_str());
-    if (file.good()) {
-        file.close();
-        return true;
-    }
-    file.close();
-    return false;
-}
-
-std::string ServerResponse::FileToString(const std::string &address) {
-    std::ifstream file(address.c_str());
-
-    return std::string((std::istreambuf_iterator<char>(file)),
-                               std::istreambuf_iterator<char>());
-}
-
-std::string ServerResponse::GeneratePage(int code) {
-    std::ostringstream page;
-
-    page << "<!DOCTYPE html>\n"
-            "<html lang=\"en\">\n"
-            "<head>\n"
-            "    <meta charset=\"UTF-8\">\n"
-            "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n";
-    page << "    <title> " << code << " " << GetCodeDescription(code) << " </title>\n"
-            "    <style>\n"
-            "        body {\n"
-            "            background-color: #2e3440;\n"
-            "            color: #eceff4;\n"
-            "            font-family: 'Helvetica', sans-serif;\n"
-            "            text-align: center;\n"
-            "            margin: 100px;\n"
-            "        }\n"
-            "\n"
-            "        h1 {\n"
-            "            color: #bf616a;\n"
-            "            font-size: 10em;\n"
-            "            margin-bottom: 0.2em;\n"
-            "        }\n"
-            "\n"
-            "        p {\n"
-            "            color: #81a1c1;\n"
-            "        }\n"
-            "    </style>\n"
-            "</head>\n"
-            "<body>\n";
-    page << "<h1> " << code << " </h1>\n";
-    page << GetCodeDescription(code) << "\n"
-            "</body>\n"
-            "</html>";
-    return page.str();
-}
 
 std::string ServerResponse::ComposeTop(const Location &location) {
     std::ostringstream oss;
@@ -146,27 +93,42 @@ std::string ServerResponse::ComposeTop(const Location &location) {
     return oss.str();
 }
 
-std::string ServerResponse::NiceTimestamp() {
-    time_t timestamp = std::time(NULL);
-    struct tm *timeinfo = gmtime(&timestamp);
-
-    if (timeinfo == NULL) {
-        return "timestamp conversion failed...";
-    }
-
-    char buffer[80];
-    strftime(buffer, sizeof(buffer), "%a, %d %b %Y %H:%M:%S GMT", timeinfo);
-
-    return buffer;
-}
-
 void ServerResponse::SendResponse(int dest) {
-    (void)dest;
-//    send top
-//    send headers
-//    send emptyline
-//    send body buffer
+    std::stringstream ss;
+
+    ss << top_header_ << "\r\n";
+    for (l_str_str_c_it it = headers_.begin();it != headers_.end(); ++it) {
+        ss << it->first << ": " << it->second << "\r\n";
+    }
+    ss << "\r\n" << body_str_;
+
+    std::string response_string = ss.str();
+    const char *response_buffer = response_string.c_str();
+    size_t response_size = response_string.size();
+
+    if (send(dest, response_buffer, response_size, 0) < 0)
+        ThrowResponseException("send() returned negative number!");
 }
+
+void    ServerResponse::ThrowResponseException(const std::string& msg) {
+    std::cout << "Response creation failed: " << msg << std::endl;
+    throw ResponseException();
+}
+
+void    output_list(l_str_str list, std::ostream &os) {
+    for (l_str_str_c_it it = list.begin(); it != list.end(); ++it) {
+        os << "\t[ " << it->first << " ] " << it->second << "\n";
+    }
+    os << std::endl;
+}
+
+std::ostream &operator<<(std::ostream &os, const ServerResponse &response)  {
+    os << response.top_header_ << "\n";
+    output_list(response.headers_, os);
+    os << response.body_str_;
+    return os;
+}
+
 
 //bool CanProceedWith(const Location &location, const ClientRequest &request) {
 //    if (location.limit_except_.except_.find(request.method_) ==
@@ -279,31 +241,31 @@ void ServerResponse::SendResponse(int dest) {
 ////    }
 ////	FindResponseFileAddr(<#initializer#>, <#initializer#>);
 //}
-
-std::string ServerResponse::FindResponseFileAddr(const Location &where,
-                                                 const std::string &filename) {
-//	if (http_is_error_) {
-//		const std::set<ErrPage>::iterator &err_page =
-//				main_.error_pages_.find(ErrPage(http_code_));
-//		if (err_page != main_.error_pages_.end()) {
-//			response_filename_ = kDefaultResPath + main_.root_ + err_page->address_;
-//		} else {
-////            No page for this error code
-//		}
-//	} else {
-//		if (!main_.index_.empty()) {
-//			for (std::set<std::string>::iterator indx_it = main_.index_.begin();
-//				 indx_it != main_.index_.end(); ++indx_it) { // Check file like in the config
-//				response_filename_ = kDefaultResPath + main_.root_ + *indx_it;
-//			}
-//		} else {
-////            Location has no index
-//		}
-//	}
-    (void) where;
-    (void) filename;
-    return "";
-}
+//
+//std::string ServerResponse::FindResponseFileAddr(const Location &where,
+//                                                 const std::string &filename) {
+////	if (http_is_error_) {
+////		const std::set<ErrPage>::iterator &err_page =
+////				main_.error_pages_.find(ErrPage(http_code_));
+////		if (err_page != main_.error_pages_.end()) {
+////			response_filename_ = kDefaultResPath + main_.root_ + err_page->address_;
+////		} else {
+//////            No page for this error code
+////		}
+////	} else {
+////		if (!main_.index_.empty()) {
+////			for (std::set<std::string>::iterator indx_it = main_.index_.begin();
+////				 indx_it != main_.index_.end(); ++indx_it) { // Check file like in the config
+////				response_filename_ = kDefaultResPath + main_.root_ + *indx_it;
+////			}
+////		} else {
+//////            Location has no index
+////		}
+////	}
+//    (void) where;
+//    (void) filename;
+//    return "";
+//}
 
 //std::ifstream ServerResponse::TryOpenFile(const std::string &filename) {
 //	std::ifstream source;

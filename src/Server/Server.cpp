@@ -118,6 +118,9 @@ Server::Server(const Server &other)
  */
 void Server::Start() {
     Init();
+    std::cout << "Server initialized successfully.." << std::endl;
+    std::cout << "socket_: " << socket_ << std::endl;
+    std::cout << "epoll_fd_: " << epoll_fd_ << std::endl;
     Start(config_.GetPort());
 }
 
@@ -153,7 +156,10 @@ void Server::CheckRequest(int client_sock, const sockaddr_in &client_addr) {
 
 void Server::HandleClientRequest(int client_sock) {
     ClientRequest request(client_sock);
-    ServerResponse response(request, SynthesizeHandlingLocation(request));
+    std::cout << "Got client request:\n" << request << std::endl;
+    ServerResponse response(request, SynthesizeHandlingLocation(request),
+                            config_.server_name_, config_.port_);
+    std::cout << "Prepared response:\n" << response << std::endl;
     response.SendResponse(client_sock);
 
 

@@ -39,6 +39,9 @@
 #include <map>
 #include "../../Config/location/LimitExcept.h"
 
+typedef const std::map<std::string, std::string>            m_str_str_c;
+typedef std::map<std::string, std::string>::const_iterator  m_str_str_c_it;
+
 class ClientRequest {
 public:
     class RequestException : public std::exception {};
@@ -51,7 +54,7 @@ public:
     const std::string &getBody() const;
     const std::map<std::string, std::string> &getParams() const;
     const std::map<std::string, std::string> &getHeaders() const;
-protected:
+
 //-------------------socket-level-----------------------------------------------
     void        Init(int client_sock);
     v_str       ReadFromSocket(int socket);
@@ -82,9 +85,8 @@ protected:
     std::string                         fragment_;
     std::map<std::string, std::string>  params_;
     std::map<std::string, std::string>  headers_;
-
-
 };
 
+std::ostream &operator<<(std::ostream &os, const ClientRequest &request);
 
 #endif //WEBSERV_LIB_CLIENTREQUEST_H

@@ -36,18 +36,19 @@ public:
 
 protected:
 //-------------------initialisation: open sockets, create epoll...--------------
-    void    Init();
-    void    PresetAddress(addrinfo **addr);
-    void    CreateSocket(addrinfo *res);
-    void    SetSocketOptions(addrinfo *res) const;
-    void    BindSocket(addrinfo *res);
-    void    ListenSocket();
-    void    CreateEpoll();
-    void    AddEpollInstance();
+    void                    Init();
+    void                    PresetAddress(addrinfo **addr);
+    void                    CreateSocket(addrinfo *res);
+    void                    SetSocketOptions(addrinfo *res) const;
+    void                    BindSocket(addrinfo *res);
+    void                    ListenSocket();
+    void                    CreateEpoll();
+    void                    AddEpollInstance();
 //-------------------request handling-------------------------------------------
-    void    Start(int port);
-    void    HandleClientRequest(int client_sock);
-    void    CheckRequest(int client_sock, const sockaddr_in &client_addr);
+    void                    Start(int port);
+    void                    HandleClientRequest(int client_sock);
+    void                    CheckRequest(int client_sock,
+                                         const sockaddr_in &client_addr);
 //-------------------assemble handling location---------------------------------
     Location                SynthesizeHandlingLocation(const ClientRequest &);
     Location                &SynthFoundExact(const ClientRequest &request,
@@ -68,12 +69,12 @@ protected:
     bool                    AccessForbidden(l_loc_c_it found,
                                             Methods method) const;
 //-------------------getters & stuff--------------------------------------------
-    void SetSocket();
-    const ServerConfiguration & GetConfig();
-    void SetConfig(const ServerConfiguration &config);
-    int getSocket() const;
-    int getEpollFd() const;
-    const epoll_event &getEvent() const;
+    void                        SetSocket();
+    const ServerConfiguration   &GetConfig();
+    void                        SetConfig(const ServerConfiguration &config);
+    int                         getSocket() const;
+    int                         getEpollFd() const;
+    const epoll_event           &getEvent() const;
 
 private:
     ServerConfiguration config_;

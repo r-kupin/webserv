@@ -23,7 +23,7 @@
 #include "../server_configuration/ServerConfiguration.h"
 
 const static std::string kDefaultResPath = "resources/";
-const static std::string kDefaultConfig = "resources/default/nginx.conf";
+const static std::string kDefaultConfig = "resources/nginx.conf";
 
 /**
  * @brief struct used only during parsing process - to keep redd

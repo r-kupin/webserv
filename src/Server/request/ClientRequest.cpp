@@ -86,6 +86,32 @@ v_str ClientRequest::ReadFromSocket(int socket) {
     }
 }
 
+void    output_map(m_str_str_c &map, std::ostream &os) {
+    for (m_str_str_c_it it = map.begin(); it != map.end(); ++it) {
+        os << "\t[ " << it->first << " ] " << it->second << "\n";
+    }
+    os << std::endl;
+}
+
+std::ostream &operator<<(std::ostream &os, const ClientRequest &request) {
+    os << "method_: " << request.method_ << "\n" <<
+       "addr_: " << request.addr_ << "\n" <<
+       "addr_last_step_: " << request.addr_last_step_ << "\n";
+    if (!request.body_.empty())
+        os << "body_: " << request.body_ << "\n";
+    if (!request.fragment_.empty())
+        os << "fragment_: " << request.fragment_ << "\n";
+    if (!request.params_.empty()) {
+        os << "params_: " << "\n";
+        output_map(request.params_, os);
+    }
+    if (!request.headers_.empty()) {
+        os << "headers_: " << "\n";
+        output_map(request.headers_, os);
+    }
+    return os;
+}
+
 Methods ClientRequest::getMethod() const {
     return method_;
 }

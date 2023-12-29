@@ -44,7 +44,8 @@ add_executable(webserv src/main.cpp
         src/Config/server_configuration/ServerConfigurationLocationSearch.cpp
         src/Server/location_synth/SynthFoundExact.cpp
         src/Server/location_synth/SynthNotFound.cpp
-        src/Server/location_synth/LocationSynth.cpp)
+        src/Server/location_synth/LocationSynth.cpp
+        src/Server/response/ResponseStaticUtils.cpp)
 add_library(webserv_lib
         src/Config/config/Config.cpp
         src/Config/config/Config.h
@@ -84,6 +85,7 @@ add_library(webserv_lib
         src/Config/server_configuration/ServerConfigurationLocationSearch.cpp
         src/Server/location_synth/SynthFoundExact.cpp
         src/Server/location_synth/SynthNotFound.cpp
-        src/Server/location_synth/LocationSynth.cpp)
+        src/Server/location_synth/LocationSynth.cpp
+        src/Server/response/ResponseStaticUtils.cpp)
 
 add_subdirectory(test)
