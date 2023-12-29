@@ -4,52 +4,83 @@ ASAN = $(NAME)_asan
 TEST = $(NAME)_test
 
 SRCS = src/main.cpp \
-		src/Server/response/ServerResponse.cpp \
-		src/Server/ServerInit.cpp \
-		src/Server/Server.cpp \
-		src/Server/ServerLocationSynthesizer.cpp \
-		src/Server/request/ClientRequest.cpp \
-		src/Server/ServerLocationSearcher.cpp \
-		src/Server/ServerManager.cpp \
-		src/Logger.cpp \
-		src/Config/config/ConfigCreate.cpp \
-		src/Config/config/Config.cpp \
-		src/Config/config/ConfigParse.cpp \
-		src/Config/Node.cpp \
-		src/Config/server_configuration/ServerConfiguration.cpp \
-		src/Config/server_configuration/ServerConfigurationLocationHandler.cpp \
-		src/Config/location/ErrPage.cpp \
-		src/Config/location/Location.cpp \
-		src/Config/location/LocationHandleReturn.cpp \
-		src/Config/location/LimitExcept.cpp
-LIB_SRCS = src/Server/response/ServerResponse.cpp \
+		src/Server/response/ResponseStaticUtils.cpp \
+        src/Server/response/ServerResponse.cpp \
         src/Server/ServerInit.cpp \
+        src/Server/ServerExceptions.cpp \
         src/Server/Server.cpp \
-        src/Server/ServerLocationSynthesizer.cpp \
         src/Server/request/ClientRequest.cpp \
-        src/Server/ServerLocationSearcher.cpp \
+        src/Server/request/ClientRequestURLHandlers.cpp \
+        src/Server/request/ClientRequestRequestHandlers.cpp \
+        src/Server/request/ClientRequestURLParamsHandlers.cpp \
+        src/Server/request/RequestExceptions.cpp \
+        src/Server/location_synth/SynthFoundExact.cpp \
+        src/Server/location_synth/LocationSynth.cpp \
+        src/Server/location_synth/SynthNotFound.cpp \
         src/Server/ServerManager.cpp \
-        src/Logger.cpp \
         src/Config/config/ConfigCreate.cpp \
         src/Config/config/Config.cpp \
         src/Config/config/ConfigParse.cpp \
         src/Config/Node.cpp \
         src/Config/server_configuration/ServerConfiguration.cpp \
+        src/Config/server_configuration/ServerConfigurationLocationSearch.cpp \
         src/Config/server_configuration/ServerConfigurationLocationHandler.cpp \
         src/Config/location/ErrPage.cpp \
         src/Config/location/Location.cpp \
         src/Config/location/LocationHandleReturn.cpp \
         src/Config/location/LimitExcept.cpp
-TEST_SRCS = tests/server_test/setup_test/ServerConfigTest.cpp \
-		tests/server_test/functionality_test/ServerTest.cpp \
-		tests/config_test/location_class_test/setup_test/HandleReturnTest.cpp \
-		tests/config_test/location_class_test/setup_test/HandleAddErrPagesTest.cpp \
-		tests/config_test/location_class_test/setup_test/HandleUpdateIndexTest.cpp \
-		tests/config_test/location_class_test/setup_test/LocationMarkDirectiveTest.cpp \
-		tests/config_test/location_class_test/setup_test/HandleLimitExceptTest.cpp \
-		tests/config_test/location_class_test/setup_test/LocationProcessDirectivesTest.cpp \
-		tests/config_test/location_class_test/setup_test/LocationConstructorTest.cpp \
-        tests/config_test/location_class_test/functionality_test/LocationFindSublocationTest.cpp
+LIB_SRCS = 		src/Server/response/ResponseStaticUtils.cpp \
+                   src/Server/response/ServerResponse.cpp \
+                   src/Server/ServerInit.cpp \
+                   src/Server/ServerExceptions.cpp \
+                   src/Server/Server.cpp \
+                   src/Server/request/ClientRequest.cpp \
+                   src/Server/request/ClientRequestURLHandlers.cpp \
+                   src/Server/request/ClientRequestRequestHandlers.cpp \
+                   src/Server/request/ClientRequestURLParamsHandlers.cpp \
+                   src/Server/request/RequestExceptions.cpp \
+                   src/Server/location_synth/SynthFoundExact.cpp \
+                   src/Server/location_synth/LocationSynth.cpp \
+                   src/Server/location_synth/SynthNotFound.cpp \
+                   src/Server/ServerManager.cpp \
+                   src/Config/config/ConfigCreate.cpp \
+                   src/Config/config/Config.cpp \
+                   src/Config/config/ConfigParse.cpp \
+                   src/Config/Node.cpp \
+                   src/Config/server_configuration/ServerConfiguration.cpp \
+                   src/Config/server_configuration/ServerConfigurationLocationSearch.cpp \
+                   src/Config/server_configuration/ServerConfigurationLocationHandler.cpp \
+                   src/Config/location/ErrPage.cpp \
+                   src/Config/location/Location.cpp \
+                   src/Config/location/LocationHandleReturn.cpp \
+                   src/Config/location/LimitExcept.cpp
+TEST_SRCS = test/tests/server_test/request_test/RequestLineLevelTest.cpp \
+            test/tests/server_test/request_test/URLLevelTest.cpp \
+            test/tests/server_test/request_test/SocketLevelTest.cpp \
+            test/tests/server_test/request_test/ParsedRequestLevelTest.cpp \
+            test/tests/server_test/functionality_test/LocationSyntFoundExact.cpp \
+            test/tests/server_test/functionality_test/LocationSynthUtilsTest.cpp \
+            test/tests/server_test/functionality_test/LocationSynthTest.cpp \
+            test/tests/server_test/functionality_test/ServerTest.cpp \
+            test/tests/server_test/functionality_test/LocationSynthFoundExactTest.cpp \
+            test/tests/config_test/location_class_test/setup_test/HandleReturnTest.cpp \
+            test/tests/config_test/location_class_test/setup_test/HandleAddErrPagesTest.cpp \
+            test/tests/config_test/location_class_test/setup_test/HandleUpdateIndexTest.cpp \
+            test/tests/config_test/location_class_test/setup_test/LocationStaticToolsTest.cpp \
+            test/tests/config_test/location_class_test/setup_test/LocationMarkDirectiveTest.cpp \
+            test/tests/config_test/location_class_test/setup_test/HandleLimitExceptTest.cpp \
+            test/tests/config_test/location_class_test/setup_test/LocationProcessDirectivesTest.cpp \
+            test/tests/config_test/location_class_test/functionality_test/LocationFindSublocationTest.cpp \
+            test/tests/config_test/config_class_test/setup_from_file_config/ConfigSetupFromFileTest.cpp \
+            test/tests/config_test/config_class_test/setup_from_file_config/ConfigFileCheckTest.cpp \
+            test/tests/config_test/config_class_test/setup_from_nodes/ConfigServerSubcontextsHandlingTest.cpp \
+            test/tests/config_test/config_class_test/setup_from_nodes/ConfigMainContextCheck.cpp \
+            test/tests/config_test/server_configuration_class_test/setup_test/HandleDirectivesTest.cpp \
+            test/tests/config_test/server_configuration_class_test/setup_test/HandleMultistepLocation.cpp \
+            test/tests/config_test/server_configuration_class_test/setup_test/HandleSingleStepLocation.cpp \
+            test/tests/config_test/server_configuration_class_test/functionality_test/NestedConfigLocationSearchTest.cpp \
+            test/tests/config_test/server_configuration_class_test/functionality_test/CheckCorrectLocationContextTest.cpp \
+            test/tests/config_test/server_configuration_class_test/functionality_test/SimpleConfigLocationSearchTest.cpp
 
 TEST_LIB_DIR = test/lib
 TEST_LIB_INCL_DIR = $(TEST_LIB_DIR)/googletest/include
