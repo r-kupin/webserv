@@ -20,12 +20,15 @@ The main context of the instance of the HTTP server. At least one should be defi
 Server context can't be empty - it should contain mandatory server-level directives: 
 - *server_name* (unique)
 - *listen* (unique)
+
 Optional directives:
 - *client_max_body_size* (unique)
+
 Server also can predefine root location with optional directives:
 - *root* (unique)
 - *index*
 - *error_page*
+
 Inside server context multiple **location** sub-contexts can be defined, to handle specific requests.
 ```nginx
 server {
@@ -83,6 +86,7 @@ Location can be empty, or contain following directives:
 - *index*
 - *return* (unique)
 - *error_page*
+
 It can also contain sub-contexts:
 - *limit_except* (unique)
 - nested *location*
@@ -97,9 +101,9 @@ The `METHOD` parameter can be one of the following: `GET`, `POST`,  or  `DELETE`
 Limit_except can't be empty, and should contain following directives:
 - *deny*
 - *allow*
+
 Depending on intention of prohibiting or allowing access. 
 Limit_except can't have any sub-contexts.
-
 ### Directives
 Directive is a single-line instruction defined in a following way:
 ```nginx
@@ -131,6 +135,7 @@ In this case:
 - URI `/loc_0/text.txt` will be handled in `/var/www/loc_0/`, because nginx appends location address to parent location's root, if it isn't overridden.
 - URI `/loc_1/text.txt` will be handled by path, constructed as `path to executable` + `/loc_1`
 - URI `/loc_1/loc_2/text.txt` will be handled by path, constructed as `parrent's root` + `/loc_2`
+
 todo -> If location and all it's super-locations have no root definition at all - server will respond with *500 Internal Server Error*, if access is not restricted, and redirect not set.
 ##### index
 May have multiple args that define files that will be used as an index - meaning - shown when location get's accessed by address. Files are checked in the specified order. The last element of the list can be a file with an absolute path.
@@ -168,7 +173,6 @@ Example:
 ```nginx
 error_page 403 404 /error.html;
 ```
-
 # How it actually works?
 ## Init
 ### Arg check
