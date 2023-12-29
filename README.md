@@ -30,8 +30,8 @@ Inside server context multiple **location** sub-contexts can be defined, to hand
 ```nginx
 server {
 	listen 4281;  
-    server_name localhost;  
-    root /var/www;
+    	server_name localhost;  
+    	root /var/www;
 
 	location / { ... }
 }
