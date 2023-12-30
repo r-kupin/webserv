@@ -22,8 +22,7 @@
  * @return not-exact copy of a location found
  */
 Location Server::SynthesizeHandlingLocation(const ClientRequest &request) {
-    ServerConfiguration::LocConstSearchResult res =
-                            config_.FindConstLocation(request.getAddress());
+    SrchRes res = config_.FindConstLocation(request.getAddress());
 
     Location synth(*res.location_);
     if (AccessForbidden(res.location_, request.getMethod())) {
@@ -33,7 +32,7 @@ Location Server::SynthesizeHandlingLocation(const ClientRequest &request) {
         if (res.status_ == "found") {
             synth = SynthFoundExact(res.location_, synth);
         } else if (res.status_ == "not found") {
-            synth = SynthForNotFound(request, res.location_, synth);
+            synth = SynthForNotFound(request, res, synth);
         } else if (res.status_ == "request misconfigured") {
             synth.return_code_ = 400;
         }

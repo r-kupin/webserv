@@ -48,6 +48,7 @@ struct Location {
     std::string             root_;
     std::string             full_address_;
     std::string             address_;
+    std::string             body_file_;
     l_loc_it                parent_;
     bool                    ghost_;
 

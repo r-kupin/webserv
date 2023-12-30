@@ -72,11 +72,12 @@ Location::Location(const Location& other)
       limit_except_(other.limit_except_),
       return_code_(other.return_code_),
       return_internal_address_(other.return_internal_address_),
+      return_external_address_(other.return_external_address_),
+      return_custom_message_(other.return_custom_message_),
       root_(other.root_),
       full_address_(other.full_address_),
       address_(other.address_),
-      parent_(other.parent_),
-      ghost_(other.ghost_){}
+      body_file_(other.body_file_) {}
 
 Location::Location(const std::string &address)
     : index_defined_(false),
@@ -455,8 +456,16 @@ void ptint_err_pages(std::ostream &os, const Location &location) {
 void print_return_info(std::ostream &os, const Location &location) {
     os << location.full_address_ << ":\t" << "Return Code: " <<
         location.return_code_ << std::endl;
-    os << location.full_address_ << ":\t" << "Return Address: " <<
-       location.return_internal_address_ << std::endl;
+    if (!location.return_internal_address_.empty()) {
+        os << location.full_address_ << ":\t" << "Return Address: " <<
+           location.return_internal_address_ << std::endl;
+    } else if (!location.return_external_address_.empty()) {
+        os << location.full_address_ << ":\t" << "Return Address: " <<
+           location.return_external_address_ << std::endl;
+    } else if (!location.return_custom_message_.empty()) {
+        os << location.full_address_ << ":\t" << "Return Custom message: " <<
+           location.return_custom_message_ << std::endl;
+    }
 }
 
 void print_index(std::ostream &os, const Location &location) {

@@ -14,22 +14,25 @@
 #include <algorithm>
 #include "../ServerExceptions.h"
 
-Location &Server::SynthForNotFound(const ClientRequest &request,
-                                   l_loc_c_it found,
+Location Server::SynthForNotFound(const ClientRequest &request,
+                                   const SrchRes &found,
                                    Location &synth) const {
-    if (ServerResponse::CheckFilesystem(found->root_)) {
-        if (found->index_defined_) {
-            HandleExplicitIndex(found, synth);
-        } else {
-            HandleImplicitIndex(found, synth);
-        }
+    (void)request;
+    std::string address = found.location_->root_ + found.leftower_address_;
+    if (ServerResponse::CheckFilesystem(address)) {
+
     } else {
-        std::cout << "open() \"" + found->root_ + "\" failed" << std::endl;
+        std::cout << "open() \"" + address + "\" failed" << std::endl;
         synth.return_code_ = 404;
     }
+
     return synth;
 }
-
+void Server::AssignFileToBody(const std::string &address,
+                              Location &synth) const {
+    synth.body_file_ = address;
+    synth.return_code_ = 200;
+}
 //Location &Server::SynthForNotFound(const ClientRequest &request,
 //                                   l_loc_c_it found,
 //                                   Location &synth,

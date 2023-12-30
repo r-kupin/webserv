@@ -28,20 +28,28 @@ void ServerResponse::ComposeResponse(const Location &synth) {
     top_header_ = ComposeTop(synth);
     headers_.push_back(std::make_pair("Server", "webserv"));
     headers_.push_back(std::make_pair("Date", NiceTimestamp()));
-    if (IsErrorCode(synth.return_code_)) {
-        HandleError(synth);
-    } else if (IsRedirectCode(synth.return_code_)) {
-        HandleRedirect(synth);
+    if (synth.return_custom_message_.empty()) {
+        if (IsErrorCode(synth.return_code_)) {
+            HandleError(synth);
+        } else if (IsRedirectCode(synth.return_code_)) {
+            HandleRedirect(synth);
+        } else {
+            if (synth.body_file_.empty()) {
+                body_str_ = FileToString(
+                        synth.root_ + "/" + synth.index_.front());
+            } else {
+                body_str_ = FileToString(synth.body_file_);
+            }
+        }
     } else {
-        body_str_ = FileToString(synth.root_ + "/" + synth.index_.front());
-        AddContentRelatedHeaders();
+        body_str_ = synth.return_custom_message_;
     }
+    AddContentRelatedHeaders();
     headers_.push_back(std::make_pair("Connection", "keep-alive"));
 }
 
 void ServerResponse::HandleRedirect(const Location &synth) {
     body_str_ = GeneratePage(synth.return_code_);
-    AddContentRelatedHeaders();
     if (!synth.return_external_address_.empty()) {
         headers_.push_back(
                 std::make_pair("Location", synth.return_external_address_));
@@ -59,7 +67,6 @@ void ServerResponse::HandleError(const Location &synth) {
     } else {
         body_str_ = GeneratePage(synth.return_code_);
     }
-    AddContentRelatedHeaders();
 }
 
 void ServerResponse::AddContentRelatedHeaders() {
@@ -78,14 +85,11 @@ void ServerResponse::GetDefinedErrorPage(const Location &synth) {
     }
 }
 
-
 std::string ServerResponse::ComposeTop(const Location &location) {
     std::ostringstream oss;
 
     oss << kHttpVersion << " " << location.return_code_ << " ";
-    if (!location.return_custom_message_.empty()) {
-        oss << location.return_custom_message_;
-    } else if (IsErrorCode(location.return_code_)) {
+    if (IsErrorCode(location.return_code_)) {
         oss << ErrPage::kHttpErrCodes.find(location.return_code_)->second;
     } else {
         oss << Location::kHttpOkCodes.find(location.return_code_)->second;

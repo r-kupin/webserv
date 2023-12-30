@@ -20,6 +20,7 @@ bool is_address(const std::string &str) {
     return is_internal_address(str) || is_external_address(str);
 }
 
+// todo: Custom message in quotes!!
 /**
  * from nginx docs:
  *  	return code [text];

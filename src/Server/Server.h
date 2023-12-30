@@ -20,7 +20,9 @@
 #include "../Config/config/Config.h"
 #include "response/ServerResponse.h"
 
-class Server {
+ typedef ServerConfiguration::LocConstSearchResult SrchRes;
+
+ class Server {
 public:
     class ServerException : public std::exception {};
 
@@ -52,8 +54,9 @@ protected:
 //-------------------assemble handling location---------------------------------
     Location                SynthesizeHandlingLocation(const ClientRequest &);
 
-    Location &SynthForNotFound(const ClientRequest &request, l_loc_c_it found,
-                               Location &synth) const;
+    Location                SynthForNotFound(const ClientRequest &request,
+                                              const SrchRes&found,
+                                              Location &synth) const;
     void                    HandleExplicitIndex(l_loc_c_it &found,
                                                 Location &synth) const;
     void                    HandleImplicitIndex(const l_loc_c_it &found,
@@ -77,7 +80,8 @@ private:
     int epoll_fd_;
     epoll_event event_;
 
-};
+     void AssignFileToBody(const std::string &address, Location &synth) const;
+ };
 
 
 #endif //WEBSERV_LIB_SERVER_H
