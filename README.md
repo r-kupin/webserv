@@ -33,8 +33,8 @@ Inside server context multiple **location** sub-contexts can be defined, to hand
 ```nginx
 server {
 	listen 4281;  
-    	server_name localhost;  
-    	root /var/www;
+    server_name localhost;  
+    root /var/www;
 
 	location / { ... }
 }
@@ -48,12 +48,40 @@ location address {
 	...
 }
 ```
-The *address* - is the absolute path from the **root** location, there are no relative paths. It means, that if location *"loc_n"* should be placed inside location *"/loc_1"* - the address should be defined as follows: *"/loc_1/loc_n"*, regardless of whether the super-context is *location /loc_1*, *location /* or *server*. But it can't be defined in any context, apart of the mentioned above.
+The *address* - is the absolute path from the **root** location, there are no relative paths. It means, that if location *"loc_n"* should be placed inside location *"/loc_1"* - the address should be defined as follows: *"/loc_1/loc_n"*, regardless of whether the super-context is *location /loc_1*, *location /* or *server*:
+```nginx
+# OK
+location / {
+	location /loc_1 {
+		location /loc_1/loc_2 {
+			...
+		}
+	}
+}
+
+location /loc_1/loc_3 {
+	....
+}
+```
+But it can't be defined in any context, apart of the mentioned above:
+```nginx
+# NOT OK
+location / {
+	location /loc_1 {
+		location /loc_3 {
+			...
+		}
+	}
+	# "/loc_3" should be defined here
+}
+# or here
+```
 Redefinition of locations is possible:
 ```nginx
 # OK
 location / {
 	location / {
+		# This will be the actual version of "/"
 		location /loc_1 {
 			...
 		}
@@ -64,7 +92,8 @@ location / {
 }
 
 location /loc_1 {
-	....
+	# And this will be the actual version of "/loc_1"
+	... 
 }
 ```
  However one super-location/server can't contain multiple sub-locations with the same addresses:
@@ -81,6 +110,22 @@ location / {
 	}
 }
 ```
+Locations also can be defined implicitly:
+```nginx
+# OK
+server {
+	listen 4281;  
+    server_name localhost;  
+    root /var/www;
+	
+	location /loc_1/loc_2 {
+		# definition of "/loc_1/loc_2"
+		...
+	}
+	# no explicit definition of "/loc_1"
+}
+```
+In this project, such locations referred as **ghost** locations. In the example above, request to `localhost:4281/loc_1/` will lead to `403 Forbidden` server response.
 Location can be empty, or contain following directives:
 - *root* (unique)
 - *index*
@@ -169,6 +214,7 @@ location /target_location {
 ##### error_page
 Similar to *index* - it is possible to define custom error pages for each location.
 Error_page directive expects one or more `error code`(s) followed by a `filename` of the error page, that should be sent to the client in case if one of the specified errors will happen.
+In case, if error page is not defined, or defined file doesn't exist - webserv would auto generate default error page automatically.
 Example:
 ```nginx
 error_page 403 404 /error.html;

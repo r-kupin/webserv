@@ -18,11 +18,7 @@
 Location &Server::SynthFoundExact(const ClientRequest &request,
                                   l_loc_c_it found,
                                   Location &synth) const {
-
-    if (AccessForbidden(found, request.getMethod())) {
-        std::cout << "access forbidden by rule" << std::endl;
-        synth.return_code_ = 403;
-    } else if (found->return_code_ == 0) {
+    if (found->return_code_ == 0) {
         SynthNoRedirectionDefined(found, synth);
     }
     return synth;

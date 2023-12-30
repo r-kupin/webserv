@@ -23,15 +23,20 @@
  */
 Location Server::SynthesizeHandlingLocation(const ClientRequest &request) {
     ServerConfiguration::LocConstSearchResult res =
-            config_.FindConstLocation(request.getAddress());
+                            config_.FindConstLocation(request.getAddress());
 
     Location synth(*res.location_);
-    if (res.status_ == "found") {
-        synth = SynthFoundExact(request, res.location_, synth);
-    } else if (res.status_ == "not found") {
-        synth = SynthForNotFound(request, res.location_, synth);
-    } else if (res.status_ == "request misconfigured") {
-        synth.return_code_ = 400;
+    if (AccessForbidden(res.location_, request.getMethod())) {
+        std::cout << "access forbidden by rule" << std::endl;
+        synth.return_code_ = 403;
+    } else {
+        if (res.status_ == "found") {
+            synth = SynthFoundExact(request, res.location_, synth);
+        } else if (res.status_ == "not found") {
+            synth = SynthForNotFound(request, res.location_, synth);
+        } else if (res.status_ == "request misconfigured") {
+            synth.return_code_ = 400;
+        }
     }
     return synth;
 }
