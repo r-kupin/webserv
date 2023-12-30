@@ -14,15 +14,19 @@
 #include <algorithm>
 #include "../ServerExceptions.h"
 
-
 Location &Server::SynthForNotFound(const ClientRequest &request,
                                    l_loc_c_it found,
-                                   Location &synth,
-                                   const std::string &def_res_address) const {
-    (void)request;
-    (void)found;
-    (void)def_res_address;
-    synth.return_code_ = 501;
+                                   Location &synth) const {
+    if (ServerResponse::CheckFilesystem(found->root_)) {
+        if (found->index_defined_) {
+            HandleExplicitIndex(found, synth);
+        } else {
+            HandleImplicitIndex(found, synth);
+        }
+    } else {
+        std::cout << "open() \"" + found->root_ + "\" failed" << std::endl;
+        synth.return_code_ = 404;
+    }
     return synth;
 }
 
@@ -31,7 +35,6 @@ Location &Server::SynthForNotFound(const ClientRequest &request,
 //                                   Location &synth,
 //                                   const std::string &def_res_address) const {
 //    // No literal match. Found location will be the closest one.
-//    // Maybe request asks for a file?
 //    if (CheckFilesystem(found->root_, def_res_address) &&
 //            AccessForbidden(found, request.getMethod())) {
 //        // closest location exists and allows access

@@ -51,20 +51,15 @@ protected:
                                          const sockaddr_in &client_addr);
 //-------------------assemble handling location---------------------------------
     Location                SynthesizeHandlingLocation(const ClientRequest &);
-    Location                &SynthFoundExact(const ClientRequest &request,
-                                             l_loc_c_it found,
-                                             Location &synth) const;
-    Location &              SynthForNotFound(const ClientRequest &request,
-                                             l_loc_c_it found,
-                                             Location &synth,
-                                             const std::string &def_res_address =
-                                                         kDefaultResPath) const;
+
+    Location &SynthForNotFound(const ClientRequest &request, l_loc_c_it found,
+                               Location &synth) const;
     void                    HandleExplicitIndex(l_loc_c_it &found,
                                                 Location &synth) const;
     void                    HandleImplicitIndex(const l_loc_c_it &found,
                                                 Location &synth) const;
-    void                    SynthNoRedirectionDefined(l_loc_c_it &found,
-                                                      Location &synth) const;
+    Location                SynthFoundExact(l_loc_c_it &found,
+                                            Location &synth) const;
     l_str_c_it              FindIndexToSend(l_loc_c_it found) const;
     bool                    AccessForbidden(l_loc_c_it found,
                                             Methods method) const;

@@ -29,9 +29,9 @@ Location Server::SynthesizeHandlingLocation(const ClientRequest &request) {
     if (AccessForbidden(res.location_, request.getMethod())) {
         std::cout << "access forbidden by rule" << std::endl;
         synth.return_code_ = 403;
-    } else {
+    } else if (res.location_->return_code_ == 0) {
         if (res.status_ == "found") {
-            synth = SynthFoundExact(request, res.location_, synth);
+            synth = SynthFoundExact(res.location_, synth);
         } else if (res.status_ == "not found") {
             synth = SynthForNotFound(request, res.location_, synth);
         } else if (res.status_ == "request misconfigured") {
