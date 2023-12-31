@@ -20,9 +20,6 @@ client_max_body_size_(1024),
 server_name_("localhost") {
     Location root_loc("/");
     root_loc.root_ = "resources/root_loc_default";
-//    todo implement automatic default error pages generation
-//    root_loc.error_pages_.insert(ErrPage("/htmls/404.html", 404));
-//    root_loc.error_pages_.insert(ErrPage("/htmls/403.html", 403));
     root_loc.return_code_ = 0;
     root_loc.return_internal_address_ = "";
     root_loc.full_address_ = "";
@@ -158,10 +155,8 @@ bool        ServerConfiguration::operator==(
 ServerConfiguration &ServerConfiguration::operator=(
                                             const ServerConfiguration &rhs) {
     if (this == &rhs) {
-        // Self-assignment, no need to do anything
         return *this;
     }
-    // Copy data members from rhs to this object
     default_hostname_ = rhs.default_hostname_;
     port_ = rhs.port_;
     port_str_ = rhs.port_str_;
@@ -175,18 +170,17 @@ ServerConfiguration &ServerConfiguration::operator=(
 }
 
 std::ostream &operator<<(std::ostream &os, const ServerConfiguration &config) {
-    os << "server: " << std::endl;
-    os << "hostname: " << config.server_name_ << std::endl;
+    os << "hostname: " << config.server_name_ << "\n";
     for (s_str_c_it it = config.server_names_.begin();
         it != config.server_names_.end(); ++it) {
-        os << "name: " << *it << std::endl;
+        os << "name: " << *it << "\n";
     }
-    os << "port: " << config.port_ << std::endl;
+    os << "port: " << config.port_ << "\n";
     if (config.client_max_body_size_) {
-        os << "client_max_body_size_: " << config.client_max_body_size_ <<
-        std::endl;
+        os << "client_max_body_size_: " << config.client_max_body_size_ << "\n";
     }
-    os << config.GetConstRoot() << std::endl;
+    os << config.GetConstRoot() << "\n";
+    os << std::endl;
     return os;
 }
 
@@ -209,19 +203,4 @@ ServerConfiguration::LocConstSearchResult::LocConstSearchResult(
         status_(status),
         full_address_(fullAddress),
         leftower_address_(leftowerAddress) {}
-//
-//void      ServerConfiguration::InheritanceErrPagesRoot(l_loc_it parent,
-//                                                  std::list<Location> &kids) {
-//    for (l_loc_it it = kids.begin(); it != kids.end(); ++it) {
-//        if (it->root_.empty())
-//            it->root_ = parent->root_;
-//        if (it->address_ != "/")
-//            it->root_ = it->root_.substr(0, it->root_.find_last_of('/')) +
-//                    it->address_ + "/";
-//        if (it->error_pages_.empty())
-//            it->error_pages_ = parent->error_pages_;
-//        if (!it->sublocations_.empty())
-//            InheritanceErrPagesRoot(it, it->sublocations_);
-//    }
-//}
 

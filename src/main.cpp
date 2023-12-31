@@ -73,7 +73,6 @@ int main(int ac, char** av) {
         Config conf = try_open_configs(ac, av);
         std::cout << "Config is on path " + conf.getConfPath() +
                     " is loaded.  Creating servers.." << std::endl;
-        std::cout << conf << std::endl;
         ServerManager server_manager(conf);
         server_manager.RunAll();
     } catch (const Config::ConfigException& e) {

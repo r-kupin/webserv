@@ -23,7 +23,6 @@ class ServerConfiguration;
 
 typedef std::list<ServerConfiguration>                  l_sc;
 typedef std::list<ServerConfiguration>::const_iterator  l_sc_c_it;
-typedef std::set<std::string>::const_iterator           s_str_c_it;
 
 class ServerConfiguration {
 public:

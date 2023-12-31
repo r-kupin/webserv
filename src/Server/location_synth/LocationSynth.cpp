@@ -25,7 +25,7 @@ Location Server::SynthesizeHandlingLocation(const ClientRequest &request) {
     SrchRes res = config_.FindConstLocation(request.getAddress());
 
     Location synth(*res.location_);
-    if (AccessForbidden(res.location_, request.getMethod())) {
+    if (AccessForbidden(res.location_, request.GetMethod())) {
         std::cout << "access forbidden by rule" << std::endl;
         synth.return_code_ = 403;
     } else if (res.location_->return_code_ == 0) {

@@ -39,16 +39,14 @@
 #include <map>
 #include "../../Config/location/LimitExcept.h"
 
-typedef const std::map<std::string, std::string>            m_str_str_c;
-typedef std::map<std::string, std::string>::const_iterator  m_str_str_c_it;
-
 class ClientRequest {
 public:
     class RequestException : public std::exception {};
+
     ClientRequest();
     explicit    ClientRequest(int client_sock);
 
-    Methods getMethod() const;
+    Methods GetMethod() const;
     const std::string &getAddress() const;
     const std::string &getLastStepUri() const;
     const std::string &getBody() const;
@@ -77,14 +75,15 @@ public:
     std::string ExtractFragment(const std::string& url);
     std::string ExtractLastAddrStep(const std::string& address);
 
-    void ThrowException(const std::string& msg, const std::string &e) const;
+    void        ThrowException(const std::string& msg,
+                               const std::string &e) const;
     Methods                             method_;
     std::string                         addr_;
     std::string                         addr_last_step_;
     std::string                         body_;
     std::string                         fragment_;
-    std::map<std::string, std::string>  params_;
-    std::map<std::string, std::string>  headers_;
+    m_str_str                           params_;
+    m_str_str                           headers_;
 };
 
 std::ostream &operator<<(std::ostream &os, const ClientRequest &request);

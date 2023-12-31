@@ -38,23 +38,6 @@ const std::string    &ServerResponse::GetCodeDescription(int code) {
     }
     throw ResponseException();
 }
-//-------------------file related-----------------------------------------------
-bool ServerResponse::CheckFilesystem(const std::string &address) {
-    std::ifstream file(address.c_str());
-    if (file.good()) {
-        file.close();
-        return true;
-    }
-    file.close();
-    return false;
-}
-
-std::string ServerResponse::FileToString(const std::string &address) {
-    std::ifstream file(address.c_str());
-
-    return std::string((std::istreambuf_iterator<char>(file)),
-                       std::istreambuf_iterator<char>());
-}
 
 std::string ServerResponse::GeneratePage(int code) {
     std::ostringstream page;
@@ -101,25 +84,4 @@ std::string ServerResponse::GeneratePage(int code) {
             "</body>\r\n"
             "</html>\r\n";
     return page.str();
-}
-
-std::string ServerResponse::IntToString(size_t n) {
-    std::stringstream ss;
-    ss << n;
-    return ss.str();
-}
-
-//-------------------time related-----------------------------------------------
-std::string ServerResponse::NiceTimestamp() {
-    time_t timestamp = std::time(NULL);
-    struct tm *timeinfo = gmtime(&timestamp);
-
-    if (timeinfo == NULL) {
-        return "timestamp conversion failed...";
-    }
-
-    char buffer[80];
-    strftime(buffer, sizeof(buffer), "%a, %d %b %Y %H:%M:%S GMT", timeinfo);
-
-    return buffer;
 }

@@ -99,13 +99,6 @@
 #include "request/RequestExceptions.h"
 #include "Server.h"
 
-
-//const int BUFFER_SIZE = 1024;
-//const int MAX_EVENTS = 10;
-//
-Server::Server()
-: socket_(0), epoll_fd_(0) {}
-
 Server::Server(const Server &other)
 : config_(other.config_), socket_(other.socket_), epoll_fd_(other.epoll_fd_),
   event_(other.event_) {}
@@ -118,9 +111,7 @@ Server::Server(const Server &other)
  */
 void Server::Start() {
     Init();
-    std::cout << "Server initialized successfully.." << std::endl;
-    std::cout << "socket_: " << socket_ << std::endl;
-    std::cout << "epoll_fd_: " << epoll_fd_ << std::endl;
+    std::cout << "Server initialized successfully..\n" << *this << std::endl;
     Start(config_.GetPort());
 }
 
@@ -142,7 +133,7 @@ void Server::CheckRequest(int client_sock, const sockaddr_in &client_addr) {
         std::cout << "Error accepting connection! " << std::endl;
     } else {
         std::cout << "Accepted client connection from " <<
-                                    client_addr.sin_addr.s_addr << std::endl;
+                        client_addr.sin_addr.s_addr  << "\n" << std::endl;
         try {
             HandleClientRequest(client_sock);
         } catch (const ClientRequest::RequestException &) {
@@ -161,42 +152,6 @@ void Server::HandleClientRequest(int client_sock) {
                             config_.server_name_, config_.port_);
     std::cout << "Prepared response:\n" << response << std::endl;
     response.SendResponse(client_sock);
-
-
-//         if (it == config_.locations_.end()) {
-////             return 404
-//         } else {
-////             const Location &to_go = *(it);
-////             if (!to_go.limit_except_.except_.empty() &&
-////                    to_go.limit_except_.except_.find(request.method_) ==
-////                            to_go.limit_except_.except_.end()) {
-//////                 return to_go.return_code_;
-////             }
-//         }
-//         std::string filepath;
-//         if ()
-//         = kDefaultResPath +
-
-
-//     // Open file corresponding to requested URI
-//     std::string filepath = "resources/default/htmls";
-//     std::ifstream file(filepath.c_str());
-//     if (!file.good()) {
-//         // If file doesn't exist, send 404 error response to client
-//         std::string response = "HTTP/1.1 404 Not Found\r\n\r\n";
-//         send(client_sock, response.c_str(), response.length(), 0);
-//         return;
-//     }
-//
-//     std::string response = "HTTP/1.1 200 OK\r\n\r\n";
-////     while (!file.eof()) {
-////         file.read(buffer, BUFFER_SIZE);
-////         send(client_sock, buffer, file.gcount(), 0);
-////     }
-//
-//     // Close file and socket
-//     file.close();
-//     close(client_sock);
  }
 
 Server &Server::operator=(const Server &other) {
@@ -208,19 +163,15 @@ Server &Server::operator=(const Server &other) {
 Server::~Server() {}
 
 
-void Server::SetConfig(const ServerConfiguration &config) {
-    config_ = config;
-}
-
-const ServerConfiguration & Server::GetConfig() {
+const ServerConfiguration & Server::GetConfig() const {
     return config_;
 }
 
-int Server::getSocket() const {
+int Server::GetSocket() const {
     return socket_;
 }
 
-int Server::getEpollFd() const {
+int Server::GetEpollFd() const {
     return epoll_fd_;
 }
 
@@ -228,73 +179,9 @@ const epoll_event &Server::getEvent() const {
     return event_;
 }
 
-
-//       ClientRequest request(client_sock);
-//         int http_code;
-//         const Location &loc = FindSublocation(request.address_,
-//                                            config_.locations_,
-//                                            http_code);
-//         ServerResponse response(request, config_.locations_, http_code);
-//
-//
-//
-//         html.exceptions(std::ifstream::failbit);
-//         header <<  "HTTP/1.1 " << http_code << " ";
-//         if (Location::kHttpOkCodes.find(http_code) !=
-//                                                Location::kHttpOkCodes.end()) {
-//             header << Location::kHttpOkCodes.find(http_code)->second;
-//             if (!loc.index_.empty()) {
-//                 for (std::set<std::string>::iterator it = loc.index_.begin();
-//                      it != loc.index_.end(); ++it) {
-//                     std::cout << kDefaultResPath + loc.root_ + *it << std::endl;
-//                     html.open((kDefaultResPath + loc.root_ + *it).c_str());
-//                     if (html) {
-//                         html.exceptions(std::ifstream::badbit);
-//                         break;
-//                     }
-//                 }
-//             }
-//         } else if (ErrPage::kHttpErrCodes.find(http_code) !=
-//                                                ErrPage::kHttpErrCodes.end()) {
-//             header << ErrPage::kHttpErrCodes.find(http_code)->second;
-//             const std::set<ErrPage>::iterator &err_page =
-//                            loc.error_pages_.find(ErrPage(http_code));
-//             if (err_page != loc.error_pages_.end()) {
-//                 html.open((kDefaultResPath + loc.root_ + err_page->address_).c_str());
-//                 if (html) {
-//                     html.exceptions(std::ifstream::badbit);
-//                 }
-//             }
-//         }
-//         header << " \r\n\r\n";
-//
-
-// // Create a buffer to hold the file data
-//         const size_t bufferSize = 1024;
-//         char buffer[bufferSize];
-//
-//         memccpy(buffer, header.str().c_str(), '\0', header.str().size());
-//         send(client_sock, buffer, header.str().size(), 0);
-//
-//
-//         // Read and send the file data in chunks
-//         while (fileSize > 0) {
-//             // Determine the number of bytes to read
-//             size_t bytesRead = std::min(static_cast<size_t>(bufferSize),
-//                                         static_cast<size_t>(fileSize));
-//
-//             // Read data from the file
-//             html.read(buffer, bytesRead);
-//
-//             // Send the data over the socket
-//             ssize_t bytesSent = send(client_sock, buffer, bytesRead, 0);
-//             if (bytesSent < 0) {
-//                 std::cerr << "Failed to send data over the socket"
-//                           << std::endl;
-//                 break;
-//             }
-//
-//             // Update the remaining file size
-//             fileSize -= bytesSent;
-//         }
-
+std::ostream &operator<<(std::ostream &os, const Server &server) {
+os << server.GetConfig() << "\n" <<
+        "socket_: " << server.GetSocket() << "\n" <<
+        "epoll_fd_: " << server.GetEpollFd();
+    return os;
+}

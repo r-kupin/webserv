@@ -26,7 +26,6 @@
 public:
     class ServerException : public std::exception {};
 
-    Server();
     Server(const Server &);
     Server(const ServerConfiguration &config);
 
@@ -34,9 +33,12 @@ public:
 
     ~Server();
 
-    void Start();
+    void                        Start();
+    const ServerConfiguration   &GetConfig() const;
+    int                         GetSocket() const;
+    int                         GetEpollFd() const;
 
-protected:
+ protected:
 //-------------------initialisation: open sockets, create epoll...--------------
     void                    Init();
     void                    PresetAddress(addrinfo **addr);
@@ -68,14 +70,10 @@ protected:
                                             Methods method) const;
 //-------------------getters & stuff--------------------------------------------
     void                        SetSocket();
-    const ServerConfiguration   &GetConfig();
-    void                        SetConfig(const ServerConfiguration &config);
-    int                         getSocket() const;
-    int                         getEpollFd() const;
     const epoll_event           &getEvent() const;
 
 private:
-    ServerConfiguration config_;
+    const ServerConfiguration &config_;
     int socket_;
     int epoll_fd_;
     epoll_event event_;
@@ -83,6 +81,7 @@ private:
      void AssignFileToBody(const std::string &address, Location &synth) const;
  };
 
+ std::ostream &operator<<(std::ostream &os, const Server &server);
 
 #endif //WEBSERV_LIB_SERVER_H
 

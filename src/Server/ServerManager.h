@@ -13,15 +13,12 @@
 #ifndef WEBSERV_LIB_SERVERMANAGER_H
 #define WEBSERV_LIB_SERVERMANAGER_H
 
-
 #include "ServerExceptions.h"
 
-typedef std::vector<Server> v_servers;
+typedef std::list<Server> l_servers;
 
 class ServerManager {
 public:
-    const m_codes kHttpCodes;
-
     ServerManager();
     ServerManager(const ServerManager &);
     ServerManager(const Config &config);
@@ -31,8 +28,7 @@ public:
 
     void RunAll();
 private:
-
-    v_servers servers_;
+    l_servers servers_;
 };
 
 

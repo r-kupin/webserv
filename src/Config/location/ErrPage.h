@@ -13,13 +13,7 @@
 #ifndef WEBSERV_LIB_ERRPAGE_H
 #define WEBSERV_LIB_ERRPAGE_H
 
-#include <string>
-#include <vector>
-#include <set>
-#include <ostream>
-#include <map>
-
-typedef std::map<int, std::string>  m_codes;
+#include "../../utils/Utils.h"
 
 struct ErrPage {
     static const m_codes kHttpErrCodes;

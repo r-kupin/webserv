@@ -16,7 +16,7 @@
 
 // implement redirect if location URI doesn't end with "/"
 Location Server::SynthFoundExact(l_loc_c_it &found, Location &synth) const {
-    if (ServerResponse::CheckFilesystem(found->root_)) {
+    if (Utils::CheckFilesystem(found->root_)) {
         if (found->index_defined_) {
             HandleExplicitIndex(found, synth);
         } else {
@@ -31,7 +31,7 @@ Location Server::SynthFoundExact(l_loc_c_it &found, Location &synth) const {
 
 void Server::HandleImplicitIndex(const l_loc_c_it &found,
                                  Location &synth) const {
-    if (ServerResponse::CheckFilesystem(found->root_ + "/index.html")) {
+    if (Utils::CheckFilesystem(found->root_ + "/index.html")) {
         synth.index_.push_front("index.html");
         synth.return_code_ = 200;
     } else {
@@ -55,9 +55,9 @@ l_str_c_it Server::FindIndexToSend(l_loc_c_it found) const {
     l_str_c_it it = found->index_.begin();
 
     for (; it != found->index_.end(); ++it) {
-        if (it->at(0) == '/' && ServerResponse::CheckFilesystem(*it))
+        if (it->at(0) == '/' && Utils::CheckFilesystem(*it))
             return it;
-        if (ServerResponse::CheckFilesystem(found->root_ + "/" + *it))
+        if (Utils::CheckFilesystem(found->root_ + "/" + *it))
             return it;
     }
     return it;

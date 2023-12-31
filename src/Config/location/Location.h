@@ -25,8 +25,6 @@ typedef std::set<ErrPage>::const_iterator                       s_err_c_it;
 typedef std::list<Location>                                     l_loc;
 typedef std::list<Location>::iterator                           l_loc_it;
 typedef std::list<Location>::const_iterator                     l_loc_c_it;
-typedef std::list<std::string>                                  l_str;
-typedef std::list<std::string>::const_iterator                  l_str_c_it;
 
 struct Location {
     class LocationException : public std::exception {};
