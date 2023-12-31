@@ -68,6 +68,8 @@ public:
     void                        SendResponse(int dest);
 
     void                        ThrowResponseException(const std::string &msg);
+
+    void AddHeader(const std::string &key, const std::string &value);
 };
 
 std::ostream &operator<<(std::ostream &os, const ServerResponse &response);

@@ -26,39 +26,28 @@ ServerResponse::ServerResponse(const ClientRequest &request,
 
 void ServerResponse::ComposeResponse(const Location &synth) {
     top_header_ = ComposeTop(synth);
-    headers_.push_back(std::make_pair("Server", "webserv"));
-    headers_.push_back(std::make_pair("Date", NiceTimestamp()));
+    AddHeader("Server", "WebServ");
+    AddHeader("Date", NiceTimestamp());
     if (synth.return_custom_message_.empty()) {
         if (IsErrorCode(synth.return_code_)) {
             HandleError(synth);
         } else if (IsRedirectCode(synth.return_code_)) {
             HandleRedirect(synth);
         } else {
+            std::string body_address;
             if (synth.body_file_.empty()) {
-                body_str_ = FileToString(
-                        synth.root_ + "/" + synth.index_.front());
+                body_address = synth.root_ + "/" + synth.index_.front();
             } else {
-                body_str_ = FileToString(synth.body_file_);
+                body_address = synth.body_file_;
             }
+            body_str_ = FileToString(body_address);
         }
     } else {
         body_str_ = synth.return_custom_message_;
     }
-    AddContentRelatedHeaders();
-    headers_.push_back(std::make_pair("Connection", "keep-alive"));
-}
-
-void ServerResponse::HandleRedirect(const Location &synth) {
-    body_str_ = GeneratePage(synth.return_code_);
-    if (!synth.return_external_address_.empty()) {
-        headers_.push_back(
-                std::make_pair("Location", synth.return_external_address_));
-    } else if (!synth.return_internal_address_.empty()) {
-        headers_.push_back(std::make_pair("Location",
-                               "http://" + server_name_ + ":" +
-                               IntToString(port_) +
-                               synth.return_internal_address_));
-    }
+    AddHeader("Content-Type", "text/html");
+    AddHeader("Content-Length",IntToString(body_str_.size()));
+    AddHeader("Connection", "keep-alive");
 }
 
 void ServerResponse::HandleError(const Location &synth) {
@@ -69,10 +58,15 @@ void ServerResponse::HandleError(const Location &synth) {
     }
 }
 
-void ServerResponse::AddContentRelatedHeaders() {
-    headers_.push_back(std::make_pair("Content-Type", "text/html"));
-    headers_.push_back(std::make_pair("Content-Length",
-                                      IntToString(body_str_.size())));
+void ServerResponse::HandleRedirect(const Location &synth) {
+    body_str_ = GeneratePage(synth.return_code_);
+    if (!synth.return_external_address_.empty()) {
+        AddHeader("Location", synth.return_external_address_);
+    } else if (!synth.return_internal_address_.empty()) {
+        AddHeader("Location",
+                  "http://" + server_name_ + ":"+ IntToString(port_) +
+                            synth.return_internal_address_);
+    }
 }
 
 void ServerResponse::GetDefinedErrorPage(const Location &synth) {
@@ -101,7 +95,7 @@ void ServerResponse::SendResponse(int dest) {
     std::stringstream ss;
 
     ss << top_header_ << "\r\n";
-    for (l_str_str_c_it it = headers_.begin();it != headers_.end(); ++it) {
+    for (l_str_str_c_it it = headers_.begin(); it != headers_.end(); ++it) {
         ss << it->first << ": " << it->second << "\r\n";
     }
     ss << "\r\n" << body_str_;
@@ -112,6 +106,11 @@ void ServerResponse::SendResponse(int dest) {
 
     if (send(dest, response_buffer, response_size, 0) < 0)
         ThrowResponseException("send() returned negative number!");
+}
+
+void ServerResponse::AddHeader(const std::string &key,
+                               const std::string &value) {
+    headers_.push_back(std::make_pair(key, value));
 }
 
 void    ServerResponse::ThrowResponseException(const std::string& msg) {
