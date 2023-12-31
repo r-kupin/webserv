@@ -13,23 +13,22 @@
 #include <gtest/gtest.h>
 #include "../../../../src/Server/Server.h"
 
-class LocationSynthUtilsCheckFilesystem : public ::testing::Test, public Server {
-public:
-    explicit LocationSynthUtilsCheckFilesystem() : Server() {};
+class LocationSynthUtilsCheckFilesystem : public ::testing::Test {
 protected:
     std::string def_res_address_ = "test_resources/nested_locations/www";
 };
 
 TEST_F(LocationSynthUtilsCheckFilesystem, CheckFilesystemExist) {
-    EXPECT_TRUE(ServerResponse::CheckFilesystem(def_res_address_ + "/"));
-    EXPECT_TRUE(ServerResponse::CheckFilesystem(def_res_address_ + "/loc_1"));
-    EXPECT_TRUE(ServerResponse::CheckFilesystem(def_res_address_ + "/loc_1/loc_3/loc_3_in_loc_1_404.html"));
+    EXPECT_TRUE(Utils::CheckFilesystem(def_res_address_ + "/"));
+    EXPECT_TRUE(Utils::CheckFilesystem(def_res_address_ + "/loc_1"));
+    EXPECT_TRUE(Utils::CheckFilesystem(def_res_address_ +
+    "/loc_1/loc_3/loc_3_in_loc_1_404.html"));
 }
 
 TEST_F(LocationSynthUtilsCheckFilesystem, CheckFilesystemNotExist) {
-    EXPECT_FALSE(ServerResponse::CheckFilesystem(def_res_address_ + "/X"));
-    EXPECT_FALSE(ServerResponse::CheckFilesystem(def_res_address_ + "/loc_1/X"));
-    EXPECT_FALSE(ServerResponse::CheckFilesystem(def_res_address_ + "/loc_1/loc_4/X"));
+    EXPECT_FALSE(Utils::CheckFilesystem(def_res_address_ + "/X"));
+    EXPECT_FALSE(Utils::CheckFilesystem(def_res_address_ + "/loc_1/X"));
+    EXPECT_FALSE(Utils::CheckFilesystem(def_res_address_ + "/loc_1/loc_4/X"));
 }
 
 // todo: more tests with ip addressess

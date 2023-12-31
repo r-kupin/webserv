@@ -77,7 +77,8 @@ Location::Location(const Location& other)
       root_(other.root_),
       full_address_(other.full_address_),
       address_(other.address_),
-      body_file_(other.body_file_) {}
+      body_file_(other.body_file_),
+      ghost_(other.ghost_) {}
 
 Location::Location(const std::string &address)
     : index_defined_(false),
