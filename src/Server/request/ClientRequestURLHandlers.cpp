@@ -10,11 +10,12 @@ void ClientRequest::CheckURL(const std::string &url) {
                        "GET request", "BadRequestException");
 }
 
+// todo http:localhost:4280(/)
 std::string ClientRequest::ExtractLastAddrStep(const std::string& address) {
     unsigned long separator = address.find_last_of('/');
 
     if (separator == std::string::npos) {
-        ThrowException("address has to contain / character", "BadURL");
+        ThrowException("Will never happen, lol", "BadURL");
     }
     return (address.substr(separator));
 }

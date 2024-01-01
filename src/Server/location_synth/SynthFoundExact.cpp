@@ -55,6 +55,7 @@ l_str_c_it Server::FindIndexToSend(l_loc_c_it found) const {
     l_str_c_it it = found->index_.begin();
 
     for (; it != found->index_.end(); ++it) {
+        std::cout << *it << std::endl;
         if (it->at(0) == '/' && Utils::CheckFilesystem(*it))
             return it;
         if (Utils::CheckFilesystem(found->root_ + "/" + *it))

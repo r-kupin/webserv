@@ -28,12 +28,10 @@ class ServerConfiguration {
 public:
     class ServerConfigurationException : public std::exception {};
 
-    bool                    default_hostname_;
     int                     port_;
     std::string             port_str_;
     size_t                  client_max_body_size_;
     std::string             server_name_;
-    std::set<std::string>   server_names_;
     std::list<Location>     locations_;
 
     ServerConfiguration();
@@ -71,7 +69,6 @@ public:
     LocConstSearchResult    FindConstLocation(const std::string &address) const;
 //-------------------setup directives handlers----------------------------------
     void                ProcessDirectives(std::vector<v_str> &directives);
-    void                UpdateHostname(const v_str &directives);
 //-------------------setup subcontexts handlers---------------------------------
     void                HandleLocationContext(const Node &context);
     void                CheckLocationContextIsCorrect(const Node &context);

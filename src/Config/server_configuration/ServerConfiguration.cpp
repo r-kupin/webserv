@@ -15,8 +15,7 @@
 #include "ServerConfiguration.h"
 
 ServerConfiguration::ServerConfiguration()
-: default_hostname_(true),
-client_max_body_size_(1024),
+: client_max_body_size_(1024),
 server_name_("localhost") {
     Location root_loc("/");
     root_loc.root_ = "resources/root_loc_default";
@@ -28,12 +27,10 @@ server_name_("localhost") {
 }
 
 ServerConfiguration::ServerConfiguration(const ServerConfiguration &other)
-: default_hostname_(other.default_hostname_),
-port_(other.port_),
+: port_(other.port_),
 port_str_(other.port_str_),
 client_max_body_size_(other.client_max_body_size_),
 server_name_(other.server_name_),
-server_names_(other.server_names_),
 locations_(other.locations_) {}
 //-------------------satic utils------------------------------------------------
 bool        ServerConfiguration::MarkDefined(const std::string &key,
@@ -58,16 +55,6 @@ bool        ServerConfiguration::UMarkDefined(const std::string &key, bool &flag
     return false;
 }
 //-------------------setup directives handlers----------------------------------
-void        ServerConfiguration::UpdateHostname(const v_str &directives) {
-    // TODO server names - hostnames ....
-    if (default_hostname_) {
-        server_names_.clear();
-        default_hostname_ = false;
-    }
-    for (size_t i = 1; i < directives.size(); ++i)
-        server_names_.insert(directives[i]);
-}
-
 void        ServerConfiguration::ProcessDirectives(
                                               std::vector<v_str> &directives) {
     bool srv_name = false;
@@ -81,8 +68,8 @@ void        ServerConfiguration::ProcessDirectives(
         ThrowServerConfigError("Server block can't be empty!");
     try {
         for (size_t i = 0; i < directives.size(); i++) {
-            if (MarkDefined("server_name", srv_name, directives[i])) {
-                UpdateHostname(directives[i]);
+            if (UMarkDefined("server_name", srv_name, directives[i])) {
+                server_name_ = directives[i][1];
             } else if (UMarkDefined("listen", port, directives[i])) {
                 port_ = atoi(directives[i][1].c_str());
                 port_str_ = directives[i][1];
@@ -135,7 +122,6 @@ const std::string &ServerConfiguration::GetPortStr() const {
 
 bool        ServerConfiguration::operator==(
                                         const ServerConfiguration &rhs) const {
-    // Compare server properties
     if (port_ != rhs.port_)
         return false;
     if (port_str_ != rhs.port_str_)
@@ -144,9 +130,6 @@ bool        ServerConfiguration::operator==(
         return false;
     if (server_name_ != rhs.server_name_)
         return false;
-    if (server_names_ != rhs.server_names_)
-        return false;
-    // Compare root location
     if (!(locations_ == rhs.locations_))
         return false;
     return true;
@@ -157,24 +140,16 @@ ServerConfiguration &ServerConfiguration::operator=(
     if (this == &rhs) {
         return *this;
     }
-    default_hostname_ = rhs.default_hostname_;
     port_ = rhs.port_;
     port_str_ = rhs.port_str_;
     client_max_body_size_ = rhs.client_max_body_size_;
     server_name_ = rhs.server_name_;
-    server_names_ = rhs.server_names_;
     locations_ = rhs.locations_;
-
-    // Return the updated object
     return *this;
 }
 
 std::ostream &operator<<(std::ostream &os, const ServerConfiguration &config) {
     os << "hostname: " << config.server_name_ << "\n";
-    for (s_str_c_it it = config.server_names_.begin();
-        it != config.server_names_.end(); ++it) {
-        os << "name: " << *it << "\n";
-    }
     os << "port: " << config.port_ << "\n";
     if (config.client_max_body_size_) {
         os << "client_max_body_size_: " << config.client_max_body_size_ << "\n";

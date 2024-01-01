@@ -25,9 +25,11 @@ TEST_F(LocationSynthUtilsCheckLimitIndexPriority, FindIndexToSend) {
     auto loc_X = GetConfig().FindConstLocation("/loc_X").location_;
     auto loc_1 = GetConfig().FindConstLocation("/loc_1").location_;
 
+    std::cout << *root << std::endl;
+    
     EXPECT_EQ(*FindIndexToSend(root), "index_1.html");
     EXPECT_EQ(FindIndexToSend(loc_X), loc_X->index_.end());
-    EXPECT_EQ(*FindIndexToSend(loc_1), "/mnt/nfs/homes/rokupin/CLionProjects/webserv/test/test_resources/index_order/www/loc_1/index_1.html");
+    EXPECT_EQ(*FindIndexToSend(loc_1), "/loc_1/index_1.html");
 }
 
 TEST_F(LocationSynthUtilsCheckLimitIndexPriority, HandleExplicitIndexTEST) {
@@ -42,7 +44,7 @@ TEST_F(LocationSynthUtilsCheckLimitIndexPriority, HandleExplicitIndexTEST) {
     Location synth_loc_1(*loc_1);
     HandleExplicitIndex(loc_1, synth_loc_1);
     EXPECT_EQ(synth_loc_1.index_.size(), 1);
-    EXPECT_EQ(synth_loc_1.index_.front(), "/mnt/nfs/homes/rokupin/CLionProjects/webserv/test/test_resources/index_order/www/loc_1/index_1.html");
+    EXPECT_EQ(synth_loc_1.index_.front(), "/loc_1/index_1.html");
     EXPECT_EQ(synth_loc_1.return_code_, 200);
 
     auto loc_3 = GetConfig().FindConstLocation("/loc_3").location_;
@@ -84,7 +86,7 @@ TEST_F(LocationSynthUtilsCheckLimitIndexPriority, HandleLocationNoRedirection) {
     Location synth_loc_1(*loc_1);
     SynthFoundExact(loc_1, synth_loc_1);
     EXPECT_EQ(synth_loc_1.index_.size(), 1);
-    EXPECT_EQ(synth_loc_1.index_.front(), "/mnt/nfs/homes/rokupin/CLionProjects/webserv/test/test_resources/index_order/www/loc_1/index_1.html");
+    EXPECT_EQ(synth_loc_1.index_.front(), "/loc_1/index_1.html");
     EXPECT_EQ(synth_loc_1.return_code_, 200);
 
     auto loc_2 = GetConfig().FindConstLocation("/loc_2").location_;
@@ -114,13 +116,13 @@ public:
     explicit LocationSynthUtilsCheckLimitIndexPriorityRootRedefined() : Server(conf_index_root_redefined.getConstServers().front()) {};
 };
 
-TEST_F(LocationSynthUtilsCheckLimitIndexPriorityRootRedefined, FindIndexToSend) {
+TEST_F(LocationSynthUtilsCheckLimitIndexPriorityRootRedefined, IndexToSend) {
     auto root = GetConfig().FindConstLocation("/").location_;
 
     EXPECT_EQ(*FindIndexToSend(root), "index_2.html");
 }
 
-TEST_F(LocationSynthUtilsCheckLimitIndexPriorityRootRedefined, HandleExplicitIndexTEST) {
+TEST_F(LocationSynthUtilsCheckLimitIndexPriorityRootRedefined, ExplicitIndexTEST) {
     auto root = GetConfig().FindConstLocation("/").location_;
 
     Location synth_root(*root);

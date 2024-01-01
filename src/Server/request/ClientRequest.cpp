@@ -137,11 +137,11 @@ const std::string &ClientRequest::getBody() const {
     return body_;
 }
 
-const std::map<std::string, std::string> &ClientRequest::getParams() const {
+const m_str_str &ClientRequest::getParams() const {
     return params_;
 }
 
-const std::map<std::string, std::string> &ClientRequest::getHeaders() const {
+const m_str_str &ClientRequest::getHeaders() const {
     return headers_;
 }
 

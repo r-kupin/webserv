@@ -50,8 +50,8 @@ public:
     const std::string &getAddress() const;
     const std::string &getLastStepUri() const;
     const std::string &getBody() const;
-    const std::map<std::string, std::string> &getParams() const;
-    const std::map<std::string, std::string> &getHeaders() const;
+    const m_str_str &getParams() const;
+    const m_str_str &getHeaders() const;
 
 //-------------------socket-level-----------------------------------------------
     void        Init(int client_sock);
