@@ -39,6 +39,13 @@ void ClientRequest::Init(int client_sock) {
     CheckURL(url);
     addr_ = ExtractAddr(url);
     addr_last_step_ = ExtractLastAddrStep(addr_);
+    if (addr_[addr_.size() - 1] == '/') {
+        index_request_ = true;
+        if (addr_ != "/")
+            addr_ = addr_.substr(0, addr_.size() - 1);
+    } else {
+        index_request_ = false;
+    }
     if (HasFragment(url))
         fragment_ = ExtractFragment(url);
     if (HasQuery(url))

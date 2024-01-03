@@ -29,14 +29,14 @@ TEST_F(HandleDirectivesTest, ComponentsTestOKServerWorks) {
     EXPECT_NO_THROW(ProcessDirectives(context_.directives_));
     EXPECT_EQ(port_, 8182);
     EXPECT_EQ(GetRoot().root_, "/not/depends/on/config");
-    EXPECT_EQ(GetRoot().index_.size(), 2);
-    EXPECT_NE(std::find(GetRoot().index_.begin(),
-                        GetRoot().index_.end(),
-                        "index.html"), GetRoot().index_.end());
-    EXPECT_NE(std::find(GetRoot().index_.begin(),
-                        GetRoot().index_.end(),
-                        "index.php"), GetRoot().index_.end());
-    EXPECT_TRUE(GetRoot().index_defined_);
+    EXPECT_EQ(GetRoot().own_index_.size(), 2);
+    EXPECT_NE(std::find(GetRoot().own_index_.begin(),
+                        GetRoot().own_index_.end(),
+                        "index.html"), GetRoot().own_index_.end());
+    EXPECT_NE(std::find(GetRoot().own_index_.begin(),
+                        GetRoot().own_index_.end(),
+                        "index.php"), GetRoot().own_index_.end());
+    EXPECT_TRUE(GetRoot().has_own_index_defined_);
     EXPECT_EQ(GetRoot().error_pages_.size(), 1);
     EXPECT_EQ(GetRoot().error_pages_.begin()->code_, 401);
     EXPECT_EQ(GetRoot().error_pages_.begin()->address_, "err.html");

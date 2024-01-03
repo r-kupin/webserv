@@ -8,7 +8,7 @@ public:
             : Location(),
               sc_root_(sc_.GetRoot()) {
         sc_root_.sublocations_.push_back(Location("/sub"));
-        sc_root_.sublocations_.begin()->index_.push_back("sub_index.html");
+        sc_root_.sublocations_.begin()->own_index_.push_back("sub_index.html");
         sc_root_.sublocations_.begin()->parent_ = sc_.GetRootIt();
     };
 protected:

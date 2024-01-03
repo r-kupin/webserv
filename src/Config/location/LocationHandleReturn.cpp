@@ -1,6 +1,5 @@
 #include <cstdlib>
 #include "Location.h"
-#include "../../Server/ServerExceptions.h"
 
 const static std::string kAddressPrefix = "http://";
 

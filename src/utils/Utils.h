@@ -20,6 +20,11 @@
 #include <list>
 #include <ostream>
 
+#define NOTHING 0
+#define FILE 1
+#define DIRECTORY 2
+#define ELSE 3
+
 typedef std::set<std::string>::const_iterator               s_str_c_it;
 
 typedef std::vector<std::string>                            v_str;
@@ -36,7 +41,7 @@ typedef std::list<std::string>::const_iterator              l_str_c_it;
 class Utils {
 public:
     static void         OutputMap(const m_str_str &map, std::ostream &os);
-    static bool         CheckFilesystem(const std::string &address);
+    static int          CheckFilesystem(const std::string &address);
     static std::string  FileToString(const std::string &address);
     static std::string  NiceTimestamp();
     static std::string  IntToString(size_t n);

@@ -20,8 +20,6 @@
 #include "../Config/config/Config.h"
 #include "response/ServerResponse.h"
 
- typedef ServerConfiguration::LocConstSearchResult SrchRes;
-
  class Server {
 public:
     class ServerException : public std::exception {};
@@ -56,16 +54,15 @@ public:
 //-------------------assemble handling location---------------------------------
     Location                SynthesizeHandlingLocation(const ClientRequest &);
 
-    Location                SynthForNotFound(const ClientRequest &request,
-                                              const SrchRes&found,
-                                              Location &synth) const;
-    void                    HandleExplicitIndex(l_loc_c_it &found,
-                                                Location &synth) const;
+    void SynthIndex(Location &synth, const Srch_c_Res &res) const;
     void                    HandleImplicitIndex(const l_loc_c_it &found,
                                                 Location &synth) const;
-    Location                SynthFoundExact(l_loc_c_it &found,
-                                            Location &synth) const;
-    l_str_c_it              FindIndexToSend(l_loc_c_it found) const;
+    Location SynthFoundExact(l_loc_c_it &found, Location &synth,
+                             bool requesting_file) const;
+    Location                SynthForNotFound(const Srch_c_Res &found,
+                                             Location &synth);
+    std::string FindIndexToSend(const l_loc_c_it &found,
+                                const std::string &compliment) const;
     bool                    AccessForbidden(l_loc_c_it found,
                                             Methods method) const;
 //-------------------getters & stuff--------------------------------------------
@@ -79,6 +76,10 @@ private:
     epoll_event event_;
 
      void AssignFileToBody(const std::string &address, Location &synth) const;
+
+     void
+     SynthFile(Location &synth, const Srch_c_Res &res,
+               const ClientRequest &request) const;
  };
 
  std::ostream &operator<<(std::ostream &os, const Server &server);

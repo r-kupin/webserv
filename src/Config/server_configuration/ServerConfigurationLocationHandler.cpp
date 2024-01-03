@@ -25,8 +25,18 @@ void ServerConfiguration::CheckLocationContextIsCorrect(const Node &context) {
 // todo: check overriding location with adding new subs
 void        ServerConfiguration::OverrideLocation(const Node &context,
                                                   l_loc_it current) {
-    current->index_defined_ = false;
+//    save old indexes, inc case they will not be overridden
+    bool before_owerride = current->has_own_index_defined_;
+    l_str list = current->own_index_;
+//    allow index override
+    current->has_own_index_defined_ = false;
+    current->own_index_.clear();
     current->ProcessDirectives(context.directives_);
+//    restore old index if it wasn't overridden
+    if (!current->has_own_index_defined_) {
+        current->has_own_index_defined_ = before_owerride;
+        current->own_index_ = list;
+    }
 
     for (v_node_c_it it = context.child_nodes_.begin();
          it != context.child_nodes_.end(); ++it) {

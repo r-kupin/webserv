@@ -29,7 +29,6 @@ public:
     class ServerConfigurationException : public std::exception {};
 
     int                     port_;
-    std::string             port_str_;
     size_t                  client_max_body_size_;
     std::string             server_name_;
     std::list<Location>     locations_;
@@ -88,6 +87,9 @@ public:
     bool operator==(const ServerConfiguration &rhs) const;
     ServerConfiguration& operator=(const ServerConfiguration& rhs);
 };
+
+typedef ServerConfiguration::LocSearchResult            Srch_Res;
+typedef ServerConfiguration::LocConstSearchResult       Srch_c_Res;
 
 std::ostream &operator<<(std::ostream &os, const ServerConfiguration &config);
 

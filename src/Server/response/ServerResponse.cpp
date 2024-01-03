@@ -34,13 +34,13 @@ void ServerResponse::ComposeResponse(const Location &synth) {
         } else if (IsRedirectCode(synth.return_code_)) {
             HandleRedirect(synth);
         } else {
-            std::string body_address;
-            if (synth.body_file_.empty()) {
-                body_address = synth.root_ + "/" + synth.index_.front();
+            if (!synth.body_file_.empty()) {
+                body_str_ = Utils::FileToString(synth.body_file_);
             } else {
-                body_address = synth.body_file_;
+                ThrowResponseException(
+                        "code is 200 but body_file is empty and custom "
+                        "message not defined. This shouldn't happen");
             }
-            body_str_ = Utils::FileToString(body_address);
         }
     } else {
         body_str_ = synth.return_custom_message_;

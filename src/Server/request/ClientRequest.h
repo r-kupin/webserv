@@ -80,6 +80,7 @@ public:
     Methods                             method_;
     std::string                         addr_;
     std::string                         addr_last_step_;
+    bool                                index_request_;
     std::string                         body_;
     std::string                         fragment_;
     m_str_str                           params_;

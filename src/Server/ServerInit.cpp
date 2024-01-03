@@ -56,7 +56,7 @@ void Server::PresetAddress(addrinfo **addr) {
     hints.ai_flags = AI_PASSIVE; // Use the local IP
 
     if (getaddrinfo(config_.server_name_.c_str(), // localhost
-                    config_.port_str_.c_str(), // 8080
+                    Utils::IntToString(config_.port_).c_str(), // port
                     &hints, addr)) {
         throw AddrinfoCreationFailed();
     }

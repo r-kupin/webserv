@@ -36,13 +36,18 @@ struct Location {
 
     std::set<ErrPage>       error_pages_;
     l_loc                   sublocations_;
-    l_str                   index_;
-    bool                    index_defined_;
+
+    bool                    has_own_index_defined_;
+    bool                    index_defined_in_parent_;
+    l_str                   own_index_;
+
     Limit                   limit_except_;
+
     int                     return_code_;
     std::string             return_internal_address_;
     std::string             return_external_address_;
     std::string             return_custom_message_;
+
     std::string             root_;
     std::string             full_address_;
     std::string             address_;
@@ -70,6 +75,9 @@ struct Location {
                                          const std::string &parent_address);
 //-------------------functional stuff-------------------------------------------
     l_loc_c_it          FindConstSublocationByAddress(const std::string & address) const;
+    const Location      &GetMyRootRef() const;
+    l_loc_c_it          GetMyRootIt() const;
+    const l_str         &GetIndeces() const;
     l_loc_it            FindSublocationByAddress(const std::string &address);
     s_err_c_it          FindErrPageForCode(int code) const;
     bool                HasErrPageForCode(int code) const;

@@ -24,9 +24,9 @@ TEST_F(ProcessDerectivesTest, TestForNewLocation) {
 
     EXPECT_EQ(loc.root_, "/nonexistent");
 
-    EXPECT_TRUE(loc.index_defined_);
-    EXPECT_EQ(loc.index_.size(), 1);
-    EXPECT_EQ(*loc.index_.begin(), "nonexistent_index.html");
+    EXPECT_TRUE(loc.has_own_index_defined_);
+    EXPECT_EQ(loc.own_index_.size(), 1);
+    EXPECT_EQ(*loc.own_index_.begin(), "nonexistent_index.html");
 
     EXPECT_EQ(loc.return_code_, 301);
     EXPECT_EQ(loc.return_external_address_, "http://localhost:4280/somewhere");
@@ -54,7 +54,7 @@ TEST_F(ProcessDerectivesTest, TestForRootRootRedefinition) {
     EXPECT_NO_THROW(root_loc.ProcessDirectives(directives_));
 
     EXPECT_EQ(root_loc.root_, "/root1");
-    EXPECT_NE(std::find(root_loc.index_.begin(), root_loc.index_.end(),"index_1.html"), root_loc.index_.end());
+    EXPECT_NE(std::find(root_loc.own_index_.begin(), root_loc.own_index_.end(), "index_1.html"), root_loc.own_index_.end());
 
     EXPECT_NE(root_loc.error_pages_.find(ErrPage("error1.html", 403)),
               root_loc.error_pages_.end());
@@ -71,7 +71,7 @@ TEST_F(ProcessDerectivesTest, TestForRootRootRedefinition) {
     EXPECT_EQ(root_loc2.sublocations_.size(), 0);
 
     EXPECT_EQ(root_loc2.root_, "/root2");
-    EXPECT_NE(std::find(root_loc2.index_.begin(), root_loc2.index_.end(),"index_2.html"), root_loc2.index_.end());
+    EXPECT_NE(std::find(root_loc2.own_index_.begin(), root_loc2.own_index_.end(), "index_2.html"), root_loc2.own_index_.end());
 
     EXPECT_NE(root_loc2.error_pages_.find(ErrPage("error2.html", 403)),
               root_loc2.error_pages_.end());

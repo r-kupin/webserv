@@ -54,10 +54,10 @@ TEST_F(HandleSingleStepLocation, RootSubnodeParentTest) {
     Location loc_loc = GetRoot().sublocations_.back();
 
     EXPECT_EQ(loc_loc.address_, "/loc_X");
-    EXPECT_NE(std::find(loc_loc.index_.begin(),
-                        loc_loc.index_.end(),
+    EXPECT_NE(std::find(loc_loc.own_index_.begin(),
+                        loc_loc.own_index_.end(),
                         "index.html"),
-              loc_loc.index_.end());
+              loc_loc.own_index_.end());
 }
 
 TEST_F(HandleSingleStepLocation, WithLimitExcept) {
@@ -102,10 +102,10 @@ TEST_F(HandleSingleStepLocation, HomeInReDefinedRoot) {
     EXPECT_EQ(GetRoot().return_internal_address_ , "");
 
     EXPECT_EQ(GetRoot().sublocations_.begin()->address_, "/loc_X");
-    EXPECT_NE(std::find(GetRoot().sublocations_.begin()->index_.begin(),
-                        GetRoot().sublocations_.begin()->index_.end(),
+    EXPECT_NE(std::find(GetRoot().sublocations_.begin()->own_index_.begin(),
+                        GetRoot().sublocations_.begin()->own_index_.end(),
                         "index.html"),
-              GetRoot().sublocations_.begin()->index_.end());
+              GetRoot().sublocations_.begin()->own_index_.end());
 }
 
 TEST_F(HandleSingleStepLocation, MultipleLimitExcept) {

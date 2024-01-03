@@ -60,8 +60,8 @@ TEST_F(HandleMultistepLocationTest, TwoStepInServerContext) {
     EXPECT_EQ(loc_7X.address_, "/loc_7X");
     EXPECT_EQ(loc_7X.full_address_, "/loc_5X/loc_7X");
     EXPECT_EQ(loc_7X.sublocations_.size(), 0);
-    EXPECT_EQ(loc_7X.index_.size(), 1);
-    EXPECT_EQ(loc_7X.index_.front(), "index.html");
+    EXPECT_EQ(loc_7X.own_index_.size(), 1);
+    EXPECT_EQ(loc_7X.own_index_.front(), "index.html");
     EXPECT_FALSE(loc_7X.ghost_);
     EXPECT_EQ(*loc_7X.parent_, loc_5X);
     EXPECT_EQ(*loc_7X.parent_->parent_, GetRoot());
@@ -92,8 +92,8 @@ TEST_F(HandleMultistepLocationTest, TwoStepInRootContext) {
     EXPECT_EQ(loc_7X.address_, "/loc_7X");
     EXPECT_EQ(loc_7X.full_address_, "/loc_5X/loc_7X");
     EXPECT_EQ(loc_7X.sublocations_.size(), 0);
-    EXPECT_EQ(loc_7X.index_.size(), 1);
-    EXPECT_EQ(loc_7X.index_.front(), "index.html");
+    EXPECT_EQ(loc_7X.own_index_.size(), 1);
+    EXPECT_EQ(loc_7X.own_index_.front(), "index.html");
     EXPECT_FALSE(loc_7X.ghost_);
     EXPECT_EQ(*loc_7X.parent_, loc_5X);
     EXPECT_EQ(*loc_7X.parent_->parent_, GetRoot());
@@ -120,8 +120,8 @@ TEST_F(HandleMultistepLocationTest, TwoStepInOneStepContext) {
     EXPECT_EQ(loc_1.address_, "/loc_1");
     EXPECT_EQ(loc_1.full_address_, "/loc_1");
     EXPECT_EQ(loc_1.sublocations_.size(), 1);
-    EXPECT_EQ(loc_1.index_.size(), 1);
-    EXPECT_EQ(loc_1.index_.front(), "loc_1_index.html");
+    EXPECT_EQ(loc_1.own_index_.size(), 1);
+    EXPECT_EQ(loc_1.own_index_.front(), "loc_1_index.html");
     EXPECT_FALSE(loc_1.ghost_);
     EXPECT_EQ(*loc_1.parent_, GetRoot());
 
@@ -130,8 +130,8 @@ TEST_F(HandleMultistepLocationTest, TwoStepInOneStepContext) {
     EXPECT_EQ(loc_3.address_, "/loc_3");
     EXPECT_EQ(loc_3.full_address_, "/loc_1/loc_3");
     EXPECT_EQ(loc_3.sublocations_.size(), 0);
-    EXPECT_EQ(loc_3.index_.size(), 1);
-    EXPECT_EQ(loc_3.index_.front(), "loc_3_in_loc_1_index_X.html");
+    EXPECT_EQ(loc_3.own_index_.size(), 1);
+    EXPECT_EQ(loc_3.own_index_.front(), "loc_3_in_loc_1_index_X.html");
     EXPECT_FALSE(loc_3.ghost_);
     EXPECT_EQ(*loc_3.parent_, loc_1);
     EXPECT_EQ(*loc_3.parent_->parent_, GetRoot());

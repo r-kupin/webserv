@@ -14,7 +14,6 @@
 #include <algorithm>
 #include <iostream>
 #include "Location.h"
-#include "../../Server/ServerExceptions.h"
 
 //-------------------static creation / initialization---------------------------
 const m_codes Location::initializeHttpRedirectCodes() {
@@ -55,10 +54,11 @@ const m_codes Location::kHttpOkCodes = Location::initializeHttpOKCodes();
 const m_codes Location::kHttpRedirectCodes = Location::initializeHttpRedirectCodes();
 
 Location::Location()
-    : index_defined_(false),
-    return_code_(0),
-    ghost_(false) {}
+    : has_own_index_defined_(false),
+      return_code_(0),
+      ghost_(false) {}
 
+// link to parent? indexes?
 Location::Location(bool ghost, const std::string &address)
     : full_address_(HandleAddressInConstructor(address)),
     address_(GetParticularAddress(address)),
@@ -67,8 +67,9 @@ Location::Location(bool ghost, const std::string &address)
 Location::Location(const Location& other)
     : error_pages_(other.error_pages_),
       sublocations_(other.sublocations_),
-      index_(other.index_),
-      index_defined_(other.index_defined_),
+      has_own_index_defined_(other.has_own_index_defined_),
+      index_defined_in_parent_(other.index_defined_in_parent_),
+      own_index_(other.own_index_),
       limit_except_(other.limit_except_),
       return_code_(other.return_code_),
       return_internal_address_(other.return_internal_address_),
@@ -78,26 +79,34 @@ Location::Location(const Location& other)
       full_address_(other.full_address_),
       address_(other.address_),
       body_file_(other.body_file_),
+      parent_(other.parent_),
       ghost_(other.ghost_) {}
 
 Location::Location(const std::string &address)
-    : index_defined_(false),
-    return_code_(0),
-    full_address_(HandleAddressInConstructor(address)),
-    address_(GetParticularAddress(address)),
-    ghost_(false) {}
+    : has_own_index_defined_(false),
+      index_defined_in_parent_(false),
+      return_code_(0),
+      full_address_(HandleAddressInConstructor(address)),
+      address_(GetParticularAddress(address)),
+      ghost_(false) {}
 
 Location::Location(const std::string &address, l_loc_it parent)
-    : index_defined_(false),
+    : has_own_index_defined_(false),
+    index_defined_in_parent_(false),
     return_code_(0),
     full_address_(HandleAddressInConstructor(address)),
     address_(GetParticularAddress(address)),
     parent_(parent),
     ghost_(false) {
-    if (parent->address_ != "/" &&
+    if (parent->index_defined_in_parent_ ||
+        parent->has_own_index_defined_) {
+        index_defined_in_parent_ = true;
+    }
+    if ((parent->address_ != "/") &&
         (parent->full_address_ + address_ != full_address_ )) {
-        ThrowLocationException("Full location address should start with parent "
-                               "full address");
+            ThrowLocationException(
+                "Full location address should start with parent "
+                "full address");
     }
 }
 
@@ -210,6 +219,31 @@ void Location::CheckSublocationsAddress(const std::string &address,
     }
 }
 //-------------------functional stuff-------------------------------------------
+const Location & Location::GetMyRootRef() const {
+    if (address_ == "/")
+        return *this;
+    else {
+        l_loc_c_it ret = parent_;
+        while (ret->address_ != "/")
+            ret = ret->parent_;
+        return *ret;
+    }
+}
+
+l_loc_c_it Location::GetMyRootIt() const {
+    l_loc_c_it ret = parent_;
+    while (ret->address_ != "/")
+        ret = ret->parent_;
+    return ret;
+}
+
+// todo tests!!
+const l_str &Location::GetIndeces() const {
+    if (!has_own_index_defined_ && index_defined_in_parent_)
+        return parent_->GetIndeces();
+    return own_index_;
+}
+
 bool Location::HasDefinedLimitExcept() const {
     return !limit_except_.except_.empty();
 }
@@ -324,25 +358,25 @@ void Location::AddErrorPages(const v_str &directive) {
  *  “/index.html”.
  */
 void Location::HandleIndex(const v_str &directives) {
-    if (index_defined_) {
+    if (has_own_index_defined_) {
         for (size_t j = 1; j < directives.size(); ++j) {
             if (directives[j][0] == '/' && j != directives.size() - 1) {
                 ThrowLocationException(
-                        "Only the ast element of the list can be a "
+                        "Only the last element of the list can be a "
                         "file with an absolute path");
             } else {
-                index_.push_back(directives[j]);
+                own_index_.push_back(directives[j]);
             }
         }
     } else {
-        index_defined_ = true;
+        has_own_index_defined_ = true;
         for (size_t j = directives.size() - 1; j >= 1; --j) {
             if (directives[j][0] == '/' && j != directives.size() - 1) {
                 ThrowLocationException(
-                        "Only the ast element of the list can be a "
+                        "Only the last element of the list can be a "
                         "file with an absolute path");
             } else {
-                index_.push_front(directives[j]);
+                own_index_.push_front(directives[j]);
             }
         }
     }
@@ -410,8 +444,8 @@ Location &Location::operator=(const Location &rhs) {
     // Copy the data members from rhs to this object
     error_pages_ = rhs.error_pages_;
     sublocations_ = rhs.sublocations_;
-    index_ = rhs.index_;
-    index_defined_ = rhs.index_defined_;
+    own_index_ = rhs.own_index_;
+    has_own_index_defined_ = rhs.has_own_index_defined_;
     limit_except_ = rhs.limit_except_;
     return_code_ = rhs.return_code_;
     return_internal_address_ = rhs.return_internal_address_;
@@ -432,8 +466,6 @@ bool Location::operator==(const Location &rhs) const {
     if (!(limit_except_ == rhs.limit_except_))
         return false;
     if (return_code_ != rhs.return_code_)
-        return false;
-    if (index_ != rhs.index_)
         return false;
     if (return_internal_address_ != rhs.return_internal_address_)
         return false;
@@ -471,8 +503,8 @@ void print_return_info(std::ostream &os, const Location &location) {
 
 void print_index(std::ostream &os, const Location &location) {
     os << location.full_address_ << ":\t" << "Index: ";
-    for (l_str_c_it it = location.index_.begin();
-         it != location.index_.end(); ++it) {
+    for (l_str_c_it it = location.GetIndeces().begin();
+         it != location.GetIndeces().end(); ++it) {
         os << *it << " ";
     }
     os << std::endl;
@@ -502,7 +534,7 @@ std::ostream &operator<<(std::ostream &os, const Location &location) {
         ptint_err_pages(os, location);
     if (location.return_code_ > 0)
         print_return_info(os, location);
-    if (!location.index_.empty())
+    if (!location.GetIndeces().empty())
         print_index(os, location);
     if (!location.root_.empty())
         print_root(os, location);

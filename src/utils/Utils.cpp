@@ -13,6 +13,7 @@
 #include <fstream>
 #include <ctime>
 #include <sstream>
+#include <sys/stat.h>
 #include "Utils.h"
 
 Utils::Utils() {}
@@ -23,14 +24,17 @@ void Utils::OutputMap(const m_str_str &map, std::ostream &os) {
     }
 }
 
-bool Utils::CheckFilesystem(const std::string &address) {
-    std::ifstream file(address.c_str());
-    if (file.good()) {
-        file.close();
-        return true;
+int Utils::CheckFilesystem(const std::string &address) {
+    struct stat fileInfo;
+
+    if (stat(address.c_str(), &fileInfo) == 0) {
+        if (S_ISREG(fileInfo.st_mode))
+            return FILE;
+        if (S_ISDIR(fileInfo.st_mode))
+            return DIRECTORY;
+        return ELSE;
     }
-    file.close();
-    return false;
+    return NOTHING;
 }
 
 std::string Utils::FileToString(const std::string &address) {

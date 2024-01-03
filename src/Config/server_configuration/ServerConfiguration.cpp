@@ -28,7 +28,6 @@ server_name_("localhost") {
 
 ServerConfiguration::ServerConfiguration(const ServerConfiguration &other)
 : port_(other.port_),
-port_str_(other.port_str_),
 client_max_body_size_(other.client_max_body_size_),
 server_name_(other.server_name_),
 locations_(other.locations_) {}
@@ -72,7 +71,6 @@ void        ServerConfiguration::ProcessDirectives(
                 server_name_ = directives[i][1];
             } else if (UMarkDefined("listen", port, directives[i])) {
                 port_ = atoi(directives[i][1].c_str());
-                port_str_ = directives[i][1];
             } else if (UMarkDefined("client_max_body_size", cl_max_bd_size,
                                     directives[i])) {
                 client_max_body_size_ = atoi(directives[i][1].c_str());
@@ -116,15 +114,9 @@ int ServerConfiguration::GetPort() const {
     return port_;
 }
 
-const std::string &ServerConfiguration::GetPortStr() const {
-    return port_str_;
-}
-
 bool        ServerConfiguration::operator==(
                                         const ServerConfiguration &rhs) const {
     if (port_ != rhs.port_)
-        return false;
-    if (port_str_ != rhs.port_str_)
         return false;
     if (client_max_body_size_ != rhs.client_max_body_size_)
         return false;
@@ -141,7 +133,6 @@ ServerConfiguration &ServerConfiguration::operator=(
         return *this;
     }
     port_ = rhs.port_;
-    port_str_ = rhs.port_str_;
     client_max_body_size_ = rhs.client_max_body_size_;
     server_name_ = rhs.server_name_;
     locations_ = rhs.locations_;
@@ -159,21 +150,19 @@ std::ostream &operator<<(std::ostream &os, const ServerConfiguration &config) {
     return os;
 }
 
-ServerConfiguration::LocSearchResult::LocSearchResult(
-                                            const l_loc_it &location,
-                                            const std::string &status,
-                                            const std::string &fullAddress,
-                                            const std::string &leftowerAddress)
+Srch_Res::LocSearchResult(const l_loc_it &location,
+                          const std::string &status,
+                          const std::string &fullAddress,
+                          const std::string &leftowerAddress)
         : location_(location),
         status_(status),
         full_address_(fullAddress),
         leftower_address_(leftowerAddress) {}
 
-ServerConfiguration::LocConstSearchResult::LocConstSearchResult(
-                                            const l_loc_c_it &location,
-                                            const std::string &status,
-                                            const std::string &fullAddress,
-                                            const std::string &leftowerAddress)
+Srch_c_Res::LocConstSearchResult(const l_loc_c_it &location,
+                                 const std::string &status,
+                                 const std::string &fullAddress,
+                                 const std::string &leftowerAddress)
         : location_(location),
         status_(status),
         full_address_(fullAddress),

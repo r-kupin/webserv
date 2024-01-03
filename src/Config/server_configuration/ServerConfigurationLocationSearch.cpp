@@ -68,8 +68,7 @@ l_loc_c_it const_recursive_search(const std::string &addr, l_loc_c_it start,
     return start;
 }
 
-ServerConfiguration::LocSearchResult
-ServerConfiguration::FindLocation(const std::string &address) {
+Srch_Res    ServerConfiguration::FindLocation(const std::string &address) {
     std::string status, leftower;
     l_loc_it res = sc_recursive_search(address, GetRootIt(), status);
 
@@ -81,8 +80,8 @@ ServerConfiguration::FindLocation(const std::string &address) {
     return LocSearchResult(res, status, address, leftower);
 }
 
-ServerConfiguration::LocConstSearchResult
-ServerConfiguration::FindConstLocation(const std::string &address) const {
+Srch_c_Res  ServerConfiguration::FindConstLocation(
+                                            const std::string &address) const {
     std::string status, leftower;
     l_loc_c_it res = const_recursive_search(address, GetConstRootIt(), status);
 
