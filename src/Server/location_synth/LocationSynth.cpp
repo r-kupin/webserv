@@ -45,15 +45,15 @@ Location Server::SynthesizeHandlingLocation(const ClientRequest &request) {
                 SynthIndex(synth, res, fs_status);
             } else {
                 // request's address part of URI has a filename after the last "/"
-                SynthFile(synth, res, request, fs_status);
+                SynthFile(synth, res, fs_status, request.addr_);
             }
         }
     }
     return synth;
 }
 
-void Server::SynthFile(Location &synth, const Srch_c_Res &res,
-                       const ClientRequest &request, int fs_status) const {
+void Server::SynthFile(Location &synth, const Srch_c_Res &res, int fs_status,
+                       const std::string &request_address) const {
     const l_loc_c_it &found = res.location_;
     std::string address = found->root_ + res.leftower_address_;
     // request's address part of URI has an address after last "/" check with
@@ -64,7 +64,7 @@ void Server::SynthFile(Location &synth, const Srch_c_Res &res,
     } else if (fs_status == DIRECTORY) {
         // redirect to index request
         synth.return_code_ = 301;
-        synth.return_internal_address_ = request.addr_ + "/";
+        synth.return_internal_address_ = request_address + "/";
     } else {
         synth.body_file_ = address;
         synth.return_code_ = 200;

@@ -14,69 +14,8 @@
 #include <algorithm>
 #include "../Server.h"
 
-// implement redirect if location URI doesn't end with "/"
-//Location Server::SynthFoundExact(l_loc_c_it &found, Location &synth,
-//                                 bool requesting_file) const {
-//    struct stat fileInfo;
-//    if (stat(found->root_.c_str(), &fileInfo) == 0) {
-//        // something exists at the address
-//        if (S_ISREG(fileInfo.st_mode)) {
-//            // it's a file
-//            if (requesting_file) {
-//                synth.body_file_ = found->root_;
-//                synth.return_code_ = 200;
-//            } else {
-//
-//            }
-//        } else {
-//            // it's a directory of something else
-//            synth.return_code_ = 403;
-//        }
-//    } else {
-//        std::cout << "open() \"" + found->root_ + "\" failed" << std::endl;
-//        synth.return_code_ = 404;
-//    }
-//    return synth;
-//}
-
-//Location Server::SynthFoundExact(l_loc_c_it &found, Location &synth) const {
-//    if (Utils::CheckFilesystem(found->root_)) {
-//        if (found->index_defined_) {
-//            HandleExplicitIndex(found, synth);
-//        } else {
-//            HandleImplicitIndex(found, synth);
-//        }
-//    } else {
-//        std::cout << "open() \"" + found->root_ + "\" failed" << std::endl;
-//        synth.return_code_ = 404;
-//    }
-//    return synth;
-//}
-
-//void Server::HandleImplicitIndex(const l_loc_c_it &found,
-//                                 Location &synth) const {
-//    if (Utils::CheckFilesystem(found->root_ + "/index.html")) {
-////        synth.index_.push_front("index.html");
-//        synth.return_code_ = 200;
-//    } else {
-//        synth.return_code_ = 403;
-//    }
-//}
-//
-//void Server::HandleExplicitIndex(l_loc_c_it &found,
-//                                 Location &synth) const {
-//    const std::string &index_address = FindIndexToSend(found);
-//    if (index_address.empty()) {
-//        // index defined but found no file(s)
-//        synth.return_code_ = 403;
-//    } else {
-//        synth.return_code_ = 200;
-//        synth.body_file_ = index_address;
-//    }
-//}
-
-void
-Server::SynthIndex(Location &synth, const Srch_c_Res &res, int fs_status) const {
+void    Server::SynthIndex(Location &synth, const Srch_c_Res &res,
+                           int fs_status) const {
     l_loc_c_it found = res.location_;
     const std::string &index_address = FindIndexToSend(found,
                                                        res.leftower_address_);

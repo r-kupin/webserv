@@ -1,20 +1,21 @@
 /******************************************************************************/
 /*                                                                            */
 /*                                                         :::      ::::::::  */
-/*    ServerTest.cpp                                     :+:      :+:    :+:  */
+/*    UtilsTest.cpp                                      :+:      :+:    :+:  */
 /*                                                     +:+ +:+         +:+    */
 /*    By: rokupin <rokupin@student.42.fr>            +#+  +:+       +#+       */
 /*                                                 +#+#+#+#+#+   +#+          */
-/*    Created: 2023/12/14 17:42:16 by rokupin           #+#    #+#            */
+/*    Created: 2024/01/04 16:45:06 by rokupin           #+#    #+#            */
 /*                                                     ###   ########.fr      */
 /*                                                                            */
 /******************************************************************************/
 
 #include <gtest/gtest.h>
-#include "../../../../src/Server/Server.h"
-#include "../../../../src/Server/ServerExceptions.h"
+#include "../../../src/utils/Utils.h"
 
-//class ServerTest : public ::testing::Test, public Server {
-//public:
-//    explicit ServerTest() : Server() {}
-//};
+TEST(CheckFS, CheckFilesystemExist) {
+    std::string def_res_address_ = "test_resources/nested_locations";
+    EXPECT_EQ(Utils::CheckFilesystem(def_res_address_ + "/nginx.conf"), FILE);
+    EXPECT_EQ(Utils::CheckFilesystem(def_res_address_ + "/www/X"), NOTHING);
+    EXPECT_EQ(Utils::CheckFilesystem(def_res_address_ + "/www"), DIRECTORY);
+}

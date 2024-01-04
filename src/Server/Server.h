@@ -69,7 +69,11 @@ public:
     void                        SetSocket();
     const epoll_event           &getEvent() const;
 
-private:
+     void
+     SynthFile(Location &synth, const Srch_c_Res &res, int fs_status,
+               const std::string &request_address) const;
+
+ private:
     const ServerConfiguration &config_;
     int socket_;
     int epoll_fd_;
@@ -77,9 +81,6 @@ private:
 
      void AssignFileToBody(const std::string &address, Location &synth) const;
 
-     void
-     SynthFile(Location &synth, const Srch_c_Res &res,
-               const ClientRequest &request, int fs_status) const;
  };
 
  std::ostream &operator<<(std::ostream &os, const Server &server);
