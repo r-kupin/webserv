@@ -54,7 +54,7 @@ public:
 //-------------------assemble handling location---------------------------------
     Location                SynthesizeHandlingLocation(const ClientRequest &);
 
-    void SynthIndex(Location &synth, const Srch_c_Res &res) const;
+    void SynthIndex(Location &synth, const Srch_c_Res &res, int fs_status) const;
     void                    HandleImplicitIndex(const l_loc_c_it &found,
                                                 Location &synth) const;
     Location SynthFoundExact(l_loc_c_it &found, Location &synth,
@@ -79,7 +79,7 @@ private:
 
      void
      SynthFile(Location &synth, const Srch_c_Res &res,
-               const ClientRequest &request) const;
+               const ClientRequest &request, int fs_status) const;
  };
 
  std::ostream &operator<<(std::ostream &os, const Server &server);

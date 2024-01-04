@@ -32,42 +32,39 @@ Location Server::SynthesizeHandlingLocation(const ClientRequest &request) {
         synth.return_code_ = 403;
     } else if (found->return_code_ == 0) {
         // return redirection rule isn't set
-        if (request.index_request_) {
-            SynthIndex(synth, res);
+        std::string address = found->root_ + res.leftower_address_;
+        int fs_status = Utils::CheckFilesystem(address);
+        if (fs_status == ELSE) {
+            std::cout << address + " is neither a file nor a directory.."
+                         "I don't know what to do with it.." << std::endl;
+            synth.return_code_ = 500;
         } else {
-            SynthFile(synth, res, request);
+            if (request.index_request_) {
+                SynthIndex(synth, res, fs_status);
+            } else {
+                SynthFile(synth, res, request, fs_status);
+            }
         }
     }
     return synth;
 }
 
 void Server::SynthFile(Location &synth, const Srch_c_Res &res,
-                       const ClientRequest &request) const {
+                       const ClientRequest &request, int fs_status) const {
     const l_loc_c_it &found = res.location_;
+    std::string address = found->root_ + res.leftower_address_;
     // request's address part of URI has an address after last "/" check with
     // leftower-address
-    switch (Utils::CheckFilesystem(found->root_ + res.leftower_address_)) {
-        case DIRECTORY :
-            // redirect to index request
-            synth.return_code_ = 301;
-            synth.return_internal_address_ = request.addr_ + "/";
-            break;
-        case FILE :
-            // requested file exists
-            synth.body_file_ = found->root_;
-            synth.return_code_ = 200;
-            break;
-        case ELSE:
-            // requested filesystem entry is neither file nor directory
-            std::cout << found->root_ + "is neither a file nor a "
-                                        "directory.. I don't know what "
-                                        "to do with it.." << std::endl;
-            synth.return_code_ = 500;
-            break;
-        default:
-            std::cout << "open() \"" + found->root_ + "\" failed" << std::endl;
-            synth.return_code_ = 404;
-            return;
+    if (fs_status == NOTHING) {
+        std::cout << "open() \"" + address + "\" failed" << std::endl;
+        synth.return_code_ = 404;
+    } else if (fs_status == DIRECTORY) {
+        // redirect to index request
+        synth.return_code_ = 301;
+        synth.return_internal_address_ = request.addr_ + "/";
+    } else {
+        synth.body_file_ = address;
+        synth.return_code_ = 200;
     }
 }
 

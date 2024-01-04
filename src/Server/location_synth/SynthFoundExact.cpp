@@ -75,17 +75,20 @@
 //    }
 //}
 
-void Server::SynthIndex(Location &synth, const Srch_c_Res &res) const {
+void
+Server::SynthIndex(Location &synth, const Srch_c_Res &res, int fs_status) const {
     l_loc_c_it found = res.location_;
 
-    const std::string &index_address = FindIndexToSend(found,
-                                                       res.leftower_address_);
-    if (index_address.empty()) {
-//        todo: falls in this case:
-// /loc_X/           | 404 | "/var/www/loc_X/index_X.html" is not found
-        std::cout << "directory index of " + found->root_ +
-                        res.leftower_address_ + " is forbidden" << std::endl;
-        synth.return_code_ = 403;
+    const std::string &index_address =
+            FindIndexToSend(found,res.leftower_address_);
+    if (Utils::CheckFilesystem(index_address) == NOTHING) {
+        if (fs_status == NOTHING) {
+            std::cout << "\"" + index_address + "\" is not found" << std::endl;
+            synth.return_code_ = 404;
+        } else {
+            std::cout << "index of " + found->root_ + " is forbidden" << std::endl;
+            synth.return_code_ = 403;
+        }
     } else {
         synth.return_code_ = 200;
         synth.body_file_ = index_address;
@@ -96,12 +99,11 @@ std::string Server::FindIndexToSend(const l_loc_c_it &found,
                                     const std::string &compliment) const {
     const Location &root = found->GetMyRootRef();
     const l_str &indeces = found->GetIndeces();
+    std::string address;
 
     if (!indeces.empty()) {
         // indexes are defined in current or somewhere up in hierarchy
         for (l_str_c_it it = indeces.begin(); it != indeces.end(); ++it) {
-            std::string address;
-
             if (it->at(0) == '/') {
                 // index with absolute path
                 address = root.root_ + *it;
@@ -117,15 +119,12 @@ std::string Server::FindIndexToSend(const l_loc_c_it &found,
         }
     } else {
         // no indexes defined, check for default, which is "index.html"
-        std::string address("index.html");
+        address = "index.html";
         if (compliment.empty()) {
             address = found->root_ + "/" + address;
         } else {
             address = found->root_ + compliment + "/" + address;
         }
-        if (Utils::CheckFilesystem(address) == FILE) {
-            return address;
-        }
     }
-    return "";
+    return address;
 }

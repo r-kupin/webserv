@@ -112,6 +112,8 @@ void    print_method(std::ostream &os, Methods method) {
 std::ostream &operator<<(std::ostream &os, const ClientRequest &request) {
     print_method(os, request.method_);
     os  << request.addr_;
+    if (request.index_request_)
+        os  << "/";
     if (!request.fragment_.empty())
         os << " #" << request.fragment_;
     os << "\n";

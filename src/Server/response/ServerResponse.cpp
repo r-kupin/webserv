@@ -122,7 +122,7 @@ std::ostream &operator<<(std::ostream &os, const ServerResponse &response)  {
     os << response.top_header_ << "\n";
     os << "--headers--\n";
     Utils::OutputMap(response.headers_, os);
-    os << "--body--\n" << response.body_str_;
+//    os << "--body--\n" << response.body_str_;
     return os;
 }
 
