@@ -85,4 +85,10 @@ TEST_F(GetRootTest, AllRootsAreRoot) {
     EXPECT_EQ(from_conf_1->GetMyRootIt(), root_);
     EXPECT_EQ(from_conf_1->GetMyRootIt(), from_conf_2->GetMyRootIt());
     EXPECT_EQ(from_conf_1->GetMyRootIt(), from_conf_3->GetMyRootIt());
+
+//    EXPECT_EQ(loc_X, GetConfig().FindConstLocation("/loc_X/").location_);
+//    EXPECT_EQ(loc_1, GetConfig().FindConstLocation("/loc_1/").location_);
+//    EXPECT_EQ(loc_2, GetConfig().FindConstLocation("/loc_2/").location_);
+//    EXPECT_EQ(loc_3, GetConfig().FindConstLocation("/loc_3/").location_);
+//    EXPECT_EQ(loc_4, GetConfig().FindConstLocation("/loc_4/").location_);
 }

@@ -20,13 +20,6 @@ public:
     explicit FindIndexTosendTest() : Server(conf_index_empty_loc.getConstServers().front()) {};
 };
 
-//    todo: move to FindConstLocation test suite
-//    EXPECT_EQ(loc_X, GetConfig().FindConstLocation("/loc_X/").location_);
-//    EXPECT_EQ(loc_1, GetConfig().FindConstLocation("/loc_1/").location_);
-//    EXPECT_EQ(loc_2, GetConfig().FindConstLocation("/loc_2/").location_);
-//    EXPECT_EQ(loc_3, GetConfig().FindConstLocation("/loc_3/").location_);
-//    EXPECT_EQ(loc_4, GetConfig().FindConstLocation("/loc_4/").location_);
-
 TEST_F(FindIndexTosendTest, FindIndexToSendInDefined) {
     auto root = GetConfig().FindConstLocation("/").location_;
     auto loc_X = GetConfig().FindConstLocation("/loc_X").location_;
@@ -72,15 +65,13 @@ TEST_F(FindIndexToSendButRootRedefined, FindIndexToSendNotDefined) {
     const ServerConfiguration::LocConstSearchResult &result_file_as_directory =
             GetConfig().FindConstLocation("/loc_1/index_1.html");
 
-    EXPECT_EQ(FindIndexToSend(result_X.location_, result_X.leftower_address_),
-              "");
+    EXPECT_EQ(FindIndexToSend(result_X.location_, result_X.leftower_address_), "");
 
     EXPECT_EQ(FindIndexToSend( result_1.location_, result_1.leftower_address_),
               "test_resources/index_order/www/loc_1/index_2.html");
 
     EXPECT_EQ(FindIndexToSend(result_file_as_directory.location_,
-                              result_file_as_directory.leftower_address_),
-              "");
+                              result_file_as_directory.leftower_address_), "");
 }
 
 

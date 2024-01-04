@@ -35,13 +35,16 @@ Location Server::SynthesizeHandlingLocation(const ClientRequest &request) {
         std::string address = found->root_ + res.leftower_address_;
         int fs_status = Utils::CheckFilesystem(address);
         if (fs_status == ELSE) {
+            // something exist on specified address, but it is neither a file nor a directory
             std::cout << address + " is neither a file nor a directory.."
                          "I don't know what to do with it.." << std::endl;
             synth.return_code_ = 500;
         } else {
             if (request.index_request_) {
+                // request's address part of URI ends with "/"
                 SynthIndex(synth, res, fs_status);
             } else {
+                // request's address part of URI has a filename after the last "/"
                 SynthFile(synth, res, request, fs_status);
             }
         }
