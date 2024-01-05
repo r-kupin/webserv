@@ -3,6 +3,29 @@ Minimalist re-implementation of nginx web server.
 1. Compile with `make`
 2. Launch as `webserv [ path_to_config ]`
 3. Connect to the servers on ports defined in the config with any HTTP network-accessing app
+# Features
+## Done
+- Choose the port([[#listen]]) and host([[#server_name]]) of each server.
+- Setup default [[#error_page]]s.
+- Setup routes with one or multiple of the following rules/configuration  ([[#return]])
+	- Define a list of accepted HTTP methods for the route.  ([[#return]])
+	- Define a HTTP redirection.  ([[#return]])
+	- Define a directory or a file from where the file should be searched ([[#root]])
+- Set a default file to answer if the request is a directory.([[#index]])
+- Make it work with POST and GET methods.
+- Your server must be compatible with the web browser of your choice
+- Your HTTP response status codes must be accurate.
+- You server must have default error pages if none are provided.
+- You must be able to serve a fully static website.
+## ToDO
+- Limit client body size.
+- Turn on or off directory listing. (?)
+- Your server must be able to listen to multiple ports 
+- A request to your server should never hang forever.
+- The first server for a host:port will be the default for this host:port (that means it will answer to all the requests that don’t belong to an other server).
+- Clients must be able to upload files
+- Make the route able to accept uploaded files and configure where they should be save
+- Execute CGI based on certain file extension (for example .php).
 # Config
 Like `nginx.conf` but with less functional supported. Feel free to consult the test configs provided in `test/test_resources`. 
 ## Config structure
@@ -183,10 +206,58 @@ In this case:
 
 todo -> If location and all it's super-locations have no root definition at all - server will respond with *500 Internal Server Error*, if access is not restricted, and redirect not set.
 ##### index
-May have multiple args that define files that will be used as an index - meaning - shown when location get's accessed by address. Files are checked in the specified order. The last element of the list can be a file with an absolute path.
-Each location has implicit index `index.html` that's being checked if index directive isn't defined explicitly.
+May have multiple args that define files that will be used as an index - meaning - shown when location get's accessed by address, following with `/`. Files are checked in the specified order - left to right. The last element of the list can be a file with an absolute path - meaning, path not from the current location's root - but from **root**-location root.
 ```nginx
 index index_X.html index_1.html index_2.html;
+```
+Indexes are checked in the following order: 
+###### defined in current location
+1. Return first index found
+2. Return *403* if none of specified files exists & is accessible
+###### not defined in current location, but in parent location
+Check parent location in the same way, except parent *index filenames* specified in *parent* are expected to be located at the *current location's root*:
+```nginx
+server {  
+		...
+        root www; # webserv  
+        index index_X.html index_1.html index_2.html;
+
+        location /loc_1 {
+		    # Request /loc_1/
+	        # Checks www/loc_1/index_X.html first, /loc_4/index.html - then
+	        # Returns 403 if both are not accessible
+            index index_X.html /loc_4/index.html;
+        }  
+  
+        location /loc_2 {
+	        # Request /loc_2/
+	        # Checks www/loc_2/index_X.html, www/loc_2/index_1.html then
+	        # www/loc_2/index_2.html
+	        # Returns 403 if all are not accessible
+        }
+}
+```
+###### no definition up to the root
+Default index `index.html` is being checked 
+```nginx
+server {  
+		...
+        root www; # webserv
+        # no index definition
+  
+        location /loc_1 {
+	        index index_X.html /loc_4/index.html;
+		    # Request /loc_1/
+	        # Checks www/loc_1/index_X.html first, /loc_4/index.html - then
+	        # Returns 403 if both are not accessible
+        }  
+  
+        location /loc_2 {
+	        # Request /loc_2/
+	        # Checks www/loc_2/index.html
+	        # Returns 403 if it is not accessible
+        }
+}
 ```
 ##### return
 Directive, responsible for redirection. Stops processing request and returns the specified code to a client. Should have one or two args.
@@ -214,7 +285,7 @@ location /target_location {
 ##### error_page
 Similar to *index* - it is possible to define custom error pages for each location.
 Error_page directive expects one or more `error code`(s) followed by a `filename` of the error page, that should be sent to the client in case if one of the specified errors will happen.
-In case, if error page is not defined, or defined file doesn't exist - webserv would auto generate default error page automatically.
+In case, if error page is not defined, or defined file doesn't exist - webserv would *auto generate default error page automatically*.
 Example:
 ```nginx
 error_page 403 404 /error.html;
@@ -223,10 +294,77 @@ error_page 403 404 /error.html;
 ## Init
 ### Arg check
 In order to work, server needs a config, which should be passed as a one optional argument. If such argument is present, server will try to create a `Config` object which is intended to store `Node`s, each one dedicated to a particular parameter.
-In case if provided address doesn't exist, *isn't readable*, if config made with mistakes or there were no arguments at all - server will try to load a default config, performing the same checks as for the custom one.
-## Config parsing
-In the runtime all the data stored inside of the object `Config`, which hosts `Nodes`, so all `Config`'s methods are dedicated to store, access and modify them.
-In `src/Config/Config.h`
+In case if provided address doesn't exist, *isn't readable*, if config made with mistakes or there were no arguments at all - server will try to load a default config by the address `resources/nginx.conf`, performing the same checks as for the custom one.
+## Setting up Config
+### Config
+Main class, storing configurations for all servers is `Config`. All its methods are dedicated to parsing config file to list of `ServerConfiguration` classes, each one storing a configuration for each particular server.
+### ServerConfiguration
+Particular config, the backbone of each server. Contains server-level data, such as *server_name*, *port* and the root of the tree of `Locations`.
+`ServerConfiguration`'s functionality is narrowed to function
+```c++
+LocConstSearchResult    FindConstLocation(const std::string &address) const;
+```
+That searches the locations tree for a requested location, and returns a `LocSearchResult`, that contains iterator to the closest found location, as well as some additional info.
+### Location
+Stores data about all [[#Location]] mentioned in config:
+```c++
+	std::set<ErrPage>       error_pages_;  
+    l_loc                   sublocations_;  
+//-------------------index related  
+    bool                    has_own_index_defined_;  
+    bool                    index_defined_in_parent_;  
+    l_str                   own_index_;  
+  
+    Limit                   limit_except_;  
+//-------------------redirect related  
+    int                     return_code_;  
+    std::string             return_internal_address_;  
+    std::string             return_external_address_;  
+    std::string             return_custom_message_;  
+  
+    std::string             root_;  
+    std::string             full_address_; // address from the root path
+    std::string             address_; // particular location's address
+    std::string             body_file_; // address of file being sent to client
+    l_loc_it                parent_; // root location's "parent" points on itself
+    bool                    ghost_;
+```
 ## Setting up servers
 ## Request handling
+HTTP request is a message sent by a client to a server. 
+Right upon receival of the connection from client, server reads the contents of client request to the `ClientRequest` class.
+```c++
+//---Request line
+Methods                             method_;
+//-----------URL
+std::string                         addr_;  
+std::string                         addr_last_step_;  
+bool                                index_request_;  
+m_str_str                           params_;
+std::string                         fragment_;  
+//---Headers & Body
+m_str_str                           headers_;
+std::string                         body_;  
+```
+Here is how HTTP request looks like:
+![[request.jpg]]
+### Request line
+#### Method(`method_`)
+ The HTTP method or verb specifies the type of request being made. WebServ is supposed to handle GET, POST or DELETE methods
+### URL
+![[url.PNG]]
+#### Path (`addr_`)
+#### Last Step in Address (`addr_last_step_`)
+The contents of the address after the last `/` in URI
+#### Index Request (`index_request_`)
+Flag indicating whether the request is for the default index resource. WebServ, automatically serves a default file (e.g., index.html) when the path points to a directory meaning if address ends with `/`.
+#### Fragment (`fragment_`)
+The fragment identifier, often used in conjunction with anchors in HTML documents. It points to a specific section within the requested resource.
+#### Parameters (`params_`)
+Additional parameters sent with the request. In the URL, these are typically query parameters (e.g., `?key1=value1&key2=value2`).
+### Headers (`headers_)
+HTTP headers provide additional information about the request, such as the type of client making the request, the preferred response format, authentication information, etc.
+### Body (`body_`)
+The body of the HTTP request, which contains additional data sent to the server. This is particularly relevant for POST requests or other methods where data is sent in the request body.
 ## Response creating
+![[response.jpg]]
