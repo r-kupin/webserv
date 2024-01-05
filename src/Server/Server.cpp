@@ -115,6 +115,7 @@ void Server::Start() {
     Start(config_.GetPort());
 }
 
+// todo: correct shutdown with a signal
 void Server::Start(int port) {
     std::cout << "started server at " << port << " port" << std::endl;
     while (true) {

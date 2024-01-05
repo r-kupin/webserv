@@ -25,7 +25,7 @@ protected:
 TEST_F(NestedConfigLocationSearchTest, FindRootLocation) {
     uri_ = "/";
 
-    ServerConfiguration &config = getServers().front();
+    ServerConfiguration &config = GetServers().front();
     const Srch_c_Res &result =
             config.FindConstLocation(uri_);
     const Location & root = *result.location_;
@@ -34,7 +34,7 @@ TEST_F(NestedConfigLocationSearchTest, FindRootLocation) {
     EXPECT_EQ(root.own_index_.front(), "root_index.html");
     EXPECT_EQ(root.root_, "test_resources/nested_locations/www");
     EXPECT_FALSE(root.ghost_);
-    EXPECT_EQ(root.sublocations_.size(), 3);
+    EXPECT_EQ(root.sublocations_.size(), 4);
 
     EXPECT_EQ(result.status_, "found");
     EXPECT_EQ(result.leftower_address_, "");
@@ -43,7 +43,7 @@ TEST_F(NestedConfigLocationSearchTest, FindRootLocation) {
 TEST_F(NestedConfigLocationSearchTest, FindDefinedLocation) {
     uri_ = "/loc_1";
 
-    ServerConfiguration &config = getServers().front();
+    ServerConfiguration &config = GetServers().front();
     const Srch_c_Res &result =
             config.FindConstLocation(uri_);
     const Location & loc_1 = *result.location_;
@@ -62,7 +62,7 @@ TEST_F(NestedConfigLocationSearchTest, FindDefinedLocation) {
 TEST_F(NestedConfigLocationSearchTest, DefinedLocationInTwiceNestedRoot) {
     uri_ = "/loc_0X";
 
-    ServerConfiguration &config = getServers().front();
+    ServerConfiguration &config = GetServers().front();
     const Srch_c_Res &result =
             config.FindConstLocation(uri_);
     const Location & loc_0X = *result.location_;
@@ -79,7 +79,7 @@ TEST_F(NestedConfigLocationSearchTest, DefinedLocationInTwiceNestedRoot) {
 TEST_F(NestedConfigLocationSearchTest, LocationIsDefinedInServerContext) {
     uri_ = "/loc_5";
 
-    ServerConfiguration &config = getServers().front();
+    ServerConfiguration &config = GetServers().front();
     const Srch_c_Res &result =
             config.FindConstLocation(uri_);
     const Location & loc_5 = *result.location_;
@@ -95,7 +95,7 @@ TEST_F(NestedConfigLocationSearchTest, LocationIsDefinedInServerContext) {
 TEST_F(NestedConfigLocationSearchTest, FindUnDefinedRootSubLocation) {
     uri_ = "/XXX";
 
-    ServerConfiguration &config = getServers().front();
+    ServerConfiguration &config = GetServers().front();
     const Srch_c_Res &result =
             config.FindConstLocation(uri_);
     const Location & xxx = *result.location_;
@@ -108,7 +108,7 @@ TEST_F(NestedConfigLocationSearchTest, FindUnDefinedRootSubLocation) {
 TEST_F(NestedConfigLocationSearchTest, Nested_loc_1_loc_3) {
     uri_ = "/loc_1/loc_3";
 
-    ServerConfiguration &config = getServers().front();
+    ServerConfiguration &config = GetServers().front();
     const Srch_c_Res &result =
             config.FindConstLocation(uri_);
     const Location & loc_3 = *result.location_;
@@ -128,7 +128,7 @@ TEST_F(NestedConfigLocationSearchTest, Nested_loc_1_loc_3) {
 TEST_F(NestedConfigLocationSearchTest, Nested_loc_1_loc_2) {
     uri_ = "/loc_1/loc_2";
 
-    ServerConfiguration &config = getServers().front();
+    ServerConfiguration &config = GetServers().front();
     const Srch_c_Res &result =
             config.FindConstLocation(uri_);
     const Location & loc_2 = *result.location_;
@@ -148,7 +148,7 @@ TEST_F(NestedConfigLocationSearchTest, Nested_loc_1_loc_2) {
 TEST_F(NestedConfigLocationSearchTest, FindUnDefinedSubLocationOfNonRoot) {
     uri_ = "/loc_1/XXX";
 
-    ServerConfiguration &config = getServers().front();
+    ServerConfiguration &config = GetServers().front();
     const Srch_c_Res &result =
             config.FindConstLocation(uri_);
     const Location & xxx = *result.location_;
@@ -166,7 +166,7 @@ TEST_F(NestedConfigLocationSearchTest, FindUnDefinedSubLocationOfNonRoot) {
 TEST_F(NestedConfigLocationSearchTest, OneStepNested) {
     uri_ = "/loc_5/loc_7";
 
-    ServerConfiguration &config = getServers().front();
+    ServerConfiguration &config = GetServers().front();
     const Srch_c_Res &result =
             config.FindConstLocation(uri_);
     const Location & loc_7 = *result.location_;

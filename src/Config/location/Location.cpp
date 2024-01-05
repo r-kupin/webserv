@@ -418,7 +418,6 @@ void Location::HandleLimitExcept(const Node &node) {
     }
 }
 
-// todo tests! check root inheritance!
 void Location::UpdateSublocations() {
     if (address_ != "/") {
         if (root_.empty())

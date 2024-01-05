@@ -19,7 +19,6 @@
 #include "LimitExcept.h"
 
 struct Location;
-//-------------------static creation / initialization---------------------------
 
 typedef std::set<ErrPage>::const_iterator                       s_err_c_it;
 typedef std::list<Location>                                     l_loc;

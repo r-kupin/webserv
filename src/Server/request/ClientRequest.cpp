@@ -71,7 +71,7 @@ v_str ClientRequest::ReadFromSocket(int socket) {
     v_str request;
 
     while (true) {
-//        int bytesRead = recv(socket, buffer, BUFFER_SIZE - 1, 0);
+        // int bytesRead = recv(socket, buffer, BUFFER_SIZE - 1, 0);
         int bytesRead = read(socket, buffer, BUFFER_SIZE - 1);
 
         if (bytesRead <= 0)

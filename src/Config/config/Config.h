@@ -62,7 +62,11 @@ protected:
                                      std::ifstream &config) const;
     void                FinishSubNode(std::string &line, RawNode &current,
                                       std::ifstream &config) const;
-    static v_str        ParseDirective(std::string &line, char c);
+    v_str               ParseDirective(std::string &line, char c) const;
+    std::string         HandleQuotedExpression(const std::string &line,
+                                               size_t &separator,
+                                               const std::string &word,
+                                               size_t first_quote) const;
     void                HandleLineLeftower(std::string &line_leftover,
                                            std::string &line) const;
     void                FinishMainNode(RawNode &current,
@@ -77,7 +81,7 @@ protected:
                                                      std::set<std::string> &address_set,
                                                      v_node_c_it &it) const;
 //-------------------getters, exceptions, etc-----------------------------------
-    l_sc                &getServers();
+    l_sc                &GetServers();
     void                ThrowSyntaxError(const std::string &msg,
                                                      std::ifstream &config) const;
     void                ThrowSyntaxError(const std::string &msg) const;

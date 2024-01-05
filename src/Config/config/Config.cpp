@@ -86,7 +86,7 @@ const l_sc &Config::getConstServers() const {
     return servers_;
 }
 
-l_sc &Config::getServers() {
+l_sc &Config::GetServers() {
     return servers_;
 }
 

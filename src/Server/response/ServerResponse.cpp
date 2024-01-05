@@ -138,18 +138,6 @@ const std::string &ServerResponse::GetTopHeader() const {
     return top_header_;
 }
 
-const std::string &ServerResponse::getBodyStr() const {
-    return body_str_;
-}
-
-const std::string &ServerResponse::getServerName() const {
-    return server_name_;
-}
-
-int ServerResponse::getPort() const {
-    return port_;
-}
-
 const m_str_str &ServerResponse::GetHeaders() const {
     return headers_;
 }

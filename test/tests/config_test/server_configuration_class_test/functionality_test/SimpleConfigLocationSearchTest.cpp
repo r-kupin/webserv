@@ -22,7 +22,7 @@ protected:
 
 TEST_F(SimpleConfigLocationSearchTest, FindRootLocation) {
     uri_ = "/";
-    ServerConfiguration &config = getServers().front();
+    ServerConfiguration &config = GetServers().front();
     const Srch_c_Res &result =
             config.FindConstLocation(uri_);
 
@@ -34,7 +34,7 @@ TEST_F(SimpleConfigLocationSearchTest, FindRootLocation) {
     EXPECT_EQ(root.own_index_.front(), "root_index.html");
     EXPECT_EQ(root.root_, "test_resources/simple/www");
     EXPECT_FALSE(root.ghost_);
-    EXPECT_EQ(root.sublocations_.size(), 7);
+    EXPECT_EQ(root.sublocations_.size(), 8);
 
     EXPECT_EQ(result.status_, "found");
     EXPECT_EQ(result.leftower_address_, "");
@@ -43,7 +43,7 @@ TEST_F(SimpleConfigLocationSearchTest, FindRootLocation) {
 TEST_F(SimpleConfigLocationSearchTest, FindDefinedLocation) {
     uri_ = "/loc_1";
 
-    ServerConfiguration &config = getServers().front();
+    ServerConfiguration &config = GetServers().front();
     const Srch_c_Res &result =
             config.FindConstLocation(uri_);
 
@@ -55,7 +55,7 @@ TEST_F(SimpleConfigLocationSearchTest, FindDefinedLocation) {
 
 TEST_F(SimpleConfigLocationSearchTest, FindUnDefinedRootSubLocation) {
     uri_ = "/XXX";
-    ServerConfiguration &config = getServers().front();
+    ServerConfiguration &config = GetServers().front();
     const Srch_c_Res &result =
             config.FindConstLocation(uri_);
 
@@ -67,7 +67,7 @@ TEST_F(SimpleConfigLocationSearchTest, FindUnDefinedRootSubLocation) {
 TEST_F(SimpleConfigLocationSearchTest, FindUnDefinedSubLocationOfNonRoot) {
     uri_ = "/loc_1/XXX";
 
-    ServerConfiguration &config = getServers().front();
+    ServerConfiguration &config = GetServers().front();
     const Srch_c_Res &result =
             config.FindConstLocation(uri_);
 

@@ -33,7 +33,7 @@ TEST_F(ConfigSetupFromFileSimpleTest, TestAllComponents) {
     EXPECT_EQ(root.own_index_.front(), "root_index.html");
     EXPECT_EQ(root.root_, "test_resources/simple/www");
     EXPECT_FALSE(root.ghost_);
-    EXPECT_EQ(root.sublocations_.size(), 7);
+    EXPECT_EQ(root.sublocations_.size(), 8);
 
     auto it = root.sublocations_.rbegin();
     const Location & loc_1X = *it;
@@ -69,6 +69,11 @@ TEST_F(ConfigSetupFromFileSimpleTest, TestAllComponents) {
     const Location & loc_5 = *it;
     EXPECT_EQ(loc_5.address_, "/loc_5");
     EXPECT_EQ(*loc_5.parent_, root);
+
+    it++;
+    const Location & loc_3X = *it;
+    EXPECT_EQ(loc_3X.address_, "/loc_3X");
+    EXPECT_EQ(*loc_3X.parent_, root);
 }
 
 class ConfigSetupFromFileNestedTest : public ::testing::Test, public Config {
@@ -90,7 +95,7 @@ TEST_F(ConfigSetupFromFileNestedTest, TestAllComponents) {
     EXPECT_EQ(root.own_index_.front(), "root_index.html");
     EXPECT_EQ(root.root_, "test_resources/nested_locations/www");
     EXPECT_FALSE(root.ghost_);
-    EXPECT_EQ(root.sublocations_.size(), 3);
+    EXPECT_EQ(root.sublocations_.size(), 4);
 //-------------------in "/"-----------------------------------------------------
     auto it = root.sublocations_.rbegin();
     const Location & loc_1 = *it;
@@ -115,6 +120,14 @@ TEST_F(ConfigSetupFromFileNestedTest, TestAllComponents) {
     EXPECT_EQ(*loc_5.parent_, root);
     EXPECT_EQ(loc_5.sublocations_.size(), 1);
     EXPECT_TRUE(loc_5.ghost_);
+
+    it++;
+    const Location & loc_8 = *it;
+    EXPECT_EQ(loc_8.address_, "/loc_8");
+    EXPECT_EQ(*loc_8.parent_, root);
+    EXPECT_TRUE(loc_8.sublocations_.empty());
+    EXPECT_EQ(loc_8.return_code_, 200);
+    EXPECT_EQ(loc_8.return_custom_message_, "Hello from loc_8 !");
 //-------------------in "/loc_1"------------------------------------------------
     const Location & loc_3 = loc_1.sublocations_.back();
     EXPECT_EQ(loc_3.address_, "/loc_3");

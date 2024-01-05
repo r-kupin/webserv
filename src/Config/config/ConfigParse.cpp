@@ -93,6 +93,8 @@ Config::ParseNode(std::ifstream &config, std::string &line_leftover,
     current.node_.main_ = main_directive;
     while (std::getline(config, line) || !line_leftover.empty()) {
         PreprocessLine(line, line_leftover);
+        if (line.find('\'') != std::string::npos)
+            ThrowSyntaxError("Found a (\') symbol. Please, use \" instead");
         while (!line.empty()) {
             size_t op_br_pos = line.find_first_of('{');
             size_t cl_br_pos = line.find_first_of('}');
@@ -199,18 +201,41 @@ void Config::FinishSubNode(std::string &line,
  * @param c terminating character
  * @return vector of strings - parsed directive
  */
-v_str Config::ParseDirective(std::string &line, char c) {
+v_str Config::ParseDirective(std::string &line, char c) const {
     v_str params;
     std::string all_separators = " \t";
     all_separators.push_back(c);
-    while (line[0] != c) {
+    while (!line.empty() && line[0] != c) {
         size_t separator = line.find_first_of(all_separators);
-        params.push_back(line.substr(0, separator));
+        std::string word = line.substr(0, separator);
+        size_t first_quote = word.find_first_of('"');
+        if (first_quote != std::string::npos)
+            word = HandleQuotedExpression(line, separator, word, first_quote);
+        params.push_back(word);
         line = line.substr(separator);
+        if (line.empty())
+            ThrowSyntaxError("missing \";\" after the end of quoted expression ");
         line = line.substr(line.find_first_not_of(" \t"));
     }
     line = line.substr(1);
     return params;
+}
+
+std::string  Config::HandleQuotedExpression(const std::string &line,
+                                            size_t &separator,
+                                            const std::string &word,
+                                            size_t first_quote) const {
+    if (first_quote != 0) {
+        separator = first_quote;
+        return word.substr(0, first_quote);
+    }
+    size_t next_quote = 1;
+    while (next_quote < line.size() && line[next_quote] != '"')
+        ++next_quote;
+    if (next_quote == line.size())
+        ThrowSyntaxError("Unclosed quote expression");
+    separator = next_quote + 1;
+    return line.substr(1, next_quote - 1);
 }
 
 /**
