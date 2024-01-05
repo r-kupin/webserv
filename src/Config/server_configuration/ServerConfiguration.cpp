@@ -102,6 +102,10 @@ const Location  &ServerConfiguration::GetConstRoot() const {
     return locations_.front();
 }
 
+size_t ServerConfiguration::GetClientMaxBodySize() const {
+    return client_max_body_size_;
+}
+
 l_loc_it    ServerConfiguration::GetRootIt() {
     return locations_.begin();
 }
@@ -112,6 +116,14 @@ l_loc_c_it ServerConfiguration::GetConstRootIt() const {
 
 int ServerConfiguration::GetPort() const {
     return port_;
+}
+
+const std::string &ServerConfiguration::GetServerName() const {
+    return server_name_;
+}
+
+const l_loc &ServerConfiguration::GetLocations() const {
+    return locations_;
 }
 
 bool        ServerConfiguration::operator==(
@@ -140,10 +152,10 @@ ServerConfiguration &ServerConfiguration::operator=(
 }
 
 std::ostream &operator<<(std::ostream &os, const ServerConfiguration &config) {
-    os << "hostname: " << config.server_name_ << "\n";
-    os << "port: " << config.port_ << "\n";
-    if (config.client_max_body_size_) {
-        os << "client_max_body_size_: " << config.client_max_body_size_ << "\n";
+    os << "hostname: " << config.GetServerName() << "\n";
+    os << "port: " << config.GetPort() << "\n";
+    if (config.GetClientMaxBodySize()) {
+        os << "client_max_body_size_: " << config.GetClientMaxBodySize() << "\n";
     }
     os << config.GetConstRoot() << "\n";
     os << std::endl;

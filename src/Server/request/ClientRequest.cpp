@@ -110,23 +110,23 @@ void    print_method(std::ostream &os, Methods method) {
 }
 
 std::ostream &operator<<(std::ostream &os, const ClientRequest &request) {
-    print_method(os, request.method_);
-    os  << request.addr_;
-    if (request.index_request_)
+    print_method(os, request.GetMethod());
+    os  << request.GetAddress();
+    if (request.IsIndexRequest())
         os  << "/";
-    if (!request.fragment_.empty())
-        os << " #" << request.fragment_;
+    if (!request.GetFragment().empty())
+        os << " #" << request.GetFragment();
     os << "\n";
-    if (!request.params_.empty()) {
+    if (!request.GetParams().empty()) {
         os << "--url params--\n";
-        Utils::OutputMap(request.params_, os);
+        Utils::OutputMap(request.GetParams(), os);
     }
-    if (!request.headers_.empty()) {
+    if (!request.GetHeaders().empty()) {
         os << "--headers--\n";
-        Utils::OutputMap(request.headers_, os);
+        Utils::OutputMap(request.GetHeaders(), os);
     }
-    if (!request.body_.empty())
-        os << "--body--\n" << request.body_ << "\n";
+    if (!request.GetBody().empty())
+        os << "--body--\n" << request.GetBody() << "\n";
     return os;
 }
 
@@ -134,23 +134,34 @@ Methods ClientRequest::GetMethod() const {
     return method_;
 }
 
-const std::string &ClientRequest::getAddress() const {
+const std::string &ClientRequest::GetAddress() const {
     return addr_;
 }
 
-const std::string &ClientRequest::getLastStepUri() const {
+const std::string &ClientRequest::GetLastStepUri() const {
     return addr_last_step_;
 }
 
-const std::string &ClientRequest::getBody() const {
+const std::string &ClientRequest::GetBody() const {
     return body_;
 }
 
-const m_str_str &ClientRequest::getParams() const {
+const m_str_str &ClientRequest::GetParams() const {
     return params_;
 }
 
-const m_str_str &ClientRequest::getHeaders() const {
+const m_str_str &ClientRequest::GetHeaders() const {
     return headers_;
 }
 
+bool ClientRequest::IsIndexRequest() const {
+    return index_request_;
+}
+
+const std::string &ClientRequest::GetFragment() const {
+    return fragment_;
+}
+
+void ClientRequest::SetMethod(Methods method) {
+    method_ = method;
+}

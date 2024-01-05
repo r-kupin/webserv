@@ -26,8 +26,8 @@ TEST_F(NestedConfigLocationSearchTest, FindRootLocation) {
     uri_ = "/";
 
     ServerConfiguration &config = getServers().front();
-    const Srch_Res &result =
-            config.FindLocation(uri_);
+    const Srch_c_Res &result =
+            config.FindConstLocation(uri_);
     const Location & root = *result.location_;
     EXPECT_EQ(root.address_, "/");
     EXPECT_EQ(root.error_pages_.size(), 2);
@@ -44,8 +44,8 @@ TEST_F(NestedConfigLocationSearchTest, FindDefinedLocation) {
     uri_ = "/loc_1";
 
     ServerConfiguration &config = getServers().front();
-    const Srch_Res &result =
-            config.FindLocation(uri_);
+    const Srch_c_Res &result =
+            config.FindConstLocation(uri_);
     const Location & loc_1 = *result.location_;
     std::cout << *config.GetRootIt() << std::endl;
     EXPECT_EQ(loc_1.address_, "/loc_1");
@@ -63,8 +63,8 @@ TEST_F(NestedConfigLocationSearchTest, DefinedLocationInTwiceNestedRoot) {
     uri_ = "/loc_0X";
 
     ServerConfiguration &config = getServers().front();
-    const Srch_Res &result =
-            config.FindLocation(uri_);
+    const Srch_c_Res &result =
+            config.FindConstLocation(uri_);
     const Location & loc_0X = *result.location_;
     EXPECT_EQ(loc_0X.address_, "/loc_0X");
     EXPECT_EQ(*loc_0X.parent_, config.GetRoot());
@@ -80,8 +80,8 @@ TEST_F(NestedConfigLocationSearchTest, LocationIsDefinedInServerContext) {
     uri_ = "/loc_5";
 
     ServerConfiguration &config = getServers().front();
-    const Srch_Res &result =
-            config.FindLocation(uri_);
+    const Srch_c_Res &result =
+            config.FindConstLocation(uri_);
     const Location & loc_5 = *result.location_;
     EXPECT_EQ(loc_5.address_, "/loc_5");
     EXPECT_EQ(*loc_5.parent_, config.GetRoot());
@@ -96,8 +96,8 @@ TEST_F(NestedConfigLocationSearchTest, FindUnDefinedRootSubLocation) {
     uri_ = "/XXX";
 
     ServerConfiguration &config = getServers().front();
-    const Srch_Res &result =
-            config.FindLocation(uri_);
+    const Srch_c_Res &result =
+            config.FindConstLocation(uri_);
     const Location & xxx = *result.location_;
     EXPECT_EQ(xxx, config.GetRoot());
 
@@ -109,8 +109,8 @@ TEST_F(NestedConfigLocationSearchTest, Nested_loc_1_loc_3) {
     uri_ = "/loc_1/loc_3";
 
     ServerConfiguration &config = getServers().front();
-    const Srch_Res &result =
-            config.FindLocation(uri_);
+    const Srch_c_Res &result =
+            config.FindConstLocation(uri_);
     const Location & loc_3 = *result.location_;
     EXPECT_EQ(loc_3.address_, "/loc_3");
     EXPECT_EQ(loc_3.full_address_, "/loc_1/loc_3");
@@ -129,8 +129,8 @@ TEST_F(NestedConfigLocationSearchTest, Nested_loc_1_loc_2) {
     uri_ = "/loc_1/loc_2";
 
     ServerConfiguration &config = getServers().front();
-    const Srch_Res &result =
-            config.FindLocation(uri_);
+    const Srch_c_Res &result =
+            config.FindConstLocation(uri_);
     const Location & loc_2 = *result.location_;
     EXPECT_EQ(loc_2.address_, "/loc_2");
     EXPECT_EQ(loc_2.full_address_, "/loc_1/loc_2");
@@ -149,8 +149,8 @@ TEST_F(NestedConfigLocationSearchTest, FindUnDefinedSubLocationOfNonRoot) {
     uri_ = "/loc_1/XXX";
 
     ServerConfiguration &config = getServers().front();
-    const Srch_Res &result =
-            config.FindLocation(uri_);
+    const Srch_c_Res &result =
+            config.FindConstLocation(uri_);
     const Location & xxx = *result.location_;
     EXPECT_EQ(xxx.address_, "/loc_1");
     EXPECT_EQ(*xxx.parent_, config.GetRoot());
@@ -167,8 +167,8 @@ TEST_F(NestedConfigLocationSearchTest, OneStepNested) {
     uri_ = "/loc_5/loc_7";
 
     ServerConfiguration &config = getServers().front();
-    const Srch_Res &result =
-            config.FindLocation(uri_);
+    const Srch_c_Res &result =
+            config.FindConstLocation(uri_);
     const Location & loc_7 = *result.location_;
     EXPECT_EQ(loc_7.address_, "/loc_7");
     EXPECT_EQ(loc_7.full_address_, "/loc_5/loc_7");

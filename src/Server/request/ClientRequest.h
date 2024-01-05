@@ -19,7 +19,7 @@
  *  parameters that are sent to the web server, providing additional
  *  information about the request. Parameters are typically in the form of
  *  key-value pairs and are separated by "&" (ampersand) symbols.
- *  For example: https://example.com/page?name=John&age=25
+ *  For example: https://example.com/page?name=Johny&age=33
  *  In this URL, the question mark indicates the start of the query string,
  *  and the parameters include "name=John" and "age=25."
  *
@@ -46,17 +46,21 @@ public:
     ClientRequest();
     explicit    ClientRequest(int client_sock);
 
-    Methods GetMethod() const;
-    const std::string &getAddress() const;
-    const std::string &getLastStepUri() const;
-    const std::string &getBody() const;
-    const m_str_str &getParams() const;
-    const m_str_str &getHeaders() const;
+    void                Init(int client_sock);
 
+    Methods             GetMethod() const;
+    const std::string   &GetAddress() const;
+    const std::string   &GetLastStepUri() const;
+    const std::string   &GetBody() const;
+    const m_str_str     &GetParams() const;
+    const m_str_str     &GetHeaders() const;
+    bool                IsIndexRequest() const;
+    const std::string   &GetFragment() const;
+    void                SetMethod(Methods method);
+protected:
 //-------------------socket-level-----------------------------------------------
-    void        Init(int client_sock);
     v_str       ReadFromSocket(int socket);
-//-------------------vector-of-stringgs parsed inpul level----------------------
+//-------------------vector-of-strings parsed input level----------------------
     void        CheckRequest(const v_str &request);
     bool        HasHeaders(const v_str &request);
     bool        HasBody(const v_str &request);
@@ -70,13 +74,14 @@ public:
     bool        HasQuery(const std::string& url);
     bool        HasFragment(const std::string& url);
     std::string ExtractAddr(const std::string& url);
-    std::string ExtractQuerry(const std::string &url);
+    std::string ExtractQuery(const std::string &url);
     void        FillUrlParams(const std::string &url);
     std::string ExtractFragment(const std::string& url);
     std::string ExtractLastAddrStep(const std::string& address);
 
     void        ThrowException(const std::string& msg,
                                const std::string &e) const;
+private:
     Methods                             method_;
     std::string                         addr_;
     std::string                         addr_last_step_;

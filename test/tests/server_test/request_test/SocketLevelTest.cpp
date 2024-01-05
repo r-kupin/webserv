@@ -116,52 +116,57 @@ class InitTest : public SocketLevelTest {};
 TEST_F(InitTest, StandardGetFromFirefox) {
     pipe_reguest_to_fd(firefox_GET_req_);
     Init(fd_);
-    EXPECT_EQ(method_, GET);
-    EXPECT_EQ(addr_, "/");
-    EXPECT_EQ(addr_last_step_, "/");
-    EXPECT_EQ(body_, "");
-    EXPECT_EQ(fragment_, "");
-    EXPECT_EQ(params_.size(), 0);
-    EXPECT_EQ(headers_.size(), 12);
-    EXPECT_EQ(headers_["Host"], "localhost:8080");
-    EXPECT_EQ(headers_["User-Agent"], "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/115.0");
-    EXPECT_EQ(headers_["Accept"], "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8");
-    EXPECT_EQ(headers_["Accept-Language"], "en-US,en;q=0.5");
-    EXPECT_EQ(headers_["Accept-Encoding"], "gzip, deflate, br");
-    EXPECT_EQ(headers_["DNT"], "1");
-    EXPECT_EQ(headers_["Connection"], "keep-alive");
-    EXPECT_EQ(headers_["Upgrade-Insecure-Requests"], "1");
-    EXPECT_EQ(headers_["Sec-Fetch-Dest"], "document");
-    EXPECT_EQ(headers_["Sec-Fetch-Mode"], "navigate");
-    EXPECT_EQ(headers_["Sec-Fetch-Site"], "none");
-    EXPECT_EQ(headers_["Sec-Fetch-User"], "?1");
+    EXPECT_EQ(GetMethod(), GET);
+    EXPECT_EQ(GetAddress(), "/");
+    EXPECT_EQ(GetLastStepUri(), "/");
+    EXPECT_EQ(GetBody(), "");
+    EXPECT_EQ(GetFragment(), "");
+    EXPECT_EQ(GetParams().size(), 0);
+    EXPECT_EQ(GetHeaders().size(), 12);
+    EXPECT_EQ(GetHeaders().at("Host"), "localhost:8080");
+    EXPECT_EQ(GetHeaders().at("User-Agent"), "Mozilla/5.0 (X11; Ubuntu; Linux "
+                                          "x86_64; rv:109"
+                              ".0) Gecko/20100101 Firefox/115.0");
+    EXPECT_EQ(GetHeaders().at("Accept"), "text/html,application/xhtml+xml,"
+                                      "application/xml;"
+                          "q=0.9,image/avif,image/webp,*/*;q=0.8");
+    EXPECT_EQ(GetHeaders().at("Accept-Language"), "en-US,en;q=0.5");
+    EXPECT_EQ(GetHeaders().at("Accept-Encoding"), "gzip, deflate, br");
+    EXPECT_EQ(GetHeaders().at("DNT"), "1");
+    EXPECT_EQ(GetHeaders().at("Connection"), "keep-alive");
+    EXPECT_EQ(GetHeaders().at("Upgrade-Insecure-Requests"), "1");
+    EXPECT_EQ(GetHeaders().at("Sec-Fetch-Dest"), "document");
+    EXPECT_EQ(GetHeaders().at("Sec-Fetch-Mode"), "navigate");
+    EXPECT_EQ(GetHeaders().at("Sec-Fetch-Site"), "none");
+    EXPECT_EQ(GetHeaders().at("Sec-Fetch-User"), "?1");
 }
 
 TEST_F(InitTest, example_POST_req_) {
     pipe_reguest_to_fd(example_POST_req_);
     Init(fd_);
-    EXPECT_EQ(method_, POST);
-    EXPECT_EQ(addr_, "/test");
-    EXPECT_EQ(addr_last_step_, "/test");
-    EXPECT_EQ(body_, "field1=value1&field2=value2");
-    EXPECT_EQ(fragment_, "");
-    EXPECT_EQ(params_.size(), 0);
-    EXPECT_EQ(headers_.size(), 3);
-    EXPECT_EQ(headers_["Host"], "foo.example");
-    EXPECT_EQ(headers_["Content-Type"], "application/x-www-form-urlencoded");
-    EXPECT_EQ(headers_["Content-Length"], "27");
+    EXPECT_EQ(GetMethod(), POST);
+    EXPECT_EQ(GetAddress(), "/test");
+    EXPECT_EQ(GetLastStepUri(), "/test");
+    EXPECT_EQ(GetBody(), "field1=value1&field2=value2");
+    EXPECT_EQ(GetFragment(), "");
+    EXPECT_EQ(GetParams().size(), 0);
+    EXPECT_EQ(GetHeaders().size(), 3);
+    EXPECT_EQ(GetHeaders().at("Host"), "foo.example");
+    EXPECT_EQ(GetHeaders().at("Content-Type"),
+              "application/x-www-form-urlencoded");
+    EXPECT_EQ(GetHeaders().at("Content-Length"), "27");
 }
 
 TEST_F(InitTest, no_headers_POST_req_) {
     pipe_reguest_to_fd(no_headers_POST_req_);
     Init(fd_);
-    EXPECT_EQ(method_, POST);
-    EXPECT_EQ(addr_, "/test");
-    EXPECT_EQ(addr_last_step_, "/test");
-    EXPECT_EQ(body_, "field1=value1&field2=value2");
-    EXPECT_EQ(fragment_, "");
-    EXPECT_EQ(params_.size(), 0);
-    EXPECT_EQ(headers_.size(), 0);
+    EXPECT_EQ(GetMethod(), POST);
+    EXPECT_EQ(GetAddress(), "/test");
+    EXPECT_EQ(GetLastStepUri(), "/test");
+    EXPECT_EQ(GetBody(), "field1=value1&field2=value2");
+    EXPECT_EQ(GetFragment(), "");
+    EXPECT_EQ(GetParams().size(), 0);
+    EXPECT_EQ(GetHeaders().size(), 0);
 }
 
 TEST_F(InitTest, ParamsNFragment) {
@@ -178,19 +183,19 @@ TEST_F(InitTest, ParamsNFragment) {
                                          "\n\r";
     pipe_reguest_to_fd(request);
     Init(fd_);
-    EXPECT_EQ(method_, GET);
-    EXPECT_EQ(addr_, "/results");
-    EXPECT_EQ(addr_last_step_, "/results");
-    EXPECT_EQ(body_, "");
-    EXPECT_EQ(fragment_, "34");
-    EXPECT_EQ(headers_.size(), 1);
-    EXPECT_EQ(headers_["Host"], "localhost:8080");
-    EXPECT_EQ(params_.size(), 5);
-    EXPECT_EQ(params_["search_query"], "pony");
-    EXPECT_EQ(params_["search_type"], "pics");
-    EXPECT_EQ(params_["safe_search"], "off");
-    EXPECT_EQ(params_["nsfw_allow"], "true");
-    EXPECT_EQ(params_["sure"], "yes");
+    EXPECT_EQ(GetMethod(), GET);
+    EXPECT_EQ(GetAddress(), "/results");
+    EXPECT_EQ(GetLastStepUri(), "/results");
+    EXPECT_EQ(GetBody(), "");
+    EXPECT_EQ(GetFragment(), "34");
+    EXPECT_EQ(GetHeaders().size(), 1);
+    EXPECT_EQ(GetHeaders().at("Host"), "localhost:8080");
+    EXPECT_EQ(GetParams().size(), 5);
+    EXPECT_EQ(GetParams().at("search_query"), "pony");
+    EXPECT_EQ(GetParams().at("search_type"), "pics");
+    EXPECT_EQ(GetParams().at("safe_search"), "off");
+    EXPECT_EQ(GetParams().at("nsfw_allow"), "true");
+    EXPECT_EQ(GetParams().at("sure"), "yes");
 }
 
 TEST_F(InitTest, ParamsNFragmentArgIncomplete) {
@@ -207,16 +212,16 @@ TEST_F(InitTest, ParamsNFragmentArgIncomplete) {
                                          "\n\r";
     pipe_reguest_to_fd(request);
     Init(fd_);
-    EXPECT_EQ(method_, GET);
-    EXPECT_EQ(addr_, "/results");
-    EXPECT_EQ(addr_last_step_, "/results");
-    EXPECT_EQ(body_, "");
-    EXPECT_EQ(fragment_, "34");
-    EXPECT_EQ(headers_.size(), 1);
-    EXPECT_EQ(headers_["Host"], "localhost:8080");
-    EXPECT_EQ(params_.size(), 4);
-    EXPECT_EQ(params_["search_query"], "pony");
-    EXPECT_EQ(params_["search_type"], "pics");
-    EXPECT_EQ(params_["safe_search"], "off");
-    EXPECT_EQ(params_["nsfw_allow"], "true");
+    EXPECT_EQ(GetMethod(), GET);
+    EXPECT_EQ(GetAddress(), "/results");
+    EXPECT_EQ(GetLastStepUri(), "/results");
+    EXPECT_EQ(GetBody(), "");
+    EXPECT_EQ(GetFragment(), "34");
+    EXPECT_EQ(GetHeaders().size(), 1);
+    EXPECT_EQ(GetHeaders().at("Host"), "localhost:8080");
+    EXPECT_EQ(GetParams().size(), 4);
+    EXPECT_EQ(GetParams().at("search_query"), "pony");
+    EXPECT_EQ(GetParams().at("search_type"), "pics");
+    EXPECT_EQ(GetParams().at("safe_search"), "off");
+    EXPECT_EQ(GetParams().at("nsfw_allow"), "true");
 }

@@ -36,13 +36,13 @@ struct Location {
 
     std::set<ErrPage>       error_pages_;
     l_loc                   sublocations_;
-
+//-------------------index related
     bool                    has_own_index_defined_;
     bool                    index_defined_in_parent_;
     l_str                   own_index_;
 
     Limit                   limit_except_;
-
+//-------------------redirect related
     int                     return_code_;
     std::string             return_internal_address_;
     std::string             return_external_address_;

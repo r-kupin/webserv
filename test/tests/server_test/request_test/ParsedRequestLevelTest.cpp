@@ -105,29 +105,34 @@ TEST_F(ParsedRequestLevelTest, HasBodyTest) {
 
 TEST_F(ParsedRequestLevelTest, ExtractHeaders_HasHeadersNoBody) {
     FillHeaders(firefox_GET_req_);
-    EXPECT_EQ(headers_.size(), 12);
-    EXPECT_EQ(headers_["Host"], "localhost:8080");
-    EXPECT_EQ(headers_["User-Agent"], "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0 "
+    EXPECT_EQ(GetHeaders().size(), 12);
+    EXPECT_EQ(GetHeaders().at("Host"), "localhost:8080");
+    EXPECT_EQ(GetHeaders().at("User-Agent"), "Mozilla/5.0 (X11; Ubuntu; Linux "
+                                          "x86_64; rv:109"
+                              ".0 "
                    "Gecko/20100101 Firefox/115.0");
-    EXPECT_EQ(headers_["Accept"], "text/html,application/xhtml+xml,application/xml;q=0.9,"
+    EXPECT_EQ(GetHeaders().at("Accept"), "text/html,application/xhtml+xml,"
+                                      "application/xml;"
+                          "q=0.9,"
                       "image/avif,image/webp,*/*;q=0.8");
-    EXPECT_EQ(headers_["Accept-Language"], "en-US,en;q=0.5");
-    EXPECT_EQ(headers_["Accept-Encoding"], "gzip, deflate, br");
-    EXPECT_EQ(headers_["DNT"], "1");
-    EXPECT_EQ(headers_["Connection"], "keep-alive");
-    EXPECT_EQ(headers_["Upgrade-Insecure-Requests"], "1");
-    EXPECT_EQ(headers_["Sec-Fetch-Dest"], "document");
-    EXPECT_EQ(headers_["Sec-Fetch-Mode"], "navigate");
-    EXPECT_EQ(headers_["Sec-Fetch-Site"], "none");
-    EXPECT_EQ(headers_["Sec-Fetch-User"], "?1");
+    EXPECT_EQ(GetHeaders().at("Accept-Language"), "en-US,en;q=0.5");
+    EXPECT_EQ(GetHeaders().at("Accept-Encoding"), "gzip, deflate, br");
+    EXPECT_EQ(GetHeaders().at("DNT"), "1");
+    EXPECT_EQ(GetHeaders().at("Connection"), "keep-alive");
+    EXPECT_EQ(GetHeaders().at("Upgrade-Insecure-Requests"), "1");
+    EXPECT_EQ(GetHeaders().at("Sec-Fetch-Dest"), "document");
+    EXPECT_EQ(GetHeaders().at("Sec-Fetch-Mode"), "navigate");
+    EXPECT_EQ(GetHeaders().at("Sec-Fetch-Site"), "none");
+    EXPECT_EQ(GetHeaders().at("Sec-Fetch-User"), "?1");
 }
 
 TEST_F(ParsedRequestLevelTest, ExtractHeaders_HasBodyAfterHeaders) {
     FillHeaders(example_POST_req_);
-    EXPECT_EQ(headers_.size(), 3);
-    EXPECT_EQ(headers_["Host"], "foo.example");
-    EXPECT_EQ(headers_["Content-Type"], "application/x-www-form-urlencoded");
-    EXPECT_EQ(headers_["Content-Length"], "27");
+    EXPECT_EQ(GetHeaders().size(), 3);
+    EXPECT_EQ(GetHeaders().at("Host"), "foo.example");
+    EXPECT_EQ(GetHeaders().at("Content-Type"),
+              "application/x-www-form-urlencoded");
+    EXPECT_EQ(GetHeaders().at("Content-Length"), "27");
 }
 
 TEST_F(ParsedRequestLevelTest, ExtractBodyTest) {

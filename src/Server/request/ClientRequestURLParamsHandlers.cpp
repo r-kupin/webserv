@@ -13,7 +13,7 @@ bool querry_ok(const std::string &line, const std::string &url) {
     return true;
 }
 
-std::string ClientRequest::ExtractQuerry(const std::string & url) {
+std::string ClientRequest::ExtractQuery(const std::string & url) {
     unsigned long param_separator = url.find_first_of('?');
     unsigned long fragm_separator = url.find_first_of('#');
 
@@ -27,7 +27,7 @@ std::string ClientRequest::ExtractQuerry(const std::string & url) {
 }
 
 void ClientRequest::FillUrlParams(const std::string &url) {
-    std::string query = ExtractQuerry(url);
+    std::string query = ExtractQuery(url);
     for (size_t separator = query.find_first_of('&');
          separator != std::string::npos;
          separator = query.find_first_of('&')) {

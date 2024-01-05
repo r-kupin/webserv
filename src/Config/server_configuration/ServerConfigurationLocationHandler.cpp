@@ -25,7 +25,7 @@ void ServerConfiguration::CheckLocationContextIsCorrect(const Node &context) {
 // todo: check overriding location with adding new subs
 void        ServerConfiguration::OverrideLocation(const Node &context,
                                                   l_loc_it current) {
-//    save old indexes, inc case they will not be overridden
+//    save old indexes, in if case they will not be overridden
     bool before_owerride = current->has_own_index_defined_;
     l_str list = current->own_index_;
 //    allow index override

@@ -149,7 +149,7 @@ void Server::HandleClientRequest(int client_sock) {
     ClientRequest request(client_sock);
     std::cout << "Got client request:\n" << request << std::endl;
     ServerResponse response(request, SynthesizeHandlingLocation(request),
-                            config_.server_name_, config_.port_);
+                            config_.GetServerName(), config_.GetPort());
     std::cout << "Prepared response:\n" << response << std::endl;
     response.SendResponse(client_sock);
  }
@@ -173,10 +173,6 @@ int Server::GetSocket() const {
 
 int Server::GetEpollFd() const {
     return epoll_fd_;
-}
-
-const epoll_event &Server::getEvent() const {
-    return event_;
 }
 
 std::ostream &operator<<(std::ostream &os, const Server &server) {

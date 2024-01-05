@@ -36,54 +36,43 @@ public:
     int                         GetSocket() const;
     int                         GetEpollFd() const;
 
- protected:
+protected:
 //-------------------initialisation: open sockets, create epoll...--------------
-    void                    Init();
-    void                    PresetAddress(addrinfo **addr);
-    void                    CreateSocket(addrinfo *res);
-    void                    SetSocketOptions(addrinfo *res) const;
-    void                    BindSocket(addrinfo *res);
-    void                    ListenSocket();
-    void                    CreateEpoll();
-    void                    AddEpollInstance();
+    void                        Init();
+    void                        PresetAddress(addrinfo **addr);
+    void                        CreateSocket(addrinfo *res);
+    void                        SetSocketOptions(addrinfo *res) const;
+    void                        BindSocket(addrinfo *res);
+    void                        ListenSocket();
+    void                        CreateEpoll();
+    void                        AddEpollInstance();
 //-------------------request handling-------------------------------------------
-    void                    Start(int port);
-    void                    HandleClientRequest(int client_sock);
-    void                    CheckRequest(int client_sock,
-                                         const sockaddr_in &client_addr);
+    void                        Start(int port);
+    void                        CheckRequest(int client_sock,
+                                             const sockaddr_in &client_addr);
+    void                        HandleClientRequest(int client_sock);
 //-------------------assemble handling location---------------------------------
-    Location                SynthesizeHandlingLocation(const ClientRequest &);
+    Location                    SynthesizeHandlingLocation(const ClientRequest &);
 
-    void SynthIndex(Location &synth, const Srch_c_Res &res, int fs_status) const;
-    void                    HandleImplicitIndex(const l_loc_c_it &found,
-                                                Location &synth) const;
-    Location SynthFoundExact(l_loc_c_it &found, Location &synth,
-                             bool requesting_file) const;
-    Location                SynthForNotFound(const Srch_c_Res &found,
-                                             Location &synth);
-    std::string FindIndexToSend(const l_loc_c_it &found,
-                                const std::string &compliment) const;
-    bool                    AccessForbidden(l_loc_c_it found,
-                                            Methods method) const;
-//-------------------getters & stuff--------------------------------------------
-    void                        SetSocket();
-    const epoll_event           &getEvent() const;
+    void                        SynthIndex(Location &synth,
+                                           const Srch_c_Res &res,
+                                           int fs_status) const;
+    std::string                 FindIndexToSend(const l_loc_c_it &found,
+                                                const std::string &compliment) const;
+    bool                        AccessForbidden(l_loc_c_it found,
+                                                Methods method) const;
+    void                        SynthFile(Location &synth,
+                                          const Srch_c_Res &res,
+                                          int fs_status,
+                                          const std::string &request_address) const;
+private:
+    const ServerConfiguration   &config_;
+    int                         socket_;
+    int                         epoll_fd_;
+    epoll_event                 event_;
+};
 
-     void
-     SynthFile(Location &synth, const Srch_c_Res &res, int fs_status,
-               const std::string &request_address) const;
-
- private:
-    const ServerConfiguration &config_;
-    int socket_;
-    int epoll_fd_;
-    epoll_event event_;
-
-     void AssignFileToBody(const std::string &address, Location &synth) const;
-
- };
-
- std::ostream &operator<<(std::ostream &os, const Server &server);
+std::ostream &operator<<(std::ostream &os, const Server &server);
 
 #endif //WEBSERV_LIB_SERVER_H
 

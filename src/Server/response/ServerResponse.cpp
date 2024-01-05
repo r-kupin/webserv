@@ -119,9 +119,9 @@ void    ServerResponse::ThrowResponseException(const std::string& msg) {
 }
 
 std::ostream &operator<<(std::ostream &os, const ServerResponse &response)  {
-    os << response.top_header_ << "\n";
+    os << response.GetTopHeader() << "\n";
     os << "--headers--\n";
-    Utils::OutputMap(response.headers_, os);
+    Utils::OutputMap(response.GetHeaders(), os);
 //    os << "--body--\n" << response.body_str_;
     return os;
 }
@@ -133,3 +133,23 @@ ServerResponse &ServerResponse::operator=(const ServerResponse &other) {
 }
 
 ServerResponse::~ServerResponse() {}
+
+const std::string &ServerResponse::GetTopHeader() const {
+    return top_header_;
+}
+
+const std::string &ServerResponse::getBodyStr() const {
+    return body_str_;
+}
+
+const std::string &ServerResponse::getServerName() const {
+    return server_name_;
+}
+
+int ServerResponse::getPort() const {
+    return port_;
+}
+
+const m_str_str &ServerResponse::GetHeaders() const {
+    return headers_;
+}

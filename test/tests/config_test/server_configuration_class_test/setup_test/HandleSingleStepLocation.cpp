@@ -46,8 +46,8 @@ TEST_F(HandleSingleStepLocation, RootSubnodeParentTest) {
 
     EXPECT_NO_THROW(HandleLocationContext(context_));
 
-    EXPECT_EQ(locations_.size(), 1);
-    EXPECT_EQ(locations_.begin(), GetRootIt());
+    EXPECT_EQ(GetLocations().size(), 1);
+    EXPECT_EQ(GetLocations().begin(), GetRootIt());
     EXPECT_EQ(GetRoot().sublocations_.size(), 1);
     EXPECT_EQ(GetRoot().sublocations_.begin()->parent_, GetRootIt());
 

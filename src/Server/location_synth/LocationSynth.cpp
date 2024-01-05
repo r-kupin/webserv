@@ -22,7 +22,7 @@
  * @return not-exact copy of a location found
  */
 Location Server::SynthesizeHandlingLocation(const ClientRequest &request) {
-    Srch_c_Res res = config_.FindConstLocation(request.getAddress());
+    Srch_c_Res res = config_.FindConstLocation(request.GetAddress());
     l_loc_c_it found = res.location_;
     Location synth(*found);
 
@@ -40,12 +40,12 @@ Location Server::SynthesizeHandlingLocation(const ClientRequest &request) {
                          "I don't know what to do with it.." << std::endl;
             synth.return_code_ = 500;
         } else {
-            if (request.index_request_) {
+            if (request.IsIndexRequest()) {
                 // request's address part of URI ends with "/"
                 SynthIndex(synth, res, fs_status);
             } else {
                 // request's address part of URI has a filename after the last "/"
-                SynthFile(synth, res, fs_status, request.addr_);
+                SynthFile(synth, res, fs_status, request.GetAddress());
             }
         }
     }

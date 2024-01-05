@@ -27,7 +27,7 @@ TEST_F(HandleDirectivesTest, ComponentsTestOKServerWorks) {
     context_.directives_.push_back(v_str({"error_page", "401", "err.html"}));
 
     EXPECT_NO_THROW(ProcessDirectives(context_.directives_));
-    EXPECT_EQ(port_, 8182);
+    EXPECT_EQ(GetPort(), 8182);
     EXPECT_EQ(GetRoot().root_, "/not/depends/on/config");
     EXPECT_EQ(GetRoot().own_index_.size(), 2);
     EXPECT_NE(std::find(GetRoot().own_index_.begin(),

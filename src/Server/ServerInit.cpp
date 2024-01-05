@@ -55,8 +55,8 @@ void Server::PresetAddress(addrinfo **addr) {
     hints.ai_socktype = SOCK_STREAM; // Stream socket (Not Datagram) TCP (not UDP)
     hints.ai_flags = AI_PASSIVE; // Use the local IP
 
-    if (getaddrinfo(config_.server_name_.c_str(), // localhost
-                    Utils::IntToString(config_.port_).c_str(), // port
+    if (getaddrinfo(config_.GetServerName().c_str(), // localhost
+                    Utils::IntToString(config_.GetPort()).c_str(), // port
                     &hints, addr)) {
         throw AddrinfoCreationFailed();
     }

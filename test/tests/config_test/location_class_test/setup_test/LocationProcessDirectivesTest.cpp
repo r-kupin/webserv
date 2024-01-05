@@ -67,7 +67,7 @@ TEST_F(ProcessDerectivesTest, TestForRootRootRedefinition) {
     Location &root_loc2 = sc.GetRoot();
     EXPECT_NO_THROW(root_loc.ProcessDirectives(directives_2));
 
-    EXPECT_EQ(sc.locations_.size(), 1);
+    EXPECT_EQ(sc.GetLocations().size(), 1);
     EXPECT_EQ(root_loc2.sublocations_.size(), 0);
 
     EXPECT_EQ(root_loc2.root_, "/root2");

@@ -42,8 +42,8 @@ TEST_F(HandleMultistepLocationTest, TwoStepInServerContext) {
 //-------------------like if it would be right in a server context--------------
     EXPECT_NO_THROW(HandleLocationContext(context_1_layer_));
 
-    EXPECT_EQ(locations_.size(), 1);
-    EXPECT_EQ(locations_.begin(), GetRootIt());
+    EXPECT_EQ(GetLocations().size(), 1);
+    EXPECT_EQ(GetLocations().begin(), GetRootIt());
     EXPECT_EQ(GetRoot().sublocations_.size(), 1);
     EXPECT_EQ(GetRoot().sublocations_.begin()->parent_, GetRootIt());
 
@@ -74,8 +74,8 @@ TEST_F(HandleMultistepLocationTest, TwoStepInRootContext) {
     location_root_.child_nodes_.push_back(context_1_layer_);
     EXPECT_NO_THROW(HandleLocationContext(location_root_));
 
-    EXPECT_EQ(locations_.size(), 1);
-    EXPECT_EQ(locations_.begin(), GetRootIt());
+    EXPECT_EQ(GetLocations().size(), 1);
+    EXPECT_EQ(GetLocations().begin(), GetRootIt());
     EXPECT_EQ(GetRoot().sublocations_.size(), 1);
     EXPECT_EQ(GetRoot().sublocations_.begin()->parent_, GetRootIt());
 
@@ -110,8 +110,8 @@ TEST_F(HandleMultistepLocationTest, TwoStepInOneStepContext) {
 //-------------------context "/loc_1/loc_3" in context "/loc_1" in "server"-----
     EXPECT_NO_THROW(HandleLocationContext(context_1_layer_));
 
-    EXPECT_EQ(locations_.size(), 1);
-    EXPECT_EQ(locations_.begin(), GetRootIt());
+    EXPECT_EQ(GetLocations().size(), 1);
+    EXPECT_EQ(GetLocations().begin(), GetRootIt());
     EXPECT_EQ(GetRoot().sublocations_.size(), 1);
     EXPECT_EQ(GetRoot().sublocations_.begin()->parent_, GetRootIt());
 

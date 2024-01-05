@@ -25,12 +25,6 @@ class ServerResponse {
 public:
     class ResponseException : public std::exception {};
 
-    std::string     top_header_;
-    std::string     body_str_;
-    std::string     server_name_;
-    int             port_;
-    m_str_str       headers_;
-
     ServerResponse();
     ServerResponse(const ServerResponse &);
     ServerResponse(const ClientRequest &request,
@@ -39,8 +33,13 @@ public:
 
     ~ServerResponse();
 
-	ServerResponse	&operator=(const ServerResponse &);
+    void                        SendResponse(int dest);
 
+    const std::string           &GetTopHeader() const;
+    const m_str_str             &GetHeaders() const;
+
+    ServerResponse              &operator=(const ServerResponse &);
+protected:
 //-------------------satic utils------------------------------------------------
     static bool                 IsErrorCode(int code);
     static bool                 IsOKCode(int code);
@@ -54,10 +53,15 @@ public:
     void                        HandleRedirect(const Location &synth);
     void                        GetDefinedErrorPage(const Location &synth);
 //-------------------functional stuff-------------------------------------------
-    void                        SendResponse(int dest);
     void                        ThrowResponseException(const std::string &msg);
     void                        AddHeader(const std::string &key,
                                           const std::string &value);
+private:
+    std::string     top_header_;
+    std::string     body_str_;
+    std::string     server_name_;
+    int             port_;
+    m_str_str       headers_;
 };
 
 std::ostream &operator<<(std::ostream &os, const ServerResponse &response);
