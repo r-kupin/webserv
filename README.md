@@ -27,7 +27,8 @@ Minimalist re-implementation of nginx web server.
 - Make the route able to accept uploaded files and configure where they should be save
 - Execute CGI based on certain file extension (for example .php).
 # Config
-Like `nginx.conf` but with less functional supported. Feel free to consult the test configs provided in `test/test_resources`. 
+Like `nginx.conf` but with less functional supported. This project follows philosophy of forward compatibility - meaning that all valid configs for WebServ will be also valid for NGINX, and will work in exact same way.
+Feel free to consult the test configs provided in `test/test_resources`. 
 ## Config structure
 Config consists of **contexts** and **directives**.
 ### Contexts
@@ -133,7 +134,7 @@ location / {
 	}
 }
 ```
-Locations also can be defined implicitly:
+Locations also can be mentioned, but not defined explicitly:
 ```nginx
 # OK
 server {
@@ -149,13 +150,13 @@ server {
 }
 ```
 In this project, such locations referred as **ghost** locations. In the example above, request to `localhost:4281/loc_1/` will lead to `403 Forbidden` server response.
-Location can be empty, or contain following directives:
+Locations can be empty, or contain following directives:
 - *root* (unique)
 - *index*
 - *return* (unique)
 - *error_page*
-
-It can also contain sub-contexts:
+- 
+Locations can also contain sub-contexts:
 - *limit_except* (unique)
 - nested *location*
 #### Limit_except
@@ -206,7 +207,7 @@ In this case:
 
 todo -> If location and all it's super-locations have no root definition at all - server will respond with *500 Internal Server Error*, if access is not restricted, and redirect not set.
 ##### index
-May have multiple args that define files that will be used as an index - meaning - shown when location get's accessed by address, following with `/`. Files are checked in the specified order - left to right. The last element of the list can be a file with an absolute path - meaning, path not from the current location's root - but from **root**-location root.
+May have multiple args that define files that will be used as an index - meaning - shown when location get's accessed by address, following with `/`. Files are checked in the specified order - left to right. The last element of the list can be a file with an absolute path - meaning, path not from the current location's root - but from **root**-location's root.
 ```nginx
 index index_X.html index_1.html index_2.html;
 ```
@@ -219,7 +220,7 @@ Check parent location in the same way, except parent *index filenames* specified
 ```nginx
 server {  
 		...
-        root www; # webserv  
+        root www;
         index index_X.html index_1.html index_2.html;
 
         location /loc_1 {
@@ -304,9 +305,9 @@ Particular config, the backbone of each server. Contains server-level data, such
 ```c++
 LocConstSearchResult    FindConstLocation(const std::string &address) const;
 ```
-That searches the locations tree for a requested location, and returns a `LocSearchResult`, that contains iterator to the closest found location, as well as some additional info.
+that searches the locations tree for a requested location, and returns a `LocSearchResult`, that contains iterator to the closest found location, as well as some additional info.
 ### Location
-Stores data about all [location](#location) mentioned in config:
+Stores data about all [locations](#location) mentioned in config:
 ```c++
 	std::set<ErrPage>       error_pages_;  
     l_loc                   sublocations_;  
@@ -330,8 +331,11 @@ Stores data about all [location](#location) mentioned in config:
     bool                    ghost_;
 ```
 ## Setting up servers
-## Request handling
-HTTP request is a message sent by a client to a server. 
+## [Request](https://developer.mozilla.org/en-US/docs/Web/HTTP/Messages#http_requests) handling
+HTTP request is a message sent by a client to a server:
+
+![request](https://github.com/r-kupin/webserv/blob/main/notes/request.jpg)
+
 Right upon receival of the connection from client, server reads the contents of client request to the `ClientRequest` class.
 ```c++
 //---Request line
@@ -346,14 +350,12 @@ std::string                         fragment_;
 m_str_str                           headers_;
 std::string                         body_;  
 ```
-Here is how HTTP request looks like:
-![request](https://github.com/r-kupin/webserv/blob/main/notes/request.jpg)
 ### Request line
 #### Method(`method_`)
- The HTTP method or verb specifies the type of request being made. WebServ is supposed to handle GET, POST or DELETE methods
-### URL
-![url](https://github.com/r-kupin/webserv/blob/main/notes/url.PNG)
+ The HTTP method or verb specifies the type of request being made. WebServ is supposed to handle GET, POST and DELETE methods
+### [URL](https://developer.mozilla.org/en-US/docs/Learn/Common_questions/Web_mechanics/What_is_a_URL)
 #### Path (`addr_`)
+An absolute path, optionally followed by a `'?'` and query string.
 #### Last Step in Address (`addr_last_step_`)
 The contents of the address after the last `/` in URI
 #### Index Request (`index_request_`)
@@ -362,9 +364,75 @@ Flag indicating whether the request is for the default index resource. WebServ, 
 The fragment identifier, often used in conjunction with anchors in HTML documents. It points to a specific section within the requested resource.
 #### Parameters (`params_`)
 Additional parameters sent with the request. In the URL, these are typically query parameters (e.g., `?key1=value1&key2=value2`).
-### Headers (`headers_)
+### Headers (`headers_`)
 HTTP headers provide additional information about the request, such as the type of client making the request, the preferred response format, authentication information, etc.
 ### Body (`body_`)
 The body of the HTTP request, which contains additional data sent to the server. This is particularly relevant for POST requests or other methods where data is sent in the request body.
-## Response creating
+## [Response](https://developer.mozilla.org/en-US/docs/Web/HTTP/Messages#http_responses) creating
+Right after the creation of the `ClientRequest` server starts generating response, which involves 2 steps: creating a synthetic location and creating a `ServerResponse` class
+### Creating a synthetic location
+Depending on compliance between what was requested and what is being found creates a synthetic location - a copy of the location that was found in [ServerConfig](#ServerConfiguration), but with altered return code, and  redirect-related fields, or with a body file set.
+In order to determine what should be returned, server performs some checks:
+#### Access permission
+server checks whether access to requested location is prohibited with [`limit_except`](#Limit_except)
+#### Redirection
+If access is allowed, server then checks defined [redirection](#return), and bounces client with internal or external redirect, or returns specified code and custom message.
+#### File system
+If no redirection is defined, server proceeds with checking for the existence of the requested resource.
+There are 2 types of requests - for file and for index. If `path` part of the URL ends with `/` - this is an index request, otherwise - file request. That requests are handled differently.
+##### Synthetic location for file request
+If `path` part of the URL has something after the last `/` symbol, it is assumed that it is a name of the file, that should be located in the root directory of the location, that preceded the filename. Depending on the result of the filesystem check server finishes response location:
+```c++
+if (fs_status == NOTHING) {  
+    std::cout << "open() \"" + address + "\" failed" << std::endl;  
+    synth.return_code_ = 404;  
+} else if (fs_status == DIRECTORY) {  
+    // redirect to index request  
+    synth.return_code_ = 301;  
+    synth.return_internal_address_ = request_address + "/";  
+} else {  
+    synth.body_file_ = address;  
+    synth.return_code_ = 200;  
+}
+```
+##### Synthetic location for index request
+At this point, server determines which file should be returned. Server checks index files defined in found location or in parenting ones, or the default `index.html` if nothing were defined at all. More info here:  [index](#index)
+Depending on filesystem response status of the directory being requested `fs_status` and of the index file of a particular location - server set's `return_code` and `body_file`:
+```c++
+if (Utils::CheckFilesystem(index_address) == NOTHING) {  
+    // index address not found  
+    if (fs_status != DIRECTORY) {  
+        // directory, where this index supposed to be doesn't exist  
+        std::cout << "\"" + index_address + "\" is not found" << std::endl;  
+        synth.return_code_ = 404;  
+    } else {  
+        // directory exists  but there are no index to return  
+        std::cout << "directory index of " + found->root_ +  
+                                            "/ is forbidden" << std::endl;  
+        synth.return_code_ = 403;  
+    }  
+} else {  
+    // index file found  
+    synth.return_code_ = 200;  
+    synth.body_file_ = index_address;  
+}
+```
+### Creating `ServerResponse` class
+Just as in case with `ClientRequest` class, `ServerResponse` is intended to contain data, corresponding to different parts of server's response message
+
 ![response](https://github.com/r-kupin/webserv/blob/main/notes/response.jpg)
+
+Server creates response in a following way:
+- Composes the top part of the HTTP response, including the status line.
+- Adds standard headers like `Server` and `Date`.
+- Determines the content of the response body based on the `Location` object:
+	- If a custom message is provided, it is used.
+	- If it's an error code:
+		- Checks if a custom error page is defined for the given error code in the `Location` object.
+	    - If a custom error page is defined, retrieves and sets it as the response body.
+	    - If not, generates a generic error page.
+	- If it's a redirection code:
+		- Generates a redirection page as the response body.
+	    - If an external or internal address is provided, sets the `Location` header accordingly.
+	- If a body file is specified, its content is read.
+- Sets additional headers like `Content-Type`, `Content-Length`, and `Connection`.
