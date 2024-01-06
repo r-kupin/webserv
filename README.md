@@ -5,19 +5,19 @@ Minimalist re-implementation of nginx web server.
 3. Connect to the servers on ports defined in the config with any HTTP network-accessing app
 # Features
 ## Done
-- Choose the port([[#listen]]) and host([[#server_name]]) of each server.
-- Setup default [[#error_page]]s.
-- Setup routes with one or multiple of the following rules/configuration  ([[#return]])
-	- Define a list of accepted HTTP methods for the route.  ([[#return]])
-	- Define a HTTP redirection.  ([[#return]])
-	- Define a directory or a file from where the file should be searched ([[#root]])
-- Set a default file to answer if the request is a directory.([[#index]])
+- Choose the [port](#listen) and [host](#server_name) of each server.
+- Setup default [error_pages](#error_page).
+- Setup routes with one or multiple of the following rules/configuration [return](#return)
+	- Define a list of accepted HTTP methods for the route.
+	- Define a HTTP redirection.
+	- Define a directory or a file from where the file should be searched
+- Set a default file to answer if the request is a directory.[index](#index)
 - Make it work with POST and GET methods.
 - Your server must be compatible with the web browser of your choice
 - Your HTTP response status codes must be accurate.
 - You server must have default error pages if none are provided.
 - You must be able to serve a fully static website.
-## ToDO
+## ToDo
 - Limit client body size.
 - Turn on or off directory listing. (?)
 - Your server must be able to listen to multiple ports 
@@ -306,7 +306,7 @@ LocConstSearchResult    FindConstLocation(const std::string &address) const;
 ```
 That searches the locations tree for a requested location, and returns a `LocSearchResult`, that contains iterator to the closest found location, as well as some additional info.
 ### Location
-Stores data about all [[#Location]] mentioned in config:
+Stores data about all [location](#location) mentioned in config:
 ```c++
 	std::set<ErrPage>       error_pages_;  
     l_loc                   sublocations_;  
@@ -347,12 +347,12 @@ m_str_str                           headers_;
 std::string                         body_;  
 ```
 Here is how HTTP request looks like:
-![[request.jpg]]
+![request](https://github.com/r-kupin/webserv/blob/main/notes/request.jpg)
 ### Request line
 #### Method(`method_`)
  The HTTP method or verb specifies the type of request being made. WebServ is supposed to handle GET, POST or DELETE methods
 ### URL
-![[url.PNG]]
+![url](https://github.com/r-kupin/webserv/blob/main/notes/url.PNG)
 #### Path (`addr_`)
 #### Last Step in Address (`addr_last_step_`)
 The contents of the address after the last `/` in URI
@@ -367,4 +367,4 @@ HTTP headers provide additional information about the request, such as the type 
 ### Body (`body_`)
 The body of the HTTP request, which contains additional data sent to the server. This is particularly relevant for POST requests or other methods where data is sent in the request body.
 ## Response creating
-![[response.jpg]]
+![response](https://github.com/r-kupin/webserv/blob/main/notes/response.jpg)
