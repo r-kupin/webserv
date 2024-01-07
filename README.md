@@ -1,8 +1,18 @@
 Minimalist re-implementation of nginx web server.
 # HowTo
+## Run
 1. Compile with `make`
 2. Launch as `webserv [ path_to_config ]`
 3. Connect to the servers on ports defined in the config with any HTTP network-accessing app
+## Test
+1. Prepare test library 
+    ```shell
+	  git clone git@github.com:google/googletest.git test/lib
+	  mkdir test/lib/build && cd test/lib/build 
+   cmake ..
+	```
+2. Get back to project's root
+3. Run `make test`
 # Features
 ## Done
 - Choose the [port](#listen) and [host](#server_name) of each server.
@@ -11,7 +21,7 @@ Minimalist re-implementation of nginx web server.
 	- Define a list of accepted HTTP methods for the route.
 	- Define a HTTP redirection.
 	- Define a directory or a file from where the file should be searched
-- Set a default file to answer if the request is a directory.[index](#index)
+- Set a default file to answer if the request is a directory ([index](#index)).
 - Make it work with POST and GET methods.
 - Your server must be compatible with the web browser of your choice
 - Your HTTP response status codes must be accurate.
@@ -204,8 +214,6 @@ In this case:
 - URI `/loc_0/text.txt` will be handled in `/var/www/loc_0/`, because nginx appends location address to parent location's root, if it isn't overridden.
 - URI `/loc_1/text.txt` will be handled by path, constructed as `path to executable` + `/loc_1`
 - URI `/loc_1/loc_2/text.txt` will be handled by path, constructed as `parrent's root` + `/loc_2`
-
-todo -> If location and all it's super-locations have no root definition at all - server will respond with *500 Internal Server Error*, if access is not restricted, and redirect not set.
 ##### index
 May have multiple args that define files that will be used as an index - meaning - shown when location get's accessed by address, following with `/`. Files are checked in the specified order - left to right. The last element of the list can be a file with an absolute path - meaning, path not from the current location's root - but from **root**-location's root.
 ```nginx
