@@ -22,6 +22,10 @@ ClientRequest::ClientRequest() {}
 
 ClientRequest::ClientRequest(int client_sock) { Init(client_sock);}
 
+ClientRequest::ClientRequest(int client_sock, int client_max_body_size) {
+    Init(client_sock, client_max_body_size);
+}
+
 const std::string & sanitize_input(const std::string &input) {
     // Implement your input validation and sanitization logic here
     // This can include removing or escaping characters that may cause security issues
@@ -32,7 +36,7 @@ const std::string & sanitize_input(const std::string &input) {
     return input;
 }
 
-void ClientRequest::Init(int client_sock) {
+void ClientRequest::Init(int client_sock, int client_max_body_size) {
     v_str request = ReadFromSocket(client_sock) ;
     CheckRequest(request);
     std::string url = ExtractUrl(request[0]);
@@ -52,8 +56,7 @@ void ClientRequest::Init(int client_sock) {
         FillUrlParams(url);
     if (HasHeaders(request))
         FillHeaders(request);
-    if (HasBody(request))
-        body_ = ExtractBody(request);
+    body_ = ExtractBody(request, client_max_body_size);
 }
 
 /**

@@ -107,6 +107,10 @@ bool Limit::operator==(const Limit &rhs) const {
     return except_ == rhs.except_;
 }
 
+bool Limit::operator!=(const Limit &rhs) const {
+    return !(*this == rhs);
+}
+
 std::ostream &operator<<(std::ostream &os, const Limit &limit) {
     for (std::_Rb_tree_const_iterator<Methods> iterator = limit.except_.begin();
          iterator != limit.except_.end(); ++iterator) {

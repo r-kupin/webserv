@@ -135,24 +135,38 @@ void Server::CheckRequest(int client_sock, const sockaddr_in &client_addr) {
     } else {
         std::cout << "Accepted client connection from " <<
                         client_addr.sin_addr.s_addr  << "\n" << std::endl;
-        try {
-            HandleClientRequest(client_sock);
-        } catch (const ClientRequest::RequestException &) {
-            std::cout << "Read from client socket failed!" << std::endl;
-        } catch (const ServerResponse::ResponseException &) {
-            std::cout << "Response creation failed!" << std::endl;
-        }
+        HandleClientRequest(client_sock);
         close(client_sock);
     }
 }
 
 void Server::HandleClientRequest(int client_sock) {
-    ClientRequest request(client_sock);
-    std::cout << "Got client request:\n" << request << std::endl;
-    ServerResponse response(request, SynthesizeHandlingLocation(request),
-                            config_.GetServerName(), config_.GetPort());
-    std::cout << "Prepared response:\n" << response << std::endl;
-    response.SendResponse(client_sock);
+    Location        response_location;
+    ClientRequest   request;
+    ServerResponse  response(config_.GetServerName(), config_.GetPort());
+
+    try {
+        request.Init(client_sock, config_.GetClientMaxBodySize());
+        std::cout << "Got client request:\n" << request << std::endl;
+        response_location = SynthesizeHandlingLocation(request);
+    } catch (const RequestBodySizeExceedsLimitException &) {
+        std::cout << "Read from client socket failed!" << std::endl;
+        std::cout << "client intended to send too large body" << std::endl;
+        response_location = config_.GetConstRoot();
+        response_location.CleanRedirectInfo();
+        response_location.SetReturnCode(413);
+    } catch (const ClientRequest::RequestException &) {
+        std::cout << "Read from client socket failed!" << std::endl;
+        // todo: set return code, whatever
+    }
+    try {
+        response.ComposeResponse(response_location);
+        std::cout << "Prepared response:\n" << response << std::endl;
+        response.SendResponse(client_sock);
+    } catch (const ServerResponse::ResponseException &) {
+        std::cout << "Response creation failed!" << std::endl;
+        // todo: set return code, whatever
+    }
  }
 
 Server &Server::operator=(const Server &other) {

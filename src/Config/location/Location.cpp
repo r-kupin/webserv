@@ -237,7 +237,6 @@ l_loc_c_it Location::GetMyRootIt() const {
     return ret;
 }
 
-// todo tests!!
 const l_str &Location::GetIndeces() const {
     if (!has_own_index_defined_ && index_defined_in_parent_)
         return parent_->GetIndeces();
@@ -250,6 +249,13 @@ bool Location::HasDefinedLimitExcept() const {
 
 s_err_c_it Location::FindErrPageForCode(int code) const {
     return error_pages_.find(ErrPage(code));
+}
+
+void Location::CleanRedirectInfo() {
+    return_code_ = 0;
+    return_internal_address_ = "";
+    return_external_address_ = "";
+    return_custom_message_ = "";
 }
 
 bool Location::HasErrPageForCode(int code) const {
@@ -403,10 +409,13 @@ void Location::HandleIndex(const v_str &directives) {
  */
 void Location::HandleRoot(const v_str &directive) {
     if (directive.size() == 2) {
-        root_ = directive[1];
-    } else {
-        ThrowLocationException("Root directive is wrong");
+        std::string root = directive[1];
+        if (root.empty() || root.at(root.size() - 1) != '/') {
+            root_ = directive[1];
+            return;
+        }
     }
+    ThrowLocationException("Root directive is wrong");
 }
 //-------------------setup subcontexts handlers---------------------------------
 void Location::HandleLimitExcept(const Node &node) {
@@ -436,6 +445,10 @@ void Location::ThrowLocationException(const std::string &msg) {
     throw LocationException();
 }
 
+void Location::SetReturnCode(int i) {
+    return_code_ = i;
+}
+
 Location &Location::operator=(const Location &rhs) {
     if (this == &rhs) {
         return *this; // Handle self-assignment
@@ -443,36 +456,60 @@ Location &Location::operator=(const Location &rhs) {
     // Copy the data members from rhs to this object
     error_pages_ = rhs.error_pages_;
     sublocations_ = rhs.sublocations_;
-    own_index_ = rhs.own_index_;
     has_own_index_defined_ = rhs.has_own_index_defined_;
+    index_defined_in_parent_ = rhs.index_defined_in_parent_;
+    own_index_ = rhs.own_index_;
     limit_except_ = rhs.limit_except_;
     return_code_ = rhs.return_code_;
     return_internal_address_ = rhs.return_internal_address_;
+    return_external_address_ = rhs.return_external_address_;
+    return_custom_message_ = rhs.return_custom_message_;
     root_ = rhs.root_;
-    address_ = rhs.address_;
     full_address_ = rhs.full_address_;
+    address_ = rhs.address_;
+    body_file_ = rhs.body_file_;
     parent_ = rhs.parent_;
+    ghost_ = rhs.ghost_;
     // Return a reference to this object
-    return *this;}
+    return *this;
+}
 
 bool Location::operator<(const Location &rhs) const {
     return address_ < rhs.address_;
 }
 
 bool Location::operator==(const Location &rhs) const {
-    if (!(error_pages_ == rhs.error_pages_))
+    if(error_pages_ != rhs.error_pages_)
         return false;
-    if (!(limit_except_ == rhs.limit_except_))
+    if(sublocations_ != rhs.sublocations_)
         return false;
-    if (return_code_ != rhs.return_code_)
+    if(has_own_index_defined_ != rhs.has_own_index_defined_)
         return false;
-    if (return_internal_address_ != rhs.return_internal_address_)
+    if(index_defined_in_parent_ != rhs.index_defined_in_parent_)
         return false;
-    if (root_ != rhs.root_)
+    if(own_index_ != rhs.own_index_)
         return false;
-    if (address_ != rhs.address_)
+    if(limit_except_ != rhs.limit_except_)
         return false;
-    if (sublocations_ != rhs.sublocations_)
+    if(return_code_ != rhs.return_code_)
+        return false;
+    if(return_internal_address_ != rhs.return_internal_address_)
+        return false;
+    if(return_external_address_ != rhs.return_external_address_)
+        return false;
+    if(return_custom_message_ != rhs.return_custom_message_)
+        return false;
+    if(root_ != rhs.root_)
+        return false;
+    if(full_address_ != rhs.full_address_)
+        return false;
+    if(address_ != rhs.address_)
+        return false;
+    if(body_file_ != rhs.body_file_)
+        return false;
+    if(parent_ != rhs.parent_)
+        return false;
+    if(ghost_ != rhs.ghost_)
         return false;
     return true;
 }

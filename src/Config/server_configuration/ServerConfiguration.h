@@ -21,6 +21,9 @@
 
 class ServerConfiguration;
 
+const static std::string kDefaultResources = "resources";
+const static std::string kDefaultConfig = kDefaultResources + "/nginx.conf";
+
 typedef std::list<ServerConfiguration>                  l_sc;
 typedef std::list<ServerConfiguration>::const_iterator  l_sc_c_it;
 
@@ -67,7 +70,7 @@ public:
     l_loc_it                GetRootIt();
     l_loc_c_it              GetConstRootIt() const;
     int                     GetPort() const;
-    size_t                  GetClientMaxBodySize() const;
+    int                     GetClientMaxBodySize() const;
     const l_loc             &GetLocations() const;
 
     bool                    operator==(const ServerConfiguration &rhs) const;
@@ -89,9 +92,13 @@ private:
                                      const v_str &directive);
 
     int                     port_;
-    size_t                  client_max_body_size_;
+    int                     client_max_body_size_;
     std::string             server_name_;
     std::list<Location>     locations_;
+
+    void HandleClientMaxBodySize(const v_str &directive);
+
+    void HandlePort(const v_str &directive);
 };
 
 typedef ServerConfiguration::LocSearchResult            Srch_Res;

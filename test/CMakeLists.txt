@@ -37,7 +37,7 @@ add_executable(Google_Tests_run
         tests/config_test/server_configuration_class_test/functionality_test/CheckCorrectLocationContextTest.cpp
         tests/config_test/server_configuration_class_test/functionality_test/SimpleConfigLocationSearchTest.cpp
         tests/config_test/config_class_test/setup_from_file_config/ParsingToolsTest.cpp
-
+        tests/server_test/response_test/HandleRequestTest.cpp
 )
 
 target_link_libraries(Google_Tests_run webserv_lib)

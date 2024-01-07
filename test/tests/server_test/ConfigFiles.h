@@ -9,6 +9,7 @@
 /*                                                     ###   ########.fr      */
 /*                                                                            */
 /******************************************************************************/
+
 #ifndef WEBSERV_LIB_CONFIGFILES_H
 #define WEBSERV_LIB_CONFIGFILES_H
 
@@ -16,5 +17,6 @@
 
 static Config simple_index_check("test_resources/index_order/simple_index_check.conf");
 static Config conf_index_root_redefined("test_resources/index_order/nginx_root_redefined.conf");
+static Config simple("test_resources/simple/nginx.conf");
 
 #endif //WEBSERV_LIB_CONFIGFILES_H

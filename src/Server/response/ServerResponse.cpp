@@ -16,11 +16,12 @@
 
 ServerResponse::ServerResponse() {}
 
-ServerResponse::ServerResponse(const ClientRequest &request,
-                               const Location &synth,
+ServerResponse::ServerResponse(const std::string &serverName, int port)
+        : server_name_(serverName), port_(port) {}
+
+ServerResponse::ServerResponse(const Location &synth,
                                const std::string &server_name, int port)
     : server_name_(server_name), port_(port) {
-    (void) request;
     ComposeResponse(synth);
 }
 
@@ -140,4 +141,8 @@ const std::string &ServerResponse::GetTopHeader() const {
 
 const m_str_str &ServerResponse::GetHeaders() const {
     return headers_;
+}
+
+const std::string &ServerResponse::GetBodyStr() const {
+    return body_str_;
 }

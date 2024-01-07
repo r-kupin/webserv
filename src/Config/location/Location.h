@@ -81,6 +81,7 @@ struct Location {
     s_err_c_it          FindErrPageForCode(int code) const;
     bool                HasErrPageForCode(int code) const;
     bool                HasDefinedLimitExcept() const;
+    void                CleanRedirectInfo();
 //-------------------setup address----------------------------------------------
     void                HandleAddress(const std::string &str);
 //-------------------setup directives handlers----------------------------------
@@ -97,6 +98,7 @@ struct Location {
     void                UpdateSublocations();
 //-------------------operator overloads & exceptions----------------------------
     static void         ThrowLocationException(const std::string &msg);
+    void                SetReturnCode(int i);
     bool                operator<(const Location &rhs) const;
     bool                operator==(const Location &rhs) const;
     Location&           operator=(const Location& rhs);

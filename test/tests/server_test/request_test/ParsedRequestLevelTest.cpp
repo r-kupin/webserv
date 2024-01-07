@@ -9,6 +9,7 @@ protected:
     v_str firefox_GET_req_;
     v_str example_POST_req_;
     v_str no_headers_POST_req_;
+    v_str multiline_body_;
     v_str req_;
 
     void setup_ff_Get() {
@@ -48,12 +49,19 @@ protected:
         no_headers_POST_req_.emplace_back("field1=value1&field2=value2");
     }
 
-    virtual void SetUp() {
-            setup_ff_Get();
-            setup_example_POST();
-            setup_no_headers_POST();
-    }
+   void setup_multiline_body() {
+        multiline_body_.emplace_back("POST /test HTTP/1.1");
+        multiline_body_.emplace_back("");
+        multiline_body_.emplace_back("field1=value1&field2=value2");
+        multiline_body_.emplace_back("field3=value4&field5=value6");
+   }
 
+   virtual void SetUp() {
+        setup_ff_Get();
+        setup_example_POST();
+        setup_no_headers_POST();
+        setup_multiline_body();
+   }
 };
 
 TEST_F(ParsedRequestLevelTest, CheckRequestWrongHTTPVersion) {
@@ -138,4 +146,10 @@ TEST_F(ParsedRequestLevelTest, ExtractHeaders_HasBodyAfterHeaders) {
 TEST_F(ParsedRequestLevelTest, ExtractBodyTest) {
     EXPECT_EQ(ExtractBody(example_POST_req_), "field1=value1&field2=value2");
     EXPECT_EQ(ExtractBody(no_headers_POST_req_), "field1=value1&field2=value2");
+    EXPECT_EQ(ExtractBody(multiline_body_),
+              "field1=value1&field2=value2\r\nfield3=value4&field5=value6");
+}
+
+TEST_F(ParsedRequestLevelTest, ExtractBodyTestExceedsMaxSize) {
+    EXPECT_THROW(ExtractBody(multiline_body_, 8), RequestBodySizeExceedsLimitException);
 }

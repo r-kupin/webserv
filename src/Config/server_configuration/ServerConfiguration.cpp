@@ -15,10 +15,10 @@
 #include "ServerConfiguration.h"
 
 ServerConfiguration::ServerConfiguration()
-: client_max_body_size_(1024),
+: client_max_body_size_(0),
 server_name_("localhost") {
     Location root_loc("/");
-    root_loc.root_ = "resources/root_loc_default";
+    root_loc.root_ = kDefaultResources;
     root_loc.return_code_ = 0;
     root_loc.return_internal_address_ = "";
     root_loc.full_address_ = "";
@@ -70,12 +70,12 @@ void        ServerConfiguration::ProcessDirectives(
             if (UMarkDefined("server_name", srv_name, directives[i])) {
                 server_name_ = directives[i][1];
             } else if (UMarkDefined("listen", port, directives[i])) {
-                port_ = atoi(directives[i][1].c_str());
+                HandlePort(directives[i]);
             } else if (UMarkDefined("client_max_body_size", cl_max_bd_size,
                                     directives[i])) {
-                client_max_body_size_ = atoi(directives[i][1].c_str());
+                HandleClientMaxBodySize(directives[i]);
             } else if (UMarkDefined("root", root, directives[i])) {
-                GetRoot().root_ = directives[i][1];
+                GetRoot().HandleRoot(directives[i]);
             } else if (MarkDefined("index", index, directives[i])) {
                 GetRoot().HandleIndex(directives[i]);
             } else if (MarkDefined("error_page", err, directives[i])) {
@@ -88,6 +88,29 @@ void        ServerConfiguration::ProcessDirectives(
     if (!port)
         ThrowServerConfigError("Port needs to be specified explicitly!");
 }
+
+void ServerConfiguration::HandleClientMaxBodySize(const v_str &directive) {
+    if (directive.size() == 2) {
+        int size = atoi(directive[1].c_str());
+        if (size >= 0) {
+            client_max_body_size_ = size;
+            return;
+        }
+    }
+    ThrowServerConfigError("client_max_body_size_ directive is wrong");
+}
+
+void ServerConfiguration::HandlePort(const v_str &directive) {
+    if (directive.size() == 2) {
+        int port = atoi(directive[1].c_str());
+        if (port >= 0) {
+            port_ = port;
+            return;
+        }
+    }
+    ThrowServerConfigError("port directive is wrong");
+}
+
 //-------------------operator overloads & exceptions----------------------------
 void        ServerConfiguration::ThrowServerConfigError(const std::string &msg) {
     std::cout << "Server config syntax error: " + msg << std::endl;
@@ -102,7 +125,7 @@ const Location  &ServerConfiguration::GetConstRoot() const {
     return locations_.front();
 }
 
-size_t ServerConfiguration::GetClientMaxBodySize() const {
+int ServerConfiguration::GetClientMaxBodySize() const {
     return client_max_body_size_;
 }
 

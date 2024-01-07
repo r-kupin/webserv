@@ -41,4 +41,13 @@ public:
     const char *what() const throw();
 };
 
+class RequestBodySizeExceedsLimitException : public
+                    ClientRequest::RequestException {
+public:
+    RequestBodySizeExceedsLimitException() :
+                    ClientRequest::RequestException() {}
+
+    const char *what() const throw();
+};
+
 #endif //WEBSERV_LIB_REQUESTEXCEPTIONS_H

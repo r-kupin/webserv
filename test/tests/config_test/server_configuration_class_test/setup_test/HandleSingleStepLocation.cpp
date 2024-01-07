@@ -86,7 +86,7 @@ TEST_F(HandleSingleStepLocation, HomeInReDefinedRoot) {
     EXPECT_NO_THROW(HandleLocationContext(location_root_));
 
     EXPECT_EQ(GetRoot().address_, "/");
-    EXPECT_EQ(GetRoot().root_ , "resources/root_loc_default");
+    EXPECT_EQ(GetRoot().root_ , kDefaultResources);
 
     const std::set<ErrPage>::iterator &NotFoundErrPage =
             GetRoot().error_pages_.find(ErrPage("/404.html", 404));

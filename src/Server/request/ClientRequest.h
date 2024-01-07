@@ -45,8 +45,9 @@ public:
 
     ClientRequest();
     explicit    ClientRequest(int client_sock);
+    ClientRequest(int client_sock, int client_max_body_size);
 
-    void                Init(int client_sock);
+    void Init(int client_sock, int client_max_body_size = -1);
 
     Methods             GetMethod() const;
     const std::string   &GetAddress() const;
@@ -65,7 +66,7 @@ protected:
     bool        HasHeaders(const v_str &request);
     bool        HasBody(const v_str &request);
     void        FillHeaders(const v_str &request);
-    std::string ExtractBody(const v_str &request);
+    std::string ExtractBody(const v_str &request, int max_size = -1);
 //-------------------request main line level------------------------------------
     std::string ExtractUrl(const std::string& request);
     Methods     ExtractMethod(const std::string &request);

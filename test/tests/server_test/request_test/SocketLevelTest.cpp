@@ -17,7 +17,7 @@ protected:
         close(fd_);
     }
 
-    void pipe_reguest_to_fd(std::string & request) {
+    void pipe_reguest_to_fd(std::string request) {
         int pipe_fd[2];
         if (pipe(pipe_fd) == -1) {
             perror("pipe");
@@ -115,7 +115,7 @@ class InitTest : public SocketLevelTest {};
 
 TEST_F(InitTest, StandardGetFromFirefox) {
     pipe_reguest_to_fd(firefox_GET_req_);
-    Init(fd_);
+    Init(fd_, -1);
     EXPECT_EQ(GetMethod(), GET);
     EXPECT_EQ(GetAddress(), "/");
     EXPECT_EQ(GetLastStepUri(), "/");
@@ -143,7 +143,7 @@ TEST_F(InitTest, StandardGetFromFirefox) {
 
 TEST_F(InitTest, example_POST_req_) {
     pipe_reguest_to_fd(example_POST_req_);
-    Init(fd_);
+    Init(fd_, -1);
     EXPECT_EQ(GetMethod(), POST);
     EXPECT_EQ(GetAddress(), "/test");
     EXPECT_EQ(GetLastStepUri(), "/test");
@@ -159,7 +159,7 @@ TEST_F(InitTest, example_POST_req_) {
 
 TEST_F(InitTest, no_headers_POST_req_) {
     pipe_reguest_to_fd(no_headers_POST_req_);
-    Init(fd_);
+    Init(fd_, -1);
     EXPECT_EQ(GetMethod(), POST);
     EXPECT_EQ(GetAddress(), "/test");
     EXPECT_EQ(GetLastStepUri(), "/test");
@@ -182,7 +182,7 @@ TEST_F(InitTest, ParamsNFragment) {
                                          "Host: localhost:8080\n\r"
                                          "\n\r";
     pipe_reguest_to_fd(request);
-    Init(fd_);
+    Init(fd_, -1);
     EXPECT_EQ(GetMethod(), GET);
     EXPECT_EQ(GetAddress(), "/results");
     EXPECT_EQ(GetLastStepUri(), "/results");
@@ -211,7 +211,7 @@ TEST_F(InitTest, ParamsNFragmentArgIncomplete) {
                                          "Host: localhost:8080\n\r"
                                          "\n\r";
     pipe_reguest_to_fd(request);
-    Init(fd_);
+    Init(fd_, -1);
     EXPECT_EQ(GetMethod(), GET);
     EXPECT_EQ(GetAddress(), "/results");
     EXPECT_EQ(GetLastStepUri(), "/results");
@@ -224,4 +224,12 @@ TEST_F(InitTest, ParamsNFragmentArgIncomplete) {
     EXPECT_EQ(GetParams().at("search_type"), "pics");
     EXPECT_EQ(GetParams().at("safe_search"), "off");
     EXPECT_EQ(GetParams().at("nsfw_allow"), "true");
+}
+
+TEST_F(InitTest, PostRootBodyTooLarge) {
+    ClientRequest   request;
+
+    pipe_reguest_to_fd("POST / HTTP/1.1\r\n\r\n"
+                       "Request body that exceeds limits\n\r");
+    EXPECT_THROW(Init(fd_, 16), RequestBodySizeExceedsLimitException);
 }

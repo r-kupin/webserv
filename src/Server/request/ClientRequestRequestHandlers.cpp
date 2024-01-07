@@ -35,14 +35,31 @@ std::string ClientRequest::ExtractUrl(const std::string& request) {
 }
 
 bool ClientRequest::HasBody(const v_str &request) {
-    return *std::find(request.begin(), request.end(), "") !=
-           *request.rbegin();
+    v_str_c_it it = std::find(request.begin(), request.end(), "");
+    return it != request.end() && ++it != request.end();
 }
 
-std::string ClientRequest::ExtractBody(const v_str &request) {
-    if (HasBody(request))
-        return request.back();
-    return "";
+std::string ClientRequest::ExtractBody(const v_str &request, int max_size) {
+    std::string body;
+
+    // find where does body section might start
+    v_str_c_it it = std::find(request.begin(), request.end(), "");
+
+    if (it != request.end() && ++it != request.end()) {
+        // if it has body - read line by line
+        for (int total_size = 0; it != request.end(); ++it) {
+            total_size += it->size();
+            if (max_size != -1 && total_size > max_size) {
+                // client max body size specified and was exceeded by request
+                ThrowException("request body size exceeds limit ",
+                               "BodyIsTooLarge");
+            }
+            if (total_size != (int)it->size())
+                body += "\r\n";
+            body += *it;
+        }
+    }
+    return body;
 }
 
 bool ClientRequest::HasHeaders(const v_str &request) {

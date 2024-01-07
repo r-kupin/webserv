@@ -61,21 +61,6 @@ TEST_F(ConfigServerSubcontextsHandlingTest, LocationKO) {
     EXPECT_THROW(CheckServerSubnodes(server_.child_nodes_, conf_), ConfigFileSyntaxError);
 }
 
-// todo non-root location redefinition
-//TEST_F(ConfigServerSubcontextsHandlingTest, MultipleLocationSameSeverKO) {
-//    Location loc = Location("/dup");
-//    loc.root_ = "/not/depends/on/config";
-//    loc.index_.push_back("/htmls/index.html");
-//    conf_.GetRoot().sublocations_.push_back(loc);
-//
-//    Node loc_dup;
-//    loc_dup.main_ = v_str({"location", "/dup"});
-//    loc_dup.directives_.push_back({"root", "/not/depends/on/config"});
-//    server_.child_nodes_.push_back(loc_dup);
-//
-//    EXPECT_THROW(CheckServerSubnodes(server_.child_nodes_, conf_), ConfigFileSyntaxError);
-//}
-
 TEST_F(ConfigServerSubcontextsHandlingTest, LimitExceptInSeverNodeKO) {
     Node lim_ex_;
     lim_ex_.main_ = v_str({"limit_except", "GET" });

@@ -38,6 +38,7 @@ struct Limit {
     void    LimExHandleDirectives(const std::vector<v_str> &directives);
 
     bool operator==(const Limit &rhs) const;
+    bool operator!=(const Limit &rhs) const;
 
     void ThrowLimitExceptError(const std::string &msg) const;
 };

@@ -27,8 +27,8 @@ Minimalist re-implementation of nginx web server.
 - Your HTTP response status codes must be accurate.
 - You server must have default error pages if none are provided.
 - You must be able to serve a fully static website.
-## ToDo
 - Limit client body size.
+## ToDo
 - Turn on or off directory listing. (?)
 - Your server must be able to listen to multiple ports 
 - A request to your server should never hang forever.
@@ -165,7 +165,6 @@ Locations can be empty, or contain following directives:
 - *index*
 - *return* (unique)
 - *error_page*
-- 
 Locations can also contain sub-contexts:
 - *limit_except* (unique)
 - nested *location*
@@ -359,19 +358,13 @@ m_str_str                           headers_;
 std::string                         body_;  
 ```
 ### Request line
-#### Method(`method_`)
- The HTTP method or verb specifies the type of request being made. WebServ is supposed to handle GET, POST and DELETE methods
+-  Method(`method_`): the HTTP method or verb specifies the type of request being made. WebServ is supposed to handle GET, POST and DELETE methods
 ### [URL](https://developer.mozilla.org/en-US/docs/Learn/Common_questions/Web_mechanics/What_is_a_URL)
-#### Path (`addr_`)
-An absolute path, optionally followed by a `'?'` and query string.
-#### Last Step in Address (`addr_last_step_`)
-The contents of the address after the last `/` in URI
-#### Index Request (`index_request_`)
-Flag indicating whether the request is for the default index resource. WebServ, automatically serves a default file (e.g., index.html) when the path points to a directory meaning if address ends with `/`.
-#### Fragment (`fragment_`)
-The fragment identifier, often used in conjunction with anchors in HTML documents. It points to a specific section within the requested resource.
-#### Parameters (`params_`)
-Additional parameters sent with the request. In the URL, these are typically query parameters (e.g., `?key1=value1&key2=value2`).
+- Path (`addr_`): An absolute path, optionally followed by a `'?'` and query string.
+-  Last Step in Address (`addr_last_step_`): The contents of the address after the last `/` in URI
+- Index Request (`index_request_`): flag indicating whether the request is for the default index resource. WebServ, automatically serves a default file (e.g., index.html) when the path points to a directory meaning if address ends with `/`.
+- Fragment (`fragment_`): the fragment identifier, often used in conjunction with anchors in HTML documents. It points to a specific section within the requested resource.
+- Parameters (`params_`): additional parameters sent with the request. In the URL, these are typically query parameters (e.g., `?key1=value1&key2=value2`).
 ### Headers (`headers_`)
 HTTP headers provide additional information about the request, such as the type of client making the request, the preferred response format, authentication information, etc.
 ### Body (`body_`)
@@ -431,16 +424,16 @@ Just as in case with `ClientRequest` class, `ServerResponse` is intended to cont
 ![response](https://github.com/r-kupin/webserv/blob/main/notes/response.jpg)
 
 Server creates response in a following way:
-- Composes the top part of the HTTP response, including the status line.
-- Adds standard headers like `Server` and `Date`.
-- Determines the content of the response body based on the `Location` object:
-	- If a custom message is provided, it is used.
-	- If it's an error code:
-		- Checks if a custom error page is defined for the given error code in the `Location` object.
-	    - If a custom error page is defined, retrieves and sets it as the response body.
-	    - If not, generates a generic error page.
-	- If it's a redirection code:
-		- Generates a redirection page as the response body.
-	    - If an external or internal address is provided, sets the `Location` header accordingly.
-	- If a body file is specified, its content is read.
-- Sets additional headers like `Content-Type`, `Content-Length`, and `Connection`.
+1. Composes the top part of the HTTP response, including the status line.
+2. Adds standard headers like `Server` and `Date`.
+3. Determines the content of the response body based on the `Location` object:
+	1. If a custom message is provided, it is used.
+	2. If it's an error code:
+		1. Checks if a custom error page is defined for the given error code in the `Location` object.
+		2. If a custom error page is defined, retrieves and sets it as the response body.
+		3. If not, generates a generic error page.
+	3. If it's a redirection code:
+		1. Generates a redirection page as the response body.
+		2. If an external or internal address is provided, sets the `Location` header accordingly.
+	4. If a body file is specified, its content is read.
+4. Sets additional headers like `Content-Type`, `Content-Length`, and `Connection`.

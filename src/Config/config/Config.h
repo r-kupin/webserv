@@ -22,8 +22,6 @@
 #include <list>
 #include "../server_configuration/ServerConfiguration.h"
 
-const static std::string kDefaultConfig = "resources/nginx.conf";
-
 /**
  * @brief struct used only during parsing process - to keep redd
  * leftovers left after block parsing
@@ -82,7 +80,7 @@ protected:
 //-------------------getters, exceptions, etc-----------------------------------
     l_sc                &GetServers();
     void                ThrowSyntaxError(const std::string &msg,
-                                                     std::ifstream &config) const;
+                                         std::ifstream &config) const;
     void                ThrowSyntaxError(const std::string &msg) const;
 private:
     std::string         conf_path_;

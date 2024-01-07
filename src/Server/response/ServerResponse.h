@@ -15,8 +15,8 @@
 
 #include <fstream>
 #include <ostream>
-#include "../request/ClientRequest.h"
 #include "../../Config/location/Location.h"
+#include "../request/ClientRequest.h"
 
 const static std::string&  kHttpVersion = "HTTP/1.1";
 const static size_t        kBufferSize = 1024;
@@ -27,15 +27,17 @@ public:
 
     ServerResponse();
     ServerResponse(const ServerResponse &);
-    ServerResponse(const ClientRequest &request,
-                   const Location &synth,
+    ServerResponse(const Location &synth,
                    const std::string &server_name, int port);
 
-    ~ServerResponse();
+    ServerResponse(const std::string &serverName, int port);
 
+    ~ServerResponse();
+    void                        ComposeResponse(const Location &synth);
     void                        SendResponse(int dest);
 
     const std::string           &GetTopHeader() const;
+    const std::string           &GetBodyStr() const;
     const m_str_str             &GetHeaders() const;
 
     ServerResponse              &operator=(const ServerResponse &);
@@ -47,7 +49,6 @@ protected:
     static const std::string    &GetCodeDescription(int code);
     static std::string          GeneratePage(int code);
 //-------------------init-------------------------------------------------------
-    void                        ComposeResponse(const Location &synth);
     std::string                 ComposeTop(const Location &location);
     void                        HandleError(const Location &synth);
     void                        HandleRedirect(const Location &synth);
