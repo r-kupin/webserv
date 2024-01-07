@@ -9,7 +9,7 @@ Minimalist re-implementation of nginx web server.
     ```shell
 	  git clone git@github.com:google/googletest.git test/lib
 	  mkdir test/lib/build && cd test/lib/build 
-   cmake ..
+	  cmake ..
 	```
 2. Get back to project's root
 3. Run `make test`
