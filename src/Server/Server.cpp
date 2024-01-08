@@ -117,19 +117,24 @@ void Server::Start() {
 
 // todo: correct shutdown with a signal
 void Server::Start(int port) {
-    std::cout << "started server at " << port << " port" << std::endl;
-    while (true) {
-        struct sockaddr_in client_addr;
-        socklen_t client_len = sizeof(client_addr);
-        int client_sock = accept(socket_,
-                                 (struct sockaddr *) &client_addr,
-                                 &client_len); // may be [MAX_CLIENTS]
-        CheckRequest(client_sock, client_addr);
+    if (epoll_fd_ > 0) {
+        std::cout << "started server at " << port << " port" << std::endl;
+        while (true) {
+            struct sockaddr_in client_addr;
+            socklen_t client_len = sizeof(client_addr);
+            int client_sock = accept(socket_,
+                                     (struct sockaddr *) &client_addr,
+                                     &client_len); // may be [MAX_CLIENTS]
+            CheckRequest(client_sock, client_addr);
+        }
+    } else {
+        std::cout << "It seems like " << port << " port is already in use" <<
+        std::endl;
     }
     close(socket_);
 }
 
-void Server::CheckRequest(int client_sock, const sockaddr_in &client_addr) {
+int Server::CheckRequest(int client_sock, const sockaddr_in &client_addr) {
     if (client_sock < 0) {
         std::cout << "Error accepting connection! " << std::endl;
     } else {
@@ -138,6 +143,7 @@ void Server::CheckRequest(int client_sock, const sockaddr_in &client_addr) {
         HandleClientRequest(client_sock);
         close(client_sock);
     }
+    return client_sock;
 }
 
 void Server::HandleClientRequest(int client_sock) {

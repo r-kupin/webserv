@@ -1,5 +1,11 @@
 Minimalist re-implementation of nginx web server.
 # HowTo
+**WARNING** 
+I am not using `Makefile` in development process, so the **lists of source files might be outdated**, and therefore - project might not compile. However - it is quite easy to get up-to-date source lists:
+- Enter repository root
+- *SRCS*: all project sources `find src/ -name \*.cpp -print `
+- *LIB_SRCS*: *SRCS*, but without `src/main.cpp`
+- *TEST_SRCS*: `find test/tests/ -name \*.cpp -print  `
 ## Run
 1. Compile with `make`
 2. Launch as `webserv [ path_to_config ]`
@@ -192,6 +198,8 @@ directive [ ARG1 ] [ ARG... ];
 Has only one *arg* which sets the port, used by the server for requests listening.
 ##### server_name
 Should define server's host name, but only works for *localhost* right now
+##### client_max_body_size
+Sets bounds for request's body size. Works in the following way: while reading client's body, server keeps track of it's size. If `client_max_body_size` is defined, and client's body exceeds it - server abandon's further request processing and returns error **413**.
 #### Location-level directives
 ##### root
 Can have only one arg, which is a path for a location, or server's root directory. For example:

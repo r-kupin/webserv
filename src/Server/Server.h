@@ -48,7 +48,7 @@ protected:
     void                        AddEpollInstance();
 //-------------------request handling-------------------------------------------
     void                        Start(int port);
-    void                        CheckRequest(int client_sock,
+    int                         CheckRequest(int client_sock,
                                              const sockaddr_in &client_addr);
     void                        HandleClientRequest(int client_sock);
 //-------------------assemble handling location---------------------------------

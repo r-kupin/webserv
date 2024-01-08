@@ -24,8 +24,6 @@ struct ErrPage {
 
     bool operator<(const ErrPage &rhs) const;
     bool operator==(const ErrPage &rhs) const;
-
-    static const m_codes initializeHttpErrCodes();
 };
 std::ostream &operator<<(std::ostream &os, const ErrPage &page);
 
