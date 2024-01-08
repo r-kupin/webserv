@@ -28,11 +28,6 @@ typedef std::list<Location>::const_iterator                     l_loc_c_it;
 struct Location {
     class LocationException : public std::exception {};
 
-    static const m_codes kHttpOkCodes;
-    static const m_codes kHttpRedirectCodes;
-    static const m_codes initializeHttpOKCodes();
-    static const m_codes initializeHttpRedirectCodes();
-
     std::set<ErrPage>       error_pages_;
     l_loc                   sublocations_;
 //-------------------index related
@@ -103,6 +98,7 @@ struct Location {
     bool                operator==(const Location &rhs) const;
     Location&           operator=(const Location& rhs);
 };
+
 std::ostream &operator<<(std::ostream &os, const Location &location);
 //-------------------sublocation search predicate class-------------------------
 struct LocationByAddress {

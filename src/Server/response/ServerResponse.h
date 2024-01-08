@@ -43,10 +43,6 @@ public:
     ServerResponse              &operator=(const ServerResponse &);
 protected:
 //-------------------satic utils------------------------------------------------
-    static bool                 IsErrorCode(int code);
-    static bool                 IsOKCode(int code);
-    static bool                 IsRedirectCode(int code);
-    static const std::string    &GetCodeDescription(int code);
     static std::string          GeneratePage(int code);
 //-------------------init-------------------------------------------------------
     std::string                 ComposeTop(const Location &location);

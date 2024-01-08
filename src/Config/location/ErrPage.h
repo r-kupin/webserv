@@ -16,8 +16,6 @@
 #include "../../utils/Utils.h"
 
 struct ErrPage {
-    static const m_codes kHttpErrCodes;
-
     std::string address_;
     int code_;
 

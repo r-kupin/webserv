@@ -16,42 +16,6 @@
 #include "Location.h"
 
 //-------------------static creation / initialization---------------------------
-const m_codes Location::initializeHttpRedirectCodes() {
-    m_codes codes;
-    codes.insert(std::make_pair(301, "Moved Permanently"));
-    codes.insert(std::make_pair(302, "Found"));
-    codes.insert(std::make_pair(303, "See Other"));
-    codes.insert(std::make_pair(307, "Temporary Redirect"));
-    codes.insert(std::make_pair(308, "Permanent Redirect"));
-
-    return codes;
-}
-
-const m_codes Location::initializeHttpOKCodes() {
-    m_codes codes;
-    codes.insert(std::make_pair(100, "Continue"));
-    codes.insert(std::make_pair(101, "Switching Protocols"));
-    codes.insert(std::make_pair(200, "OK"));
-    codes.insert(std::make_pair(201, "Created"));
-    codes.insert(std::make_pair(202, "Accepted"));
-    codes.insert(std::make_pair(203, "Non-Authoritative Information"));
-    codes.insert(std::make_pair(204, "No Content"));
-    codes.insert(std::make_pair(205, "Reset Content"));
-    codes.insert(std::make_pair(206, "Partial Content"));
-    codes.insert(std::make_pair(300, "Multiple Choices"));
-    codes.insert(std::make_pair(301, "Moved Permanently"));
-    codes.insert(std::make_pair(302, "Found"));
-    codes.insert(std::make_pair(303, "See Other"));
-    codes.insert(std::make_pair(304, "Not Modified"));
-    codes.insert(std::make_pair(305, "Use Proxy"));
-    codes.insert(std::make_pair(307, "Temporary Redirect"));
-    codes.insert(std::make_pair(308, "Permanent Redirect"));
-
-    return codes;
-}
-
-const m_codes Location::kHttpOkCodes = Location::initializeHttpOKCodes();
-const m_codes Location::kHttpRedirectCodes = Location::initializeHttpRedirectCodes();
 
 Location::Location()
     : has_own_index_defined_(false),
@@ -319,8 +283,7 @@ void Location::AddErrorPages(const v_str &directive) {
         address = *(directive.rbegin());
         for (size_t i = 1; directive[i] != address; ++i) {
             code = std::atoi(directive[i].c_str());
-            if (ErrPage::kHttpErrCodes.find(code) ==
-                ErrPage::kHttpErrCodes.end()) {
+            if (!Utils::IsErrorCode(code)) {
                 ThrowLocationException("Error code is wrong");
             }
             ErrPage err_page(address, code);

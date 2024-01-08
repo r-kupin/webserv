@@ -17,28 +17,6 @@
 #include "ServerResponse.h"
 
 //-------------------code related-----------------------------------------------
-bool ServerResponse::IsErrorCode(int code) {
-    return ErrPage::kHttpErrCodes.find(code) != ErrPage::kHttpErrCodes.end();
-}
-
-bool ServerResponse::IsOKCode(int code) {
-    return Location::kHttpOkCodes.find(code) != Location::kHttpOkCodes.end();
-}
-
-bool ServerResponse::IsRedirectCode(int code) {
-    return Location::kHttpRedirectCodes.find(code) !=
-           Location::kHttpRedirectCodes.end();
-}
-
-const std::string    &ServerResponse::GetCodeDescription(int code) {
-    if (IsErrorCode(code)) {
-        return ErrPage::kHttpErrCodes.find(code)->second;
-    } else if (IsOKCode(code)) {
-        return Location::kHttpOkCodes.find(code)->second;
-    }
-    throw ResponseException();
-}
-
 std::string ServerResponse::GeneratePage(int code) {
     std::ostringstream page;
 
@@ -47,7 +25,7 @@ std::string ServerResponse::GeneratePage(int code) {
             "<head>\r\n"
             "    <meta charset=\"UTF-8\">\r\n"
             "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n";
-    page << "    <title> " << code << " " << GetCodeDescription(code) << " </title>\r\n"
+    page << "    <title> " << code << " " << Utils::GetCodeDescription(code) << " </title>\r\n"
             "    <style>\r\n"
             "        body {\r\n"
             "            background-color: #2e3440;\r\n"
@@ -80,7 +58,7 @@ std::string ServerResponse::GeneratePage(int code) {
             "<div class=\"block\">\r\n";
     page << "<h1>" << code << "</h1>\r\n"
             "<hr style=\"border-top: 1px solid #88C0D0; width: 95%;\">\r\n";
-    page << "<p>" << GetCodeDescription(code) << "</p>\r\n"
+    page << "<p>" << Utils::GetCodeDescription(code) << "</p>\r\n"
             "</body>\r\n"
             "</html>\r\n";
     return page.str();

@@ -30,9 +30,9 @@ void ServerResponse::ComposeResponse(const Location &synth) {
     AddHeader("Server", "WebServ");
     AddHeader("Date", Utils::NiceTimestamp());
     if (synth.return_custom_message_.empty()) {
-        if (IsErrorCode(synth.return_code_)) {
+        if (Utils::IsErrorCode(synth.return_code_)) {
             HandleError(synth);
-        } else if (IsRedirectCode(synth.return_code_)) {
+        } else if (Utils::IsRedirectCode(synth.return_code_)) {
             HandleRedirect(synth);
         } else {
             if (!synth.body_file_.empty()) {
@@ -43,10 +43,11 @@ void ServerResponse::ComposeResponse(const Location &synth) {
                         "message not defined. This shouldn't happen");
             }
         }
+        AddHeader("Content-Type", "text/html");
     } else {
+        AddHeader("Content-Type", "application/octet-stream");
         body_str_ = synth.return_custom_message_;
     }
-    AddHeader("Content-Type", "text/html");
     AddHeader("Content-Length",Utils::IntToString(body_str_.size()));
     AddHeader("Connection", "keep-alive");
 }
@@ -84,11 +85,7 @@ std::string ServerResponse::ComposeTop(const Location &location) {
     std::ostringstream oss;
 
     oss << kHttpVersion << " " << location.return_code_ << " ";
-    if (IsErrorCode(location.return_code_)) {
-        oss << ErrPage::kHttpErrCodes.find(location.return_code_)->second;
-    } else {
-        oss << Location::kHttpOkCodes.find(location.return_code_)->second;
-    }
+    oss << Utils::GetCodeDescription(location.return_code_);
     return oss.str();
 }
 

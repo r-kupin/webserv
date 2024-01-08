@@ -1,8 +1,6 @@
 #include <cstdlib>
 #include "Location.h"
 
-const static std::string kAddressPrefix = "http://";
-
 bool is_number(const std::string &str) {
     return str.find_first_not_of("0123456789") == std::string::npos;
 }
@@ -12,7 +10,8 @@ bool is_internal_address(const std::string &str) {
 }
 
 bool is_external_address(const std::string &str) {
-    return str.substr(0, kAddressPrefix.size()) == kAddressPrefix;
+    std::string address_prefix = "http://";
+    return str.substr(0, address_prefix.size()) == address_prefix;
 }
 
 bool is_address(const std::string &str) {
@@ -56,13 +55,11 @@ void Location::HandleLocationReturn(const v_str &directives_) {
 void Location::Handle2ArgReturn(const v_str &directives_) {
     HandleCode(directives_[1]);
     if (is_address(directives_[2])) {
-        if (!kHttpRedirectCodes.empty() &&
-            kHttpRedirectCodes.find(return_code_) == kHttpRedirectCodes.end())
+        if (!Utils::IsRedirectCode(return_code_))
             ThrowLocationException("Return directive is wrong");
         HandleAddress(directives_[2]);
     } else {
-        if (!kHttpRedirectCodes.empty() &&
-            kHttpRedirectCodes.find(return_code_) !=kHttpRedirectCodes.end())
+        if (Utils::IsRedirectCode(return_code_))
             ThrowLocationException("Return directive is wrong");
         return_custom_message_ = directives_[2];
     }
@@ -82,9 +79,7 @@ void Location::Handle1ArgReturn(const v_str &directives_) {
 void Location::HandleCode(const std::string &str) {
     if (is_number(str)) {
         int code = atoi(str.c_str());
-        if (!kHttpOkCodes.empty() &&
-            kHttpOkCodes.find(code) == kHttpOkCodes.end() &&
-            ErrPage::kHttpErrCodes.find(code) == ErrPage::kHttpErrCodes.end()) {
+        if (!Utils::IsValidHTTPCode(code)) {
             ThrowLocationException("Return code is wrong");
         }
         return_code_ = code;

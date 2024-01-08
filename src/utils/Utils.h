@@ -45,7 +45,20 @@ public:
     static std::string  FileToString(const std::string &address);
     static std::string  NiceTimestamp();
     static std::string  IntToString(size_t n);
+    static bool         IsErrorCode(int code);
+    static bool         IsOKCode(int code);
+    static bool         IsRedirectCode(int code);
+    static bool         IsValidHTTPCode(int code);
+    static std::string  GetCodeDescription(int code);
 private:
+    static m_codes err_codes;
+    static m_codes ok_codes;
+    static m_codes redirect_codes;
+
+    static m_codes initializeHttpErrCodes();
+    static m_codes initializeHttpRedirectCodes();
+    static m_codes initializeHttpOKCodes();
+
     Utils();
 };
 
