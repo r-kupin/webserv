@@ -70,7 +70,6 @@ public:
     l_loc_it                GetRootIt();
     l_loc_c_it              GetConstRootIt() const;
     int                     GetPort() const;
-    int                     GetClientMaxBodySize() const;
     const l_loc             &GetLocations() const;
 
     bool                    operator==(const ServerConfiguration &rhs) const;
@@ -90,15 +89,11 @@ private:
                                     const v_str &directive);
     static bool             UMarkDefined(const std::string &key, bool &flag,
                                      const v_str &directive);
+    void                    HandlePort(const v_str &directive);
 
     int                     port_;
-    int                     client_max_body_size_;
     std::string             server_name_;
     std::list<Location>     locations_;
-
-    void HandleClientMaxBodySize(const v_str &directive);
-
-    void HandlePort(const v_str &directive);
 };
 
 typedef ServerConfiguration::LocSearchResult            Srch_Res;

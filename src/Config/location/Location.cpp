@@ -20,6 +20,7 @@
 Location::Location()
     : has_own_index_defined_(false),
       return_code_(0),
+      client_max_body_size_(-1),
       ghost_(false) {}
 
 // link to parent? indexes?
@@ -39,17 +40,21 @@ Location::Location(const Location& other)
       return_internal_address_(other.return_internal_address_),
       return_external_address_(other.return_external_address_),
       return_custom_message_(other.return_custom_message_),
+      client_max_body_size_(other.client_max_body_size_),
       root_(other.root_),
       full_address_(other.full_address_),
       address_(other.address_),
       body_file_(other.body_file_),
       parent_(other.parent_),
-      ghost_(other.ghost_) {}
+      ghost_(other.ghost_),
+      fastcgi_params_(other.fastcgi_params_),
+      fastcgi_pass_(other.fastcgi_pass_) {}
 
 Location::Location(const std::string &address)
     : has_own_index_defined_(false),
       index_defined_in_parent_(false),
       return_code_(0),
+      client_max_body_size_(-1),
       full_address_(HandleAddressInConstructor(address)),
       address_(GetParticularAddress(address)),
       ghost_(false) {}
@@ -58,6 +63,7 @@ Location::Location(const std::string &address, l_loc_it parent)
     : has_own_index_defined_(false),
     index_defined_in_parent_(false),
     return_code_(0),
+    client_max_body_size_(-1),
     full_address_(HandleAddressInConstructor(address)),
     address_(GetParticularAddress(address)),
     parent_(parent),
@@ -262,6 +268,7 @@ void Location::ProcessDirectives(const std::vector<v_str> &directives) {
     bool index = false;
     bool ret = false;
     bool err = false;
+    bool cl_max_bd_size = false;
 
     for (size_t i = 0; i < directives.size(); ++i) {
         if (UMarkDefined("root", root, directives[i]))
@@ -270,9 +277,23 @@ void Location::ProcessDirectives(const std::vector<v_str> &directives) {
             HandleIndex(directives[i]);
         if (UMarkDefined("return", ret, directives[i]))
             HandleLocationReturn(directives[i]);
+        if (UMarkDefined("client_max_body_size", cl_max_bd_size,
+                         directives[i]))
+            HandleClientMaxBodySize(directives[i]);
         if (MarkDefined("error_page", err, directives[i]))
             AddErrorPages(directives[i]);
     }
+}
+
+void Location::HandleClientMaxBodySize(const v_str &directive) {
+    if (directive.size() == 2) {
+        int size = atoi(directive[1].c_str());
+        if (size >= 0) {
+            client_max_body_size_ = size;
+            return;
+        }
+    }
+    ThrowLocationException("client_max_body_size_ directive is wrong");
 }
 
 void Location::AddErrorPages(const v_str &directive) {
@@ -427,13 +448,15 @@ Location &Location::operator=(const Location &rhs) {
     return_internal_address_ = rhs.return_internal_address_;
     return_external_address_ = rhs.return_external_address_;
     return_custom_message_ = rhs.return_custom_message_;
+    client_max_body_size_ = rhs.client_max_body_size_;
     root_ = rhs.root_;
     full_address_ = rhs.full_address_;
     address_ = rhs.address_;
     body_file_ = rhs.body_file_;
     parent_ = rhs.parent_;
     ghost_ = rhs.ghost_;
-    // Return a reference to this object
+    fastcgi_params_ = rhs.fastcgi_params_;
+    fastcgi_pass_ = rhs.fastcgi_pass_;
     return *this;
 }
 
@@ -462,6 +485,8 @@ bool Location::operator==(const Location &rhs) const {
         return false;
     if(return_custom_message_ != rhs.return_custom_message_)
         return false;
+    if(client_max_body_size_ != rhs.client_max_body_size_)
+        return false;
     if(root_ != rhs.root_)
         return false;
     if(full_address_ != rhs.full_address_)
@@ -473,6 +498,10 @@ bool Location::operator==(const Location &rhs) const {
     if(parent_ != rhs.parent_)
         return false;
     if(ghost_ != rhs.ghost_)
+        return false;
+    if(fastcgi_params_ != rhs.fastcgi_params_)
+        return false;
+    if(fastcgi_pass_ != rhs.fastcgi_pass_)
         return false;
     return true;
 }

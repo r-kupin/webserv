@@ -21,10 +21,10 @@ void ClientRequest::CheckRequest(const v_str &request) {
     if (request[0].find("HTTP/1.1") == std::string::npos)
         ThrowException("HTTP/1.1 is the only supported protocol",
                        "BadRequestException");
-    if((method_ == POST || method_ == DELETE) && !HasBody(request))
+    if((method_ == POST || method_ == DELETE) && !HasBody())
         ThrowException("POST and DELETE methods should contain body",
                        "BadRequestException");
-    if(method_ == GET && HasBody(request))
+    if(method_ == GET && HasBody())
         ThrowException("only POST and DELETE methods can have a body",
                        "BadRequestException");
 }
@@ -34,32 +34,39 @@ std::string ClientRequest::ExtractUrl(const std::string& request) {
     return (uri.substr(0, uri.find_first_of(' ')));
 }
 
-bool ClientRequest::HasBody(const v_str &request) {
-    v_str_c_it it = std::find(request.begin(), request.end(), "");
-    return it != request.end() && ++it != request.end();
+bool ClientRequest::HasBody() {
+    return !body_.empty();
 }
 
-std::string ClientRequest::ExtractBody(const v_str &request, int max_size) {
-    std::string body;
+void ClientRequest::ExtractBody(int max_size) {
+    body_ = ExtractBody(max_size, socket_, body_);
+}
 
-    // find where does body section might start
-    v_str_c_it it = std::find(request.begin(), request.end(), "");
+std::string ClientRequest::ExtractBody(int max_size, int socket,
+                                       std::string &body, int buffer_size) {
+    if (max_size > 0 && body.size() > (size_t)max_size)
+        ThrowException("request body size exceeds limit ",
+                       "BodyIsTooLarge");
+    char buffer[buffer_size];
 
-    if (it != request.end() && ++it != request.end()) {
-        // if it has body - read line by line
-        for (int total_size = 0; it != request.end(); ++it) {
-            total_size += it->size();
-            if (max_size != -1 && total_size > max_size) {
-                // client max body size specified and was exceeded by request
+    while (true) {
+        // int bytes_read = recv(socket, buffer, buffer_size - 1, 0);
+        int bytes_read = read(socket, buffer, buffer_size - 1);
+        if (bytes_read < 0) {
+            throw ReadFromSocketFailedException();
+        } else if (bytes_read > 0) {
+            // Null-terminate the buffer
+            buffer[bytes_read] = '\0';
+            // Find the end of the line
+            body += std::string(buffer);
+            if (max_size > 0 && body.size() > (size_t) max_size)
                 ThrowException("request body size exceeds limit ",
                                "BodyIsTooLarge");
-            }
-            if (total_size != (int)it->size())
-                body += "\r\n";
-            body += *it;
         }
+        // Nothing (left) to read
+        if (bytes_read < buffer_size - 1)
+            return body;
     }
-    return body;
 }
 
 bool ClientRequest::HasHeaders(const v_str &request) {

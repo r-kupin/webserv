@@ -13,6 +13,7 @@
 #include <iostream>
 #include <algorithm>
 #include "../ServerExceptions.h"
+#include "../request/RequestExceptions.h"
 
 /**
  * Depending on compliance between what was requested and what is being found
@@ -22,15 +23,18 @@
  * @param request
  * @return not-exact copy of a location found
  */
-Location Server::SynthesizeHandlingLocation(const ClientRequest &request) {
+Location Server::SynthesizeHandlingLocation(ClientRequest &request) {
     Srch_c_Res res = config_.FindConstLocation(request.GetAddress());
     l_loc_c_it found = res.location_;
     Location synth(*found);
 
-    if (AccessForbidden(found, request.GetMethod())) {
+    if (RequestBodyExceedsLimit(found, request)) {
+        std::cout << "client intended to send too large body" << std::endl;
+        synth.SetReturnCode(413);
+    } else if (AccessForbidden(found, request.GetMethod())) {
         // limit_access rule prohibits request
         std::cout << "access forbidden by rule" << std::endl;
-        synth.return_code_ = 403;
+        synth.SetReturnCode(403);
     } else if (found->return_code_ == 0) {
         // return redirection rule isn't set
         std::string address = found->root_ + res.leftower_address_;
@@ -39,7 +43,7 @@ Location Server::SynthesizeHandlingLocation(const ClientRequest &request) {
             // something exist on specified address, but it is neither a file nor a directory
             std::cout << address + " is neither a file nor a directory.."
                          "I don't know what to do with it.." << std::endl;
-            synth.return_code_ = 500;
+            synth.SetReturnCode(500);
         } else {
             if (request.IsIndexRequest()) {
                 // request's address part of URI ends with "/"
@@ -70,6 +74,19 @@ void Server::SynthFile(Location &synth, const Srch_c_Res &res, int fs_status,
         synth.body_file_ = address;
         synth.return_code_ = 200;
     }
+}
+
+bool Server::RequestBodyExceedsLimit(l_loc_c_it found, ClientRequest &request) {
+    //    Extracting body here, because we couldn't know the max allowed body
+    //    size before we found responsible location. And we don't want to
+    //    read the whole body in advance, because it can be a 10G file, and it
+    //    will crash the server
+    try {
+        request.ExtractBody(found->client_max_body_size_);
+    } catch (const RequestBodySizeExceedsLimitException &) {
+        return true;
+    }
+    return false;
 }
 
 bool Server::AccessForbidden(l_loc_c_it found, Methods method) const {

@@ -128,8 +128,8 @@ void Server::Start(int port) {
             CheckRequest(client_sock, client_addr);
         }
     } else {
-        std::cout << "It seems like " << port << " port is already in use" <<
-        std::endl;
+        std::cout << "It seems like " << port << " port is already in use\n" <<
+        "Aborting." << std::endl;
     }
     close(socket_);
 }
@@ -141,7 +141,6 @@ int Server::CheckRequest(int client_sock, const sockaddr_in &client_addr) {
         std::cout << "Accepted client connection from " <<
                         client_addr.sin_addr.s_addr  << "\n" << std::endl;
         HandleClientRequest(client_sock);
-        close(client_sock);
     }
     return client_sock;
 }
@@ -152,15 +151,9 @@ void Server::HandleClientRequest(int client_sock) {
     ServerResponse  response(config_.GetServerName(), config_.GetPort());
 
     try {
-        request.Init(client_sock, config_.GetClientMaxBodySize());
+        request.Init(client_sock);
         std::cout << "Got client request:\n" << request << std::endl;
         response_location = SynthesizeHandlingLocation(request);
-    } catch (const RequestBodySizeExceedsLimitException &) {
-        std::cout << "Read from client socket failed!" << std::endl;
-        std::cout << "client intended to send too large body" << std::endl;
-        response_location = config_.GetConstRoot();
-        response_location.CleanRedirectInfo();
-        response_location.SetReturnCode(413);
     } catch (const ClientRequest::RequestException &) {
         std::cout << "Read from client socket failed!" << std::endl;
         // todo: set return code, whatever

@@ -16,15 +16,9 @@
 #include "ClientRequest.h"
 #include "RequestExceptions.h"
 
-const int BUFFER_SIZE = 1024;
-
 ClientRequest::ClientRequest() {}
 
 ClientRequest::ClientRequest(int client_sock) { Init(client_sock);}
-
-ClientRequest::ClientRequest(int client_sock, int client_max_body_size) {
-    Init(client_sock, client_max_body_size);
-}
 
 const std::string & sanitize_input(const std::string &input) {
     // Implement your input validation and sanitization logic here
@@ -36,8 +30,9 @@ const std::string & sanitize_input(const std::string &input) {
     return input;
 }
 
-void ClientRequest::Init(int client_sock, int client_max_body_size) {
-    v_str request = ReadFromSocket(client_sock) ;
+void ClientRequest::Init(int client_sock) {
+    socket_ = client_sock;
+    v_str request = ReadFromSocket(socket_, body_) ;
     CheckRequest(request);
     std::string url = ExtractUrl(request[0]);
     CheckURL(url);
@@ -56,7 +51,6 @@ void ClientRequest::Init(int client_sock, int client_max_body_size) {
         FillUrlParams(url);
     if (HasHeaders(request))
         FillHeaders(request);
-    body_ = ExtractBody(request, client_max_body_size);
 }
 
 /**
@@ -68,19 +62,19 @@ void ClientRequest::Init(int client_sock, int client_max_body_size) {
  * @param socket
  * @return
  */
-v_str ClientRequest::ReadFromSocket(int socket) {
-    char buffer[BUFFER_SIZE];
+v_str ClientRequest::ReadFromSocket(int socket, std::string &body, int buffer_size) {
+    char buffer[buffer_size];
     std::string line;
     v_str request;
 
     while (true) {
-        // int bytesRead = recv(socket, buffer, BUFFER_SIZE - 1, 0);
-        int bytesRead = read(socket, buffer, BUFFER_SIZE - 1);
+        // int bytes_read = recv(socket, buffer, buffer_size - 1, 0);
+        int bytes_read = read(socket, buffer, buffer_size - 1);
 
-        if (bytesRead <= 0)
+        if (bytes_read <= 0)
             throw ReadFromSocketFailedException();
 
-        buffer[bytesRead] = '\0';  // Null-terminate the buffer
+        buffer[bytes_read] = '\0';  // Null-terminate the buffer
 
         // Find the end of the line
         line += std::string(buffer);
@@ -88,10 +82,16 @@ v_str ClientRequest::ReadFromSocket(int socket) {
         while (!line.empty()) {
             unsigned long line_break = line.find_first_of("\n\r");
             std::string subline = line.substr(0, line_break);
+            if (subline.empty()) {
+                // start of body section
+                body = line.substr(line_break + 2);
+                return request;
+            }
             request.push_back(sanitize_input(subline));
             line = line.substr(line_break + 2);
         }
-        if (bytesRead < BUFFER_SIZE - 1)
+        // Request without body
+        if (bytes_read < buffer_size - 1)
             return request;
     }
 }

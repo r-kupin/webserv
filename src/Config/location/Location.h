@@ -42,12 +42,16 @@ struct Location {
     std::string             return_external_address_;
     std::string             return_custom_message_;
 
+    int                     client_max_body_size_;
     std::string             root_;
     std::string             full_address_;
     std::string             address_;
     std::string             body_file_;
     l_loc_it                parent_;
     bool                    ghost_;
+//-------------------fastcgi related
+    m_str_str               fastcgi_params_;
+    std::string             fastcgi_pass_;
 
     Location();
     Location(bool ghost, const std::string &address);
@@ -87,6 +91,7 @@ struct Location {
     void                HandleIndex(const v_str &directives);
     void                HandleCode(const std::string &str);
     void                HandleRoot(const v_str &directive);
+    void                HandleClientMaxBodySize(const v_str &directive);
     void                AddErrorPages(const v_str &directive);
 //-------------------setup subcontexts handlers---------------------------------
     void                HandleLimitExcept(const Node &node);

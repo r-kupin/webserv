@@ -15,20 +15,19 @@
 #include "ServerConfiguration.h"
 
 ServerConfiguration::ServerConfiguration()
-: client_max_body_size_(0),
-server_name_("localhost") {
+: server_name_("localhost") {
     Location root_loc("/");
     root_loc.root_ = kDefaultResources;
     root_loc.return_code_ = 0;
     root_loc.return_internal_address_ = "";
     root_loc.full_address_ = "";
+    root_loc.client_max_body_size_ = -1;
     locations_.push_back(root_loc);
     locations_.begin()->parent_ = locations_.begin();
 }
 
 ServerConfiguration::ServerConfiguration(const ServerConfiguration &other)
 : port_(other.port_),
-client_max_body_size_(other.client_max_body_size_),
 server_name_(other.server_name_),
 locations_(other.locations_) {}
 //-------------------satic utils------------------------------------------------
@@ -73,7 +72,7 @@ void        ServerConfiguration::ProcessDirectives(
                 HandlePort(directives[i]);
             } else if (UMarkDefined("client_max_body_size", cl_max_bd_size,
                                     directives[i])) {
-                HandleClientMaxBodySize(directives[i]);
+                GetRoot().HandleClientMaxBodySize(directives[i]);
             } else if (UMarkDefined("root", root, directives[i])) {
                 GetRoot().HandleRoot(directives[i]);
             } else if (MarkDefined("index", index, directives[i])) {
@@ -87,17 +86,6 @@ void        ServerConfiguration::ProcessDirectives(
     }
     if (!port)
         ThrowServerConfigError("Port needs to be specified explicitly!");
-}
-
-void ServerConfiguration::HandleClientMaxBodySize(const v_str &directive) {
-    if (directive.size() == 2) {
-        int size = atoi(directive[1].c_str());
-        if (size >= 0) {
-            client_max_body_size_ = size;
-            return;
-        }
-    }
-    ThrowServerConfigError("client_max_body_size_ directive is wrong");
 }
 
 void ServerConfiguration::HandlePort(const v_str &directive) {
@@ -125,10 +113,6 @@ const Location  &ServerConfiguration::GetConstRoot() const {
     return locations_.front();
 }
 
-int ServerConfiguration::GetClientMaxBodySize() const {
-    return client_max_body_size_;
-}
-
 l_loc_it    ServerConfiguration::GetRootIt() {
     return locations_.begin();
 }
@@ -153,8 +137,6 @@ bool        ServerConfiguration::operator==(
                                         const ServerConfiguration &rhs) const {
     if (port_ != rhs.port_)
         return false;
-    if (client_max_body_size_ != rhs.client_max_body_size_)
-        return false;
     if (server_name_ != rhs.server_name_)
         return false;
     if (!(locations_ == rhs.locations_))
@@ -168,7 +150,6 @@ ServerConfiguration &ServerConfiguration::operator=(
         return *this;
     }
     port_ = rhs.port_;
-    client_max_body_size_ = rhs.client_max_body_size_;
     server_name_ = rhs.server_name_;
     locations_ = rhs.locations_;
     return *this;
@@ -177,9 +158,6 @@ ServerConfiguration &ServerConfiguration::operator=(
 std::ostream &operator<<(std::ostream &os, const ServerConfiguration &config) {
     os << "hostname: " << config.GetServerName() << "\n";
     os << "port: " << config.GetPort() << "\n";
-    if (config.GetClientMaxBodySize()) {
-        os << "client_max_body_size_: " << config.GetClientMaxBodySize() << "\n";
-    }
     os << config.GetConstRoot() << "\n";
     os << std::endl;
     return os;
