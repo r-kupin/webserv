@@ -210,3 +210,19 @@ TEST_F(SimpleResponseTest, PostRootBodyWithinLimits) {
                                      "</body>\n"
                                      "</html>");
 }
+
+TEST_F(SimpleResponseTest, PostRootBodyExceedsLimits) {
+    Location        response_location;
+    ClientRequest   request;
+    ServerResponse  response(GetConfig().GetServerName(), GetConfig().GetPort());
+
+    pipe_reguest_to_fd("POST / HTTP/1.1\r\n"
+                       "\r\nthis is body, and it is quite big");
+    request.Init(fd_);
+    response_location = SynthesizeHandlingLocation(request);
+    response.ComposeResponse(response_location);
+
+    EXPECT_EQ(response.GetTopHeader(), "HTTP/1.1 413 Payload Too Large");
+    EXPECT_EQ(response.GetHeaders().find("Server")->second, "WebServ");
+    EXPECT_TRUE(!response.GetBodyStr().empty());
+}

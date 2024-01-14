@@ -154,14 +154,12 @@ void Server::HandleClientRequest(int client_sock) {
         request.Init(client_sock);
         std::cout << "Got client request:\n" << request << std::endl;
         response_location = SynthesizeHandlingLocation(request);
-    } catch (const ClientRequest::RequestException &) {
-        std::cout << "Read from client socket failed!" << std::endl;
-        // todo: set return code, whatever
-    }
-    try {
         response.ComposeResponse(response_location);
         std::cout << "Prepared response:\n" << response << std::endl;
         response.SendResponse(client_sock);
+    } catch (const ClientRequest::RequestException &) {
+        std::cout << "Read from client socket failed!" << std::endl;
+        // todo: set return code, whatever
     } catch (const ServerResponse::ResponseException &) {
         std::cout << "Response creation failed!" << std::endl;
         // todo: set return code, whatever

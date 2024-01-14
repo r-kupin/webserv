@@ -58,16 +58,14 @@ For now, webserv supports the following contexts:
 #### Server
 The main context of the instance of the HTTP server. At least one should be defined in the config. 
 Server context can't be empty - it should contain mandatory server-level directives: 
-- *server_name* (unique)
-- *listen* (unique)
-
-Optional directives:
-- *client_max_body_size* (unique)
+- *[server_name](#server_name)* (unique)
+- *[listen](#listen)* (unique)
 
 Server also can predefine root location with optional directives:
-- *root* (unique)
-- *index*
-- *error_page*
+- *[root](#root)* (unique)
+- *[index](#index)*
+- *[error_page](#error_page)*
+- *[client_max_body_size](#client_max_body_size)* (unique)
 
 Inside server context multiple **location** sub-contexts can be defined, to handle specific requests.
 ```nginx
@@ -167,12 +165,15 @@ server {
 ```
 In this project, such locations referred as **ghost** locations. In the example above, request to `localhost:4281/loc_1/` will lead to `403 Forbidden` server response.
 Locations can be empty, or contain following directives:
-- *root* (unique)
-- *index*
-- *return* (unique)
-- *error_page*
+- *[root](#root)* (unique)
+- *[client_max_body_size](#client_max_body_size)* (unique)
+- *[client_body_temp_path](#client_body_temp_path)* (unique)
+- *[index](#index)*
+- *[return](#return)* (unique)
+- *[error_page](#error_page)*
+
 Locations can also contain sub-contexts:
-- *limit_except* (unique)
+- *[limit_except](#limit_except)* (unique)
 - nested *location*
 #### Limit_except
 Limits access to location. Defined only inside a location with one or more *HTTP* methods:
@@ -198,8 +199,6 @@ directive [ ARG1 ] [ ARG... ];
 Has only one *arg* which sets the port, used by the server for requests listening.
 ##### server_name
 Should define server's host name, but only works for *localhost* right now
-##### client_max_body_size
-Sets bounds for request's body size. Works in the following way: while reading client's body, server keeps track of it's size. If `client_max_body_size` is defined, and client's body exceeds it - server abandon's further request processing and returns error **413**.
 #### Location-level directives
 ##### root
 Can have only one arg, which is a path for a location, or server's root directory. For example:
@@ -221,6 +220,11 @@ In this case:
 - URI `/loc_0/text.txt` will be handled in `/var/www/loc_0/`, because nginx appends location address to parent location's root, if it isn't overridden.
 - URI `/loc_1/text.txt` will be handled by path, constructed as `path to executable` + `resources` + `/loc_1`
 - URI `/loc_1/loc_2/text.txt` will be handled by path, constructed as `parrent's root` + `/loc_2`
+##### client_max_body_size
+Can have only one arg, which is a number in bytes.
+Sets bounds for request's body size. Works in the following way: while reading client's body, server keeps track of it's size. If `client_max_body_size` is defined, and client's body exceeds it - server abandon's further request processing and returns error **413**.
+##### client_body_temp_path
+Specifies a directory, where bodies from client requests should be saved. If specified directory doesn't exist - creates one. 
 ##### index
 May have multiple args that define files that will be used as an index - meaning - shown when location get's accessed by address, following with `/`. Files are checked in the specified order - left to right. The last element of the list can be a file with an absolute path - meaning, path not from the current location's root - but from **root**-location's root.
 ```nginx
