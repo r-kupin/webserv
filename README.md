@@ -13,9 +13,9 @@ I am not using `Makefile` in development process, so the **lists of source files
 ## Test
 1. Prepare test library 
     ```shell
-	  git clone git@github.com:google/googletest.git test/lib
-	  mkdir test/lib/build && cd test/lib/build 
-	  cmake ..
+	git clone git@github.com:google/googletest.git test/lib
+	mkdir test/lib/build && cd test/lib/build 
+	cmake ..
 	```
 2. Get back to project's root
 3. Run `make test`
@@ -35,6 +35,8 @@ I am not using `Makefile` in development process, so the **lists of source files
 - You must be able to serve a fully static website.
 - Limit client body size.
 ## ToDo
+- upload_store implement
+- default client_max_body_size 1Mb
 - Turn on or off directory listing. (?)
 - Your server must be able to listen to multiple ports 
 - A request to your server should never hang forever.
@@ -167,7 +169,8 @@ In this project, such locations referred as **ghost** locations. In the example 
 Locations can be empty, or contain following directives:
 - *[root](#root)* (unique)
 - *[client_max_body_size](#client_max_body_size)* (unique)
-- *[client_body_temp_path](#client_body_temp_path)* (unique)
+- *[upload_store](#upload_store)* (unique)
+- *[upload_pass](#upload_pass)* (unique)
 - *[index](#index)*
 - *[return](#return)* (unique)
 - *[error_page](#error_page)*
@@ -222,9 +225,10 @@ In this case:
 - URI `/loc_1/loc_2/text.txt` will be handled by path, constructed as `parrent's root` + `/loc_2`
 ##### client_max_body_size
 Can have only one arg, which is a number in bytes.
-Sets bounds for request's body size. Works in the following way: while reading client's body, server keeps track of it's size. If `client_max_body_size` is defined, and client's body exceeds it - server abandon's further request processing and returns error **413**.
-##### client_body_temp_path
-Specifies a directory, where bodies from client requests should be saved. If specified directory doesn't exist - creates one. 
+Sets bounds for request's body size. Works in the following way: while reading client's body, server keeps track of it's size. If `client_max_body_size` is defined, and client's body exceeds it - server abandon's further request processing and returns error **413**. If not specified - default value of 1Mb is being applied.
+###### upload_store
+This directive is not a part of vanilla nginx, but from a third-party module, more info [here](#Uploads).
+In this project, it's behavior is slightly simplified.
 ##### index
 May have multiple args that define files that will be used as an index - meaning - shown when location get's accessed by address, following with `/`. Files are checked in the specified order - left to right. The last element of the list can be a file with an absolute path - meaning, path not from the current location's root - but from **root**-location's root.
 ```nginx
@@ -386,8 +390,10 @@ Right after the creation of the `ClientRequest` server starts generating respons
 ### Creating a synthetic location
 Depending on compliance between what was requested and what is being found creates a synthetic location - a copy of the location that was found in [ServerConfig](#ServerConfiguration), but with altered return code, and  redirect-related fields, or with a body file set.
 In order to determine what should be returned, server performs some checks:
+#### Request's body check
+If request contains body, it's size will be counted while reading from socket. If size would exceed limit - error code *413* will be returned.
 #### Access permission
-server checks whether access to requested location is prohibited with [`limit_except`](#Limit_except)
+Server checks whether access to requested location is prohibited with [`limit_except`](#Limit_except)
 #### Redirection
 If access is allowed, server then checks defined [redirection](#return), and bounces client with internal or external redirect, or returns specified code and custom message.
 #### File system
@@ -449,3 +455,57 @@ Server creates response in a following way:
 		2. If an external or internal address is provided, sets the `Location` header accordingly.
 	4. If a body file is specified, its content is read.
 4. Sets additional headers like `Content-Type`, `Content-Length`, and `Connection`.
+
+#  Additional info
+## Uploads
+
+![one_does_not_simply](https://github.com/r-kupin/webserv/blob/main/notes/one_does_not_simply.jpg)
+
+Typically, no one uses nginx (or any web server) to store files, uploaded by a client on a machine that runs the server. Upload requests are normally being transferred to the  web application's back-end, that decides what to do with the data: save in database, store on the NAS, etc. In summary - server's job is to transfer requests to appropriate back-end and therefore it doesn't have a simple and direct way to handle uploads.
+In order to make real nginx store uploaded files, the most intuitive way I found is described below:
+1. Download [**nginx-upload-module**](https://www.nginx.com/resources/wiki/modules/upload/) from the official [github page](https://github.com/vkholodkov/nginx-upload-module/tree/master).
+2. Add it to installed server following [this guide](https://www.nginx.com/blog/compiling-dynamic-modules-nginx-plus/).
+3. Launch server with test configuration.
+	```nginx
+	server {
+		# specify server name, port, root
+	
+	    location /upload {
+	        upload_pass   @test;
+	        upload_store /path/to/upload_directory 1;
+	    }
+	    
+	    location @test {
+	        return 200 "Hello from test";
+	    }
+	}
+	```
+4. Use web client to upload file. Here's one of the simplest ways: `curl -v -T "file=@file_name" http://server_name:port/upload/ `
+
+As described at module's page:
+-  [upload_pass](https://www.nginx.com/resources/wiki/modules/upload/#upload-pass "Permalink to this headline"): specifies location to pass request body to. File fields will be stripped and replaced by fields, containig necessary information to handle uploaded files.
+- [upload_store](https://www.nginx.com/resources/wiki/modules/upload/#upload-store "Permalink to this headline"): specifies a directory to which output files will be saved to. The directory could be hashed. In this case all subdirectories should exist before starting NGINX.
+Note:
+1. *upload_store* won't work if *upload_pass* is not specified - server will return *403* if there is no index file in uploads directory, or *405* otherwise. Nothing will be stored.
+2. In  *upload_directory* sub-directories 0 1 2 3 4 5 6 7 8 9 should exist and be accessible by user, that is used by nginx. I have tested nginx on Debian machine with nginx installed via `apt install`, and the username used by nginx was *www-data*, however, it might be different on other systems and/or if other ways of installation were used. In my case, working *upload_directory* looked like this:
+	```
+	❯ ls -l
+	total 40
+	dr-xrwxr-x 2 my_login www-data 4096 Jan 14 15:36 0
+	dr-xrwxr-x 2 my_login www-data 4096 Jan 14 15:37 1
+	dr-xrwxr-x 2 my_login www-data 4096 Jan 14 15:37 2
+	dr-xrwxr-x 2 my_login www-data 4096 Jan 14 16:14 3
+	dr-xrwxr-x 2 my_login www-data 4096 Jan 14 16:14 4
+	dr-xrwxr-x 2 my_login www-data 4096 Jan 14 16:43 5
+	dr-xrwxr-x 2 my_login www-data 4096 Jan 14 16:43 6
+	dr-xrwxr-x 2 my_login www-data 4096 Jan 14 16:47 7
+	dr-xrwxr-x 2 my_login www-data 4096 Jan 14 16:47 8
+	dr-xrwxr-x 2 my_login www-data 4096 Jan 14 16:51 9
+	```
+ 	Otherwise, nginx would be unable to create files to save the uploads and will return *503*
+ 3. The only request method supported is *POST*
+ 4. Works in a following way: 
+	 1. for each request that posts to *upload_directory* nginx creates file with name which is a numbers of files saved preceded with zeros, so each file being saved has name of 10 characters.
+	 2. files are placed in 10 directories, based on the last digit:
+		 1. `0000000001`, `0000000021`, etc.. - in `./1`
+		 2. `0000000010`, `0000000210`, etc.. -  in `./0`
