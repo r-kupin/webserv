@@ -468,24 +468,24 @@ In order to make real nginx store uploaded files, the most intuitive way I found
 3. Launch server with test configuration.
 	```nginx
 	server {
-		# specify server name, port, root
-	
-	    location /upload {
-	        upload_pass   @test;
-	        upload_store /path/to/upload_directory 1;
-	    }
-	    
-	    location @test {
-	        return 200 "Hello from test";
-	    }
+	 	# specify server name, port, root
+		location /upload {
+		    upload_pass   @test;
+		    upload_store /path/to/upload_directory 1;
+		}
+		
+		location @test {
+		    return 200 "Hello from test";
+		}
 	}
 	```
-4. Use web client to upload file. Here's one of the simplest ways: `curl -v -T "file=@file_name" http://server_name:port/upload/ `
+4. Use web client to upload file. Here's one of the simplest ways: `curl -v -F "file=@file_name" http://server_name:port/upload/ `
 
 As described at module's page:
 -  [upload_pass](https://www.nginx.com/resources/wiki/modules/upload/#upload-pass "Permalink to this headline"): specifies location to pass request body to. File fields will be stripped and replaced by fields, containig necessary information to handle uploaded files.
 - [upload_store](https://www.nginx.com/resources/wiki/modules/upload/#upload-store "Permalink to this headline"): specifies a directory to which output files will be saved to. The directory could be hashed. In this case all subdirectories should exist before starting NGINX.
-Note:
+
+Important notes:
 1. *upload_store* won't work if *upload_pass* is not specified - server will return *403* if there is no index file in uploads directory, or *405* otherwise. Nothing will be stored.
 2. In  *upload_directory* sub-directories 0 1 2 3 4 5 6 7 8 9 should exist and be accessible by user, that is used by nginx. I have tested nginx on Debian machine with nginx installed via `apt install`, and the username used by nginx was *www-data*, however, it might be different on other systems and/or if other ways of installation were used. In my case, working *upload_directory* looked like this:
 	```
@@ -509,3 +509,4 @@ Note:
 	 2. files are placed in 10 directories, based on the last digit:
 		 1. `0000000001`, `0000000021`, etc.. - in `./1`
 		 2. `0000000010`, `0000000210`, etc.. -  in `./0`
+    3. So the first request's body would be saved to  `./1/0000000001`, second - `./2/0000000002`, etc..
