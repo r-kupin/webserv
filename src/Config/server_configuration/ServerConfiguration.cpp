@@ -61,6 +61,7 @@ void        ServerConfiguration::ProcessDirectives(
     bool index = false;
     bool root = false;
     bool port = false;
+    bool uploads = false;
 
     if (directives.empty())
         ThrowServerConfigError("Server block can't be empty!");
@@ -79,6 +80,8 @@ void        ServerConfiguration::ProcessDirectives(
                 GetRoot().HandleIndex(directives[i]);
             } else if (MarkDefined("error_page", err, directives[i])) {
                 GetRoot().AddErrorPages(directives[i]);
+            } else if (UMarkDefined("upload_store", uploads, directives[i])) {
+                GetRoot().SetUploadsDirectory(directives[i]);
             }
         }
     } catch (const Location::LocationException &) {

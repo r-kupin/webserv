@@ -41,6 +41,7 @@ Location::Location(const Location& other)
       return_external_address_(other.return_external_address_),
       return_custom_message_(other.return_custom_message_),
       client_max_body_size_(other.client_max_body_size_),
+      uploads_path_(other.uploads_path_),
       root_(other.root_),
       full_address_(other.full_address_),
       address_(other.address_),
@@ -269,6 +270,7 @@ void Location::ProcessDirectives(const std::vector<v_str> &directives) {
     bool ret = false;
     bool err = false;
     bool cl_max_bd_size = false;
+    bool uploads = false;
 
     for (size_t i = 0; i < directives.size(); ++i) {
         if (UMarkDefined("root", root, directives[i]))
@@ -282,6 +284,8 @@ void Location::ProcessDirectives(const std::vector<v_str> &directives) {
             HandleClientMaxBodySize(directives[i]);
         if (MarkDefined("error_page", err, directives[i]))
             AddErrorPages(directives[i]);
+        if (UMarkDefined("upload_store", uploads, directives[i]))
+            SetUploadsDirectory(directives[i]);
     }
 }
 
@@ -401,6 +405,18 @@ void Location::HandleRoot(const v_str &directive) {
     }
     ThrowLocationException("Root directive is wrong");
 }
+
+void Location::SetUploadsDirectory(const v_str &directive) {
+    if (directive.size() == 2) {
+        std::string uploads = directive[1];
+        if (uploads.empty() || uploads.at(uploads.size() - 1) != '/') {
+            uploads_path_ = directive[1];
+            return;
+        }
+    }
+    ThrowLocationException("upload_store directive is wrong");
+}
+
 //-------------------setup subcontexts handlers---------------------------------
 void Location::HandleLimitExcept(const Node &node) {
     if (HasDefinedLimitExcept()) {
@@ -449,6 +465,7 @@ Location &Location::operator=(const Location &rhs) {
     return_external_address_ = rhs.return_external_address_;
     return_custom_message_ = rhs.return_custom_message_;
     client_max_body_size_ = rhs.client_max_body_size_;
+    uploads_path_ = rhs.uploads_path_;
     root_ = rhs.root_;
     full_address_ = rhs.full_address_;
     address_ = rhs.address_;
@@ -485,7 +502,7 @@ bool Location::operator==(const Location &rhs) const {
         return false;
     if(return_custom_message_ != rhs.return_custom_message_)
         return false;
-    if(client_max_body_size_ != rhs.client_max_body_size_)
+    if(uploads_path_ != rhs.uploads_path_)
         return false;
     if(root_ != rhs.root_)
         return false;
@@ -528,6 +545,10 @@ void print_return_info(std::ostream &os, const Location &location) {
            location.return_custom_message_ << std::endl;
     }
 }
+void print_upload_path(std::ostream &os, const Location &location) {
+    os << location.full_address_ << ":\t" << "Uploads path: " <<
+       location.uploads_path_ << std::endl;
+}
 
 void print_index(std::ostream &os, const Location &location) {
     os << location.full_address_ << ":\t" << "Index: ";
@@ -566,6 +587,8 @@ std::ostream &operator<<(std::ostream &os, const Location &location) {
         print_index(os, location);
     if (!location.root_.empty())
         print_root(os, location);
+    if (!location.uploads_path_.empty())
+        print_upload_path(os, location);
     if (location.address_ != "/")
         print_parent_info(os, location);
     if (!location.sublocations_.empty())

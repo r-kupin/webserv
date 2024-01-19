@@ -35,6 +35,9 @@ Location Server::SynthesizeHandlingLocation(ClientRequest &request) {
         // limit_access rule prohibits request
         std::cout << "access forbidden by rule" << std::endl;
         synth.SetReturnCode(403);
+    } else if (!found->uploads_path_.empty()) {
+        // 405 - upload_pass without upload_store w index || unappropriate method
+        // 503 - can't create output : file failed to create output file "/var/www/upload/1/0000000001" for "2023-12-10-17-34-01.077-VBoxHeadless-1515430.log"
     } else if (found->return_code_ == 0) {
         // return redirection rule isn't set
         std::string address = found->root_ + res.leftower_address_;

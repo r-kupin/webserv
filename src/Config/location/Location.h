@@ -41,8 +41,10 @@ struct Location {
     std::string             return_internal_address_;
     std::string             return_external_address_;
     std::string             return_custom_message_;
-
+//-------------------uploads related
     int                     client_max_body_size_;
+    std::string             uploads_path_;
+
     std::string             root_;
     std::string             full_address_;
     std::string             address_;
@@ -93,6 +95,7 @@ struct Location {
     void                HandleRoot(const v_str &directive);
     void                HandleClientMaxBodySize(const v_str &directive);
     void                AddErrorPages(const v_str &directive);
+    void                SetUploadsDirectory(const v_str &directive);
 //-------------------setup subcontexts handlers---------------------------------
     void                HandleLimitExcept(const Node &node);
     void                UpdateSublocations();
@@ -102,6 +105,8 @@ struct Location {
     bool                operator<(const Location &rhs) const;
     bool                operator==(const Location &rhs) const;
     Location&           operator=(const Location& rhs);
+
+    void print_upload_path(std::ostream &ostream, const Location &location);
 };
 
 std::ostream &operator<<(std::ostream &os, const Location &location);

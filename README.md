@@ -68,6 +68,7 @@ Server also can predefine root location with optional directives:
 - *[index](#index)*
 - *[error_page](#error_page)*
 - *[client_max_body_size](#client_max_body_size)* (unique)
+- *[upload_store](#upload_store)* (unique)
 
 Inside server context multiple **location** sub-contexts can be defined, to handle specific requests.
 ```nginx
@@ -170,7 +171,6 @@ Locations can be empty, or contain following directives:
 - *[root](#root)* (unique)
 - *[client_max_body_size](#client_max_body_size)* (unique)
 - *[upload_store](#upload_store)* (unique)
-- *[upload_pass](#upload_pass)* (unique)
 - *[index](#index)*
 - *[return](#return)* (unique)
 - *[error_page](#error_page)*
@@ -224,11 +224,12 @@ In this case:
 - URI `/loc_1/text.txt` will be handled by path, constructed as `path to executable` + `resources` + `/loc_1`
 - URI `/loc_1/loc_2/text.txt` will be handled by path, constructed as `parrent's root` + `/loc_2`
 ##### client_max_body_size
-Can have only one arg, which is a number in bytes.
+Should have only one arg, which is a number in bytes.
 Sets bounds for request's body size. Works in the following way: while reading client's body, server keeps track of it's size. If `client_max_body_size` is defined, and client's body exceeds it - server abandon's further request processing and returns error **413**. If not specified - default value of 1Mb is being applied.
-###### upload_store
-This directive is not a part of vanilla nginx, but from a third-party module, more info [here](#Uploads).
-In this project, it's behavior is slightly simplified.
+##### upload_store
+In this project, it's behavior is slightly simplified, because this directive is not a part of vanilla nginx, but from a third-party module, more info [here](#Uploads).
+Should have only one arg, which is path to the uploads directory.
+Set's path to uploads directory. When location containing this directive handles POST request, it creates a file in specified directory, and writes request's body to it. The name of the file being created is it's number: first is `1`, second is `2`, etc.
 ##### index
 May have multiple args that define files that will be used as an index - meaning - shown when location get's accessed by address, following with `/`. Files are checked in the specified order - left to right. The last element of the list can be a file with an absolute path - meaning, path not from the current location's root - but from **root**-location's root.
 ```nginx
