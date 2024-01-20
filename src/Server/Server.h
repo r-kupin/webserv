@@ -53,7 +53,7 @@ protected:
     void                        HandleClientRequest(int client_sock);
 //-------------------assemble handling location---------------------------------
     Location                    SynthesizeHandlingLocation(
-             ClientRequest &request);
+                                                        ClientRequest &request);
 
     void                        SynthIndex(Location &synth,
                                            const Srch_c_Res &res,
@@ -66,13 +66,16 @@ protected:
                                           const Srch_c_Res &res,
                                           int fs_status,
                                           const std::string &request_address) const;
+    bool                        RequestBodyExceedsLimit(l_loc_c_it found,
+                                                        ClientRequest &request);
+    bool                        UploadFile(const ClientRequest &request);
 private:
     const ServerConfiguration   &config_;
     int                         socket_;
     int                         epoll_fd_;
     epoll_event                 event_;
 
-     bool RequestBodyExceedsLimit(l_loc_c_it found, ClientRequest &request);
+
  };
 
 std::ostream &operator<<(std::ostream &os, const Server &server);
