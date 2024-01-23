@@ -11,10 +11,14 @@
 /******************************************************************************/
 
 #include <fstream>
-#include <ctime>
 #include <sstream>
-#include <sys/stat.h>
 #include <iostream>
+#include <sys/stat.h>
+#include <sys/statvfs.h>
+#include <ctime>
+#include <unistd.h>
+#include <cstdlib>
+#include <climits>
 #include "Utils.h"
 
 m_codes Utils::err_codes;
@@ -122,12 +126,46 @@ int Utils::CheckFilesystem(const std::string &address) {
     return NOTHING;
 }
 
+bool Utils::CheckSpace(const std::string &address, size_t size) {
+    struct statvfs stat;
+    if (statvfs(address.c_str(), &stat) != 0) {
+        throw StatvfsException();
+    }
+    size_t availableSpace = stat.f_frsize * stat.f_bavail;
+    return (availableSpace > size);
+}
+
+bool Utils::FileExists(const std::string &address) {
+    return CheckFilesystem(address) != NOTHING;
+}
+
+bool Utils::CheckPermissions(const std::string &address) {
+    std::ofstream file(address.c_str());
+    if (!file.is_open()) {
+        return false;
+    }
+    file.close();
+    return true;
+}
+
 std::string Utils::FileToString(const std::string &address) {
     std::cout << address << std::endl;
     std::ifstream file(address.c_str());
 
     return std::string((std::istreambuf_iterator<char>(file)),
                        std::istreambuf_iterator<char>());
+}
+
+bool Utils::AppendToFile(const std::string &data, const std::string &address) {
+    // Open the file in append mode
+    std::ofstream file(address.c_str(), std::ios::app);
+    if (!file.is_open())
+        return false;
+    file << data;
+    if (!file)
+        return false;
+    file.close();
+    return true;
 }
 
 std::string Utils::NiceTimestamp() {
@@ -144,7 +182,24 @@ std::string Utils::NiceTimestamp() {
     return buffer;
 }
 
-std::string Utils::IntToString(size_t n) {
+size_t Utils::StringToNbr(const std::string &str) {
+    char* end_ptr;
+    const char* val_ptr = str.c_str();
+    errno = 0; // To distinguish success/failure after call
+    size_t nbr = strtoul(val_ptr, &end_ptr, 10);
+    if ((errno == ERANGE && (nbr == ULONG_MAX || nbr == 0)) ||
+        (errno != 0 && nbr == 0)) {
+        throw ConversionException();
+    }
+    // Check if the entire string was consumed
+    if (end_ptr == val_ptr || *end_ptr != '\0') {
+        // Handle invalid input
+        throw ConversionException();
+    }
+    return nbr;
+}
+
+std::string Utils::NbrToString(size_t n) {
     std::stringstream ss;
     ss << n;
     return ss.str();

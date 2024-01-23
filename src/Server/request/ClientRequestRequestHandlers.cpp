@@ -21,12 +21,6 @@ void ClientRequest::CheckRequest(const v_str &request) {
     if (request[0].find("HTTP/1.1") == std::string::npos)
         ThrowException("HTTP/1.1 is the only supported protocol",
                        "BadRequestException");
-    if((method_ == POST || method_ == DELETE) && !HasBody())
-        ThrowException("POST and DELETE methods should contain body",
-                       "BadRequestException");
-    if(method_ == GET && HasBody())
-        ThrowException("only POST and DELETE methods can have a body",
-                       "BadRequestException");
 }
 
 std::string ClientRequest::ExtractUrl(const std::string& request) {
@@ -34,17 +28,13 @@ std::string ClientRequest::ExtractUrl(const std::string& request) {
     return (uri.substr(0, uri.find_first_of(' ')));
 }
 
-bool ClientRequest::HasBody() {
-    return !body_.empty();
-}
-
-void ClientRequest::ExtractBody(int max_size) {
+void ClientRequest::ExtractBody(size_t max_size) {
     body_ = ExtractBody(max_size, socket_, body_);
 }
 
-std::string ClientRequest::ExtractBody(int max_size, int socket,
+std::string ClientRequest::ExtractBody(size_t max_size, int socket,
                                        std::string &body, int buffer_size) {
-    if (max_size > 0 && body.size() > (size_t)max_size)
+    if (body.size() > max_size)
         ThrowException("request body size exceeds limit ",
                        "BodyIsTooLarge");
     char buffer[buffer_size];
@@ -59,7 +49,7 @@ std::string ClientRequest::ExtractBody(int max_size, int socket,
             buffer[bytes_read] = '\0';
             // Find the end of the line
             body += std::string(buffer);
-            if (max_size > 0 && body.size() > (size_t) max_size)
+            if (body.size() > max_size)
                 ThrowException("request body size exceeds limit ",
                                "BodyIsTooLarge");
         }

@@ -27,6 +27,8 @@ ServerResponse::ServerResponse(const Location &synth,
 
 void ServerResponse::ComposeResponse(const Location &synth) {
     top_header_ = ComposeTop(synth);
+    if (synth.return_code_ == 100)
+        return;
     AddHeader("Server", "WebServ");
     AddHeader("Date", Utils::NiceTimestamp());
     if (synth.return_custom_message_.empty()) {
@@ -48,7 +50,7 @@ void ServerResponse::ComposeResponse(const Location &synth) {
         AddHeader("Content-Type", "application/octet-stream");
         body_str_ = synth.return_custom_message_;
     }
-    AddHeader("Content-Length",Utils::IntToString(body_str_.size()));
+    AddHeader("Content-Length", Utils::NbrToString(body_str_.size()));
     AddHeader("Connection", "keep-alive");
 }
 
@@ -66,8 +68,8 @@ void ServerResponse::HandleRedirect(const Location &synth) {
         AddHeader("Location", synth.return_external_address_);
     } else if (!synth.return_internal_address_.empty()) {
         AddHeader("Location",
-                  "http://" + server_name_ + ":"+ Utils::IntToString(port_) +
-                            synth.return_internal_address_);
+                  "http://" + server_name_ + ":" + Utils::NbrToString(port_) +
+                  synth.return_internal_address_);
     }
 }
 

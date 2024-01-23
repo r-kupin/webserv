@@ -96,6 +96,29 @@ v_str ClientRequest::ReadFromSocket(int socket, std::string &body, int buffer_si
     }
 }
 
+bool ClientRequest::HasHeader(const std::string &key) const {
+    m_str_str_c_it header = headers_.find(key);
+    return header != headers_.end() && !header->second.empty();
+}
+
+std::string ClientRequest::GetHeaderValue(const std::string &key) const {
+    if (HasHeader(key)) {
+        return headers_.find(key)->second;
+    }
+    return "";
+}
+
+size_t ClientRequest::GetDeclaredBodySize() const {
+    if (HasHeader("Content-Length")) {
+        return Utils::StringToNbr(GetHeaderValue("Content-Length"));
+    }
+    return 0;
+}
+
+bool ClientRequest::IsCurlRequest() const {
+    return GetHeaderValue("User-Agent").find("curl") != std::string::npos;
+}
+
 void    print_method(std::ostream &os, Methods method) {
     switch (method) {
         case GET:

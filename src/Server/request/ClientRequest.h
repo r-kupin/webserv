@@ -49,7 +49,7 @@ public:
     explicit ClientRequest(int client_sock);
 
     void                Init(int client_sock);
-    void                ExtractBody(int max_size = -1);
+    void                ExtractBody(size_t max_size);
 
     Methods             GetMethod() const;
     const std::string   &GetAddress() const;
@@ -57,10 +57,15 @@ public:
     const std::string   &GetBody() const;
     const m_str_str     &GetParams() const;
     const m_str_str     &GetHeaders() const;
+    bool                HasHeader(const std::string &key) const;
+    std::string         GetHeaderValue(const std::string &key) const;
+    size_t              GetDeclaredBodySize() const;
+    bool                IsCurlRequest() const;
 
     bool                IsIndexRequest() const;
     const std::string   &GetFragment() const;
     void                SetMethod(Methods method);
+
 protected:
 //-------------------socket-level-----------------------------------------------
     v_str       ReadFromSocket(int socket, std::string &body,
@@ -68,7 +73,6 @@ protected:
 //-------------------vector-of-strings parsed input level----------------------
     void        CheckRequest(const v_str &request);
     bool        HasHeaders(const v_str &request);
-    bool HasBody();
     void        FillHeaders(const v_str &request);
 //-------------------request main line level------------------------------------
     std::string ExtractUrl(const std::string& request);
@@ -82,7 +86,7 @@ protected:
     void        FillUrlParams(const std::string &url);
     std::string ExtractFragment(const std::string& url);
     std::string ExtractLastAddrStep(const std::string& address);
-    std::string ExtractBody(int max_size, int socket, std::string &body,
+    std::string ExtractBody(size_t max_size, int socket, std::string &body,
                             int buffer_size = BUFFER_SIZE);
 
     void        ThrowException(const std::string& msg,
@@ -97,6 +101,8 @@ private:
     m_str_str                           params_;
     m_str_str                           headers_;
     int                                 socket_;
+
+
 };
 
 std::ostream &operator<<(std::ostream &os, const ClientRequest &request);

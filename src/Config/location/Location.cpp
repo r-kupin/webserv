@@ -13,6 +13,8 @@
 #include <cstdlib>
 #include <algorithm>
 #include <iostream>
+#include <cerrno>
+#include <climits>
 #include "Location.h"
 
 //-------------------static creation / initialization---------------------------
@@ -20,7 +22,7 @@
 Location::Location()
     : has_own_index_defined_(false),
       return_code_(0),
-      client_max_body_size_(-1),
+      client_max_body_size_(1000000),
       ghost_(false) {}
 
 // link to parent? indexes?
@@ -55,7 +57,7 @@ Location::Location(const std::string &address)
     : has_own_index_defined_(false),
       index_defined_in_parent_(false),
       return_code_(0),
-      client_max_body_size_(-1),
+      client_max_body_size_(1000000),
       full_address_(HandleAddressInConstructor(address)),
       address_(GetParticularAddress(address)),
       ghost_(false) {}
@@ -64,7 +66,7 @@ Location::Location(const std::string &address, l_loc_it parent)
     : has_own_index_defined_(false),
     index_defined_in_parent_(false),
     return_code_(0),
-    client_max_body_size_(-1),
+    client_max_body_size_(1000000),
     full_address_(HandleAddressInConstructor(address)),
     address_(GetParticularAddress(address)),
     parent_(parent),
@@ -289,12 +291,15 @@ void Location::ProcessDirectives(const std::vector<v_str> &directives) {
     }
 }
 
+// todo tests
 void Location::HandleClientMaxBodySize(const v_str &directive) {
     if (directive.size() == 2) {
-        int size = atoi(directive[1].c_str());
-        if (size >= 0) {
+        try {
+            size_t size = Utils::StringToNbr(directive[1]);
             client_max_body_size_ = size;
             return;
+        } catch (const Utils::ConversionException &) {
+            ThrowLocationException("client_max_body_size_ directive is wrong");
         }
     }
     ThrowLocationException("client_max_body_size_ directive is wrong");
@@ -307,7 +312,11 @@ void Location::AddErrorPages(const v_str &directive) {
     if (directive.size() > 2) {
         address = *(directive.rbegin());
         for (size_t i = 1; directive[i] != address; ++i) {
-            code = std::atoi(directive[i].c_str());
+            try {
+                code = Utils::StringToNbr(directive[1]);
+            } catch (const Utils::ConversionException &) {
+                ThrowLocationException("Error code is wrong");
+            }
             if (!Utils::IsErrorCode(code)) {
                 ThrowLocationException("Error code is wrong");
             }

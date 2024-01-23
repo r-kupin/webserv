@@ -56,7 +56,7 @@ void Server::PresetAddress(addrinfo **addr) {
     hints.ai_flags = AI_PASSIVE; // Use the local IP
 
     if (getaddrinfo(config_.GetServerName().c_str(), // localhost
-                    Utils::IntToString(config_.GetPort()).c_str(), // port
+                    Utils::NbrToString(config_.GetPort()).c_str(), // port
                     &hints, addr)) {
         throw AddrinfoCreationFailed();
     }

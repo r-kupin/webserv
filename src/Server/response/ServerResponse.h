@@ -13,7 +13,6 @@
 #ifndef WEBSERV_LIB_SEVRERRESPONSE_H
 #define WEBSERV_LIB_SEVRERRESPONSE_H
 
-#include <fstream>
 #include <ostream>
 #include "../../Config/location/Location.h"
 #include "../request/ClientRequest.h"

@@ -40,16 +40,28 @@ typedef std::list<std::string>::const_iterator              l_str_c_it;
 
 class Utils {
 public:
-    static void         OutputMap(const m_str_str &map, std::ostream &os);
+    class UtilsException : public std::exception {};
+    class StatvfsException : public UtilsException {};
+    class ConversionException : public UtilsException {};
+
     static int          CheckFilesystem(const std::string &address);
+    static bool         FileExists(const std::string &address);
+    static bool         CheckSpace(const std::string &address, size_t size);
+    static bool         CheckPermissions(const std::string &address);
     static std::string  FileToString(const std::string &address);
+    static bool         AppendToFile(const std::string &data,
+                                     const std::string &address);
+
+    static std::string  NbrToString(size_t n);
+    static size_t       StringToNbr(const std::string & str);
     static std::string  NiceTimestamp();
-    static std::string  IntToString(size_t n);
+
     static bool         IsErrorCode(int code);
     static bool         IsOKCode(int code);
     static bool         IsRedirectCode(int code);
     static bool         IsValidHTTPCode(int code);
     static std::string  GetCodeDescription(int code);
+    static void         OutputMap(const m_str_str &map, std::ostream &os);
 private:
     static m_codes err_codes;
     static m_codes ok_codes;

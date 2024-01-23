@@ -68,14 +68,17 @@ protected:
                                           const std::string &request_address) const;
     bool                        RequestBodyExceedsLimit(l_loc_c_it found,
                                                         ClientRequest &request);
-    bool                        UploadFile(const ClientRequest &request);
+    bool UploadFile(const ClientRequest &request, l_loc_c_it found, bool &done);
+    bool UploadFromCURL(const ClientRequest &request,
+                        const std::string &filename, bool &done);
+    bool                        CanCreateFile(const std::string &dir,
+                                              const std::string &filename,
+                                              size_t size);
 private:
     const ServerConfiguration   &config_;
     int                         socket_;
     int                         epoll_fd_;
     epoll_event                 event_;
-
-
  };
 
 std::ostream &operator<<(std::ostream &os, const Server &server);

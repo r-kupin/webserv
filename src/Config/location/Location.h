@@ -42,7 +42,7 @@ struct Location {
     std::string             return_external_address_;
     std::string             return_custom_message_;
 //-------------------uploads related
-    int                     client_max_body_size_;
+    size_t                  client_max_body_size_;
     std::string             uploads_path_;
 
     std::string             root_;

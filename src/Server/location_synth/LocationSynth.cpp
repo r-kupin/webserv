@@ -14,8 +14,10 @@
 #include <algorithm>
 #include "../ServerExceptions.h"
 #include "../request/RequestExceptions.h"
-#include "../Server.h"
 
+const static std::string kHTTPEndBlock = "\r\n\r\n";
+const static std::string kHTTPNewline = "\r\n";
+const static std::string kBoundary = "boundary=";
 
 /**
  * Depending on compliance between what was requested and what is being found
@@ -42,10 +44,16 @@ Location Server::SynthesizeHandlingLocation(ClientRequest &request) {
         if (!found->uploads_path_.empty()) {
             // location is dedicated to handle uploads
             if (request.GetMethod() == POST) {
+                bool upload_finished;
                 // only post method is acknowledged to contain upload payload
-                if (UploadFile(request)) {
+                if (UploadFile(request, found, upload_finished)) {
                     // upload saved successfully
-                    synth.SetReturnCode(200);
+                    if (upload_finished) {
+                        synth.SetReturnCode(200);
+                        synth.return_custom_message_ = "Upload successfull";
+                    } else {
+                        synth.SetReturnCode(100);
+                    }
                 } else {
                     std::cout << "failed to create output file" << std::endl;
                     synth.SetReturnCode(503);
@@ -105,8 +113,22 @@ bool Server::RequestBodyExceedsLimit(l_loc_c_it found, ClientRequest &request) {
     try {
         request.ExtractBody(found->client_max_body_size_);
     } catch (const RequestBodySizeExceedsLimitException &) {
+        // actual size of body redd exceeds limit
         return true;
     }
+    if (!request.GetBody().empty()) {
+        if (request.HasHeader("Content-Length")) {
+            try {
+                // Content-Length header value exceeds limit
+                return found->client_max_body_size_ < request.GetDeclaredBodySize();
+            } catch (const Utils::ConversionException &) {
+                // throw: content length header misconfigured
+            }
+        } else {
+            //  content length should be specified if body is present
+        }
+    }
+    // client request has no body
     return false;
 }
 
@@ -122,11 +144,91 @@ bool Server::AccessForbidden(l_loc_c_it found, Methods method) const {
     return true;
 }
 
-bool Server::UploadFile(const ClientRequest &request) {
-    //  Check directory exists
-    //  Create a file
-    //  check "expect 100"
+bool Server::CanCreateFile(const std::string & dir, const std::string & filename,
+                   size_t size) {
+    try {
+        if (Utils::CheckFilesystem(dir) != DIRECTORY) {
+            std::cout << "directory " + dir + " where server is trying to "
+                         "create a file does not exist" << std::endl;
+            return false;
+        }
+        if (Utils::FileExists(filename)) {
+            std::cout << "file " + filename + " already exists" << std::endl;
+            return false;
+        }
+        if (!Utils::CheckPermissions(filename)) {
+            std::cout << "server doesn't have proper permissions to create " +
+            filename + " file"<< std::endl;
+            return false;
+        }
+        if (!Utils::CheckSpace(filename, size)) {
+            std::cout << "not enough disk space to create a file with size " +
+                    Utils::NbrToString(size) << std::endl;
+            return false;
+        }
+        return true;
+    } catch (const Utils::StatvfsException &) {
+        std::cout << "can't check available space with statvfs" << std::endl;
+    }
+    return false;
+}
+
+bool    Server::UploadFile(const ClientRequest &request, l_loc_c_it found,
+                           bool &done) {
     //  handle boundary
     //  write contents to file
-    return true;
+    static int  files_uploaded_;
+
+    std::string dirname;
+    if (found->uploads_path_.at(0) == '/')
+        dirname = found->uploads_path_;
+    else
+        dirname = config_.GetConstRoot().root_ + "/" + found->uploads_path_;
+
+    std::string filename(dirname + "/" + Utils::NbrToString(files_uploaded_));
+    if (request.HasHeader("User-Agent")) {
+        if (CanCreateFile(dirname, filename, request.GetDeclaredBodySize())) {
+            if (request.IsCurlRequest() &&
+                UploadFromCURL(request, filename, done)) {
+                if (done)
+                    files_uploaded_++;
+                return true;
+            }
+            // else: other clients
+        }
+        // required header
+    }
+    return false;
+}
+
+bool Server::UploadFromCURL(const ClientRequest &request,
+                            const std::string &filename, bool &done) {
+    //  check "expect 100"
+    size_t bound_pos = request.GetHeaderValue("Content-Type").find(kBoundary);
+    const std::string &body = request.GetBody();
+    if (bound_pos != std::string::npos) {
+        // body contains boundary delimiter
+        size_t start = body.find(kHTTPEndBlock) + kHTTPEndBlock.size();
+        std::string delimiter = request.GetHeaderValue("Content-Type").
+                substr(bound_pos + kBoundary.size());
+        size_t end = body.rfind(delimiter);
+        if ((end == std::string::npos) ||
+            (request.HasHeader("Expect") &&
+             request.GetHeaderValue("Expect") == "100-continue")) {
+            done = false;
+            return true;
+        }// "\r\n" before the delimiter and "--" after == 4
+        end = end > start ? end - 4 : body.size();
+        const std::string &to_write = body.substr(start, end - start);
+        if (Utils::AppendToFile(to_write,filename)) {
+            return true;
+        }
+    } else {
+        // body is simply a file
+        if (Utils::AppendToFile(body, filename)) {
+            done = request.GetDeclaredBodySize() == body.size();
+            return true;
+        }
+    }
+    return false;
 }

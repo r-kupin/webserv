@@ -87,7 +87,7 @@ TEST_F(SimpleIndexConfigResponseTest, Loc4) {
     EXPECT_EQ(response.GetHeaders().find("Server")->second, "WebServ");
     EXPECT_EQ(response.GetHeaders().find("Content-Type")->second, "text/html");
     EXPECT_EQ(response.GetHeaders().find("Location")->second,
-              "http://localhost:" + Utils::IntToString(GetConfig().GetPort()) + "/loc_4/");
+              "http://localhost:" + Utils::NbrToString(GetConfig().GetPort()) + "/loc_4/");
 }
 
 TEST_F(SimpleIndexConfigResponseTest, Loc4Index) {
@@ -134,7 +134,7 @@ TEST_F(SimpleIndexConfigResponseTest, loc1) {
     EXPECT_EQ(response.GetHeaders().find("Server")->second, "WebServ");
     EXPECT_EQ(response.GetHeaders().find("Content-Type")->second, "text/html");
     EXPECT_EQ(response.GetHeaders().find("Location")->second,
-              "http://localhost:" + Utils::IntToString(GetConfig().GetPort())
+              "http://localhost:" + Utils::NbrToString(GetConfig().GetPort())
               + "/loc_1/");
 }
 
