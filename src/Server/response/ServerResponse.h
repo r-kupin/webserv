@@ -32,6 +32,8 @@ public:
     ServerResponse(const std::string &serverName, int port);
 
     ~ServerResponse();
+    static bool TellClientToContinue(int socket);
+
     void                        ComposeResponse(const Location &synth);
     void                        SendResponse(int dest);
 
@@ -40,11 +42,14 @@ public:
     const m_str_str             &GetHeaders() const;
 
     ServerResponse              &operator=(const ServerResponse &);
+
+
+
 protected:
 //-------------------satic utils------------------------------------------------
     static std::string          GeneratePage(int code);
 //-------------------init-------------------------------------------------------
-    std::string                 ComposeTop(const Location &location);
+    static std::string          ComposeTop(int return_code);
     void                        HandleError(const Location &synth);
     void                        HandleRedirect(const Location &synth);
     void                        GetDefinedErrorPage(const Location &synth);

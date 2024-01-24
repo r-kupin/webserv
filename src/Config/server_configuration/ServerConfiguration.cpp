@@ -21,7 +21,6 @@ ServerConfiguration::ServerConfiguration()
     root_loc.return_code_ = 0;
     root_loc.return_internal_address_ = "";
     root_loc.full_address_ = "";
-    root_loc.client_max_body_size_ = -1;
     locations_.push_back(root_loc);
     locations_.begin()->parent_ = locations_.begin();
 }

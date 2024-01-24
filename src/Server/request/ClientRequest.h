@@ -66,6 +66,8 @@ public:
     const std::string   &GetFragment() const;
     void                SetMethod(Methods method);
 
+    std::string         ExtractBodyByParts(size_t max_size, int socket,
+                                           int buffer_size = BUFFER_SIZE) const;
 protected:
 //-------------------socket-level-----------------------------------------------
     v_str       ReadFromSocket(int socket, std::string &body,

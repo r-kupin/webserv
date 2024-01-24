@@ -53,7 +53,8 @@ protected:
     void                        HandleClientRequest(int client_sock);
 //-------------------assemble handling location---------------------------------
     Location                    SynthesizeHandlingLocation(
-                                                        ClientRequest &request);
+                                                        ClientRequest&request,
+                                                        int socket = -1);
 
     void                        SynthIndex(Location &synth,
                                            const Srch_c_Res &res,
@@ -66,11 +67,12 @@ protected:
                                           const Srch_c_Res &res,
                                           int fs_status,
                                           const std::string &request_address) const;
-    bool                        RequestBodyExceedsLimit(l_loc_c_it found,
-                                                        ClientRequest &request);
-    bool UploadFile(const ClientRequest &request, l_loc_c_it found, bool &done);
+    bool RequestBodyExceedsLimit(l_loc_c_it found, ClientRequest &request);
+    bool UploadFile(const ClientRequest &request, l_loc_c_it found, bool &done,
+                    int socket);
     bool UploadFromCURL(const ClientRequest &request,
-                        const std::string &filename, bool &done);
+                        const std::string &filename, bool &done,
+                        int socket);
     bool                        CanCreateFile(const std::string &dir,
                                               const std::string &filename,
                                               size_t size);

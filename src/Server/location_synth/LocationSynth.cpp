@@ -27,11 +27,13 @@ const static std::string kBoundary = "boundary=";
  * @param request
  * @return not-exact copy of a location found
  */
-Location Server::SynthesizeHandlingLocation(ClientRequest &request) {
+Location Server::SynthesizeHandlingLocation(ClientRequest &request,
+                                            int socket) {
     Srch_c_Res res = config_.FindConstLocation(request.GetAddress());
     l_loc_c_it found = res.location_;
     Location synth(*found);
 
+    // server doesn't read body here anymore !!
     if (RequestBodyExceedsLimit(found, request)) {
         std::cout << "client intended to send too large body" << std::endl;
         synth.SetReturnCode(413);
@@ -44,9 +46,9 @@ Location Server::SynthesizeHandlingLocation(ClientRequest &request) {
         if (!found->uploads_path_.empty()) {
             // location is dedicated to handle uploads
             if (request.GetMethod() == POST) {
-                bool upload_finished;
+                bool upload_finished = false;
                 // only post method is acknowledged to contain upload payload
-                if (UploadFile(request, found, upload_finished)) {
+                if (UploadFile(request, found, upload_finished, socket)) {
                     // upload saved successfully
                     if (upload_finished) {
                         synth.SetReturnCode(200);
@@ -110,25 +112,20 @@ bool Server::RequestBodyExceedsLimit(l_loc_c_it found, ClientRequest &request) {
     //    size before we found responsible location. And we don't want to
     //    read the whole body in advance, because it can be a 10G file, and it
     //    will crash the server
-    try {
-        request.ExtractBody(found->client_max_body_size_);
-    } catch (const RequestBodySizeExceedsLimitException &) {
-        // actual size of body redd exceeds limit
-        return true;
-    }
-    if (!request.GetBody().empty()) {
-        if (request.HasHeader("Content-Length")) {
-            try {
+
+    if (request.HasHeader("Content-Length")) {
+        try {
+            if (found->client_max_body_size_ &&
+                found->client_max_body_size_ < request.GetDeclaredBodySize()) {
                 // Content-Length header value exceeds limit
-                return found->client_max_body_size_ < request.GetDeclaredBodySize();
-            } catch (const Utils::ConversionException &) {
-                // throw: content length header misconfigured
+                return true;
             }
-        } else {
-            //  content length should be specified if body is present
+        } catch (const Utils::ConversionException &) {
+            // throw: content length header misconfigured
         }
+    } else if (request.GetMethod() == POST || request.GetMethod() == DELETE) {
+        // throw: POST and DELETE should have a body and "Content-Length" set
     }
-    // client request has no body
     return false;
 }
 
@@ -173,13 +170,12 @@ bool Server::CanCreateFile(const std::string & dir, const std::string & filename
     return false;
 }
 
-bool    Server::UploadFile(const ClientRequest &request, l_loc_c_it found,
-                           bool &done) {
-    //  handle boundary
-    //  write contents to file
+bool
+Server::UploadFile(const ClientRequest &request, l_loc_c_it found, bool &done,
+                   int socket) {
     static int  files_uploaded_;
-
     std::string dirname;
+
     if (found->uploads_path_.at(0) == '/')
         dirname = found->uploads_path_;
     else
@@ -188,47 +184,101 @@ bool    Server::UploadFile(const ClientRequest &request, l_loc_c_it found,
     std::string filename(dirname + "/" + Utils::NbrToString(files_uploaded_));
     if (request.HasHeader("User-Agent")) {
         if (CanCreateFile(dirname, filename, request.GetDeclaredBodySize())) {
-            if (request.IsCurlRequest() &&
-                UploadFromCURL(request, filename, done)) {
-                if (done)
-                    files_uploaded_++;
+            if (request.IsCurlRequest()) {
+                if (UploadFromCURL(request, filename, done, socket)) {
+                    if (done)
+                        files_uploaded_++;
+                } else {
+                    // upload failed
+                    return false;
+                }
                 return true;
             }
             // else: other clients
+        } else {
+            // throw  503 or something
         }
+    } else {
         // required header
     }
     return false;
 }
 
 bool Server::UploadFromCURL(const ClientRequest &request,
-                            const std::string &filename, bool &done) {
-    //  check "expect 100"
+                            const std::string &filename, bool &done,
+                            int socket) {
     size_t bound_pos = request.GetHeaderValue("Content-Type").find(kBoundary);
-    const std::string &body = request.GetBody();
-    if (bound_pos != std::string::npos) {
-        // body contains boundary delimiter
-        size_t start = body.find(kHTTPEndBlock) + kHTTPEndBlock.size();
-        std::string delimiter = request.GetHeaderValue("Content-Type").
-                substr(bound_pos + kBoundary.size());
-        size_t end = body.rfind(delimiter);
-        if ((end == std::string::npos) ||
-            (request.HasHeader("Expect") &&
-             request.GetHeaderValue("Expect") == "100-continue")) {
-            done = false;
-            return true;
-        }// "\r\n" before the delimiter and "--" after == 4
-        end = end > start ? end - 4 : body.size();
-        const std::string &to_write = body.substr(start, end - start);
-        if (Utils::AppendToFile(to_write,filename)) {
-            return true;
+
+    if (request.HasHeader("Expect") &&
+        request.GetHeaderValue("Expect") == "100-continue") {
+        // Body is too big to be sent in one chunk, so we need to read it by parts
+        // Keep track of size to be sure that it's not exceeding limit
+        size_t size = request.GetDeclaredBodySize();
+        while (!done) {
+            // ensure client that we are ready for the first part of data
+            if (!ServerResponse::TellClientToContinue(socket)) {
+                // can't send "HTTP/1.1 100 Continue" to given destination
+            }
+            try {
+                // read the first part
+                const std::string &body = request.ExtractBodyByParts(size, socket);
+                if (bound_pos != std::string::npos) {
+                    // body contains boundary delimiter, adjust start and end position
+                    size_t start = body.find(kHTTPEndBlock);
+                    start = (start == std::string::npos) ?
+                                              0 : start + kHTTPEndBlock.size();
+                    std::string delimiter = request.
+                                            GetHeaderValue("Content-Type").
+                                            substr(bound_pos + kBoundary.size());
+                    size_t end = body.rfind(delimiter);
+                    // "\r\n" before the delimiter and "--" after == 4
+                    if (end == std::string::npos || end <= start) {
+                        end = body.size();
+                    } else {
+                        end -= 4;
+                    }
+                    const std::string &to_write = body.substr(start, end - start);
+                    if (Utils::AppendToFile(to_write,filename)) {
+                        size -= body.size();
+                        done = end != body.size();
+                    }
+                } else {
+                    // body is simply a file
+                    if (Utils::AppendToFile(body, filename)) {
+                        // WRONG!
+                        done = request.GetDeclaredBodySize() == body.size();
+                        return true;
+                    }
+                }
+            } catch (const RequestBodySizeExceedsLimitException &) {
+                std::cout << "actual size of body redd is larger that what was expected" << std::endl;
+                return true;
+            }
         }
     } else {
-        // body is simply a file
-        if (Utils::AppendToFile(body, filename)) {
-            done = request.GetDeclaredBodySize() == body.size();
-            return true;
+        const std::string &body = request.GetBody();
+        if (bound_pos != std::string::npos) {
+            // body contains boundary delimiter
+            size_t start = body.find(kHTTPEndBlock) + kHTTPEndBlock.size();
+            std::string delimiter = request.GetHeaderValue("Content-Type").
+                    substr(bound_pos + kBoundary.size());
+            size_t end = body.rfind(delimiter);
+            // "\r\n" before the delimiter and "--" after == 4
+            end = end > start ? end - 4 : body.size();
+            const std::string &to_write = body.substr(start, end - start);
+            if (Utils::AppendToFile(to_write,filename)) {
+                done = end != body.size();
+                return true;
+            }
+        } else {
+            // body is simply a file
+            if (Utils::AppendToFile(body, filename)) {
+                // WRONG!
+                done = request.GetDeclaredBodySize() == body.size();
+                return true;
+            }
         }
+        return false;
     }
-    return false;
+    return true;
 }

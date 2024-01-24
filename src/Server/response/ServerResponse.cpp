@@ -25,8 +25,26 @@ ServerResponse::ServerResponse(const Location &synth,
     ComposeResponse(synth);
 }
 
+bool ServerResponse::TellClientToContinue(int socket) {
+    std::string response_string = ComposeTop(100) + "\r\n\r\n";
+    const char *response_buffer = response_string.c_str();
+    size_t response_size = response_string.size();
+
+    if (send(socket, response_buffer, response_size, 0) < 0)
+        return false;
+    return true;
+}
+
+std::string ServerResponse::ComposeTop(int return_code) {
+    std::ostringstream oss;
+
+    oss << kHttpVersion << " " << return_code << " ";
+    oss << Utils::GetCodeDescription(return_code);
+    return oss.str();
+}
+
 void ServerResponse::ComposeResponse(const Location &synth) {
-    top_header_ = ComposeTop(synth);
+    top_header_ = ComposeTop(synth.return_code_);
     if (synth.return_code_ == 100)
         return;
     AddHeader("Server", "WebServ");
@@ -81,14 +99,6 @@ void ServerResponse::GetDefinedErrorPage(const Location &synth) {
     } else {
         body_str_ = GeneratePage(synth.return_code_);
     }
-}
-
-std::string ServerResponse::ComposeTop(const Location &location) {
-    std::ostringstream oss;
-
-    oss << kHttpVersion << " " << location.return_code_ << " ";
-    oss << Utils::GetCodeDescription(location.return_code_);
-    return oss.str();
 }
 
 void ServerResponse::SendResponse(int dest) {

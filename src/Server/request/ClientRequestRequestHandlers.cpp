@@ -40,7 +40,32 @@ std::string ClientRequest::ExtractBody(size_t max_size, int socket,
     char buffer[buffer_size];
 
     while (true) {
-        // int bytes_read = recv(socket, buffer, buffer_size - 1, 0);
+//         int bytes_read = recv(socket, buffer, buffer_size - 1, 0);
+        int bytes_read = read(socket, buffer, buffer_size - 1);
+        if (bytes_read < 0) {
+            throw ReadFromSocketFailedException();
+        } else if (bytes_read > 0) {
+            // Null-terminate the buffer
+            buffer[bytes_read] = '\0';
+            // Find the end of the line
+            body += std::string(buffer);
+            if (body.size() > max_size)
+                ThrowException("request body size exceeds limit ",
+                               "BodyIsTooLarge");
+        }
+        // Nothing (left) to read
+        if (bytes_read < buffer_size - 1)
+            return body;
+    }
+}
+
+std::string ClientRequest::ExtractBodyByParts(size_t max_size, int socket,
+                                              int buffer_size) const {
+    char        buffer[buffer_size];
+    std::string body;
+
+    while (true) {
+//         int bytes_read = recv(socket, buffer, buffer_size - 1, 0);
         int bytes_read = read(socket, buffer, buffer_size - 1);
         if (bytes_read < 0) {
             throw ReadFromSocketFailedException();

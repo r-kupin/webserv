@@ -153,7 +153,7 @@ void Server::HandleClientRequest(int client_sock) {
     try {
         request.Init(client_sock);
         std::cout << "Got client request:\n" << request << std::endl;
-        response_location = SynthesizeHandlingLocation(request);
+        response_location = SynthesizeHandlingLocation(request, client_sock);
         response.ComposeResponse(response_location);
         std::cout << "Prepared response:\n" << response << std::endl;
         response.SendResponse(client_sock);
