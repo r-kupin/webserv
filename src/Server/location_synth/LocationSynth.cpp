@@ -223,7 +223,7 @@ size_t write_file_data(const std::string &body,
             // "\r\n" before the delimiter and "--" after == 4
             end -= 4;
         }
-        file << body.substr(start, end - start);
+        file.write(body.substr(start, end - start).c_str(), end - start);
     }
     return body.size();
 }
@@ -240,7 +240,7 @@ bool Server::UploadFromCURL(const ClientRequest &request,
         return false;
     if (bound_pos != std::string::npos) {
         std::string delimiter = content_type.substr(bound_pos + kBoundary.size());
-        size -= write_file_data(request.GetBody(), delimiter, file);
+        char        buffer[BUFFER_SIZE];
         if (request.HasHeader("Expect") &&
             request.GetHeaderValue("Expect") == "100-continue") {
             // ensure client that we are ready for the first part of data
@@ -248,14 +248,28 @@ bool Server::UploadFromCURL(const ClientRequest &request,
                 // can't send "HTTP/1.1 100 Continue" to given destination
                 return false;
             }
+            int bytes_read = read(socket, buffer, BUFFER_SIZE - 1);
+            if (bytes_read <= 0) {
+                // should have body
+                return false;
+            }
+            buffer[bytes_read] = '\0';
+            size -= write_file_data(std::string(buffer), delimiter, file);
+        } else {
+            size -= write_file_data(request.GetBody(), delimiter, file);
         }
-        char    buffer[BUFFER_SIZE];
         while (size > 0) {
-            int bytes_read = read(socket, buffer, BUFFER_SIZE);
+            int bytes_read = read(socket, buffer, BUFFER_SIZE - 1);
             if (bytes_read < 0) {
                 return false;
             } else if (bytes_read > 0) {
-                file.write(buffer, bytes_read);
+                buffer[bytes_read] = '\0';
+                std::string buff(buffer);
+                if (buff.find(delimiter) != std::string::npos) {
+                    write_file_data(buff, delimiter, file);
+                } else {
+                    file.write(buffer, bytes_read);
+                }
             }
             size -= bytes_read;
         }
