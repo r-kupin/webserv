@@ -12,6 +12,7 @@
 
 #include <iostream>
 #include <algorithm>
+#include <csignal>
 #include "../ServerExceptions.h"
 #include "../request/RequestExceptions.h"
 
@@ -182,7 +183,7 @@ Server::UploadFile(const ClientRequest &request, l_loc_c_it found, bool &done,
         dirname = config_.GetConstRoot().root_ + "/" + found->uploads_path_;
 
     std::string filename(dirname + "/" + Utils::NbrToString(files_uploaded_));
-    if (request.HasHeader("User-Agent")) {
+    if (request.HasHeader("User-Agent") && request.HasHeader("Content-Type")) {
         if (CanCreateFile(dirname, filename, request.GetDeclaredBodySize())) {
             if (request.IsCurlRequest()) {
                 if (UploadFromCURL(request, filename, done, socket)) {
@@ -204,81 +205,182 @@ Server::UploadFile(const ClientRequest &request, l_loc_c_it found, bool &done,
     return false;
 }
 
+size_t write_file_data(const std::string &body,
+                       const std::string &delimiter, std::ofstream &file) {
+    if (!body.empty()) {
+        size_t start = body.find(delimiter);
+        if (start == std::string::npos) {
+            start = 0;
+        } else {
+            start = body.substr(start).find(kHTTPEndBlock) +
+                    kHTTPEndBlock.size() + 2;
+        }
+
+        size_t end = body.rfind(delimiter);
+        if (end == std::string::npos || end <= start) {
+            end = body.size();
+        } else {
+            // "\r\n" before the delimiter and "--" after == 4
+            end -= 4;
+        }
+        file << body.substr(start, end - start);
+    }
+    return body.size();
+}
+
 bool Server::UploadFromCURL(const ClientRequest &request,
                             const std::string &filename, bool &done,
                             int socket) {
-    size_t bound_pos = request.GetHeaderValue("Content-Type").find(kBoundary);
-
-    if (request.HasHeader("Expect") &&
-        request.GetHeaderValue("Expect") == "100-continue") {
-        // Body is too big to be sent in one chunk, so we need to read it by parts
-        // Keep track of size to be sure that it's not exceeding limit
-        size_t size = request.GetDeclaredBodySize();
-        while (!done) {
+    const std::string   &content_type = request.GetHeaderValue("Content-Type");
+    size_t              bound_pos = content_type.find(kBoundary);
+    size_t              size = request.GetDeclaredBodySize();
+    // Open the file in append mode. todo: check it's open and good
+    std::ofstream       file(filename.c_str(), std::ios::app);
+    if (!file.is_open())
+        return false;
+    if (bound_pos != std::string::npos) {
+        std::string delimiter = content_type.substr(bound_pos + kBoundary.size());
+        size -= write_file_data(request.GetBody(), delimiter, file);
+        if (request.HasHeader("Expect") &&
+            request.GetHeaderValue("Expect") == "100-continue") {
             // ensure client that we are ready for the first part of data
             if (!ServerResponse::TellClientToContinue(socket)) {
                 // can't send "HTTP/1.1 100 Continue" to given destination
-            }
-            try {
-                // read the first part
-                const std::string &body = request.ExtractBodyByParts(size, socket);
-                if (bound_pos != std::string::npos) {
-                    // body contains boundary delimiter, adjust start and end position
-                    size_t start = body.find(kHTTPEndBlock);
-                    start = (start == std::string::npos) ?
-                                              0 : start + kHTTPEndBlock.size();
-                    std::string delimiter = request.
-                                            GetHeaderValue("Content-Type").
-                                            substr(bound_pos + kBoundary.size());
-                    size_t end = body.rfind(delimiter);
-                    // "\r\n" before the delimiter and "--" after == 4
-                    if (end == std::string::npos || end <= start) {
-                        end = body.size();
-                    } else {
-                        end -= 4;
-                    }
-                    const std::string &to_write = body.substr(start, end - start);
-                    if (Utils::AppendToFile(to_write,filename)) {
-                        size -= body.size();
-                        done = end != body.size();
-                    }
-                } else {
-                    // body is simply a file
-                    if (Utils::AppendToFile(body, filename)) {
-                        // WRONG!
-                        done = request.GetDeclaredBodySize() == body.size();
-                        return true;
-                    }
-                }
-            } catch (const RequestBodySizeExceedsLimitException &) {
-                std::cout << "actual size of body redd is larger that what was expected" << std::endl;
-                return true;
+                return false;
             }
         }
-    } else {
-        const std::string &body = request.GetBody();
-        if (bound_pos != std::string::npos) {
-            // body contains boundary delimiter
-            size_t start = body.find(kHTTPEndBlock) + kHTTPEndBlock.size();
-            std::string delimiter = request.GetHeaderValue("Content-Type").
-                    substr(bound_pos + kBoundary.size());
-            size_t end = body.rfind(delimiter);
-            // "\r\n" before the delimiter and "--" after == 4
-            end = end > start ? end - 4 : body.size();
-            const std::string &to_write = body.substr(start, end - start);
-            if (Utils::AppendToFile(to_write,filename)) {
-                done = end != body.size();
-                return true;
+        char    buffer[BUFFER_SIZE];
+        while (size > 0) {
+            int bytes_read = read(socket, buffer, BUFFER_SIZE);
+            if (bytes_read < 0) {
+                return false;
+            } else if (bytes_read > 0) {
+                file.write(buffer, bytes_read);
             }
-        } else {
-            // body is simply a file
-            if (Utils::AppendToFile(body, filename)) {
-                // WRONG!
-                done = request.GetDeclaredBodySize() == body.size();
-                return true;
-            }
+            size -= bytes_read;
         }
-        return false;
+        done = true;
+        file.close();
+        return true;
     }
     return true;
 }
+
+//bool Server::UploadFromCURL(const ClientRequest &request,
+//                            const std::string &filename, bool &done,
+//                            int socket) {
+//    const std::string   &content_type = request.GetHeaderValue("Content-Type");
+//    size_t              bound_pos = content_type.find(kBoundary);
+//    size_t              size = request.GetDeclaredBodySize();
+//    // Open the file in append mode. todo: check it's open and good
+//    std::ofstream       file(filename.c_str(), std::ios::app);
+//    if (!file.is_open())
+//        return false;
+//    if (bound_pos != std::string::npos) {
+//        std::string delimiter = content_type.substr(bound_pos + kBoundary.size());
+//        size -= write_file_data(request.GetBody(), delimiter, file);
+//        if (request.HasHeader("Expect") &&
+//            request.GetHeaderValue("Expect") == "100-continue") {
+//            // ensure client that we are ready for the first part of data
+//            if (!ServerResponse::TellClientToContinue(socket)) {
+//                // can't send "HTTP/1.1 100 Continue" to given destination
+//                return false;
+//            }
+//        }
+//        while (size > 0) {
+//            size -= write_file_data(request.ReadBodyPart(size, socket),
+//                                    delimiter, file);
+//            std::cout << size << "\n";
+//            if (!file)
+//                return false;
+//        }
+//        done = true;
+//        file.close();
+//        return true;
+//    }
+//    return true;
+//}
+
+//bool Server::UploadFromCURL(const ClientRequest &request,
+//                            const std::string &filename, bool &done,
+//                            int socket) {
+//    size_t bound_pos = request.GetHeaderValue("Content-Type").find(kBoundary);
+//    std::string delimiter;
+//    if (bound_pos != std::string::npos) {
+//        // body contains boundary delimiter, adjust start and end position
+//        delimiter = request.GetHeaderValue("Content-Type").substr(bound_pos +
+//                                                                  kBoundary.size());
+//    }
+//    if (request.HasHeader("Expect") &&
+//        request.GetHeaderValue("Expect") == "100-continue") {
+//        // Body is too big to be sent in one chunk, so we need to read it by parts
+//        // Keep track of size to be sure that it's not exceeding limit
+//        size_t size = request.GetDeclaredBodySize();
+//        while (!done) {
+//            // ensure client that we are ready for the first part of data
+//            if (!ServerResponse::TellClientToContinue(socket)) {
+//                // can't send "HTTP/1.1 100 Continue" to given destination
+//            }
+////            sleep(1);
+//            try {
+//                std::stringstream *ss = new std::stringstream();
+//                for (size_t bytes_red = 1; bytes_red != 0; ) {
+//                    // read the first part
+//                    const std::string &body = request.ExtractBodyByParts(size,
+//                                                                         socket);
+//                    // body contains boundary delimiter, adjust start and end position
+//                    size_t start = body.find(delimiter);
+//                    start = (start == std::string::npos) ?
+//                            0 : body.substr(start).find(kHTTPEndBlock) +
+//                                kHTTPEndBlock.size();
+//
+//                    size_t end = body.rfind(delimiter);
+//                    // "\r\n" before the delimiter and "--" after == 4
+//                    end = (end == std::string::npos || end <= start) ?
+//                          body.size() : end - 4;
+//                    done = end != body.size();
+//                    *ss << body.substr(start, end - start);
+//                    bytes_red = body.size();
+//                    std::cout << "red " << bytes_red << "\n";
+//                }
+//                if (Utils::AppendToFile(ss->str(),filename)) {
+//                    size -= ss->str().size();
+//                    delete ss;
+//                }
+//                size_t uploaded = request.GetDeclaredBodySize() - size;
+//                std::cout << uploaded << " done (" <<
+//                          (uploaded / request
+//                                  .GetDeclaredBodySize()) *
+//                          100 << "%)" << std::endl;
+//            } catch (const RequestBodySizeExceedsLimitException &) {
+//                std::cout << "actual size of body redd is larger that what was expected" << std::endl;
+//                return true;
+//            }
+//        }
+//    } else {
+////        const std::string &body = request.GetBody();
+////        if (bound_pos != std::string::npos) {
+////            // body contains boundary delimiter
+////            size_t start = body.find(kHTTPEndBlock) + kHTTPEndBlock.size();
+////            std::string delimiter = request.GetHeaderValue("Content-Type").
+////                    substr(bound_pos + kBoundary.size());
+////            size_t end = body.rfind(delimiter);
+////            // "\r\n" before the delimiter and "--" after == 4
+////            end = end > start ? end - 4 : body.size();
+////            const std::string &to_write = body.substr(start, end - start);
+////            if (Utils::AppendToFile(to_write,filename)) {
+////                done = end != body.size();
+////                return true;
+////            }
+////        } else {
+////            // body is simply a file
+////            if (Utils::AppendToFile(body, filename)) {
+////                // WRONG!
+////                done = request.GetDeclaredBodySize() == body.size();
+////                return true;
+////            }
+////        }
+////        return false;
+//    }
+//    return true;
+//}

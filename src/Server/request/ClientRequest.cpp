@@ -80,7 +80,7 @@ v_str ClientRequest::ReadFromSocket(int socket, std::string &body, int buffer_si
         line += std::string(buffer);
 
         while (!line.empty()) {
-            unsigned long line_break = line.find_first_of("\n\r");
+            unsigned long line_break = line.find("\r\n");
             std::string subline = line.substr(0, line_break);
             if (subline.empty()) {
                 // start of body section

@@ -1,6 +1,7 @@
 #include <csignal>
 #include <iostream>
 #include <algorithm>
+#include <sstream>
 #include "ClientRequest.h"
 #include "RequestExceptions.h"
 
@@ -32,38 +33,16 @@ void ClientRequest::ExtractBody(size_t max_size) {
     body_ = ExtractBody(max_size, socket_, body_);
 }
 
-std::string ClientRequest::ExtractBody(size_t max_size, int socket,
-                                       std::string &body, int buffer_size) {
-    if (body.size() > max_size)
-        ThrowException("request body size exceeds limit ",
-                       "BodyIsTooLarge");
-    char buffer[buffer_size];
-
-    while (true) {
-//         int bytes_read = recv(socket, buffer, buffer_size - 1, 0);
-        int bytes_read = read(socket, buffer, buffer_size - 1);
-        if (bytes_read < 0) {
-            throw ReadFromSocketFailedException();
-        } else if (bytes_read > 0) {
-            // Null-terminate the buffer
-            buffer[bytes_read] = '\0';
-            // Find the end of the line
-            body += std::string(buffer);
-            if (body.size() > max_size)
-                ThrowException("request body size exceeds limit ",
-                               "BodyIsTooLarge");
-        }
-        // Nothing (left) to read
-        if (bytes_read < buffer_size - 1)
-            return body;
-    }
+std::string ClientRequest::ExtractBody(size_t size, int socket,
+                                       std::string &body, int buffer_size) const {
+    return body + ReadBodyPart(size - body.size(), socket, buffer_size);
 }
 
-std::string ClientRequest::ExtractBodyByParts(size_t max_size, int socket,
-                                              int buffer_size) const {
-    char        buffer[buffer_size];
-    std::string body;
-
+std::string ClientRequest::ReadBodyPart(size_t size, int socket,
+                                        int buffer_size) const {
+    char                buffer[buffer_size];
+    std::stringstream   ss;
+    size_t              current_body_size = 0;
     while (true) {
 //         int bytes_read = recv(socket, buffer, buffer_size - 1, 0);
         int bytes_read = read(socket, buffer, buffer_size - 1);
@@ -73,14 +52,17 @@ std::string ClientRequest::ExtractBodyByParts(size_t max_size, int socket,
             // Null-terminate the buffer
             buffer[bytes_read] = '\0';
             // Find the end of the line
-            body += std::string(buffer);
-            if (body.size() > max_size)
+            current_body_size += bytes_read;
+            if (current_body_size > size) {
                 ThrowException("request body size exceeds limit ",
                                "BodyIsTooLarge");
+            } else {
+                ss << std::string(buffer);
+            }
         }
         // Nothing (left) to read
         if (bytes_read < buffer_size - 1)
-            return body;
+            return ss.str();
     }
 }
 

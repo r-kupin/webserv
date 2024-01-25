@@ -66,8 +66,10 @@ public:
     const std::string   &GetFragment() const;
     void                SetMethod(Methods method);
 
-    std::string         ExtractBodyByParts(size_t max_size, int socket,
-                                           int buffer_size = BUFFER_SIZE) const;
+    std::string         ExtractBody(size_t size, int socket, std::string &body,
+                                    int buffer_size = BUFFER_SIZE) const;
+    std::string         ReadBodyPart(size_t size, int socket,
+                                     int buffer_size = BUFFER_SIZE) const;
 protected:
 //-------------------socket-level-----------------------------------------------
     v_str       ReadFromSocket(int socket, std::string &body,
@@ -88,8 +90,6 @@ protected:
     void        FillUrlParams(const std::string &url);
     std::string ExtractFragment(const std::string& url);
     std::string ExtractLastAddrStep(const std::string& address);
-    std::string ExtractBody(size_t max_size, int socket, std::string &body,
-                            int buffer_size = BUFFER_SIZE);
 
     void        ThrowException(const std::string& msg,
                                const std::string &e) const;
