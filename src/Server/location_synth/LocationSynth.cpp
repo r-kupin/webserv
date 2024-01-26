@@ -13,6 +13,10 @@
 #include <iostream>
 #include <algorithm>
 #include <csignal>
+#include <sstream>
+#include <bits/fcntl-linux.h>
+#include <fcntl.h>
+#include <cstring>
 #include "../ServerExceptions.h"
 #include "../request/RequestExceptions.h"
 
@@ -205,27 +209,44 @@ Server::UploadFile(const ClientRequest &request, l_loc_c_it found, bool &done,
     return false;
 }
 
-size_t write_file_data(const std::string &body,
-                       const std::string &delimiter, std::ofstream &file) {
-    if (!body.empty()) {
-        size_t start = body.find(delimiter);
-        if (start == std::string::npos) {
-            start = 0;
-        } else {
-            start = body.substr(start).find(kHTTPEndBlock) +
-                    kHTTPEndBlock.size() + 2;
-        }
+const int MAX_HEADERS_SIZE = 4096;
 
-        size_t end = body.rfind(delimiter);
-        if (end == std::string::npos || end <= start) {
-            end = body.size();
-        } else {
-            // "\r\n" before the delimiter and "--" after == 4
-            end -= 4;
-        }
-        file.write(body.substr(start, end - start).c_str(), end - start);
+void saveBinaryDataToFile(int socketFD) {
+    char headers[MAX_HEADERS_SIZE];
+    char buffer[1024];
+
+    // Read the HTTP headers
+    ssize_t bytesRead = recv(socketFD, headers, sizeof(headers) - 1, 0);
+    if (bytesRead <= 0) {
+        std::cerr << "Error reading HTTP headers" << std::endl;
+        return;
     }
-    return body.size();
+
+    headers[bytesRead] = '\0';
+
+    // Find the start and end of binary data
+    const char* binaryDataStart = strstr(headers, "\r\n\r\n");
+    const char* binaryDataEnd = strstr(binaryDataStart, "\r\n----------------");
+
+    if (!binaryDataStart || !binaryDataEnd) {
+        std::cerr << "Error: Binary data not found in HTTP request" << std::endl;
+        return;
+    }
+
+    binaryDataStart += 4; // Move past the "\r\n\r\n" delimiter
+
+    // Open a file to save the binary data
+    std::ofstream outputFile("output.bin", std::ios::binary);
+    if (!outputFile.is_open()) {
+        std::cerr << "Error opening output file" << std::endl;
+        return;
+    }
+
+    // Write the binary data to the file
+    outputFile.write(binaryDataStart, binaryDataEnd - binaryDataStart);
+    outputFile.close();
+
+    std::cout << "Binary data saved to output.bin" << std::endl;
 }
 
 bool Server::UploadFromCURL(const ClientRequest &request,
@@ -238,35 +259,103 @@ bool Server::UploadFromCURL(const ClientRequest &request,
     std::ofstream       file(filename.c_str(), std::ios::app);
     if (!file.is_open())
         return false;
+
     if (bound_pos != std::string::npos) {
         std::string delimiter = content_type.substr(bound_pos + kBoundary.size());
-        char        buffer[BUFFER_SIZE];
         if (request.HasHeader("Expect") &&
-            request.GetHeaderValue("Expect") == "100-continue") {
+             request.GetHeaderValue("Expect") == "100-continue") {
             // ensure client that we are ready for the first part of data
             if (!ServerResponse::TellClientToContinue(socket)) {
                 // can't send "HTTP/1.1 100 Continue" to given destination
                 return false;
             }
-            int bytes_read = read(socket, buffer, BUFFER_SIZE - 1);
+        }
+        if (request.GetBody().empty()) {
+
+           char                buffer[REQUEST_BODY_METADATA_BUFFER_SIZE];
+           std::stringstream   ss;
+           int bytes_read = read(socket, buffer,
+                                 REQUEST_BODY_METADATA_BUFFER_SIZE - 1);
+
+           if (bytes_read <= 0) {
+               // should have body
+               return false;
+           }
+           buffer[bytes_read] = '\0';
+           ss << buffer;
+           while (!ss.str().empty() &&
+                   ss.str().find(delimiter) == std::string::npos &&
+                   bytes_read > 0) {
+               bytes_read = read(socket, buffer,
+                                 REQUEST_BODY_METADATA_BUFFER_SIZE - 1);
+               buffer[bytes_read] = '\0';
+               ss << buffer;
+           }
+           while (!ss.str().empty() &&
+                   ss.str().find(delimiter) != std::string::npos &&
+                   ss.str().find(kHTTPEndBlock) == std::string::npos &&
+                   bytes_read > 0) {
+               bytes_read = read(socket, buffer,
+                                 REQUEST_BODY_METADATA_BUFFER_SIZE - 1);
+               buffer[bytes_read] = '\0';
+               ss << buffer;
+           }
+           if (bytes_read <= 0) {
+               // should have body
+               return false;
+           }
+           const std::string &file_metadata = ss.str();
+           size_t file_starts = file_metadata.find(kHTTPEndBlock) +
+                                                         kHTTPEndBlock.size();
+           const std::string &file_part = file_metadata.substr(file_starts);
+           size -= file_metadata.size();
+           file.write(file_part.c_str(), file_part.size());
+        } else {
+            char                buffer[REQUEST_BODY_METADATA_BUFFER_SIZE];
+            std::stringstream   ss;
+
+            int                 bytes_read = request.GetBody().empty();
+            ss << request.GetBody();
+            while (!ss.str().empty() &&
+                   ss.str().find(delimiter) == std::string::npos &&
+                   bytes_read > 0) {
+                bytes_read = read(socket, buffer,
+                                  REQUEST_BODY_METADATA_BUFFER_SIZE - 1);
+                buffer[bytes_read] = '\0';
+                ss << buffer;
+            }
+            while (!ss.str().empty() &&
+                   ss.str().find(delimiter) != std::string::npos &&
+                   ss.str().find(kHTTPEndBlock) == std::string::npos &&
+                   bytes_read > 0) {
+                bytes_read = read(socket, buffer,
+                                  REQUEST_BODY_METADATA_BUFFER_SIZE - 1);
+                buffer[bytes_read] = '\0';
+                ss << buffer;
+            }
             if (bytes_read <= 0) {
                 // should have body
                 return false;
             }
-            buffer[bytes_read] = '\0';
-            size -= write_file_data(std::string(buffer), delimiter, file);
-        } else {
-            size -= write_file_data(request.GetBody(), delimiter, file);
+            const std::string &file_metadata = ss.str();
+            size_t file_starts = file_metadata.find(kHTTPEndBlock) +
+                                 kHTTPEndBlock.size();
+            const std::string &file_part = file_metadata.substr(file_starts);
+            size -= file_metadata.size();
+            file.write(file_part.c_str(), file_part.size());
         }
+        char buffer[REQUEST_BODY_FILE_BUFFER_SIZE];
         while (size > 0) {
-            int bytes_read = read(socket, buffer, BUFFER_SIZE - 1);
+            int bytes_read = read(socket, buffer, 
+                                  REQUEST_BODY_FILE_BUFFER_SIZE - 1);
             if (bytes_read < 0) {
                 return false;
             } else if (bytes_read > 0) {
                 buffer[bytes_read] = '\0';
                 std::string buff(buffer);
-                if (buff.find(delimiter) != std::string::npos) {
-                    write_file_data(buff, delimiter, file);
+                size_t end_file_content = buff.find(delimiter);
+                if (end_file_content != std::string::npos) {
+                    file.write(buffer, end_file_content - 4);
                 } else {
                     file.write(buffer, bytes_read);
                 }

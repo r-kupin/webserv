@@ -33,7 +33,9 @@
  *  corresponding section on the webpage.
  */
 
-#define BUFFER_SIZE 1024
+#define REQUEST_BUFFER_SIZE 64
+#define REQUEST_BODY_METADATA_BUFFER_SIZE 16
+#define REQUEST_BODY_FILE_BUFFER_SIZE 1024
 
 #include <string>
 #include <netinet/in.h>
@@ -67,13 +69,13 @@ public:
     void                SetMethod(Methods method);
 
     std::string         ExtractBody(size_t size, int socket, std::string &body,
-                                    int buffer_size = BUFFER_SIZE) const;
+                                    int buffer_size = REQUEST_BUFFER_SIZE) const;
     std::string         ReadBodyPart(size_t size, int socket,
-                                     int buffer_size = BUFFER_SIZE) const;
+                                     int buffer_size = REQUEST_BUFFER_SIZE) const;
 protected:
 //-------------------socket-level-----------------------------------------------
     v_str       ReadFromSocket(int socket, std::string &body,
-                               int buffer_size = BUFFER_SIZE);
+                               int buffer_size = REQUEST_BUFFER_SIZE);
 //-------------------vector-of-strings parsed input level----------------------
     void        CheckRequest(const v_str &request);
     bool        HasHeaders(const v_str &request);
