@@ -55,6 +55,9 @@ public:
     static std::string  NbrToString(size_t n);
     static size_t       StringToNbr(const std::string & str);
     static std::string  NiceTimestamp();
+    static size_t
+    FindInBuffer(const char *buffer, size_t buffer_size,
+                 const std::string &pattern);
 
     static bool         IsErrorCode(int code);
     static bool         IsOKCode(int code);

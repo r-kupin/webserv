@@ -182,6 +182,22 @@ std::string Utils::NiceTimestamp() {
     return buffer;
 }
 
+size_t
+Utils::FindInBuffer(const char *buffer, size_t buffer_size,
+                    const std::string &pattern) {
+    for (size_t i = 0; i < buffer_size; ++i) {
+        size_t j = 0;
+        while (j < pattern.size() && i < buffer_size &&
+                buffer[i] == pattern[j]) {
+            ++j;
+            ++i;
+        }
+        if (j == pattern.size())
+            return i - j;
+    }
+    return std::string::npos;;
+}
+
 size_t Utils::StringToNbr(const std::string &str) {
     char* end_ptr;
     const char* val_ptr = str.c_str();

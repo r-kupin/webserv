@@ -67,7 +67,6 @@ v_str ClientRequest::ReadFromSocket(int socket, std::string &body, int buffer_si
     std::string line;
     v_str request;
 
-    (void)body;
     while (true) {
         // int bytes_read = recv(socket, buffer, buffer_size - 1, 0);
         int bytes_read = read(socket, buffer, buffer_size - 1);
@@ -85,13 +84,10 @@ v_str ClientRequest::ReadFromSocket(int socket, std::string &body, int buffer_si
             std::string subline = line.substr(0, line_break);
             if (subline.empty()) {
                 // start of body section
-//                body = line.substr(line_break + 2);
-//                return request;
-                std::cout << "\\r\\n" << std::endl;
-            } else {
-                std::cout << subline << "\\r\\n" << std::endl;
-//            request.push_back(sanitize_input(subline));
+                body = line.substr(line_break + 2);
+                return request;
             }
+            request.push_back(sanitize_input(subline));
             line = line.substr(line_break + 2);
             line_break = line.find("\r\n");
         }

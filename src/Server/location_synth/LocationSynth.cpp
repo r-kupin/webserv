@@ -14,11 +14,8 @@
 #include <algorithm>
 #include <csignal>
 #include <sstream>
-#include <bits/fcntl-linux.h>
-#include <fcntl.h>
 #include <cstring>
 #include "../ServerExceptions.h"
-#include "../request/RequestExceptions.h"
 
 const static std::string kHTTPEndBlock = "\r\n\r\n";
 const static std::string kHTTPNewline = "\r\n";
@@ -213,7 +210,6 @@ const int MAX_HEADERS_SIZE = 4096;
 
 void saveBinaryDataToFile(int socketFD) {
     char headers[MAX_HEADERS_SIZE];
-    char buffer[1024];
 
     // Read the HTTP headers
     ssize_t bytesRead = recv(socketFD, headers, sizeof(headers) - 1, 0);
@@ -351,11 +347,9 @@ bool Server::UploadFromCURL(const ClientRequest &request,
             if (bytes_read < 0) {
                 return false;
             } else if (bytes_read > 0) {
-                buffer[bytes_read] = '\0';
-                std::string buff(buffer);
-                size_t end_file_content = buff.find(delimiter);
-                if (end_file_content != std::string::npos) {
-                    file.write(buffer, end_file_content - 4);
+                size_t end = Utils::FindInBuffer(buffer, bytes_read, "\r\n--" + delimiter);
+                if (end != std::string::npos) {
+                    file.write(buffer, end);
                 } else {
                     file.write(buffer, bytes_read);
                 }
