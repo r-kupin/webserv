@@ -22,7 +22,7 @@ Config::Config(const Config &other)
 
 /**
  * @brief Creating a config from file
- * 1. Try to open config file. At first step we are looking for the failbit
+ * 1. TryCreateOutputFile to open config file. At first step we are looking for the failbit
  *    only, because this bit get's set if we are unable to open the file. If
  *    failed - @throw ConfigFileNotFound
  * 2. Once config successfully opened we perform minimal NGINX syntax check.

@@ -18,7 +18,6 @@
 #include "../request/ClientRequest.h"
 
 const static std::string&  kHttpVersion = "HTTP/1.1";
-const static size_t        kBufferSize = 1024;
 
 class ServerResponse {
 public:

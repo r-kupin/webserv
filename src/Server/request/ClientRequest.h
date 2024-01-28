@@ -33,15 +33,15 @@
  *  corresponding section on the webpage.
  */
 
-#define REQUEST_BUFFER_SIZE 64
-#define REQUEST_BODY_METADATA_BUFFER_SIZE 16
-#define REQUEST_BODY_FILE_BUFFER_SIZE 1024
-
 #include <string>
 #include <netinet/in.h>
 #include <vector>
 #include <map>
 #include "../../Config/location/LimitExcept.h"
+
+static const size_t kBufferSize = 64;
+static const size_t kMetadataBufferSize = 16;
+static const size_t kFileBufferSize = 1048576; // 32^4
 
 class ClientRequest {
 public:
@@ -56,7 +56,7 @@ public:
     Methods             GetMethod() const;
     const std::string   &GetAddress() const;
     const std::string   &GetLastStepUri() const;
-    const std::string   &GetBody() const;
+    const v_char & GetBody() const;
     const m_str_str     &GetParams() const;
     const m_str_str     &GetHeaders() const;
     bool                HasHeader(const std::string &key) const;
@@ -69,13 +69,13 @@ public:
     void                SetMethod(Methods method);
 
     std::string         ExtractBody(size_t size, int socket, std::string &body,
-                                    int buffer_size = REQUEST_BUFFER_SIZE) const;
+                                    int buffer_size = kBufferSize) const;
     std::string         ReadBodyPart(size_t size, int socket,
-                                     int buffer_size = REQUEST_BUFFER_SIZE) const;
+                                     int buffer_size = kBufferSize) const;
 protected:
 //-------------------socket-level-----------------------------------------------
-    v_str       ReadFromSocket(int socket, std::string &body,
-                               int buffer_size = REQUEST_BUFFER_SIZE);
+    v_str       ReadFromSocket(int socket, v_char &body,
+                               int buffer_size = kBufferSize);
 //-------------------vector-of-strings parsed input level----------------------
     void        CheckRequest(const v_str &request);
     bool        HasHeaders(const v_str &request);
@@ -100,7 +100,7 @@ private:
     std::string                         addr_;
     std::string                         addr_last_step_;
     bool                                index_request_;
-    std::string                         body_;
+    v_char                              body_;
     std::string                         fragment_;
     m_str_str                           params_;
     m_str_str                           headers_;

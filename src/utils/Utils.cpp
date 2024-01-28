@@ -156,18 +156,6 @@ std::string Utils::FileToString(const std::string &address) {
                        std::istreambuf_iterator<char>());
 }
 
-bool Utils::AppendToFile(const std::string &data, const std::string &address) {
-    // Open the file in append mode
-    std::ofstream file(address.c_str(), std::ios::app);
-    if (!file.is_open())
-        return false;
-    file << data;
-    if (!file)
-        return false;
-    file.close();
-    return true;
-}
-
 std::string Utils::NiceTimestamp() {
     time_t timestamp = std::time(NULL);
     struct tm *timeinfo = gmtime(&timestamp);
@@ -182,9 +170,8 @@ std::string Utils::NiceTimestamp() {
     return buffer;
 }
 
-size_t
-Utils::FindInBuffer(const char *buffer, size_t buffer_size,
-                    const std::string &pattern) {
+size_t  Utils::FindInBuffer(const char *buffer, size_t buffer_size,
+                            const std::string &pattern) {
     for (size_t i = 0; i < buffer_size; ++i) {
         size_t j = 0;
         while (j < pattern.size() && i < buffer_size &&
@@ -195,7 +182,22 @@ Utils::FindInBuffer(const char *buffer, size_t buffer_size,
         if (j == pattern.size())
             return i - j;
     }
-    return std::string::npos;;
+    return std::string::npos;
+}
+
+size_t  Utils::FindInCharVect(const std::vector<char> &buffer,
+                              const std::string &pattern) {
+    for (size_t i = 0; i < buffer.size(); ++i) {
+        size_t j = 0;
+        while (j < pattern.size() && i < buffer.size() &&
+                buffer[i] == pattern[j]) {
+            ++j;
+            ++i;
+        }
+        if (j == pattern.size())
+            return i - j;
+    }
+    return std::string::npos;
 }
 
 size_t Utils::StringToNbr(const std::string &str) {

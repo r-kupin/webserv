@@ -20,6 +20,10 @@
 #include "../Config/config/Config.h"
 #include "response/ServerResponse.h"
 
+ const static std::string kHTTPEndBlock = "\r\n\r\n";
+ const static std::string kHTTPNewline = "\r\n";
+ const static std::string kBoundary = "boundary=";
+
  class Server {
 public:
     class ServerException : public std::exception {};
@@ -68,14 +72,12 @@ protected:
                                           int fs_status,
                                           const std::string &request_address) const;
     bool RequestBodyExceedsLimit(l_loc_c_it found, ClientRequest &request);
-    bool UploadFile(const ClientRequest &request, l_loc_c_it found, bool &done,
-                    int socket);
+    bool UploadFile(const ClientRequest &request, l_loc_c_it found, int socket);
     bool UploadFromCURL(const ClientRequest &request,
-                        const std::string &filename, bool &done,
-                        int socket);
-    bool                        CanCreateFile(const std::string &dir,
-                                              const std::string &filename,
-                                              size_t size);
+                        const std::string &filename, int socket);
+    bool                        TryCreateOutputFile(const std::string &dir,
+                                                    const std::string &filename,
+                                                    size_t size) const;
 private:
     const ServerConfiguration   &config_;
     int                         socket_;

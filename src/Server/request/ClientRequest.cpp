@@ -62,40 +62,72 @@ void ClientRequest::Init(int client_sock) {
  * @param socket
  * @return
  */
-v_str ClientRequest::ReadFromSocket(int socket, std::string &body, int buffer_size) {
-    char buffer[buffer_size];
-    std::string line;
-    v_str request;
+v_str ClientRequest::ReadFromSocket(int socket, v_char &body, int buffer_size) {
+    char                buffer[buffer_size];
+    std::vector<char>   storage;
+    v_str               request;
 
     while (true) {
         // int bytes_read = recv(socket, buffer, buffer_size - 1, 0);
-        int bytes_read = read(socket, buffer, buffer_size - 1);
-
+        int bytes_read = read(socket, buffer, buffer_size);
         if (bytes_read <= 0)
             throw ReadFromSocketFailedException();
+        storage.insert(storage.end(), buffer, buffer + bytes_read);
 
-        buffer[bytes_read] = '\0';  // Null-terminate the buffer
+        size_t line_break = Utils::FindInCharVect(storage, "\r\n");
 
-        // Find the end of the line
-        line += std::string(buffer);
-        unsigned long line_break = line.find("\r\n");
-
-        while (!line.empty() && line_break != std::string::npos) {
-            std::string subline = line.substr(0, line_break);
-            if (subline.empty()) {
+        while (!storage.empty() && line_break != std::string::npos) {
+            v_char header_line(storage.begin(), storage.begin() + line_break);
+            if (header_line.empty()) {
                 // start of body section
-                body = line.substr(line_break + 2);
+                body = v_char(storage.begin(), storage.end());
                 return request;
             }
-            request.push_back(sanitize_input(subline));
-            line = line.substr(line_break + 2);
-            line_break = line.find("\r\n");
+            request.push_back(std::string(header_line.begin(),
+                                          header_line.end()));
+            storage.erase(storage.begin(), storage.begin() + line_break + 2);
+            line_break = Utils::FindInCharVect(storage, "\r\n");
         }
         // Request without body
         if (bytes_read < buffer_size - 1)
             return request;
     }
 }
+
+//v_str ClientRequest::ReadFromSocket(int socket, std::string &body, int buffer_size) {
+//    char buffer[buffer_size];
+//    std::string line;
+//    v_str request;
+//
+//    while (true) {
+//        // int bytes_read = recv(socket, buffer, buffer_size - 1, 0);
+//        int bytes_read = read(socket, buffer, buffer_size - 1);
+//
+//        if (bytes_read <= 0)
+//            throw ReadFromSocketFailedException();
+//
+//        buffer[bytes_read] = '\0';  // Null-terminate the buffer
+//
+//        // Find the end of the line
+//        line += std::string(buffer);
+//        unsigned long line_break = line.find("\r\n");
+//
+//        while (!line.empty() && line_break != std::string::npos) {
+//            std::string subline = line.substr(0, line_break);
+//            if (subline.empty()) {
+//                // start of body section
+//                body = line.substr(line_break + 2);
+//                return request;
+//            }
+//            request.push_back(sanitize_input(subline));
+//            line = line.substr(line_break + 2);
+//            line_break = line.find("\r\n");
+//        }
+//        // Request without body
+//        if (bytes_read < buffer_size - 1)
+//            return request;
+//    }
+//}
 
 bool ClientRequest::HasHeader(const std::string &key) const {
     m_str_str_c_it header = headers_.find(key);
@@ -152,8 +184,6 @@ std::ostream &operator<<(std::ostream &os, const ClientRequest &request) {
         os << "--headers--\n";
         Utils::OutputMap(request.GetHeaders(), os);
     }
-    if (!request.GetBody().empty())
-        os << "--body--\n" << request.GetBody() << "\n";
     return os;
 }
 
@@ -169,7 +199,7 @@ const std::string &ClientRequest::GetLastStepUri() const {
     return addr_last_step_;
 }
 
-const std::string &ClientRequest::GetBody() const {
+const v_char & ClientRequest::GetBody() const {
     return body_;
 }
 

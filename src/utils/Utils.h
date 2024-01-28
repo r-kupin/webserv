@@ -27,6 +27,8 @@
 
 typedef std::set<std::string>::const_iterator               s_str_c_it;
 
+typedef std::vector<char>                                   v_char;
+
 typedef std::vector<std::string>                            v_str;
 typedef std::vector<std::string>::const_iterator            v_str_c_it;
 typedef std::vector<v_str>::const_iterator                  vstr_vstr_c_it;
@@ -65,6 +67,10 @@ public:
     static bool         IsValidHTTPCode(int code);
     static std::string  GetCodeDescription(int code);
     static void         OutputMap(const m_str_str &map, std::ostream &os);
+
+    static size_t
+    FindInCharVect(const std::vector<char> &buffer, const std::string &pattern);
+
 private:
     static m_codes err_codes;
     static m_codes ok_codes;
@@ -75,6 +81,7 @@ private:
     static m_codes initializeHttpOKCodes();
 
     Utils();
+
 };
 
 

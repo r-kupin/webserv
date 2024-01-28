@@ -29,14 +29,14 @@ std::string ClientRequest::ExtractUrl(const std::string& request) {
     return (uri.substr(0, uri.find_first_of(' ')));
 }
 
-void ClientRequest::ExtractBody(size_t max_size) {
-    body_ = ExtractBody(max_size, socket_, body_);
-}
-
-std::string ClientRequest::ExtractBody(size_t size, int socket,
-                                       std::string &body, int buffer_size) const {
-    return body + ReadBodyPart(size - body.size(), socket, buffer_size);
-}
+//void ClientRequest::ExtractBody(size_t max_size) {
+////    body_ = ExtractBody(max_size, socket_, body_);
+//}
+//
+//std::string ClientRequest::ExtractBody(size_t size, int socket,
+//                                       std::string &body, int buffer_size) const {
+//    return body + ReadBodyPart(size - body.size(), socket, buffer_size);
+//}
 
 std::string ClientRequest::ReadBodyPart(size_t size, int socket,
                                         int buffer_size) const {
