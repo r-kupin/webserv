@@ -21,12 +21,14 @@ I am not using `Makefile` in development process, so the **lists of source files
 3. Run `make test`
 # Features
 ## Done
+- Your program has to take a configuration file as argument, or use a default path.
 - Choose the [port](#listen) and [host](#server_name) of each server.
 - Setup default [error_pages](#error_page).
 - Setup routes with one or multiple of the following rules/configuration [return](#return)
 	- Define a list of accepted HTTP methods for the route.
 	- Define a HTTP redirection.
 	- Define a directory or a file from where the file should be searched
+	- Make the route able to accept uploaded files and configure where they should be saved
 - Set a default file to answer if the request is a directory ([index](#index)).
 - Make it work with POST and GET methods.
 - Your server must be compatible with the web browser of your choice
@@ -34,15 +36,15 @@ I am not using `Makefile` in development process, so the **lists of source files
 - You server must have default error pages if none are provided.
 - You must be able to serve a fully static website.
 - Limit client body size.
-## ToDo
+- Clients must be able to upload files
 - upload_store implement
 - default client_max_body_size 1Mb
+## ToDo
+- Setup the server_names or not.
 - Turn on or off directory listing. (?)
 - Your server must be able to listen to multiple ports 
 - A request to your server should never hang forever.
 - The first server for a host:port will be the default for this host:port (that means it will answer to all the requests that don’t belong to an other server).
-- Clients must be able to upload files
-- Make the route able to accept uploaded files and configure where they should be save
 - Execute CGI based on certain file extension (for example .php).
 # Config
 Like `nginx.conf` but with less functional supported. This project follows philosophy of forward compatibility - meaning that all valid configs for WebServ will be also valid for NGINX, and will work in exact same way.

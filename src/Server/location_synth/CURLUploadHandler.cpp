@@ -13,8 +13,6 @@
 #include <iostream>
 #include <algorithm>
 #include <csignal>
-#include <sstream>
-#include <cstring>
 #include "../ServerExceptions.h"
 
 bool tell_server_to_start_if_needed(const ClientRequest &request, int socket) {
@@ -54,8 +52,8 @@ bool    read_up_to_double_break(const std::string &delimiter, char *buffer,
     return true;
 }
 
-bool process_metadata(v_char & storage, int socket, size_t &size,
-                      const std::string &delimiter, std::ofstream &file) {
+bool    process_metadata(v_char &storage, int socket, size_t &size,
+                         const std::string &delimiter) {
     char    buffer[kFileBufferSize];
 
     int bytes_read = read(socket, buffer, kMetadataBufferSize - 1);
@@ -68,38 +66,26 @@ bool process_metadata(v_char & storage, int socket, size_t &size,
         read_up_to_double_break(delimiter, buffer, socket, storage)) {
         size_t file_start = Utils::FindInCharVect(storage, kHTTPEndBlock) +
                             kHTTPEndBlock.size();
-        std::copy(storage.begin() + file_start, storage.end(), buffer);
-        file.write(buffer, storage.size() - file_start);
-        size -= storage.size();
+        // we don't need that metadata... right?
+        storage.erase(storage.begin(), storage.begin() + file_start);
+        size -= file_start;
         return true;
     }
     return false;
 }
 
-//bool process_file_metadata(const std::string &delimiter, char *buffer,
-//                           int socket, int bytes_read,
-//                           size_t &size, std::ofstream &file) {
-//    std::stringstream    ss;
-//    if (bytes_read <= 0) {
-//        // should have body
-//        return false;
-//    }
-//    buffer[bytes_read] = '\0';
-//    ss << buffer;
-//    if (read_up_to_delimiter(delimiter, buffer, socket, bytes_read, ss) &&
-//        read_up_to_double_break(delimiter, buffer, socket, bytes_read, ss)) {
-//        size_t file_start = ss.str().find(kHTTPEndBlock) + kHTTPEndBlock.size();
-//        const std::string &file_part = ss.str().substr(file_start);
-//        size -= ss.str().size();
-//        file.write(file_part.c_str(), file_part.size());
-//        return true;
-//    }
-//    return false;
-//}
-
-bool copy_file_contents(char *buffer, int socket, std::ofstream &file,
-                        const std::string &delimiter, size_t &size) {
-    int bytes_read = read(socket, buffer, std::min(kFileBufferSize - 1, size));
+bool copy_file_contents(char *buffer, int socket, size_t &size, v_char &storage,
+                        std::ofstream &file, const std::string &delimiter) {
+    int bytes_read;
+    if (storage.empty()) {
+        bytes_read = read(socket, buffer, std::min(kFileBufferSize - 1, size));
+    } else {
+        std::copy(storage.begin(), storage.end(), buffer);
+        bytes_read = read(socket, buffer + storage.size(),
+                          std::min(kFileBufferSize - 1, size) - storage.size());
+        bytes_read += storage.size();
+        storage.clear();
+    }
     if (bytes_read < 0) {
         return false;
     } else if (bytes_read > 0) {
@@ -133,24 +119,12 @@ bool Server::UploadFromCURL(const ClientRequest &request,
             // can't send "HTTP/1.1 100 Continue" to given destination
             return false;
         }
-        if (!process_metadata(storage, socket, size, delimiter, file)) {
+        if (!process_metadata(storage, socket, size, delimiter)) {
             return false;
         }
-//        if (request.GetBody().empty()) {
-//            int     bytes_read = read(socket, buffer, METADATA_BUFFER_SIZE - 1);
-//            if (!process_file_metadata(delimiter, buffer, socket, bytes_read,
-//                                       size, file)) {
-//                return false;
-//            }
-//        } else {
-//            memcpy(buffer, request.GetBody().c_str(), request.GetBody().size());
-//            if (!process_file_metadata(delimiter, buffer, socket,
-//                                       request.GetBody().size(), size, file)) {
-//                return false;
-//            }
-//        }
         while (size > 0) {
-            if (!copy_file_contents(buffer, socket, file, delimiter, size)) {
+            if (!copy_file_contents(buffer, socket, size, storage, file,
+                                    delimiter)) {
                 return false;
             }
         }

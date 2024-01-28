@@ -51,15 +51,14 @@ public:
     static bool         CheckSpace(const std::string &address, size_t size);
     static bool         CheckPermissions(const std::string &address);
     static std::string  FileToString(const std::string &address);
-    static bool         AppendToFile(const std::string &data,
-                                     const std::string &address);
 
+    static std::string  NiceTimestamp();
     static std::string  NbrToString(size_t n);
     static size_t       StringToNbr(const std::string & str);
-    static std::string  NiceTimestamp();
-    static size_t
-    FindInBuffer(const char *buffer, size_t buffer_size,
-                 const std::string &pattern);
+    static size_t       FindInBuffer(const char *buffer, size_t buffer_size,
+                                     const std::string &pattern);
+    static size_t       FindInCharVect(const std::vector<char> &buffer,
+                                       const std::string &pattern);
 
     static bool         IsErrorCode(int code);
     static bool         IsOKCode(int code);
@@ -67,9 +66,6 @@ public:
     static bool         IsValidHTTPCode(int code);
     static std::string  GetCodeDescription(int code);
     static void         OutputMap(const m_str_str &map, std::ostream &os);
-
-    static size_t
-    FindInCharVect(const std::vector<char> &buffer, const std::string &pattern);
 
 private:
     static m_codes err_codes;
