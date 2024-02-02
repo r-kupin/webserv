@@ -50,7 +50,7 @@ ServerResponse  response(GetConfig().GetServerName(), GetConfig().GetPort());
 
 pipe_reguest_to_fd("GET /loc_X HTTP/1.1\r\n");
     request.Init(fd_);
-response_location = SynthesizeHandlingLocation(request);
+response_location = ProcessRequest(request);
 response.ComposeResponse(response_location);
 
 EXPECT_EQ(response.GetTopHeader(), "HTTP/1.1 404 Not Found");
@@ -65,7 +65,7 @@ ServerResponse  response(GetConfig().GetServerName(), GetConfig().GetPort());
 
 pipe_reguest_to_fd("GET /loc_X/ HTTP/1.1\r\n");
     request.Init(fd_);
-response_location = SynthesizeHandlingLocation(request);
+response_location = ProcessRequest(request);
 response.ComposeResponse(response_location);
 
 EXPECT_EQ(response.GetTopHeader(), "HTTP/1.1 404 Not Found");
@@ -80,7 +80,7 @@ TEST_F(SimpleIndexConfigResponseTest, Loc4) {
 
     pipe_reguest_to_fd("GET /loc_4 HTTP/1.1\r\n");
     request.Init(fd_);
-    response_location = SynthesizeHandlingLocation(request);
+    response_location = ProcessRequest(request);
     response.ComposeResponse(response_location);
 
     EXPECT_EQ(response.GetTopHeader(), "HTTP/1.1 301 Moved Permanently");
@@ -97,7 +97,7 @@ TEST_F(SimpleIndexConfigResponseTest, Loc4Index) {
 
     pipe_reguest_to_fd("GET /loc_4/ HTTP/1.1\r\n");
     request.Init(fd_);
-    response_location = SynthesizeHandlingLocation(request);
+    response_location = ProcessRequest(request);
     response.ComposeResponse(response_location);
 
     EXPECT_EQ(response.GetTopHeader(), "HTTP/1.1 403 Forbidden");
@@ -112,7 +112,7 @@ TEST_F(SimpleIndexConfigResponseTest, Loc4File) {
 
     pipe_reguest_to_fd("GET /loc_4/index.html HTTP/1.1\r\n");
     request.Init(fd_);
-    response_location = SynthesizeHandlingLocation(request);
+    response_location = ProcessRequest(request);
     response.ComposeResponse(response_location);
 
     EXPECT_EQ(response.GetTopHeader(), "HTTP/1.1 200 OK");
@@ -127,7 +127,7 @@ TEST_F(SimpleIndexConfigResponseTest, loc1) {
 
     pipe_reguest_to_fd("GET /loc_1 HTTP/1.1\r\n");
     request.Init(fd_);
-    response_location = SynthesizeHandlingLocation(request);
+    response_location = ProcessRequest(request);
     response.ComposeResponse(response_location);
 
     EXPECT_EQ(response.GetTopHeader(), "HTTP/1.1 301 Moved Permanently");
@@ -145,7 +145,7 @@ TEST_F(SimpleIndexConfigResponseTest, loc1Index) {
 
     pipe_reguest_to_fd("GET /loc_1/ HTTP/1.1\r\n");
     request.Init(fd_);
-    response_location = SynthesizeHandlingLocation(request);
+    response_location = ProcessRequest(request);
     response.ComposeResponse(response_location);
 
     EXPECT_EQ(response.GetTopHeader(), "HTTP/1.1 200 OK");

@@ -47,7 +47,7 @@ TEST_F(LocationSynthTest_SimpleIndex, Root) {
     pipe_reguest_to_fd("GET / HTTP/1.1\n\r\n\r");
     ClientRequest request(fd_);
 
-    Location synth = SynthesizeHandlingLocation(request);
+    Location synth = ProcessRequest(request);
     EXPECT_EQ(synth.return_code_, 200);
     EXPECT_EQ(synth.body_file_,
               "test_resources/index_order/www/index_1.html");
@@ -57,7 +57,7 @@ TEST_F(LocationSynthTest_SimpleIndex, Loc_1) {
     pipe_reguest_to_fd("GET /loc_1 HTTP/1.1\n\r\n\r");
     ClientRequest request(fd_);
 
-    Location synth = SynthesizeHandlingLocation(request);
+    Location synth = ProcessRequest(request);
     EXPECT_EQ(synth.return_code_, 301);
     EXPECT_EQ(synth.return_internal_address_, "/loc_1/");
 }
@@ -66,7 +66,7 @@ TEST_F(LocationSynthTest_SimpleIndex, loc_1_) {
     pipe_reguest_to_fd("GET /loc_1/ HTTP/1.1\n\r\n\r");
     ClientRequest request(fd_);
 
-    Location synth = SynthesizeHandlingLocation(request);
+    Location synth = ProcessRequest(request);
     EXPECT_EQ(synth.return_code_, 200);
     EXPECT_EQ(synth.body_file_,
               "test_resources/index_order/www/loc_4/index.html");
@@ -76,7 +76,7 @@ TEST_F(LocationSynthTest_SimpleIndex, loc_2) {
     pipe_reguest_to_fd("GET /loc_2 HTTP/1.1\n\r\n\r");
     ClientRequest request(fd_);
 
-    Location synth = SynthesizeHandlingLocation(request);
+    Location synth = ProcessRequest(request);
     EXPECT_EQ(synth.return_code_, 301);
     EXPECT_EQ(synth.return_internal_address_, "/loc_2/");
 }
@@ -85,7 +85,7 @@ TEST_F(LocationSynthTest_SimpleIndex, loc_2_) {
     pipe_reguest_to_fd("GET /loc_2/ HTTP/1.1\n\r\n\r");
     ClientRequest request(fd_);
 
-    Location synth = SynthesizeHandlingLocation(request);
+    Location synth = ProcessRequest(request);
     EXPECT_EQ(synth.return_code_, 403);
 }
 
@@ -93,7 +93,7 @@ TEST_F(LocationSynthTest_SimpleIndex, loc_3) {
     pipe_reguest_to_fd("GET /loc_3 HTTP/1.1\n\r\n\r");
     ClientRequest request(fd_);
 
-    Location synth = SynthesizeHandlingLocation(request);
+    Location synth = ProcessRequest(request);
     EXPECT_EQ(synth.return_code_, 301);
     EXPECT_EQ(synth.return_internal_address_, "/loc_3/");
 }
@@ -102,7 +102,7 @@ TEST_F(LocationSynthTest_SimpleIndex, loc_3_) {
     pipe_reguest_to_fd("GET /loc_3/ HTTP/1.1\n\r\n\r");
     ClientRequest request(fd_);
 
-    Location synth = SynthesizeHandlingLocation(request);
+    Location synth = ProcessRequest(request);
     EXPECT_EQ(synth.return_code_, 403);
 }
 
@@ -110,7 +110,7 @@ TEST_F(LocationSynthTest_SimpleIndex, loc_4) {
     pipe_reguest_to_fd("GET /loc_4 HTTP/1.1\n\r\n\r");
     ClientRequest request(fd_);
 
-    Location synth = SynthesizeHandlingLocation(request);
+    Location synth = ProcessRequest(request);
     EXPECT_EQ(synth.return_code_, 301);
     EXPECT_EQ(synth.return_internal_address_, "/loc_4/");
 }
@@ -119,7 +119,7 @@ TEST_F(LocationSynthTest_SimpleIndex, loc_4_) {
     pipe_reguest_to_fd("GET /loc_4/ HTTP/1.1\n\r\n\r");
     ClientRequest request(fd_);
 
-    Location synth = SynthesizeHandlingLocation(request);
+    Location synth = ProcessRequest(request);
     EXPECT_EQ(synth.return_code_, 403);
 }
 
@@ -127,7 +127,7 @@ TEST_F(LocationSynthTest_SimpleIndex, loc_4_index) {
     pipe_reguest_to_fd("GET /loc_4/index.html HTTP/1.1\n\r\n\r");
     ClientRequest request(fd_);
 
-    Location synth = SynthesizeHandlingLocation(request);
+    Location synth = ProcessRequest(request);
     EXPECT_EQ(synth.return_code_, 200);
     EXPECT_EQ(synth.body_file_,
               "test_resources/index_order/www/loc_4/index.html");
@@ -137,7 +137,7 @@ TEST_F(LocationSynthTest_SimpleIndex, loc_X) {
     pipe_reguest_to_fd("GET /loc_X HTTP/1.1\n\r\n\r");
     ClientRequest request(fd_);
 
-    Location synth = SynthesizeHandlingLocation(request);
+    Location synth = ProcessRequest(request);
     EXPECT_EQ(synth.return_code_, 404);
 }
 
@@ -145,6 +145,6 @@ TEST_F(LocationSynthTest_SimpleIndex, loc_X_) {
     pipe_reguest_to_fd("GET /loc_X/ HTTP/1.1\n\r\n\r");
     ClientRequest request(fd_);
 
-    Location synth = SynthesizeHandlingLocation(request);
+    Location synth = ProcessRequest(request);
     EXPECT_EQ(synth.return_code_, 404);
 }

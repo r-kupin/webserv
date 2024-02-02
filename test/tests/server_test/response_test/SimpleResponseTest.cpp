@@ -49,7 +49,7 @@ TEST_F(SimpleResponseTest, GetRoot) {
 
     pipe_reguest_to_fd("GET / HTTP/1.1\r\n");
     request.Init(fd_);
-    response_location = SynthesizeHandlingLocation(request);
+    response_location = ProcessRequest(request);
     response.ComposeResponse(response_location);
 
     EXPECT_EQ(response.GetTopHeader(), "HTTP/1.1 200 OK");
@@ -74,7 +74,7 @@ TEST_F(SimpleResponseTest, LocationNOTDefinedDirectoryNOTExists) {
 
     pipe_reguest_to_fd("GET /loc_X HTTP/1.1\r\n");
     request.Init(fd_);
-    response_location = SynthesizeHandlingLocation(request);
+    response_location = ProcessRequest(request);
     response.ComposeResponse(response_location);
 
     EXPECT_EQ(response.GetTopHeader(), "HTTP/1.1 404 Not Found");
@@ -89,7 +89,7 @@ TEST_F(SimpleResponseTest, GetProvokeRedirect) {
 
     pipe_reguest_to_fd("GET /loc_0 HTTP/1.1\r\n");
     request.Init(fd_);
-    response_location = SynthesizeHandlingLocation(request);
+    response_location = ProcessRequest(request);
     response.ComposeResponse(response_location);
 
     EXPECT_EQ(response.GetTopHeader(), "HTTP/1.1 301 Moved Permanently");
@@ -105,7 +105,7 @@ TEST_F(SimpleResponseTest, LocationNOTDefinedDirectoryExists) {
 
     pipe_reguest_to_fd("GET /loc_0/ HTTP/1.1\r\n");
     request.Init(fd_);
-    response_location = SynthesizeHandlingLocation(request);
+    response_location = ProcessRequest(request);
     response.ComposeResponse(response_location);
 
     EXPECT_EQ(response.GetTopHeader(), "HTTP/1.1 403 Forbidden");
@@ -120,7 +120,7 @@ TEST_F(SimpleResponseTest, LocationDefinedDirectoryNOTExists) {
 
     pipe_reguest_to_fd("GET /loc_1X HTTP/1.1\r\n");
     request.Init(fd_);
-    response_location = SynthesizeHandlingLocation(request);
+    response_location = ProcessRequest(request);
     response.ComposeResponse(response_location);
 
     EXPECT_EQ(response.GetTopHeader(), "HTTP/1.1 404 Not Found");
@@ -135,7 +135,7 @@ TEST_F(SimpleResponseTest, AccessForbiddenByRule) {
 
     pipe_reguest_to_fd("GET /loc_1/ HTTP/1.1\r\n");
     request.Init(fd_);
-    response_location = SynthesizeHandlingLocation(request);
+    response_location = ProcessRequest(request);
     response.ComposeResponse(response_location);
 
     EXPECT_EQ(response.GetTopHeader(), "HTTP/1.1 403 Forbidden");
@@ -150,7 +150,7 @@ TEST_F(SimpleResponseTest, FileRequestFileExists) {
 
     pipe_reguest_to_fd("GET /loc_4/index.html HTTP/1.1\r\n");
     request.Init(fd_);
-    response_location = SynthesizeHandlingLocation(request);
+    response_location = ProcessRequest(request);
     response.ComposeResponse(response_location);
 
     EXPECT_EQ(response.GetTopHeader(), "HTTP/1.1 200 OK");
@@ -177,7 +177,7 @@ TEST_F(SimpleResponseTest, RedirectWithCustomMessage) {
 
     pipe_reguest_to_fd("GET /loc_3X HTTP/1.1\r\n");
     request.Init(fd_);
-    response_location = SynthesizeHandlingLocation(request);
+    response_location = ProcessRequest(request);
     response.ComposeResponse(response_location);
 
     EXPECT_EQ(response.GetTopHeader(), "HTTP/1.1 200 OK");
@@ -194,7 +194,7 @@ TEST_F(SimpleResponseTest, PostRootBodyWithinLimits) {
 
     pipe_reguest_to_fd("POST / HTTP/1.1\r\n\r\nthis is body\n\r");
     request.Init(fd_);
-    response_location = SynthesizeHandlingLocation(request);
+    response_location = ProcessRequest(request);
     response.ComposeResponse(response_location);
 
     EXPECT_EQ(response.GetTopHeader(), "HTTP/1.1 200 OK");
@@ -219,7 +219,7 @@ TEST_F(SimpleResponseTest, PostRootBodyExceedsLimits) {
     pipe_reguest_to_fd("POST / HTTP/1.1\r\n"
                        "\r\nthis is body, and it is quite big");
     request.Init(fd_);
-    response_location = SynthesizeHandlingLocation(request);
+    response_location = ProcessRequest(request);
     response.ComposeResponse(response_location);
 
     EXPECT_EQ(response.GetTopHeader(), "HTTP/1.1 413 Payload Too Large");

@@ -23,13 +23,11 @@
  * @param request
  * @return not-exact copy of a location found
  */
-Location Server::SynthesizeHandlingLocation(ClientRequest &request,
-                                            int socket) {
+Location Server::ProcessRequest(ClientRequest &request, int socket) {
     Srch_c_Res res = config_.FindConstLocation(request.GetAddress());
     l_loc_c_it found = res.location_;
     Location synth(*found);
 
-    // server doesn't read body here anymore !!
     if (RequestBodyExceedsLimit(found, request)) {
         std::cout << "client intended to send too large body" << std::endl;
         synth.SetReturnCode(413);
@@ -40,43 +38,54 @@ Location Server::SynthesizeHandlingLocation(ClientRequest &request,
     } else if (found->return_code_ == 0) {
         // return redirection rule isn't set
         if (!found->uploads_path_.empty()) {
-            // location is dedicated to handle uploads
-            if (request.GetMethod() == POST) {
-                // only post method is acknowledged to contain upload payload
-                if (UploadFile(request, found, socket)) {
-                    // upload saved successfully
-                    synth.SetReturnCode(200);
-                    synth.return_custom_message_ = "Upload successfull";
-                } else {
-                    std::cout << "failed to create output file" << std::endl;
-                    synth.SetReturnCode(503);
-                }
-            } else {
-                std::cout << "only POST method should be used to access "
-                             "upload locations" << std::endl;
-                synth.SetReturnCode(405);
-            }
+            HandleUpload(request, socket, found, synth);
+//      } else if (???) {
+//          Handle CGI
         } else {
-            std::string address = found->root_ + res.leftower_address_;
-            int fs_status = Utils::CheckFilesystem(address);
-            if (fs_status == ELSE) {
-                // something exist on specified address, but it is neither a file nor a directory
-                std::cout << address + " is neither a file nor a directory.."
-                                       "I don't know what to do with it.."
-                          << std::endl;
-                synth.SetReturnCode(500);
-            } else {
-                if (request.IsIndexRequest()) {
-                    // request's address part of URI ends with "/"
-                    SynthIndex(synth, res, fs_status);
-                } else {
-                    // request's address part of URI has a filename after the last "/"
-                    SynthFile(synth, res, fs_status, request.GetAddress());
-                }
-            }
+            HandleStatic(request, res, found, synth);
         }
     }
     return synth;
+}
+
+void Server::HandleStatic(const ClientRequest &request, const Srch_c_Res &res,
+                          const l_loc_c_it &found, Location &synth) const {
+    std::string address = found->root_ + res.leftower_address_;
+    int fs_status = Utils::CheckFilesystem(address);
+    if (fs_status == ELSE) {
+        // something exist on specified address, but it is neither a file nor a directory
+        std::cout << address + " is neither a file nor a directory.."
+                               "I don't know what to do with it.."
+                  << std::endl;
+        synth.SetReturnCode(500);
+    } else {
+        if (request.IsIndexRequest()) {
+            // request's address part of URI ends with "/"
+            SynthIndex(synth, res, fs_status);
+        } else {
+            // request's address part of URI has a filename after the last "/"
+            SynthFile(synth, res, fs_status, request.GetAddress());
+        }
+    }
+}
+
+void Server::HandleUpload(const ClientRequest &request, int socket,
+                          l_loc_c_it &found, Location &synth) {
+    if (request.GetMethod() == POST) {
+        // only post method is acknowledged to contain upload payload
+        if (UploadFile(request, found, socket)) {
+            // upload saved successfully
+            synth.SetReturnCode(200);
+            synth.return_custom_message_ = "Upload successfull";
+        } else {
+            std::cout << "failed to create output file" << std::endl;
+            synth.SetReturnCode(503);
+        }
+    } else {
+        std::cout << "only POST method should be used to access "
+                     "upload locations" << std::endl;
+        synth.SetReturnCode(405);
+    }
 }
 
 void Server::SynthFile(Location &synth, const Srch_c_Res &res, int fs_status,
@@ -99,11 +108,6 @@ void Server::SynthFile(Location &synth, const Srch_c_Res &res, int fs_status,
 }
 
 bool Server::RequestBodyExceedsLimit(l_loc_c_it found, ClientRequest &request) {
-    //    Extracting body here, because we couldn't know the max allowed body
-    //    size before we found responsible location. And we don't want to
-    //    read the whole body in advance, because it can be a 10G file, and it
-    //    will crash the server
-
     if (request.HasHeader("Content-Length")) {
         try {
             if (found->client_max_body_size_ &&

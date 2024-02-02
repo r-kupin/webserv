@@ -54,9 +54,9 @@ protected:
     void                        Start(int port);
     int                         CheckRequest(int client_sock,
                                              const sockaddr_in &client_addr);
-    void                        HandleClientRequest(int client_sock);
+    void                        HandleRequest(int client_sock);
 //-------------------assemble handling location---------------------------------
-    Location                    SynthesizeHandlingLocation(
+    Location                    ProcessRequest(
                                                         ClientRequest&request,
                                                         int socket = -1);
 
@@ -83,6 +83,13 @@ private:
     int                         socket_;
     int                         epoll_fd_;
     epoll_event                 event_;
+
+     void
+     HandleUpload(const ClientRequest &request, int socket, l_loc_c_it &found,
+                  Location &synth);
+
+     void HandleStatic(const ClientRequest &request, const Srch_c_Res &res,
+                       const l_loc_c_it &found, Location &synth) const;
  };
 
 std::ostream &operator<<(std::ostream &os, const Server &server);

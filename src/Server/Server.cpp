@@ -140,12 +140,12 @@ int Server::CheckRequest(int client_sock, const sockaddr_in &client_addr) {
     } else {
         std::cout << "Accepted client connection from " <<
                         client_addr.sin_addr.s_addr  << "\n" << std::endl;
-        HandleClientRequest(client_sock);
+        HandleRequest(client_sock);
     }
     return client_sock;
 }
 
-void Server::HandleClientRequest(int client_sock) {
+void Server::HandleRequest(int client_sock) {
     Location        response_location;
     ClientRequest   request;
     ServerResponse  response(config_.GetServerName(), config_.GetPort());
@@ -153,7 +153,7 @@ void Server::HandleClientRequest(int client_sock) {
     try {
         request.Init(client_sock);
         std::cout << "Got client request:\n" << request << std::endl;
-        response_location = SynthesizeHandlingLocation(request, client_sock);
+        response_location = ProcessRequest(request, client_sock);
         response.ComposeResponse(response_location);
         std::cout << "Prepared response:\n" << response << std::endl;
         response.SendResponse(client_sock);
