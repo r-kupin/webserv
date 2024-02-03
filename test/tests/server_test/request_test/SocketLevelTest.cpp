@@ -12,7 +12,7 @@ protected:
     std::string no_headers_POST_req_;
 
     int fd_;
-    std::string body_;
+    v_char body_;
 
     virtual void TearDown() {
         close(fd_);
@@ -62,7 +62,7 @@ class ReadFromSocketTest : public SocketLevelTest {};
 
 TEST_F(ReadFromSocketTest, ReadFromFD_FFGetRequest) {
     pipe_reguest_to_fd(firefox_GET_req_);
-    v_str req = ReadFromSocket(fd_, SocketLevelTest::body_);
+    v_str req = ReadFromSocket(fd_, 0);
     EXPECT_EQ(req.size(), 13);
     EXPECT_EQ(req[0], "GET / HTTP/1.1");
     EXPECT_EQ(req[1], "Host: localhost:8080");
@@ -78,74 +78,63 @@ TEST_F(ReadFromSocketTest, ReadFromFD_FFGetRequest) {
     EXPECT_EQ(req[11], "Sec-Fetch-Site: none");
     EXPECT_EQ(req[12], "Sec-Fetch-User: ?1");
     EXPECT_TRUE(SocketLevelTest::body_.empty());
-    EXPECT_NO_THROW(ExtractBody(-1, fd_, SocketLevelTest::body_));
-    EXPECT_TRUE(SocketLevelTest::body_.empty());
 }
 
 TEST_F(ReadFromSocketTest, ReadFromFD_CurlPostRequest) {
     pipe_reguest_to_fd(example_POST_req_ + "field1=value1&field2=value2");
-    v_str req = ReadFromSocket(fd_, SocketLevelTest::body_, 1024);
+    v_str req = ReadFromSocket(fd_, 1024);
     EXPECT_EQ(req.size(), 3);
     EXPECT_EQ(req[0],"POST /test HTTP/1.1");
     EXPECT_EQ(req[1],"Host: foo.example");
     EXPECT_EQ(req[2],"Content-Type: application/x-www-form-urlencoded");
-    EXPECT_EQ(SocketLevelTest::body_, "field1=value1&field2=value2");
-    EXPECT_NO_THROW(ExtractBody(-1, fd_, SocketLevelTest::body_));
+    EXPECT_NO_THROW(GetWholeBody(-1, fd_, SocketLevelTest::body_));
     EXPECT_EQ(SocketLevelTest::body_, "field1=value1&field2=value2");
 }
 
 TEST_F(ReadFromSocketTest, ReadFromFD_NoHeadersPostRequest) {
     pipe_reguest_to_fd(no_headers_POST_req_ + "field1=value1&field2=value2");
-    v_str req = ReadFromSocket(fd_, SocketLevelTest::body_, 1024);
+    v_str req = ReadFromSocket(fd_, 1024);
     EXPECT_EQ(req.size(), 1);
     EXPECT_EQ(req[0],"POST /test HTTP/1.1");
-    EXPECT_EQ(SocketLevelTest::body_, "field1=value1&field2=value2");
-    EXPECT_NO_THROW(ExtractBody(-1, fd_, SocketLevelTest::body_));
-    EXPECT_EQ(SocketLevelTest::body_, "field1=value1&field2=value2");
 }
 
 TEST_F(ReadFromSocketTest, ReadFromFD_Empty) {
-    std::string request = "";
-
+    std::string request;
     pipe_reguest_to_fd(request);
-    EXPECT_THROW(ReadFromSocket(fd_, SocketLevelTest::body_, 1024),
+    EXPECT_THROW(ReadFromSocket(fd_, 1024),
                                                     ReadFromSocketFailedException);
 }
 
 TEST_F(ReadFromSocketTest, ReadFromFD_NoHeadersHUGE_BODYPostRequest) {
     const std::string &file_str = Utils::FileToString("test_resources/test_body.txt");
     pipe_reguest_to_fd(no_headers_POST_req_ + file_str);
-    v_str req = ReadFromSocket(fd_, SocketLevelTest::body_, 1024);
+    v_str req = ReadFromSocket(fd_, 1024);
     EXPECT_EQ(req.size(), 1);
     EXPECT_EQ(req[0],"POST /test HTTP/1.1");
     EXPECT_EQ(SocketLevelTest::body_.size(), 1000);
-    EXPECT_NO_THROW(ExtractBody(-1, fd_, SocketLevelTest::body_));
-    EXPECT_EQ(SocketLevelTest::body_, file_str);
 }
 
 TEST_F(ReadFromSocketTest, ReadFromFD_CurlHUGE_BODYPostRequest) {
     const std::string &file_str = Utils::FileToString("test_resources/test_body.txt");
     pipe_reguest_to_fd(example_POST_req_ + file_str);
-    v_str req = ReadFromSocket(fd_, SocketLevelTest::body_, 1024);
+    v_str req = ReadFromSocket(fd_, 1024);
     EXPECT_EQ(req.size(), 3);
     EXPECT_EQ(req[0],"POST /test HTTP/1.1");
     EXPECT_EQ(req[1],"Host: foo.example");
     EXPECT_EQ(req[2],"Content-Type: application/x-www-form-urlencoded");
     EXPECT_EQ(SocketLevelTest::body_.size(), 932);
-    EXPECT_NO_THROW(ExtractBody(-1, fd_, SocketLevelTest::body_));
-    EXPECT_EQ(SocketLevelTest::body_, file_str);
 }
 
 TEST_F(ReadFromSocketTest, ThrowBodyTooLarge) {
     const std::string &file_str = Utils::FileToString("test_resources/test_body.txt");
     pipe_reguest_to_fd(example_POST_req_ + file_str);
-    v_str req = ReadFromSocket(fd_, SocketLevelTest::body_, 1024);
+    v_str req = ReadFromSocket(fd_, 1024);
     EXPECT_EQ(req.size(), 3);
     EXPECT_EQ(req[0],"POST /test HTTP/1.1");
     EXPECT_EQ(req[1],"Host: foo.example");
     EXPECT_EQ(req[2],"Content-Type: application/x-www-form-urlencoded");
     EXPECT_EQ(SocketLevelTest::body_.size(), 932);
-    EXPECT_THROW(ExtractBody(1024, fd_, SocketLevelTest::body_), RequestBodySizeExceedsLimitException);
+    EXPECT_THROW(GetWholeBody(1024, fd_, SocketLevelTest::body_), RequestBodySizeExceedsLimitException);
 }
 
 class InitTest : public SocketLevelTest {};
@@ -189,7 +178,7 @@ TEST_F(InitTest, example_POST_req_) {
     EXPECT_EQ(GetHeaders().size(), 2);
     EXPECT_EQ(GetHeaders().at("Host"), "foo.example");
     EXPECT_EQ(GetHeaders().at("Content-Type"),"application/x-www-form-urlencoded");
-    ExtractBody(-1);
+    FillBody(-1);
     EXPECT_EQ(GetBody(), "field1=value1&field2=value2");
 }
 
@@ -202,7 +191,7 @@ TEST_F(InitTest, no_headers_POST_req_) {
     EXPECT_EQ(GetFragment(), "");
     EXPECT_EQ(GetParams().size(), 0);
     EXPECT_EQ(GetHeaders().size(), 0);
-    ExtractBody(-1);
+    FillBody(-1);
     EXPECT_EQ(GetBody(), "field1=value1&field2=value2");
 }
 
@@ -269,5 +258,5 @@ TEST_F(InitTest, PostRootBodyTooLarge) {
     pipe_reguest_to_fd("POST / HTTP/1.1\r\n\r\n"
                        "Request body that exceeds limits\n\r");
     Init(fd_);
-    EXPECT_THROW(ExtractBody(16), RequestBodySizeExceedsLimitException);
+    EXPECT_THROW(FillBody(16), RequestBodySizeExceedsLimitException);
 }

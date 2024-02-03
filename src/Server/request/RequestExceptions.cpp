@@ -15,6 +15,10 @@ void ClientRequest::ThrowException(const std::string& msg,
         throw HTTPVersionNotSupportedException();
     else if (e == "BodyIsTooLarge")
         throw RequestBodySizeExceedsLimitException();
+    else if (e == "SendContinue")
+        throw SendContinueFailedException();
+    else if (e == "ReadFailed")
+        throw ReadFromSocketFailedException();
 }
 
 const char *ReadFromSocketFailedException::what() const throw() {
@@ -38,5 +42,9 @@ const char *BadRequestException::what() const throw() {
 }
 
 const char *RequestBodySizeExceedsLimitException::what() const throw() {
+    return exception::what();
+}
+
+const char *SendContinueFailedException::what() const throw() {
     return exception::what();
 }

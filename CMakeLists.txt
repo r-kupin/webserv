@@ -34,6 +34,9 @@ add_executable(webserv src/main.cpp
         src/Config/location/LimitExcept.cpp
         src/Server/location_synth/UploadHandler.cpp
         src/Server/location_synth/CURLUploadHandler.cpp
+        src/utils/FSUtils.cpp
+        src/utils/StringUtils.cpp
+        src/Server/request/ClientRequestBodyProcessing.cpp
 )
 add_library(webserv_lib
         src/utils/Utils.cpp
@@ -63,6 +66,9 @@ add_library(webserv_lib
         src/Config/location/LocationHandleReturn.cpp
         src/Config/location/LimitExcept.cpp
         src/Server/location_synth/UploadHandler.cpp
+        src/utils/FSUtils.cpp
+        src/utils/StringUtils.cpp
+        src/Server/request/ClientRequestBodyProcessing.cpp
 )
 
 add_subdirectory(test)

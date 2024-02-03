@@ -20,19 +20,9 @@ ClientRequest::ClientRequest() {}
 
 ClientRequest::ClientRequest(int client_sock) { Init(client_sock);}
 
-const std::string & sanitize_input(const std::string &input) {
-    // Implement your input validation and sanitization logic here
-    // This can include removing or escaping characters that may cause security issues
-    // You may also enforce constraints on input length, format, or content
-
-    // Apply your sanitization rules to the sanitizedInput string
-
-    return input;
-}
-
 void ClientRequest::Init(int client_sock) {
     socket_ = client_sock;
-    v_str request = ReadFromSocket(socket_, body_) ;
+    v_str request = ReadFromSocket(socket_, kBufferSize);
     CheckRequest(request);
     std::string url = ExtractUrl(request[0]);
     CheckURL(url);
@@ -62,25 +52,25 @@ void ClientRequest::Init(int client_sock) {
  * @param socket
  * @return
  */
-v_str ClientRequest::ReadFromSocket(int socket, v_char &body, int buffer_size) {
+v_str ClientRequest::ReadFromSocket(int socket, int buffer_size) {
     char                buffer[buffer_size];
-    std::vector<char>   storage;
+    v_char              storage;
     v_str               request;
 
     while (true) {
         // int bytes_read = recv(socket, buffer, buffer_size - 1, 0);
         int bytes_read = read(socket, buffer, buffer_size);
         if (bytes_read <= 0)
-            throw ReadFromSocketFailedException();
+            ThrowException("unable to read request", "ReadFailed");
         storage.insert(storage.end(), buffer, buffer + bytes_read);
 
-        size_t line_break = Utils::FindInCharVect(storage, "\r\n");
+        size_t line_break = Utils::FindInCharVect(storage, kHTTPNewline);
 
         while (!storage.empty() && line_break != std::string::npos) {
             v_char header_line(storage.begin(), storage.begin() + line_break);
             if (header_line.empty()) {
                 // start of body section
-                body = v_char(storage.begin(), storage.end());
+                body_ = v_char(storage.begin(), storage.end());
                 return request;
             }
             request.push_back(std::string(header_line.begin(),
@@ -92,64 +82,6 @@ v_str ClientRequest::ReadFromSocket(int socket, v_char &body, int buffer_size) {
         if (bytes_read < buffer_size - 1)
             return request;
     }
-}
-
-//v_str ClientRequest::ReadFromSocket(int socket, std::string &body, int buffer_size) {
-//    char buffer[buffer_size];
-//    std::string line;
-//    v_str request;
-//
-//    while (true) {
-//        // int bytes_read = recv(socket, buffer, buffer_size - 1, 0);
-//        int bytes_read = read(socket, buffer, buffer_size - 1);
-//
-//        if (bytes_read <= 0)
-//            throw ReadFromSocketFailedException();
-//
-//        buffer[bytes_read] = '\0';  // Null-terminate the buffer
-//
-//        // Find the end of the line
-//        line += std::string(buffer);
-//        unsigned long line_break = line.find("\r\n");
-//
-//        while (!line.empty() && line_break != std::string::npos) {
-//            std::string subline = line.substr(0, line_break);
-//            if (subline.empty()) {
-//                // start of body section
-//                body = line.substr(line_break + 2);
-//                return request;
-//            }
-//            request.push_back(sanitize_input(subline));
-//            line = line.substr(line_break + 2);
-//            line_break = line.find("\r\n");
-//        }
-//        // Request without body
-//        if (bytes_read < buffer_size - 1)
-//            return request;
-//    }
-//}
-
-bool ClientRequest::HasHeader(const std::string &key) const {
-    m_str_str_c_it header = headers_.find(key);
-    return header != headers_.end() && !header->second.empty();
-}
-
-std::string ClientRequest::GetHeaderValue(const std::string &key) const {
-    if (HasHeader(key)) {
-        return headers_.find(key)->second;
-    }
-    return "";
-}
-
-size_t ClientRequest::GetDeclaredBodySize() const {
-    if (HasHeader("Content-Length")) {
-        return Utils::StringToNbr(GetHeaderValue("Content-Length"));
-    }
-    return 0;
-}
-
-bool ClientRequest::IsCurlRequest() const {
-    return GetHeaderValue("User-Agent").find("curl") != std::string::npos;
 }
 
 void    print_method(std::ostream &os, Methods method) {
@@ -221,4 +153,31 @@ const std::string &ClientRequest::GetFragment() const {
 
 void ClientRequest::SetMethod(Methods method) {
     method_ = method;
+}
+
+bool        ClientRequest::HasHeaders(const v_str &request) {
+    return (request.size() > 1 && request[1].find(':') != std::string::npos);
+}
+
+bool ClientRequest::HasHeader(const std::string &key) const {
+    m_str_str_c_it header = headers_.find(key);
+    return header != headers_.end() && !header->second.empty();
+}
+
+std::string ClientRequest::GetHeaderValue(const std::string &key) const {
+    if (HasHeader(key)) {
+        return headers_.find(key)->second;
+    }
+    return "";
+}
+
+size_t ClientRequest::GetDeclaredBodySize() const {
+    if (HasHeader("Content-Length")) {
+        return Utils::StringToNbr(GetHeaderValue("Content-Length"));
+    }
+    return 0;
+}
+
+bool ClientRequest::IsCurlRequest() const {
+    return GetHeaderValue("User-Agent").find("curl") != std::string::npos;
 }

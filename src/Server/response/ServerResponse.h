@@ -17,21 +17,17 @@
 #include "../../Config/location/Location.h"
 #include "../request/ClientRequest.h"
 
-const static std::string&  kHttpVersion = "HTTP/1.1";
-
 class ServerResponse {
 public:
     class ResponseException : public std::exception {};
 
     ServerResponse();
-    ServerResponse(const ServerResponse &);
     ServerResponse(const Location &synth,
                    const std::string &server_name, int port);
 
     ServerResponse(const std::string &serverName, int port);
 
     ~ServerResponse();
-    static bool TellClientToContinue(int socket);
 
     void                        ComposeResponse(const Location &synth);
     void                        SendResponse(int dest);

@@ -20,9 +20,18 @@
 #include "../Config/config/Config.h"
 #include "response/ServerResponse.h"
 
- const static std::string kHTTPEndBlock = "\r\n\r\n";
- const static std::string kHTTPNewline = "\r\n";
- const static std::string kBoundary = "boundary=";
+#define BAD_REQUEST 400
+#define ACCESS_FORBIDDEN 403
+#define NOT_FOUND 404
+#define UNAPROPRIATE_METHOD 405
+#define BODY_TOO_LARGE 413
+#define REQUESTED_FILE_IS_NOT_A_FILE 500
+#define WRITE_TO_FILE_FAILED 500
+#define ONLY_CURL_UPLOADS_SUPPORTED 501
+#define FAILED_TO_CREATE_OUTPUT_FILE 503
+#define BAD_HTTP_VERSION 505
+#define REDIRECT 301
+#define OK 200
 
  class Server {
 public:
@@ -55,11 +64,9 @@ protected:
     int                         CheckRequest(int client_sock,
                                              const sockaddr_in &client_addr);
     void                        HandleRequest(int client_sock);
-//-------------------assemble handling location---------------------------------
-    Location                    ProcessRequest(
-                                                        ClientRequest&request,
-                                                        int socket = -1);
-
+//-------------------request server-side processing-----------------------------
+    Location                    ProcessRequest(ClientRequest&request,
+                                               int socket = -1);
     void                        SynthIndex(Location &synth,
                                            const Srch_c_Res &res,
                                            int fs_status) const;
@@ -71,25 +78,41 @@ protected:
                                           const Srch_c_Res &res,
                                           int fs_status,
                                           const std::string &request_address) const;
-    bool RequestBodyExceedsLimit(l_loc_c_it found, ClientRequest &request);
-    bool UploadFile(const ClientRequest &request, l_loc_c_it found, int socket);
-    bool UploadFromCURL(const ClientRequest &request,
-                        const std::string &filename, int socket);
+    bool                        RequestBodyExceedsLimit(l_loc_c_it found,
+                                                        ClientRequest &request);
+    int                         UploadFile(ClientRequest &request,
+                                           l_loc_c_it found,
+                                           int socket);
+    int                         UploadFromCURL(ClientRequest &request,
+                                               const std::string &filename,
+                                               int socket);
+    bool FlushBuffer(char *buffer, std::ofstream &file,
+                     const std::string &delimiter, int bytes_read);
+     int                        FillBuffer(char *buffer, int socket,
+                                           const size_t &size,
+                                           v_char &storage) const;
     bool                        TryCreateOutputFile(const std::string &dir,
                                                     const std::string &filename,
                                                     size_t size) const;
+    void                        HandleUpload(ClientRequest &request,
+                                             int socket, l_loc_c_it &found,
+                                             Location &synth);
+    void                        HandleStatic(const ClientRequest &request,
+                                             const Srch_c_Res &res,
+                                             const l_loc_c_it &found,
+                                             Location &synth) const;
 private:
+    void                        Log(const std::string & msg) const;
+
     const ServerConfiguration   &config_;
     int                         socket_;
     int                         epoll_fd_;
     epoll_event                 event_;
 
-     void
-     HandleUpload(const ClientRequest &request, int socket, l_loc_c_it &found,
-                  Location &synth);
-
-     void HandleStatic(const ClientRequest &request, const Srch_c_Res &res,
-                       const l_loc_c_it &found, Location &synth) const;
+     int PerformUpload(const ClientRequest &request, int socket,
+                       std::ofstream &file,
+                       const std::string &delimiter, char *buffer,
+                       size_t bytes_left);
  };
 
 std::ostream &operator<<(std::ostream &os, const Server &server);

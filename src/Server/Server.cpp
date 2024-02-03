@@ -111,14 +111,15 @@ Server::Server(const Server &other)
  */
 void Server::Start() {
     Init();
-    std::cout << "Server initialized successfully..\n" << *this << std::endl;
+    Log("Server initialized successfully..\n");
+    std::cout << *this << std::endl;
     Start(config_.GetPort());
 }
 
 // todo: correct shutdown with a signal
 void Server::Start(int port) {
     if (epoll_fd_ > 0) {
-        std::cout << "started server at " << port << " port" << std::endl;
+        Log("started server at " + Utils::NbrToString(port) + " port");
         while (true) {
             struct sockaddr_in client_addr;
             socklen_t client_len = sizeof(client_addr);
@@ -128,18 +129,18 @@ void Server::Start(int port) {
             CheckRequest(client_sock, client_addr);
         }
     } else {
-        std::cout << "It seems like " << port << " port is already in use\n" <<
-        "Aborting." << std::endl;
+        Log("It seems like " + Utils::NbrToString(port) +
+            " port is already in use. Aborting.");
     }
     close(socket_);
 }
 
 int Server::CheckRequest(int client_sock, const sockaddr_in &client_addr) {
     if (client_sock < 0) {
-        std::cout << "Error accepting connection! " << std::endl;
+        Log("Error accepting connection!");
     } else {
-        std::cout << "Accepted client connection from " <<
-                        client_addr.sin_addr.s_addr  << "\n" << std::endl;
+        Log("Accepted client connection from " +
+            Utils::NbrToString(client_addr.sin_addr.s_addr) + "\n");
         HandleRequest(client_sock);
     }
     return client_sock;
@@ -152,19 +153,39 @@ void Server::HandleRequest(int client_sock) {
 
     try {
         request.Init(client_sock);
-        std::cout << "Got client request:\n" << request << std::endl;
+        Log("Got client request:\n");
+        std::cout << request << std::endl;
         response_location = ProcessRequest(request, client_sock);
-        response.ComposeResponse(response_location);
-        std::cout << "Prepared response:\n" << response << std::endl;
-        response.SendResponse(client_sock);
+        Log("Request processed");
+    } catch (const HTTPVersionNotSupportedException &) {
+        response_location.SetReturnCode(BAD_HTTP_VERSION);
+    } catch (const ReadFromSocketFailedException &) {
+//        response_location.SetReturnCode(?);
+    } catch (const BadURL &) {
+//        empty url / fragment before url params
+//        response_location.SetReturnCode(?);
+    } catch (const BadRequestException &) {
+//        querry / fragment but not GET method
+//        response_location.SetReturnCode(?);
+    }
+    response.ComposeResponse(response_location);
+    Log("Prepared response:\n");
+    std::cout << response << std::endl;
+    response.SendResponse(client_sock);
+
+    try {
     } catch (const ClientRequest::RequestException &) {
-        std::cout << "Read from client socket failed!" << std::endl;
+        Log("Read from client socket failed!");
         // todo: set return code, whatever
     } catch (const ServerResponse::ResponseException &) {
-        std::cout << "Response creation failed!" << std::endl;
+        Log("Response creation failed!");
         // todo: set return code, whatever
     }
- }
+}
+
+void Server::Log(const std::string &msg) const {
+    std::cout << "Server: " << msg << std::endl;
+}
 
 Server &Server::operator=(const Server &other) {
     if (this == &other)

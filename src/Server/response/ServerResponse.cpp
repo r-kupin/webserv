@@ -25,16 +25,6 @@ ServerResponse::ServerResponse(const Location &synth,
     ComposeResponse(synth);
 }
 
-bool ServerResponse::TellClientToContinue(int socket) {
-    std::string response_string = ComposeTop(100) + "\r\n\r\n";
-    const char *response_buffer = response_string.c_str();
-    size_t response_size = response_string.size();
-
-    if (send(socket, response_buffer, response_size, 0) < 0)
-        return false;
-    return true;
-}
-
 std::string ServerResponse::ComposeTop(int return_code) {
     std::ostringstream oss;
 

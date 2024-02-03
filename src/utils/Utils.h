@@ -45,28 +45,28 @@ public:
     class UtilsException : public std::exception {};
     class StatvfsException : public UtilsException {};
     class ConversionException : public UtilsException {};
-
+//-------------------filesystem utils-------------------------------------------
     static int          CheckFilesystem(const std::string &address);
     static bool         FileExists(const std::string &address);
     static bool         CheckSpace(const std::string &address, size_t size);
     static bool         CheckPermissions(const std::string &address);
     static std::string  FileToString(const std::string &address);
-
+//-------------------string/container utils-------------------------------------
     static std::string  NiceTimestamp();
     static std::string  NbrToString(size_t n);
     static size_t       StringToNbr(const std::string & str);
+    static v_char       StringToVchar(const std::string & str);
     static size_t       FindInBuffer(const char *buffer, size_t buffer_size,
                                      const std::string &pattern);
     static size_t       FindInCharVect(const std::vector<char> &buffer,
                                        const std::string &pattern);
-
+    static void         OutputMap(const m_str_str &map, std::ostream &os);
+//-------------------HTTP utils-------------------------------------------------
     static bool         IsErrorCode(int code);
     static bool         IsOKCode(int code);
     static bool         IsRedirectCode(int code);
     static bool         IsValidHTTPCode(int code);
     static std::string  GetCodeDescription(int code);
-    static void         OutputMap(const m_str_str &map, std::ostream &os);
-
 private:
     static m_codes err_codes;
     static m_codes ok_codes;
@@ -77,7 +77,6 @@ private:
     static m_codes initializeHttpOKCodes();
 
     Utils();
-
 };
 
 

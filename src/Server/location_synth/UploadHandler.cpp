@@ -20,33 +20,32 @@ bool    Server::TryCreateOutputFile(const std::string & dir,
                                  size_t size) const {
     try {
         if (Utils::CheckFilesystem(dir) != DIRECTORY) {
-            std::cout << "directory " + dir + " where server is trying to "
-                                              "create a file does not exist" << std::endl;
+            Log("directory " + dir + " where server is trying to create a "
+                                     "file does not exist");
             return false;
         }
         if (Utils::FileExists(filename)) {
-            std::cout << "file " + filename + " already exists" << std::endl;
+            Log("file " + filename + " already exists");
             return false;
         }
         if (!Utils::CheckPermissions(filename)) {
-            std::cout << "server doesn't have proper permissions to create " +
-                         filename + " file"<< std::endl;
+            Log("server doesn't have proper permissions to create " +
+                filename + " file");
             return false;
         }
         if (!Utils::CheckSpace(filename, size)) {
-            std::cout << "not enough disk space to create a file with size " +
-                         Utils::NbrToString(size) << std::endl;
+            Log("not enough disk space to create a file with size " +
+                Utils::NbrToString(size));
             return false;
         }
         return true;
     } catch (const Utils::StatvfsException &) {
-        std::cout << "can't check available space with statvfs" << std::endl;
+        Log("can't check available space with statvfs");
     }
     return false;
 }
 
-bool
-Server::UploadFile(const ClientRequest &request, l_loc_c_it found, int socket) {
+int Server::UploadFile(ClientRequest &request, l_loc_c_it found, int socket) {
     static int  files_uploaded_;
     std::string dirname;
 
@@ -56,25 +55,24 @@ Server::UploadFile(const ClientRequest &request, l_loc_c_it found, int socket) {
         dirname = config_.GetConstRoot().root_ + "/" + found->uploads_path_;
 
     std::string filename(dirname + "/" + Utils::NbrToString(files_uploaded_));
-    if (request.HasHeader("User-Agent") && request.HasHeader("Content-Type")) {
+    if (request.HasHeader("User-Agent") &&
+        request.HasHeader("Content-Type") &&
+        request.HasHeader("Content-Length") ) {
         if (TryCreateOutputFile(dirname, filename,
                                 request.GetDeclaredBodySize())) {
+            // file created successfully
             if (request.IsCurlRequest()) {
-                if (UploadFromCURL(request, filename, socket)) {
+                int status = UploadFromCURL(request, filename, socket);
+                if (status == OK)
                     files_uploaded_++;
-                } else {
-                    // upload failed
-                    return false;
-                }
-                return true;
+                return status;
             }
-            // else: other clients aren't supported yet
-            return false;
-        } else {
-            // throw  503 or something
+            Log("Only uploads via curl are supported for now");
+            return ONLY_CURL_UPLOADS_SUPPORTED;
         }
-    } else {
-        // required header
+        return FAILED_TO_CREATE_OUTPUT_FILE;
     }
-    return false;
+    Log("Mandatory headers User-Agent, Content-Type and/or Content-Length are "
+        "missing");
+    return BAD_REQUEST;
 }

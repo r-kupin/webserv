@@ -23,17 +23,16 @@ void    Server::SynthIndex(Location &synth, const Srch_c_Res &res,
         // index address not found
         if (fs_status != DIRECTORY) {
             // directory, where this index supposed to be doesn't exist
-            std::cout << "\"" + index_address + "\" is not found" << std::endl;
-            synth.return_code_ = 404;
+            Log("\"" + index_address + "\" is not found");
+            synth.SetReturnCode(NOT_FOUND);
         } else {
             // directory exists  but there are no index to return
-            std::cout << "directory index of " + found->root_ +
-                                                "/ is forbidden" << std::endl;
-            synth.return_code_ = 403;
+            Log("directory index of " + found->root_ + "/ is forbidden" );
+            synth.SetReturnCode(ACCESS_FORBIDDEN);
         }
     } else {
         // index file found
-        synth.return_code_ = 200;
+        synth.SetReturnCode(200);
         synth.body_file_ = index_address;
     }
 }

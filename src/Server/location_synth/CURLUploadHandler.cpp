@@ -14,124 +14,95 @@
 #include <algorithm>
 #include <csignal>
 #include "../ServerExceptions.h"
+#include "../request/RequestExceptions.h"
 
-bool tell_server_to_start_if_needed(const ClientRequest &request, int socket) {
-    if (request.HasHeader("Expect") &&
-        request.GetHeaderValue("Expect") == "100-continue") {
-        // ensure client that we are ready for the first part of data
-        if (!ServerResponse::TellClientToContinue(socket)) {
-            // can't send "HTTP/1.1 100 Continue" to given destination
-            return false;
-        }
-    }
-    return true;
-}
-
-bool    read_up_to_delimiter(const std::string &delimiter, char *buffer,
-                             int socket, v_char & storage) {
-    while (Utils::FindInCharVect(storage, delimiter) == std::string::npos) {
-        int bytes_read = read(socket, buffer, kMetadataBufferSize - 1);
-        if (bytes_read <= 0) {
-            return false;
-        }
-        storage.insert(storage.end(), buffer, buffer + bytes_read);
-    }
-    return true;
-}
-
-bool    read_up_to_double_break(const std::string &delimiter, char *buffer,
-                                int socket, v_char & storage) {
-    while (Utils::FindInCharVect(storage, delimiter) != std::string::npos &&
-        Utils::FindInCharVect(storage, kHTTPEndBlock) == std::string::npos) {
-        int bytes_read = read(socket, buffer, kMetadataBufferSize - 1);
-        if (bytes_read <= 0) {
-            return false;
-        }
-        storage.insert(storage.end(), buffer, buffer + bytes_read);
-    }
-    return true;
-}
-
-bool    process_metadata(v_char &storage, int socket, size_t &size,
-                         const std::string &delimiter) {
-    char    buffer[kFileBufferSize];
-
-    int bytes_read = read(socket, buffer, kMetadataBufferSize - 1);
-    if (bytes_read <= 0) {
-        // should have body
-        return false;
-    }
-    storage.insert(storage.end(), buffer, buffer + bytes_read);
-    if (read_up_to_delimiter(delimiter, buffer, socket, storage) &&
-        read_up_to_double_break(delimiter, buffer, socket, storage)) {
-        size_t file_start = Utils::FindInCharVect(storage, kHTTPEndBlock) +
-                            kHTTPEndBlock.size();
-        // we don't need that metadata... right?
-        storage.erase(storage.begin(), storage.begin() + file_start);
-        size -= file_start;
-        return true;
-    }
-    return false;
-}
-
-bool copy_file_contents(char *buffer, int socket, size_t &size, v_char &storage,
-                        std::ofstream &file, const std::string &delimiter) {
+int Server::FillBuffer(char *buffer, int socket, const size_t &size,
+                       v_char &storage) const {
     int bytes_read;
     if (storage.empty()) {
-        bytes_read = read(socket, buffer, std::min(kFileBufferSize - 1, size));
+        bytes_read = read(socket, buffer, std::min(kFileBufferSize, size));
     } else {
         std::copy(storage.begin(), storage.end(), buffer);
         bytes_read = read(socket, buffer + storage.size(),
-                          std::min(kFileBufferSize - 1, size) - storage.size());
+                          std::min(kFileBufferSize, size) - storage.size());
         bytes_read += storage.size();
         storage.clear();
     }
-    if (bytes_read < 0) {
-        return false;
-    } else if (bytes_read > 0) {
+    return bytes_read;
+}
+
+bool Server::FlushBuffer(char *buffer, std::ofstream &file,
+                         const std::string &delimiter, int bytes_read) {
+    if (bytes_read > 0) {
         size_t end = Utils::FindInBuffer(buffer, bytes_read, delimiter);
         if (end != std::string::npos) {
             file.write(buffer, end);
         } else {
             file.write(buffer, bytes_read);
         }
+        if (!file)
+            return false;
     }
-    size -= bytes_read;
     return true;
 }
 
-bool Server::UploadFromCURL(const ClientRequest &request,
-                            const std::string &filename, int socket) {
+int Server::PerformUpload(const ClientRequest &request, int socket,
+                          std::ofstream &file, const std::string &delimiter,
+                          char *buffer, size_t bytes_left) {
+    // actual file contents will be stored here
+    v_char      storage(request.GetBody());
+
+    while (bytes_left > 0) {
+        int bytes_read = FillBuffer(buffer, socket, bytes_left, storage);
+        if (bytes_read < 0) {
+            Log("unable to read from socket");
+            // return ?
+        }
+        if (!FlushBuffer(buffer, file, delimiter, bytes_read)) {
+            Log("unable to write to file");
+            return WRITE_TO_FILE_FAILED;
+        }
+        bytes_left -= bytes_read;
+    }
+    // file successfully uploaded
+    file.close();
+    return OK;
+}
+
+int Server::UploadFromCURL(ClientRequest &request, const std::string &filename,
+                           int socket) {
     // Open the file in append mode
     std::ofstream       file(filename.c_str(), std::ios::app);
     const std::string   &content_type = request.GetHeaderValue("Content-Type");
     size_t              bound_pos = content_type.find(kBoundary);
-    size_t              size = request.GetDeclaredBodySize();
-    if (!file.is_open())
-        return false;
+
+    if (!file.is_open()) {
+        Log("Unable to open file to write uploaded data");
+        return FAILED_TO_CREATE_OUTPUT_FILE;
+    }
     if (bound_pos != std::string::npos) {
+        // get delimiter from "Content-Type" header
         std::string delimiter = kHTTPNewline + "--" +
                             content_type.substr(bound_pos + kBoundary.size());
         char        buffer[kFileBufferSize];
-        v_char      storage(request.GetBody());
-
-        if (!tell_server_to_start_if_needed(request, socket)) {
-            // can't send "HTTP/1.1 100 Continue" to given destination
+        try {
+            // If request has "Expect: 100-continue" header - it will wait here
+            request.TellClientToContinueIfNeed(socket);
+            // Body contains metadata before file contents. Write it to body_
+            size_t bytes_left = request.GetDeclaredBodySize() -
+                                request.ProcessCURLFileMetadata(socket,delimiter);
+            return PerformUpload(request, socket, file, delimiter, buffer,
+                                 bytes_left);
+        } catch (const SendContinueFailedException & ) {
             return false;
-        }
-        if (!process_metadata(storage, socket, size, delimiter)) {
+        } catch (const ReadFromSocketFailedException & ) {
             return false;
+        } catch (const RequestBodySizeExceedsLimitException & ) {
+            return BODY_TOO_LARGE;
+        } catch (const BadRequestException & ) {
+            return BAD_REQUEST;
         }
-        while (size > 0) {
-            if (!copy_file_contents(buffer, socket, size, storage, file,
-                                    delimiter)) {
-                return false;
-            }
-        }
-        // file successfully uploaded
-        file.close();
-        return true;
     }
-    // curl always adds bound file delimitation
-    return false;
+    Log("file bound delimitation is missing");
+    return BAD_REQUEST;
 }

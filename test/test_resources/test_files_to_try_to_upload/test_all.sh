@@ -1,12 +1,13 @@
 #!/bin/bash
 
 # Check if a directory is provided as a command-line argument
-if [ "$#" -eq 0 ]; then
-    echo "Usage: $0 <directory>"
+if [ "$#" -ne 2 ]; then
+    echo "Usage: $0 <directory> <url>"
     exit 1
 fi
 
 target_directory="$1"
+url="$2"
 rm "$1"/*
 
 ((i=0));
@@ -17,10 +18,10 @@ for file in *.txt *.iso; do
         # Form the path to the corresponding file in the target directory
         target_file="${target_directory}/$i"
 
-        curl -F "file=@$file" http://localhost:4281/uploads
+        curl -F "file=@$file" "$url"
         # Check if the file exists in the target directory
         if [ -f "$target_file" ]; then
-          printf "\t%s\n" "$i"
+            printf "\t%s\n" "$i"
             # Perform 'diff' between the current file and the corresponding file in the target directory
             diff_result=$(diff "$file" "$target_file")
             echo -n "diff: "

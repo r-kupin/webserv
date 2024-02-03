@@ -1,11 +1,10 @@
-#include <csignal>
+
 #include <iostream>
 #include <algorithm>
-#include <sstream>
 #include "ClientRequest.h"
 #include "RequestExceptions.h"
 
-Methods ClientRequest::ExtractMethod(const std::string &request) {
+Methods     ClientRequest::ExtractMethod(const std::string &request) {
     if (request.find("POST") != std::string::npos) {
         return POST;
     } else if (request.find("GET") != std::string::npos) {
@@ -17,11 +16,11 @@ Methods ClientRequest::ExtractMethod(const std::string &request) {
     }
 }
 
-void ClientRequest::CheckRequest(const v_str &request) {
+void        ClientRequest::CheckRequest(const v_str &request) {
     method_ = ExtractMethod(request[0]);
     if (request[0].find("HTTP/1.1") == std::string::npos)
         ThrowException("HTTP/1.1 is the only supported protocol",
-                       "BadRequestException");
+                       "HTTPVersionNotSupportedException");
 }
 
 std::string ClientRequest::ExtractUrl(const std::string& request) {
@@ -29,48 +28,8 @@ std::string ClientRequest::ExtractUrl(const std::string& request) {
     return (uri.substr(0, uri.find_first_of(' ')));
 }
 
-//void ClientRequest::ExtractBody(size_t max_size) {
-////    body_ = ExtractBody(max_size, socket_, body_);
-//}
-//
-//std::string ClientRequest::ExtractBody(size_t size, int socket,
-//                                       std::string &body, int buffer_size) const {
-//    return body + ReadBodyPart(size - body.size(), socket, buffer_size);
-//}
 
-std::string ClientRequest::ReadBodyPart(size_t size, int socket,
-                                        int buffer_size) const {
-    char                buffer[buffer_size];
-    std::stringstream   ss;
-    size_t              current_body_size = 0;
-    while (true) {
-//         int bytes_read = recv(socket, buffer, buffer_size - 1, 0);
-        int bytes_read = read(socket, buffer, buffer_size - 1);
-        if (bytes_read < 0) {
-            throw ReadFromSocketFailedException();
-        } else if (bytes_read > 0) {
-            // Null-terminate the buffer
-            buffer[bytes_read] = '\0';
-            // Find the end of the line
-            current_body_size += bytes_read;
-            if (current_body_size > size) {
-                ThrowException("request body size exceeds limit ",
-                               "BodyIsTooLarge");
-            } else {
-                ss << std::string(buffer);
-            }
-        }
-        // Nothing (left) to read
-        if (bytes_read < buffer_size - 1)
-            return ss.str();
-    }
-}
-
-bool ClientRequest::HasHeaders(const v_str &request) {
-    return (request.size() > 1 && request[1].find(':') != std::string::npos);
-}
-
-void ClientRequest::FillHeaders(const v_str &request) {
+void        ClientRequest::FillHeaders(const v_str &request) {
     for (size_t i = 1; i < request.size(); ++i) {
         if (!request[i].empty() && request[i].find(':') != std::string::npos) {
             std::string name = request[i].

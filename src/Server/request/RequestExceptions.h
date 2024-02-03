@@ -50,4 +50,11 @@ public:
     const char *what() const throw();
 };
 
+class SendContinueFailedException : public ClientRequest::RequestException {
+public:
+    SendContinueFailedException() : ClientRequest::RequestException() {}
+
+    const char *what() const throw();
+};
+
 #endif //WEBSERV_LIB_REQUESTEXCEPTIONS_H

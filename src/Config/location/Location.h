@@ -105,8 +105,6 @@ struct Location {
     bool                operator<(const Location &rhs) const;
     bool                operator==(const Location &rhs) const;
     Location&           operator=(const Location& rhs);
-
-    void print_upload_path(std::ostream &ostream, const Location &location);
 };
 
 std::ostream &operator<<(std::ostream &os, const Location &location);
