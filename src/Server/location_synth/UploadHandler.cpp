@@ -67,6 +67,7 @@ int Server::UploadFile(ClientRequest &request, l_loc_c_it found, int socket) {
                     files_uploaded_++;
                 return status;
             }
+            // wget doesn't work on nginx - sends file without tailing linebreak
             Log("Only uploads via curl are supported for now");
             return ONLY_CURL_UPLOADS_SUPPORTED;
         }

@@ -74,7 +74,8 @@ void Server::HandleUpload(ClientRequest &request, int socket,
                           l_loc_c_it &found, Location &synth) {
     if (request.GetMethod() == POST) {
         // Try to perform upload
-        synth.SetReturnCode(UploadFile(request, found, socket));
+        int upload_status = UploadFile(request, found, socket);
+        synth.SetReturnCode(upload_status);
         if (synth.return_code_ == OK)
             synth.return_custom_message_ = "Upload successful";
     } else {

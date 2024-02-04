@@ -67,40 +67,47 @@ protected:
 //-------------------request server-side processing-----------------------------
     Location                    ProcessRequest(ClientRequest&request,
                                                int socket = -1);
+    bool                        AccessForbidden(l_loc_c_it found,
+                                                Methods method) const;
+    bool                        RequestBodyExceedsLimit(l_loc_c_it found,
+                                                        ClientRequest &request);
+//-------------------static request processing----------------------------------
+    void                        HandleStatic(const ClientRequest &request,
+                                              const Srch_c_Res &res,
+                                              const l_loc_c_it &found,
+                                              Location &synth) const;
     void                        SynthIndex(Location &synth,
                                            const Srch_c_Res &res,
                                            int fs_status) const;
     std::string                 FindIndexToSend(const l_loc_c_it &found,
                                                 const std::string &compliment) const;
-    bool                        AccessForbidden(l_loc_c_it found,
-                                                Methods method) const;
     void                        SynthFile(Location &synth,
                                           const Srch_c_Res &res,
                                           int fs_status,
                                           const std::string &request_address) const;
-    bool                        RequestBodyExceedsLimit(l_loc_c_it found,
-                                                        ClientRequest &request);
+//-------------------upload request processing----------------------------------
     int                         UploadFile(ClientRequest &request,
                                            l_loc_c_it found,
                                            int socket);
     int                         UploadFromCURL(ClientRequest &request,
                                                const std::string &filename,
                                                int socket);
-    bool FlushBuffer(char *buffer, std::ofstream &file,
-                     const std::string &delimiter, int bytes_read);
-     int                        FillBuffer(char *buffer, int socket,
+    bool                        FlushBuffer(char *buffer, std::ofstream &file,
+                                            const std::string &delimiter,
+                                            int bytes_read);
+    int                         FillBuffer(char *buffer, int socket,
                                            const size_t &size,
                                            v_char &storage) const;
+    int                        PerformUpload(const ClientRequest &request,
+                                             int socket, std::ofstream &file,
+                                             const std::string &delimiter,
+                                             char *buffer, size_t bytes_left);
     bool                        TryCreateOutputFile(const std::string &dir,
                                                     const std::string &filename,
                                                     size_t size) const;
     void                        HandleUpload(ClientRequest &request,
                                              int socket, l_loc_c_it &found,
                                              Location &synth);
-    void                        HandleStatic(const ClientRequest &request,
-                                             const Srch_c_Res &res,
-                                             const l_loc_c_it &found,
-                                             Location &synth) const;
 private:
     void                        Log(const std::string & msg) const;
 
@@ -108,11 +115,6 @@ private:
     int                         socket_;
     int                         epoll_fd_;
     epoll_event                 event_;
-
-     int PerformUpload(const ClientRequest &request, int socket,
-                       std::ofstream &file,
-                       const std::string &delimiter, char *buffer,
-                       size_t bytes_left);
  };
 
 std::ostream &operator<<(std::ostream &os, const Server &server);

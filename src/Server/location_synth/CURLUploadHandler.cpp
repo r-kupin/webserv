@@ -22,10 +22,15 @@ int Server::FillBuffer(char *buffer, int socket, const size_t &size,
     if (storage.empty()) {
         bytes_read = read(socket, buffer, std::min(kFileBufferSize, size));
     } else {
+        // it is first iteration after metadata processing, and body_ contains
+        // data that was accidentally red. Now we copy it to buffer
         std::copy(storage.begin(), storage.end(), buffer);
+        // and read the remaining amount of bytes, in order to fill buffer
+        // fully, and not overwrite data we put there before
         bytes_read = read(socket, buffer + storage.size(),
                           std::min(kFileBufferSize, size) - storage.size());
         bytes_read += storage.size();
+        // all data in the buffer now
         storage.clear();
     }
     return bytes_read;
@@ -34,6 +39,7 @@ int Server::FillBuffer(char *buffer, int socket, const size_t &size,
 bool Server::FlushBuffer(char *buffer, std::ofstream &file,
                          const std::string &delimiter, int bytes_read) {
     if (bytes_read > 0) {
+        // delimiter position marks the end of the file
         size_t end = Utils::FindInBuffer(buffer, bytes_read, delimiter);
         if (end != std::string::npos) {
             file.write(buffer, end);
@@ -81,10 +87,11 @@ int Server::UploadFromCURL(ClientRequest &request, const std::string &filename,
         return FAILED_TO_CREATE_OUTPUT_FILE;
     }
     if (bound_pos != std::string::npos) {
-        // get delimiter from "Content-Type" header
-        std::string delimiter = kHTTPNewline + "--" +
-                            content_type.substr(bound_pos + kBoundary.size());
         char        buffer[kFileBufferSize];
+        // get delimiter from "Content-Type" header
+        std::string delimiter = content_type.substr(bound_pos + kBoundary.size());
+        // and this is how it will appear in actual file:
+        delimiter = kHTTPNewline + "--" + delimiter;
         try {
             // If request has "Expect: 100-continue" header - it will wait here
             request.TellClientToContinueIfNeed(socket);
