@@ -172,8 +172,16 @@ std::string ClientRequest::GetHeaderValue(const std::string &key) const {
 }
 
 size_t ClientRequest::GetDeclaredBodySize() const {
-    if (HasHeader("Content-Length")) {
-        return Utils::StringToNbr(GetHeaderValue("Content-Length"));
+    if (!HasHeader("Content-Length")) {
+        ThrowException("Content-Length header is missing",
+                       "BadRequestException");
+    } else {
+        try {
+            return Utils::StringToNbr(GetHeaderValue("Content-Length"));
+        } catch (const Utils::ConversionException &) {
+            ThrowException("Content-Length header value is not a number",
+                           "BadRequestException");
+        }
     }
     return 0;
 }

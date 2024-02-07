@@ -161,26 +161,14 @@ void Server::HandleRequest(int client_sock) {
         response_location.SetReturnCode(BAD_HTTP_VERSION);
     } catch (const ReadFromSocketFailedException &) {
 //        response_location.SetReturnCode(?);
-    } catch (const BadURL &) {
-//        empty url / fragment before url params
-//        response_location.SetReturnCode(?);
-    } catch (const BadRequestException &) {
-//        querry / fragment but not GET method
-//        response_location.SetReturnCode(?);
+    } catch (const ClientRequest::RequestException &) {
+        response_location.SetReturnCode(BAD_REQUEST);
     }
+
     response.ComposeResponse(response_location);
     Log("Prepared response:\n");
     std::cout << response << std::endl;
     response.SendResponse(client_sock);
-
-    try {
-    } catch (const ClientRequest::RequestException &) {
-        Log("Read from client socket failed!");
-        // todo: set return code, whatever
-    } catch (const ServerResponse::ResponseException &) {
-        Log("Response creation failed!");
-        // todo: set return code, whatever
-    }
 }
 
 void Server::Log(const std::string &msg) const {

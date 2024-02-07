@@ -104,18 +104,10 @@ void Server::SynthFile(Location &synth, const Srch_c_Res &res, int fs_status,
 }
 
 bool Server::RequestBodyExceedsLimit(l_loc_c_it found, ClientRequest &request) {
-    if (request.HasHeader("Content-Length")) {
-        try {
-            if (found->client_max_body_size_ &&
-                found->client_max_body_size_ < request.GetDeclaredBodySize()) {
-                // Content-Length header value exceeds limit
-                return true;
-            }
-        } catch (const Utils::ConversionException &) {
-            // throw: content length header misconfigured
+    if (request.GetMethod() == POST || request.GetMethod() == DELETE) {
+        if (found->client_max_body_size_ < request.GetDeclaredBodySize()) {
+            return true;
         }
-    } else if (request.GetMethod() == POST || request.GetMethod() == DELETE) {
-        // throw: POST and DELETE should have a body and "Content-Length" set
     }
     return false;
 }
