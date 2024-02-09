@@ -25,6 +25,10 @@ printf "Content-Length: %d\r\n" "$body_size" >> "$request_file"
 printf "Content-Type: multipart/form-data; boundary=%s\r\n\r\n" "$boundary" >> "$request_file"
 printf "%s\n" "$pre_body" >> "$request_file" # printf skips tailing '\n' for no reason
 
-cat "$file" >> "$request_file"
+exec 3<> /dev/tcp/"$hostname"/"$port"
 
-printf "%s\n" "$after_body" >> "$request_file" # printf skips tailing '\n' for no reason
+cat "$request_file"  >&3
+cat "$file"  >&3
+printf "%s\n" "$after_body" >&3
+
+exec 3>&-

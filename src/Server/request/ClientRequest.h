@@ -39,9 +39,9 @@
 #include <map>
 #include "../../Config/location/LimitExcept.h"
 
-const static size_t         kBufferSize = 64;
-const static size_t         kMetadataBufferSize = 16;
-const static size_t         kFileBufferSize = 1048576; // 32^4
+#define BUFFER_SIZE 64
+#define METADATA_BUFFER_SIZE 16
+#define FILE_BUFFER_SIZE 1048576 // 32^4
 
 const static std::string    kHttpVersion = "HTTP/1.1";
 const static std::string    kBoundary = "boundary=";
@@ -73,9 +73,9 @@ public:
     void                SetMethod(Methods method);
 //-------------------manual body processing-------------------------------------
     void                TellClientToContinueIfNeed(int socket) const;
-    size_t ProcessCURLFileMetadata(int socket,
-                                   const std::string &delimiter);
-    void ReadBodyToRequest(int socket, int buffer_size);
+    size_t              ProcessCURLFileMetadata(int socket,
+                                                const std::string &delimiter);
+    void                ReadBodyToRequest(int socket);
 protected:
 //-------------------socket-level-----------------------------------------------
     v_str               ReadFromSocket(int socket, int buffer_size);

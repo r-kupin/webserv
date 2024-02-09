@@ -295,7 +295,8 @@ void Location::ProcessDirectives(const std::vector<v_str> &directives) {
 void Location::HandleClientMaxBodySize(const v_str &directive) {
     if (directive.size() == 2) {
         try {
-            size_t size = Utils::StringToNbr(directive[1]);
+            size_t size = Utils::StringToULong(
+                    directive[1]);
             client_max_body_size_ = size;
             return;
         } catch (const Utils::ConversionException &) {
@@ -313,7 +314,8 @@ void Location::AddErrorPages(const v_str &directive) {
         address = *(directive.rbegin());
         for (size_t i = 1; directive[i] != address; ++i) {
             try {
-                code = Utils::StringToNbr(directive[1]);
+                code = Utils::StringToULong(
+                        directive[1]);
             } catch (const Utils::ConversionException &) {
                 ThrowLocationException("Error code is wrong");
             }
@@ -533,7 +535,7 @@ bool Location::operator==(const Location &rhs) const {
 }
 
 void ptint_err_pages(std::ostream &os, const Location &location) {
-    os << location.full_address_ << ":\t" << "Error Pages: " << std::endl;
+    os << location.full_address_ << ":\tError Pages: " << std::endl;
     for (s_err_c_it it = location.error_pages_.begin();
          it != location.error_pages_.end(); ++it) {
         os << location.full_address_ <<  ":\t\t" << *it << std::endl;
@@ -541,26 +543,26 @@ void ptint_err_pages(std::ostream &os, const Location &location) {
 }
 
 void print_return_info(std::ostream &os, const Location &location) {
-    os << location.full_address_ << ":\t" << "Return Code: " <<
+    os << location.full_address_ << ":\tReturn Code: " <<
         location.return_code_ << std::endl;
     if (!location.return_internal_address_.empty()) {
-        os << location.full_address_ << ":\t" << "Return Address: " <<
+        os << location.full_address_ << ":\tReturn Address: " <<
            location.return_internal_address_ << std::endl;
     } else if (!location.return_external_address_.empty()) {
-        os << location.full_address_ << ":\t" << "Return Address: " <<
+        os << location.full_address_ << ":\tReturn Address: " <<
            location.return_external_address_ << std::endl;
     } else if (!location.return_custom_message_.empty()) {
-        os << location.full_address_ << ":\t" << "Return Custom message: " <<
+        os << location.full_address_ << ":\tReturn Custom message: " <<
            location.return_custom_message_ << std::endl;
     }
 }
 void print_upload_path(std::ostream &os, const Location &location) {
-    os << location.full_address_ << ":\t" << "Uploads path: " <<
+    os << location.full_address_ << ":\tUploads path: " <<
        location.uploads_path_ << std::endl;
 }
 
 void print_index(std::ostream &os, const Location &location) {
-    os << location.full_address_ << ":\t" << "Index: ";
+    os << location.full_address_ << ":\tIndex: ";
     for (l_str_c_it it = location.GetIndeces().begin();
          it != location.GetIndeces().end(); ++it) {
         os << *it << " ";
@@ -569,12 +571,17 @@ void print_index(std::ostream &os, const Location &location) {
 }
 
 void print_root(std::ostream &os, const Location &location) {
-    os << location.full_address_ << ":\t" << "Root: " <<
+    os << location.full_address_ << ":\tRoot: " <<
         location.root_ << std::endl;
 }
 
+void print_max_size(std::ostream &os, const Location &location) {
+    os << location.full_address_ << ":\tclient_max_body_size_: " <<
+    location.client_max_body_size_ << std::endl;
+}
+
 void print_parent_info(std::ostream &os, const Location &location) {
-    os << location.address_ << ":\t" << "Parent: " <<
+    os << location.address_ << ":\tParent: " <<
         location.parent_->address_ << std::endl;
 }
 
@@ -586,8 +593,8 @@ void print_sublocations(std::ostream &os, const Location &location) {
 }
 
 std::ostream &operator<<(std::ostream &os, const Location &location) {
-    os << std::endl << "Localion " << location.address_ << ":" <<
-       std::endl;
+    os << "\nLocalion " << location.address_ << ":\n";
+    print_max_size(os, location);
     if (!location.error_pages_.empty())
         ptint_err_pages(os, location);
     if (location.return_code_ > 0)

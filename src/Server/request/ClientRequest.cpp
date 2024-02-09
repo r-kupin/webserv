@@ -22,7 +22,7 @@ ClientRequest::ClientRequest(int client_sock) { Init(client_sock);}
 
 void ClientRequest::Init(int client_sock) {
     socket_ = client_sock;
-    v_str request = ReadFromSocket(socket_, kBufferSize);
+    v_str request = ReadFromSocket(socket_, BUFFER_SIZE);
     CheckRequest(request);
     std::string url = ExtractUrl(request[0]);
     CheckURL(url);
@@ -177,9 +177,9 @@ size_t ClientRequest::GetDeclaredBodySize() const {
                        "BadRequestException");
     } else {
         try {
-            return Utils::StringToNbr(GetHeaderValue("Content-Length"));
+            return Utils::StringToULong(GetHeaderValue("Content-Length"));
         } catch (const Utils::ConversionException &) {
-            ThrowException("Content-Length header value is not a number",
+            ThrowException("Content-Length header value is not an unsigned long",
                            "BadRequestException");
         }
     }

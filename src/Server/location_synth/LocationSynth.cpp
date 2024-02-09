@@ -38,7 +38,7 @@ Location Server::ProcessRequest(ClientRequest &request, int socket) {
     } else if (found->return_code_ == 0) {
         // return redirection rule isn't set
         if (!found->uploads_path_.empty()) {
-            HandleUpload(request, socket, found, synth);
+             HandleUpload(request, socket, found, synth);
 //      } else if (???) {
 //          Handle CGI
         } else {

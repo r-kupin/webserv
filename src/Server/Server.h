@@ -20,18 +20,18 @@
 #include "../Config/config/Config.h"
 #include "response/ServerResponse.h"
 
+#define OK 200
+#define REDIRECT 301
 #define BAD_REQUEST 400
 #define ACCESS_FORBIDDEN 403
 #define NOT_FOUND 404
 #define UNAPROPRIATE_METHOD 405
 #define BODY_TOO_LARGE 413
 #define REQUESTED_FILE_IS_NOT_A_FILE 500
-#define WRITE_TO_FILE_FAILED 500
+#define FAILED_IO 500
 #define ONLY_CURL_UPLOADS_SUPPORTED 501
 #define FAILED_TO_CREATE_OUTPUT_FILE 503
 #define BAD_HTTP_VERSION 505
-#define REDIRECT 301
-#define OK 200
 
  class Server {
 public:

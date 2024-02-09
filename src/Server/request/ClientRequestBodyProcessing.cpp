@@ -49,13 +49,12 @@ int ClientRequest::ReadBodyPart(int socket, int buffer_size, char *buffer) {
     return bytes_read;
 }
 
-
-void ClientRequest::ReadBodyToRequest(int socket, int buffer_size) {
-    char    buffer[buffer_size];
+void    ClientRequest::ReadBodyToRequest(int socket) {
+    char    buffer[BUFFER_SIZE];
 
     TellClientToContinueIfNeed(socket);
     while (true) {
-        if (ReadBodyPart(socket, buffer_size, buffer) < buffer_size - 1)
+        if (ReadBodyPart(socket, BUFFER_SIZE, buffer) < BUFFER_SIZE - 1)
             return;
     }
 }
@@ -63,14 +62,14 @@ void ClientRequest::ReadBodyToRequest(int socket, int buffer_size) {
 void    ClientRequest::ReadCURLFileMetadata(const std::string &delimiter,
                                             char *buffer, int socket) {
     while (Utils::FindInCharVect(body_, delimiter) == std::string::npos) {
-        if (ReadBodyPart(socket, kMetadataBufferSize, buffer) == 0)
+        if (ReadBodyPart(socket, METADATA_BUFFER_SIZE, buffer) == 0)
             ThrowException("Curl request's body intended to upload a file "
                            "should start with delimiter, seems like it's "
                            "missing", "BadRequestException");
     }
     while (Utils::FindInCharVect(body_, delimiter) != std::string::npos &&
            Utils::FindInCharVect(body_, kHTTPEndBlock) == std::string::npos) {
-        if (ReadBodyPart(socket, kMetadataBufferSize, buffer) == 0)
+        if (ReadBodyPart(socket, METADATA_BUFFER_SIZE, buffer) == 0)
             ThrowException("Curl request's body intended to upload a file "
                            "should start with delimiter, followed by "
                            "\"\\r\\n\\r\\\"", "BadRequestException");
@@ -79,9 +78,9 @@ void    ClientRequest::ReadCURLFileMetadata(const std::string &delimiter,
 
 size_t ClientRequest::ProcessCURLFileMetadata(int socket,
                                               const std::string &delimiter) {
-    char    buffer[kFileBufferSize];
+    char    buffer[FILE_BUFFER_SIZE];
 
-    ReadBodyPart(socket, kMetadataBufferSize, buffer);
+    ReadBodyPart(socket, METADATA_BUFFER_SIZE, buffer);
     ReadCURLFileMetadata(delimiter, buffer, socket);
     size_t file_start = Utils::FindInCharVect(body_, kHTTPEndBlock) +
                         kHTTPEndBlock.size();

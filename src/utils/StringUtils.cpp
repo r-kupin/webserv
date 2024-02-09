@@ -41,12 +41,31 @@ std::string Utils::NbrToString(size_t n) {
     return ss.str();
 }
 
-size_t Utils::StringToNbr(const std::string &str) {
+size_t Utils::StringToULong(const std::string &str) {
     char* end_ptr;
     const char* val_ptr = str.c_str();
+    if (str.find_first_not_of("0123456789") != std::string::npos)
+        throw ConversionException();
     errno = 0; // To distinguish success/failure after call
     size_t nbr = strtoul(val_ptr, &end_ptr, 10);
     if ((errno == ERANGE && (nbr == ULONG_MAX || nbr == 0)) ||
+        (errno != 0 && nbr == 0)) {
+        throw ConversionException();
+    }
+    // Check if the entire string was consumed
+    if (end_ptr == val_ptr || *end_ptr != '\0') {
+        // Handle invalid input
+        throw ConversionException();
+    }
+    return nbr;
+}
+
+long Utils::StringToNbr(const std::string &str) {
+    char* end_ptr;
+    const char* val_ptr = str.c_str();
+    errno = 0; // To distinguish success/failure after call
+    long nbr = strtoul(val_ptr, &end_ptr, 10);
+    if ((errno == ERANGE && (nbr == LONG_MAX || nbr == LONG_MIN)) ||
         (errno != 0 && nbr == 0)) {
         throw ConversionException();
     }

@@ -54,7 +54,8 @@ public:
 //-------------------string/container utils-------------------------------------
     static std::string  NiceTimestamp();
     static std::string  NbrToString(size_t n);
-    static size_t       StringToNbr(const std::string & str);
+    static size_t       StringToULong(const std::string & str);
+    static long         StringToNbr(const std::string & str);
     static v_char       StringToVchar(const std::string & str);
     static size_t       FindInBuffer(const char *buffer, size_t buffer_size,
                                      const std::string &pattern);

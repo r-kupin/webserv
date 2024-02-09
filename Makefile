@@ -56,37 +56,37 @@ LIB_SRCS = 	src/Config/config/Config.cpp \
             src/Server/location_synth/LocationSynth.cpp \
             src/Server/response/ResponseStaticUtils.cpp \
             src/utils/Utils.cpp
-TEST_SRCS = test/tests/utils_test/UtilsTest.cpp \
-            test/tests/server_test/request_test/RequestLineLevelTest.cpp \
-            test/tests/server_test/request_test/URLLevelTest.cpp \
-            test/tests/server_test/request_test/SocketLevelTest.cpp \
-            test/tests/server_test/request_test/ParsedRequestLevelTest.cpp \
-            test/tests/server_test/functionality_test/SynthIndexTest.cpp \
-            test/tests/server_test/functionality_test/FindIndexTest.cpp \
-            test/tests/server_test/functionality_test/LocationSynthUtilsTest.cpp \
-            test/tests/server_test/functionality_test/LocationSynthTest_SimpleIndex.cpp \
-            test/tests/server_test/functionality_test/SynthFileTest.cpp \
-            test/tests/config_test/location_class_test/setup_test/HandleReturnTest.cpp \
-            test/tests/config_test/location_class_test/setup_test/HandleAddErrPagesTest.cpp \
-            test/tests/config_test/location_class_test/setup_test/HandleUpdateIndexTest.cpp \
-            test/tests/config_test/location_class_test/setup_test/LocationStaticToolsTest.cpp \
-            test/tests/config_test/location_class_test/setup_test/LocationMarkDirectiveTest.cpp \
-            test/tests/config_test/location_class_test/setup_test/HandleLimitExceptTest.cpp \
-            test/tests/config_test/location_class_test/setup_test/LocationProcessDirectivesTest.cpp \
-            test/tests/config_test/location_class_test/functionality_test/LocationFindSublocationTest.cpp \
-            test/tests/config_test/config_class_test/setup_from_file_config/ConfigSetupFromFileTest.cpp \
-            test/tests/config_test/config_class_test/setup_from_file_config/ConfigFileCheckTest.cpp \
-            test/tests/config_test/config_class_test/setup_from_nodes/ConfigServerSubcontextsHandlingTest.cpp \
-            test/tests/config_test/config_class_test/setup_from_nodes/ConfigMainContextCheck.cpp \
-            test/tests/config_test/server_configuration_class_test/setup_test/HandleDirectivesTest.cpp \
-            test/tests/config_test/server_configuration_class_test/setup_test/HandleMultistepLocation.cpp \
-            test/tests/config_test/server_configuration_class_test/setup_test/HandleSingleStepLocation.cpp \
-            test/tests/config_test/server_configuration_class_test/functionality_test/NestedConfigLocationSearchTest.cpp \
-            test/tests/config_test/server_configuration_class_test/functionality_test/CheckCorrectLocationContextTest.cpp \
-            test/tests/config_test/server_configuration_class_test/functionality_test/SimpleConfigLocationSearchTest.cpp \
-            test/tests/config_test/config_class_test/setup_from_file_config/ParsingToolsTest.cpp
+TEST_SRCS = unit_tests/tests/utils_test/UtilsTest.cpp \
+            unit_tests/tests/server_test/request_test/RequestLineLevelTest.cpp \
+            unit_tests/tests/server_test/request_test/URLLevelTest.cpp \
+            unit_tests/tests/server_test/request_test/SocketLevelTest.cpp \
+            unit_tests/tests/server_test/request_test/ParsedRequestLevelTest.cpp \
+            unit_tests/tests/server_test/functionality_test/SynthIndexTest.cpp \
+            unit_tests/tests/server_test/functionality_test/FindIndexTest.cpp \
+            unit_tests/tests/server_test/functionality_test/LocationSynthUtilsTest.cpp \
+            unit_tests/tests/server_test/functionality_test/LocationSynthTest_SimpleIndex.cpp \
+            unit_tests/tests/server_test/functionality_test/SynthFileTest.cpp \
+            unit_tests/tests/config_test/location_class_test/setup_test/HandleReturnTest.cpp \
+            unit_tests/tests/config_test/location_class_test/setup_test/HandleAddErrPagesTest.cpp \
+            unit_tests/tests/config_test/location_class_test/setup_test/HandleUpdateIndexTest.cpp \
+            unit_tests/tests/config_test/location_class_test/setup_test/LocationStaticToolsTest.cpp \
+            unit_tests/tests/config_test/location_class_test/setup_test/LocationMarkDirectiveTest.cpp \
+            unit_tests/tests/config_test/location_class_test/setup_test/HandleLimitExceptTest.cpp \
+            unit_tests/tests/config_test/location_class_test/setup_test/LocationProcessDirectivesTest.cpp \
+            unit_tests/tests/config_test/location_class_test/functionality_test/LocationFindSublocationTest.cpp \
+            unit_tests/tests/config_test/config_class_test/setup_from_file_config/ConfigSetupFromFileTest.cpp \
+            unit_tests/tests/config_test/config_class_test/setup_from_file_config/ConfigFileCheckTest.cpp \
+            unit_tests/tests/config_test/config_class_test/setup_from_nodes/ConfigServerSubcontextsHandlingTest.cpp \
+            unit_tests/tests/config_test/config_class_test/setup_from_nodes/ConfigMainContextCheck.cpp \
+            unit_tests/tests/config_test/server_configuration_class_test/setup_test/HandleDirectivesTest.cpp \
+            unit_tests/tests/config_test/server_configuration_class_test/setup_test/HandleMultistepLocation.cpp \
+            unit_tests/tests/config_test/server_configuration_class_test/setup_test/HandleSingleStepLocation.cpp \
+            unit_tests/tests/config_test/server_configuration_class_test/functionality_test/NestedConfigLocationSearchTest.cpp \
+            unit_tests/tests/config_test/server_configuration_class_test/functionality_test/CheckCorrectLocationContextTest.cpp \
+            unit_tests/tests/config_test/server_configuration_class_test/functionality_test/SimpleConfigLocationSearchTest.cpp \
+            unit_tests/tests/config_test/config_class_test/setup_from_file_config/ParsingToolsTest.cpp
 
-TEST_LIB_DIR = test/lib
+TEST_LIB_DIR = unit_tests/lib
 TEST_LIB_INCL_DIR =	$(TEST_LIB_DIR)/googletest/include
 TEST_LIB_BILD_DIR =	$(TEST_LIB_DIR)/build
 TEST_LIB_LIB_DIR =	$(TEST_LIB_BILD_DIR)/lib
@@ -135,7 +135,7 @@ $(TEST): $(TEST_LIBS) $(TEST_OBJS) $(NAME_LIB)
 src/%.o: src/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-test/%.o: test/%.cpp
+unit_tests/%.o: unit_tests/%.cpp
 	$(GXX) -I$(TEST_LIB_INCL_DIR) -c $< -o $@
 
 clean:

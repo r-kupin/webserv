@@ -57,7 +57,7 @@ int Server::UploadFile(ClientRequest &request, l_loc_c_it found, int socket) {
     std::string filename(dirname + "/" + Utils::NbrToString(files_uploaded_));
     if (request.HasHeader("User-Agent") &&
         request.HasHeader("Content-Type") &&
-        request.HasHeader("Content-Length") ) {
+        request.HasHeader("Content-Length")) {
         if (TryCreateOutputFile(dirname, filename,
                                 request.GetDeclaredBodySize())) {
             // file created successfully
