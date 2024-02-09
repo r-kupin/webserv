@@ -75,7 +75,8 @@ public:
     void                TellClientToContinueIfNeed(int socket) const;
     size_t              ProcessCURLFileMetadata(int socket,
                                                 const std::string &delimiter);
-    void                ReadBodyToRequest(int socket);
+    int
+    ReadBodyToRequest(int socket);
 protected:
 //-------------------socket-level-----------------------------------------------
     v_str               ReadFromSocket(int socket, int buffer_size);

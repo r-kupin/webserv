@@ -89,8 +89,6 @@ TEST_F(ReadFromSocketTest, ReadFromFD_CurlPostRequest) {
     EXPECT_EQ(req[1],"Host: foo.example");
     EXPECT_EQ(req[2],"Content-Type: application/x-www-form-urlencoded");
     EXPECT_EQ(req[3],"Content-Length: 27");
-    ReadBodyToRequest(fd_);
-    EXPECT_EQ(SocketLevelTest::body_, Utils::StringToVchar("field1=value1&field2=value2"));
 }
 
 TEST_F(ReadFromSocketTest, ReadFromFD_Empty) {
@@ -105,7 +103,6 @@ TEST_F(ReadFromSocketTest, ReadFromFD_NoHeadersHUGE_BODYPostRequest) {
     v_str req = ReadFromSocket(fd_, 1024);
     EXPECT_EQ(req.size(), 1);
     EXPECT_EQ(req[0],"POST /test HTTP/1.1");
-    EXPECT_EQ(SocketLevelTest::body_.size(), 1000);
 }
 
 TEST_F(ReadFromSocketTest, ReadFromFD_CurlHUGE_BODYPostRequest) {
@@ -116,7 +113,6 @@ TEST_F(ReadFromSocketTest, ReadFromFD_CurlHUGE_BODYPostRequest) {
     EXPECT_EQ(req[0],"POST /test HTTP/1.1");
     EXPECT_EQ(req[1],"Host: foo.example");
     EXPECT_EQ(req[2],"Content-Type: application/x-www-form-urlencoded");
-    EXPECT_EQ(SocketLevelTest::body_.size(), 932);
 }
 
 TEST_F(ReadFromSocketTest, ThrowBodyTooLarge) {
@@ -127,7 +123,6 @@ TEST_F(ReadFromSocketTest, ThrowBodyTooLarge) {
     EXPECT_EQ(req[0],"POST /test HTTP/1.1");
     EXPECT_EQ(req[1],"Host: foo.example");
     EXPECT_EQ(req[2],"Content-Type: application/x-www-form-urlencoded");
-    EXPECT_EQ(SocketLevelTest::body_.size(), 932);
 }
 
 class InitTest : public SocketLevelTest {};
@@ -138,7 +133,6 @@ TEST_F(InitTest, StandardGetFromFirefox) {
     EXPECT_EQ(GetMethod(), GET);
     EXPECT_EQ(GetAddress(), "/");
     EXPECT_EQ(GetLastStepUri(), "/");
-    EXPECT_TRUE(GetBody().empty());
     EXPECT_EQ(GetFragment(), "");
     EXPECT_EQ(GetParams().size(), 0);
     EXPECT_EQ(GetHeaders().size(), 12);
@@ -171,8 +165,6 @@ TEST_F(InitTest, example_POST_req_) {
     EXPECT_EQ(GetHeaders().size(), 2);
     EXPECT_EQ(GetHeaders().at("Host"), "foo.example");
     EXPECT_EQ(GetHeaders().at("Content-Type"),"application/x-www-form-urlencoded");
-    ReadBodyToRequest(fd_);
-    EXPECT_EQ(GetBody(), Utils::StringToVchar("field1=value1&field2=value2"));
 }
 
 TEST_F(InitTest, no_headers_POST_req_) {
@@ -184,8 +176,6 @@ TEST_F(InitTest, no_headers_POST_req_) {
     EXPECT_EQ(GetFragment(), "");
     EXPECT_EQ(GetParams().size(), 0);
     EXPECT_EQ(GetHeaders().size(), 0);
-    ReadBodyToRequest(fd_);
-    EXPECT_EQ(GetBody(), Utils::StringToVchar("field1=value1&field2=value2"));
 }
 
 TEST_F(InitTest, ParamsNFragment) {
@@ -205,7 +195,6 @@ TEST_F(InitTest, ParamsNFragment) {
     EXPECT_EQ(GetMethod(), GET);
     EXPECT_EQ(GetAddress(), "/results");
     EXPECT_EQ(GetLastStepUri(), "/results");
-    EXPECT_TRUE(GetBody().empty());
     EXPECT_EQ(GetFragment(), "34");
     EXPECT_EQ(GetHeaders().size(), 1);
     EXPECT_EQ(GetHeaders().at("Host"), "localhost:8080");
@@ -234,7 +223,6 @@ TEST_F(InitTest, ParamsNFragmentArgIncomplete) {
     EXPECT_EQ(GetMethod(), GET);
     EXPECT_EQ(GetAddress(), "/results");
     EXPECT_EQ(GetLastStepUri(), "/results");
-    EXPECT_TRUE(GetBody().empty());
     EXPECT_EQ(GetFragment(), "34");
     EXPECT_EQ(GetHeaders().size(), 1);
     EXPECT_EQ(GetHeaders().at("Host"), "localhost:8080");

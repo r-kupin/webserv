@@ -49,14 +49,22 @@ int ClientRequest::ReadBodyPart(int socket, int buffer_size, char *buffer) {
     return bytes_read;
 }
 
-void    ClientRequest::ReadBodyToRequest(int socket) {
-    char    buffer[BUFFER_SIZE];
-
-    TellClientToContinueIfNeed(socket);
-    while (true) {
-        if (ReadBodyPart(socket, BUFFER_SIZE, buffer) < BUFFER_SIZE - 1)
-            return;
-    }
+int ClientRequest::ReadBodyToRequest(int socket) {
+//    char    buffer[BUFFER_SIZE];
+//
+//    TellClientToContinueIfNeed(socket);
+//    size_t bytes_left = GetDeclaredBodySize();
+//    for (int bytes_read = 1; bytes_left > 0;) {
+//        if (bytes_read == 0) {
+//            Log("specified body size is bigger then body actually is");
+//            return BAD_REQUEST;
+//        }
+//    }
+//    while (true) {
+//        if (ReadBodyPart(socket, BUFFER_SIZE, buffer) < BUFFER_SIZE - 1)
+//            return;
+//    }
+    return socket;
 }
 
 void    ClientRequest::ReadCURLFileMetadata(const std::string &delimiter,

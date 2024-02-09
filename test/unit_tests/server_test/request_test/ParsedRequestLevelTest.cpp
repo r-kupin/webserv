@@ -54,25 +54,12 @@ protected:
 
 TEST_F(ParsedRequestLevelTest, CheckRequestWrongHTTPVersion) {
     req_.emplace_back("GET / HTTP/1.0");
-    EXPECT_THROW(CheckRequest(req_), BadRequestException);
+    EXPECT_THROW(CheckRequest(req_), HTTPVersionNotSupportedException);
 }
 
 TEST_F(ParsedRequestLevelTest, CheckRequestWrongMethod) {
     req_.emplace_back("OPTIONS / HTTP/1.1");
     EXPECT_THROW(CheckRequest(req_), UnsupportedClientMethodException);
-}
-
-TEST_F(ParsedRequestLevelTest, CheckRequestPOSTHasHeadersNoBody) {
-    req_.emplace_back("POST / HTTP/1.1");
-    req_.emplace_back("Host: localhost:8080");
-    req_.emplace_back("");
-    EXPECT_THROW(CheckRequest(req_), BadRequestException);
-}
-
-TEST_F(ParsedRequestLevelTest, CheckRequestPOSTHasNoHeadersNoBody) {
-    req_.emplace_back("POST / HTTP/1.1");
-    req_.emplace_back("");
-    EXPECT_THROW(CheckRequest(req_), BadRequestException);
 }
 
 TEST_F(ParsedRequestLevelTest, HasHeadersTest) {

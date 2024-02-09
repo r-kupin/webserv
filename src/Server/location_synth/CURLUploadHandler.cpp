@@ -107,10 +107,8 @@ int Server::UploadFromCURL(ClientRequest &request, const std::string &filename,
             return PerformUpload(request, socket, file, delimiter, buffer,
                                  bytes_left);
         } catch (const SendContinueFailedException & ) {
-            // don't know what I should send
             return FAILED_IO;
         } catch (const ReadFromSocketFailedException & ) {
-            // don't know what I should send
             return FAILED_IO;
         } catch (const RequestBodySizeExceedsLimitException & ) {
             return BODY_TOO_LARGE;
