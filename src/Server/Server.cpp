@@ -160,7 +160,7 @@ void Server::HandleRequest(int client_sock) {
     } catch (const HTTPVersionNotSupportedException &) {
         response_location.SetReturnCode(BAD_HTTP_VERSION);
     } catch (const ReadFromSocketFailedException &) {
-//        response_location.SetReturnCode(?);
+        response_location.SetReturnCode(FAILED_IO);
     } catch (const ClientRequest::RequestException &) {
         response_location.SetReturnCode(BAD_REQUEST);
     }
@@ -169,6 +169,7 @@ void Server::HandleRequest(int client_sock) {
     Log("Prepared response:\n");
     std::cout << response << std::endl;
     response.SendResponse(client_sock);
+    Log("Response sent\n");
 }
 
 void Server::Log(const std::string &msg) const {

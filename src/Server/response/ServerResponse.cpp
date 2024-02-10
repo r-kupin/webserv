@@ -71,7 +71,6 @@ void ServerResponse::HandleError(const Location &synth) {
 }
 
 void ServerResponse::HandleRedirect(const Location &synth) {
-    body_str_ = GeneratePage(synth.return_code_);
     if (!synth.return_external_address_.empty()) {
         AddHeader("Location", synth.return_external_address_);
     } else if (!synth.return_internal_address_.empty()) {
