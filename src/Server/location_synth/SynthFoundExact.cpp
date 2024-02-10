@@ -32,7 +32,7 @@ void    Server::SynthIndex(Location &synth, const Srch_c_Res &res,
         }
     } else {
         // index file found
-        synth.SetReturnCode(200);
+        synth.SetReturnCode(OK);
         synth.body_file_ = index_address;
     }
 }

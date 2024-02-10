@@ -230,8 +230,9 @@ Should have only one arg, which is a number in bytes.
 Sets bounds for request's body size. Works in the following way: while reading client's body, server keeps track of it's size. If `client_max_body_size` is defined, and client's body exceeds it - server abandon's further request processing and returns error **413**. If not specified - default value of 1Mb is being applied.
 ##### upload_store
 In this project, it's behavior is slightly simplified, because this directive is not a part of vanilla nginx, but from a third-party module, more info [here](#Uploads).
+ **Works only for requests done with CURL**
 Should have only one arg, which is path to the uploads directory.
-Set's path to uploads directory. When location containing this directive handles POST request, it creates a file in specified directory, and writes request's body to it. The name of the file being created is it's number: first is `1`, second is `2`, etc.
+Set's path to uploads directory. When location containing this directive handles POST request, it creates a file in specified directory, and writes request's body to it. The name of the file being created is it's number: first is `1`, second is `2`, etc. If File already exists - server returns 503
 ##### index
 May have multiple args that define files that will be used as an index - meaning - shown when location get's accessed by address, following with `/`. Files are checked in the specified order - left to right. The last element of the list can be a file with an absolute path - meaning, path not from the current location's root - but from **root**-location's root.
 ```nginx
@@ -387,7 +388,7 @@ std::string                         body_;
 ### Headers (`headers_`)
 HTTP headers provide additional information about the request, such as the type of client making the request, the preferred response format, authentication information, etc.
 ### Body (`body_`)
-The body of the HTTP request, which contains additional data sent to the server. This is particularly relevant for POST requests or other methods where data is sent in the request body.
+The body of the HTTP request, which contains additional data sent to the server. This is particularly relevant for POST requests or other methods where data is sent in the request body. In case of file upload the body will contain file contents.
 ## [Response](https://developer.mozilla.org/en-US/docs/Web/HTTP/Messages#http_responses) creating
 Right after the creation of the `ClientRequest` server starts generating response, which involves 2 steps: creating a synthetic location and creating a `ServerResponse` class
 ### Creating a synthetic location
@@ -399,10 +400,31 @@ If request contains body, it's size will be counted while reading from socket. I
 Server checks whether access to requested location is prohibited with [`limit_except`](#Limit_except)
 #### Redirection
 If access is allowed, server then checks defined [redirection](#return), and bounces client with internal or external redirect, or returns specified code and custom message.
-#### File system
-If no redirection is defined, server proceeds with checking for the existence of the requested resource.
-There are 2 types of requests - for file and for index. If `path` part of the URL ends with `/` - this is an index request, otherwise - file request. That requests are handled differently.
-##### Synthetic location for file request
+#### Server-side handling
+##### Upload request
+If found location contains [upload_store](#upload_store)  - all requests to it will be treated as uploads. They have to:
+- Be POST
+- Have headers:
+	- `User-Agent`: only **curl** supported
+	- `Content-Type`: should have a `boundary` delimiter - a unique string that separates the individual parts of the message. `boundary` parameter is used to delineate the boundaries between different parts of the message body. 
+	- `Content-Length`: corresponds to the size of the request body, which is bigger then the file itself, because it contains some metadata such as filename.
+- Have a body of the certain structure:
+	1. Start with delimiter preceded by `\r\n--`
+	2. Contain some file metadata (optional) followed by `\r\n\r\n` (mandatory)
+	3. Contain actual file contents
+	4. End up with delimiter preceded by `\r\n--`
+If amount of bytes processed corresponds with the value of `Content-Length` and the last thing received was delimiter - request is correct.
+Before the start of the upload process, server also checks the file being created to store this upload:
+- Check that the value of `upload_store` points indeed to the directory where we are supposed to create files
+- Check that file intended to store current upload doesn't already exist
+- Check that server has permissions to create the file
+- Check that server's storage has enough free space to store file
+If any of those fails - [503 Service Unavailable](#503)  will be returned
+##### CGI request
+##### Static request
+If found location doesn't contain any directives specifying that request should be uploaded or handled by CGI, server proceeds with checking for the existence of the requested resource.
+There are 2 types of static requests - for file and for index. If `path` part of the URL ends with `/` - this is an index request, otherwise - file request. That requests are handled differently.
+###### Synthetic location for file request
 If `path` part of the URL has something after the last `/` symbol, it is assumed that it is a name of the file, that should be located in the root directory of the location, that preceded the filename. Depending on the result of the filesystem check server finishes response location:
 ```c++
 if (fs_status == NOTHING) {  
@@ -417,7 +439,7 @@ if (fs_status == NOTHING) {
     synth.return_code_ = 200;  
 }
 ```
-##### Synthetic location for index request
+###### Synthetic location for index request
 At this point, server determines which file should be returned. Server checks index files defined in found location or in parenting ones, or the default `index.html` if nothing were defined at all. More info here:  [index](#index)
 Depending on filesystem response status of the directory being requested `fs_status` and of the index file of a particular location - server set's `return_code` and `body_file`:
 ```c++
@@ -460,6 +482,30 @@ Server creates response in a following way:
 4. Sets additional headers like `Content-Type`, `Content-Length`, and `Connection`.
 
 #  Additional info
+## Server response codes implemented
+### OK
+#### 100 Continue
+In case if request's body is large, client might ask server for a confirmation before sending body. Client does it by including `Expect: 100-continue` header in request.
+In this case, server will send short message to let client start body upload.
+#### 200  OK
+This status code is returned when the server successfully processes the request and provides the requested resource. It signifies that the client's request has been fulfilled without any issues.
+
+### Implicit redirect
+#### 301 Moved Permanently
+This status code is returned when client requests for a static file, but specified address actually points to a directory. In this case, response is also followed by a header `Location`, which value corresponds to request url, followed by '/'
+### Client side errors
+#### 400  Bad Request
+If the server cannot process the client's request due to malformed syntax or other errors on the client side, it returns this status code. It indicates that there was an error in the client's request.
+#### 403  
+#### 404  
+#### 405  
+#### 413  
+
+### Server side errors
+#### 500  
+#### 501  
+#### 503  
+#### 505
 ## Uploads
 
 ![one_does_not_simply](https://github.com/r-kupin/webserv/blob/main/notes/one_does_not_simply.jpg)
