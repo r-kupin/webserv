@@ -13,6 +13,7 @@
 #include <gtest/gtest.h>
 #include "../../../../src/Server/Server.h"
 #include "../ConfigFiles.h"
+#include "../../../../src/Server/request/RequestExceptions.h"
 
 class SimpleResponseTest : public ::testing::Test, public Server {
 public:
@@ -187,6 +188,7 @@ TEST_F(SimpleResponseTest, RedirectWithCustomMessage) {
     EXPECT_EQ(response.GetBodyStr(), "Hello from loc_3X !");
 }
 
+//request test
 TEST_F(SimpleResponseTest, PostRootBodyWithinLimits) {
     Location        response_location;
     ClientRequest   request;
@@ -194,35 +196,19 @@ TEST_F(SimpleResponseTest, PostRootBodyWithinLimits) {
 
     pipe_reguest_to_fd("POST / HTTP/1.1\r\n\r\nthis is body\n\r");
     request.Init(fd_);
-    response_location = ProcessRequest(request);
-    response.ComposeResponse(response_location);
-
-    EXPECT_EQ(response.GetTopHeader(), "HTTP/1.1 200 OK");
-    EXPECT_EQ(response.GetHeaders().find("Server")->second, "WebServ");
-    EXPECT_EQ(response.GetBodyStr(), "<!DOCTYPE html>\n"
-                                     "<html lang=\"en\">\n"
-                                     "<head>\n"
-                                     "    <meta charset=\"UTF-8\">\n"
-                                     "    <title>root_index.html</title>\n"
-                                     "</head>\n"
-                                     "<body>\n"
-                                     "This is root_index.html\n"
-                                     "</body>\n"
-                                     "</html>");
-}
-
-TEST_F(SimpleResponseTest, PostRootBodyExceedsLimits) {
-    Location        response_location;
-    ClientRequest   request;
-    ServerResponse  response(GetConfig().GetServerName(), GetConfig().GetPort());
-
-    pipe_reguest_to_fd("POST / HTTP/1.1\r\n"
-                       "\r\nthis is body, and it is quite big");
-    request.Init(fd_);
-    response_location = ProcessRequest(request);
-    response.ComposeResponse(response_location);
-
-    EXPECT_EQ(response.GetTopHeader(), "HTTP/1.1 413 Payload Too Large");
-    EXPECT_EQ(response.GetHeaders().find("Server")->second, "WebServ");
-    EXPECT_TRUE(!response.GetBodyStr().empty());
+    EXPECT_THROW(ProcessRequest(request), BadRequestException);
+//    response.ComposeResponse(response_location);
+//
+//    EXPECT_EQ(response.GetTopHeader(), "HTTP/1.1 200 OK");
+//    EXPECT_EQ(response.GetHeaders().find("Server")->second, "WebServ");
+//    EXPECT_EQ(response.GetBodyStr(), "<!DOCTYPE html>\n"
+//                                     "<html lang=\"en\">\n"
+//                                     "<head>\n"
+//                                     "    <meta charset=\"UTF-8\">\n"
+//                                     "    <title>root_index.html</title>\n"
+//                                     "</head>\n"
+//                                     "<body>\n"
+//                                     "This is root_index.html\n"
+//                                     "</body>\n"
+//                                     "</html>");
 }

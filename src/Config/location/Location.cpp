@@ -314,8 +314,7 @@ void Location::AddErrorPages(const v_str &directive) {
         address = *(directive.rbegin());
         for (size_t i = 1; directive[i] != address; ++i) {
             try {
-                code = Utils::StringToULong(
-                        directive[1]);
+                code = Utils::StringToULong(directive[i]);
             } catch (const Utils::ConversionException &) {
                 ThrowLocationException("Error code is wrong");
             }
