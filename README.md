@@ -43,6 +43,8 @@ I am not using `Makefile` in development process, so the **lists of source files
 - Setup the server_names or not.
 - Turn on or off directory listing. (?)
 - Your server must be able to listen to multiple ports 
+	- multiple domains
+	- multiple simultaneous requests to the same server
 - A request to your server should never hang forever.
 - The first server for a host:port will be the default for this host:port (that means it will answer to all the requests that don’t belong to an other server).
 - Execute CGI based on certain file extension (for example .php).
@@ -232,7 +234,7 @@ Sets bounds for request's body size. Works in the following way: while reading c
 In this project, it's behavior is slightly simplified, because this directive is not a part of vanilla nginx, but from a third-party module, more info [here](#Uploads).
  **Works only for requests done with CURL**
 Should have only one arg, which is path to the uploads directory.
-Set's path to uploads directory. When location containing this directive handles POST request, it creates a file in specified directory, and writes request's body to it. The name of the file being created is it's number: first is `1`, second is `2`, etc. If File already exists - server returns 503
+Set's path to uploads directory. When location containing this directive handles POST request, it creates a file in specified directory, and writes request's body to it. The name of the file being created is it's number: first is `1`, second is `2`, etc. If File already exists or it's not possible to create it - server returns 503
 ##### index
 May have multiple args that define files that will be used as an index - meaning - shown when location get's accessed by address, following with `/`. Files are checked in the specified order - left to right. The last element of the list can be a file with an absolute path - meaning, path not from the current location's root - but from **root**-location's root.
 ```nginx
@@ -404,7 +406,7 @@ If access is allowed, server then checks defined [redirection](#return), and bou
 ##### Upload request
 If found location contains [upload_store](#upload_store)  - all requests to it will be treated as uploads. They have to:
 - Be POST
-- Have headers:
+- Have headers set:
 	- `User-Agent`: only **curl** supported
 	- `Content-Type`: should have a `boundary` delimiter - a unique string that separates the individual parts of the message. `boundary` parameter is used to delineate the boundaries between different parts of the message body. 
 	- `Content-Length`: corresponds to the size of the request body, which is bigger then the file itself, because it contains some metadata such as filename.
@@ -413,7 +415,7 @@ If found location contains [upload_store](#upload_store)  - all requests to it w
 	2. Contain some file metadata (optional) followed by `\r\n\r\n` (mandatory)
 	3. Contain actual file contents
 	4. End up with delimiter preceded by `\r\n--`
-If amount of bytes processed corresponds with the value of `Content-Length` and the last thing received was delimiter - request is correct.
+If amount of bytes processed corresponds with the value of `Content-Length` and the last thing received was delimiter - request is correct. Otherwise - [400  Bad Request](#400  Bad Request) will be returned.
 Before the start of the upload process, server also checks the file being created to store this upload:
 - Check that the value of `upload_store` points indeed to the directory where we are supposed to create files
 - Check that file intended to store current upload doesn't already exist
@@ -425,7 +427,7 @@ If any of those fails - [503 Service Unavailable](#503)  will be returned
 If found location doesn't contain any directives specifying that request should be uploaded or handled by CGI, server proceeds with checking for the existence of the requested resource.
 There are 2 types of static requests - for file and for index. If `path` part of the URL ends with `/` - this is an index request, otherwise - file request. That requests are handled differently.
 ###### Synthetic location for file request
-If `path` part of the URL has something after the last `/` symbol, it is assumed that it is a name of the file, that should be located in the root directory of the location, that preceded the filename. Depending on the result of the filesystem check server finishes response location:
+If `path` part of the URL has something after the last `/` symbol, it is assumed that it is a name of the file, that should be located in the root directory of the location, that preceded the filename. Depending on the result of the file system check server finishes response location:
 ```c++
 if (fs_status == NOTHING) {  
     std::cout << "open() \"" + address + "\" failed" << std::endl;  

@@ -122,17 +122,65 @@ uri ends:
 20. The server extracts the relevant settings from the configuration file and
 	uses them to configure the server's behavior, such as the server's root_ directory, port number, and other settings.
 
+fd_set workflow:
 
-
-- Root <- *parent*
-	- Root <- current = parent
-		- Root
-			- A
-			- B <- Same Address as current -
-		- A
-			- A
-			- B <- New location
-		- C <- New location
-	- A <- current != parent
-		- A
-		- B
+1. Init
+	1. Init each server's sockets with **port** & **BACKLOG**=10
+		1. Init socket basis (**domain** AF_INET, **service** SOCK_STREAM, **protocol** PROTOCOL, **port**, **interface** INADDR_ANY)
+			1. _domain = domain;  
+			2. _service = service;  
+			3. _protocol = protocol;  
+			4. _port = port;  
+			5. _interface = interface;
+		2. Init sockaddr_in
+			1. _address.sin_family = domain;  
+			2. _address.sin_port = htons(port); 
+			3. _address.sin_addr.s_addr = htonl(interface);
+		3. Create socket : int **_socket_fd** = **`socket(domain, service, protocol)`**
+	2. Connect each server's socket
+		1. **`setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));`**
+		2. **`bind(socket_fd, (struct sockaddr *)&address, sizeof(address));`**
+	3. Start listening
+		1. in socket of each server _listening = **`listen(socket_fd, _backlog)`**
+		2. assign server's **fd** = **socket_fd**
+2. Run
+	1. Init fd_sets **_recv_fd_pool** and  **_send_fd_pool**
+		1. clear  before use
+			1. **`FD_ZERO(&_recv_fd_pool);`**
+			2. **`FD_ZERO(&_send_fd_pool);`**
+		2. Add each **serer's fd** to **_recv_fd_pool**
+			1.  set **serer's fd** to non-blocking mode **`fcntl(serverFd, F_SETFL, O_NONBLOCK)`**
+			2. add to set `_addToSet(serverFd, &_recv_fd_pool)`
+				1. modify *max_fd* if ** **serer's fd** exceeds it
+				2. **`FD_SET(serverFd, recv_fd_pool)`**;
+			3. _max_fd = serverFd
+	2. Main loop
+		1. Save copies of **fd_pool**s
+		2. Block execution until any activity on sockets observed
+			1. **`select(_max_fd + 1, &recv_fd_pool_copy, &send_fd_pool_copy, NULL, NULL)`**
+		3. On unblock - `for (int `**fd**` = 3; fd <= _max_fd; fd++)` and check for activity on each one
+			1. If activity spotted on the side of the *recv_fd_pool*
+				1. check that no servers are already working with this **fd** (?) `clientsMap.count(fd) > 0`
+					1. Accept connection (**fd**)
+						1. **f_d** = **`accept(fd, (struct sockaddr *)&address, (socklen_t *)&address_len)`**
+						2. If **f_d** is good - add to **_recv_fd_pool**
+							1. modify *max_fd* if **f_d** exceeds it
+							2. **`FD_SET(f_d, _recv_fd_pool)`**;
+						3. set newly obtained **f_d** to nonblock **`fcntl(f_d, F_SETFL, O_NONBLOCK)`**
+						4. save *server*-**f_d** correspondence
+				2.  If it's already in base - request is accepted and we have to handle it...
+					1. Handle connection (**fd**)
+						1. Create request from **fd**
+						2. retrieve pointer to server from correspondence by **fd**
+						3. make srever generate response
+						4. remove **fd** from _recv_fd_pool
+							1. modify *max_fd* if **fd** exceeds it
+							2. **`FD_CLR(fd, _recv_fd_pool);`**
+						5. add **fd** to *_send_fd_pool*
+							1. modify *max_fd* if **fd** exceeds it
+							2. **`FD_SET(fd, _send_fd_pool)`;**
+			2. Activity at _send_fd_pool
+					1. Respond (**fd**)
+						1. perform **`send(fd, response buffer retrieved from map by "fd")`**
+						2. remove **fd** from _send_fd_pool
+						3. add **fd** to _recv_fd_pool
