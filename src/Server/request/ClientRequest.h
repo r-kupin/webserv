@@ -75,12 +75,11 @@ public:
     void                TellClientToContinueIfNeed(int socket) const;
     size_t              ProcessCURLFileMetadata(int socket,
                                                 const std::string &delimiter);
-    int
-    ReadBodyToRequest(int socket);
+    int                 ReadBodyToRequest(int socket);
 protected:
 //-------------------socket-level-----------------------------------------------
     v_str               ReadFromSocket(int socket, int buffer_size);
-    int ReadBodyPart(int socket, int buffer_size, char *buffer);
+    int                 ReadBodyPart(int socket, int buffer_size, char *buffer);
     void                ReadCURLFileMetadata(const std::string &delimiter,
                                              char *buffer, int socket);
 //-------------------vector-of-strings parsed input level----------------------
