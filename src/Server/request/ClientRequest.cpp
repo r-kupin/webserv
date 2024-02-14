@@ -23,7 +23,7 @@ ClientRequest::ClientRequest(int client_sock) { Init(client_sock);}
 void ClientRequest::Init(int client_sock) {
     socket_ = client_sock;
     v_str request = ReadFromSocket(socket_, BUFFER_SIZE);
-    CheckRequest(request);
+//    CheckRequest(request);
     std::string url = ExtractUrl(request[0]);
     CheckURL(url);
     addr_ = ExtractAddr(url);
@@ -58,8 +58,8 @@ v_str ClientRequest::ReadFromSocket(int socket, int buffer_size) {
     v_str               request;
 
     while (true) {
-        // int bytes_read = recv(socket, buffer, buffer_size - 1, 0);
-        int bytes_read = read(socket, buffer, buffer_size);
+         int bytes_read = recv(socket, buffer, buffer_size - 1, 0);
+//        int bytes_read = read(socket, buffer, buffer_size);
         if (bytes_read <= 0)
             ThrowException("unable to read request", "ReadFailed");
         storage.insert(storage.end(), buffer, buffer + bytes_read);

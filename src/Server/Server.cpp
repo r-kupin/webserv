@@ -116,18 +116,10 @@ void Server::Start() {
     Start(config_.GetPort());
 }
 
-// todo: correct shutdown with a signal
 void Server::Start(int port) {
     if (epoll_fd_ > 0) {
         Log("started server at " + Utils::NbrToString(port) + " port");
-        while (true) {
-            struct sockaddr_in client_addr;
-            socklen_t client_len = sizeof(client_addr);
-            int client_sock = accept(socket_,
-                                     (struct sockaddr *) &client_addr,
-                                     &client_len); // may be [MAX_CLIENTS]
-            CheckRequest(client_sock, client_addr);
-        }
+        while (true) {HandleEvents();}
     } else {
         Log("It seems like " + Utils::NbrToString(port) +
             " port is already in use. Aborting.");
@@ -135,15 +127,42 @@ void Server::Start(int port) {
     close(socket_);
 }
 
+void    Server::HandleEvents() {
+    epoll_event events[MAX_EVENTS];
+    int nfds = epoll_wait(epoll_fd_, events, MAX_EVENTS, -1);
+    if (nfds == -1) {
+        // Handle epoll_wait error
+        return;
+    }
+    for (int i = 0; i < nfds; ++i) {
+        if (events[i].data.fd == socket_) {
+            // New connection
+            struct sockaddr_in client_addr;
+            socklen_t client_len = sizeof(client_addr);
+            int client_sock = accept(socket_, (struct sockaddr *) &client_addr, &client_len);
+            CheckRequest(client_sock, client_addr);
+        }
+    }
+}
+
 int Server::CheckRequest(int client_sock, const sockaddr_in &client_addr) {
     if (client_sock < 0) {
         Log("Error accepting connection!");
-    } else {
+    } else if (AddClientToEpoll(client_sock)) {
         Log("Accepted client connection from " +
             Utils::NbrToString(client_addr.sin_addr.s_addr) + "\n");
         HandleRequest(client_sock);
+    } else {
+        Log("Error adding client socket to epoll");
     }
     return client_sock;
+}
+
+bool    Server::AddClientToEpoll(int client_sock) {
+    epoll_event event;
+    event.events = EPOLLIN | EPOLLET;
+    event.data.fd = client_sock;
+    return epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, client_sock, &event) != -1;
 }
 
 void Server::HandleRequest(int client_sock) {

@@ -138,7 +138,7 @@ void Server::BindSocket(addrinfo *res) {
  * new incoming connections.
  */
 void Server::ListenSocket()  {
-    if (listen(socket_, 5) < 0) {
+    if (listen(socket_, -1) < 0) {
         close(socket_);
         throw SocketListeningFailureException();
     }
@@ -184,8 +184,7 @@ void Server::CreateEpoll() {
 void Server::AddEpollInstance() {
     std::memset(&event_, 0, sizeof(event_));
     event_.data.fd = socket_;
-    event_.events = EPOLLIN | EPOLLET | EPOLLONESHOT;
-    if (epoll_ctl(epoll_fd_, EPOLL_CTL_ADD,
-                  socket_, &event_) < 0)
+    event_.events = EPOLLIN | EPOLLET;
+    if (epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, socket_, &event_) < 0)
         throw EpollAddFailed();
 }
