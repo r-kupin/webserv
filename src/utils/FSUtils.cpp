@@ -21,7 +21,7 @@ int Utils::CheckFilesystem(const std::string &address) {
 
     if (stat(address.c_str(), &fileInfo) == 0) {
         if (S_ISREG(fileInfo.st_mode))
-            return FILE;
+            return COMM_FILE;
         if (S_ISDIR(fileInfo.st_mode))
             return DIRECTORY;
         return ELSE;

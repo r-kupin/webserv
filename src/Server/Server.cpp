@@ -95,7 +95,7 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <algorithm>
-#include "ServerExceptions.h"
+#include <sys/fcntl.h>
 #include "request/RequestExceptions.h"
 #include "Server.h"
 
@@ -127,6 +127,22 @@ void Server::Start(int port) {
     close(socket_);
 }
 
+bool    add_client_to_epoll(int client_sock, int epoll_fd) {
+    epoll_event event;
+    event.events = EPOLLIN | EPOLLET;
+    event.data.fd = client_sock;
+    return epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_sock, &event) != -1;
+}
+
+bool    set_non_blocking(int sockfd) {
+    int flags = fcntl(sockfd, F_GETFL, 0);
+    if (flags == -1)
+        return false;
+
+    flags |= O_NONBLOCK;
+    return (fcntl(sockfd, F_SETFL, flags) != -1);
+}
+
 void    Server::HandleEvents() {
     epoll_event events[MAX_EVENTS];
     int nfds = epoll_wait(epoll_fd_, events, MAX_EVENTS, -1);
@@ -139,8 +155,11 @@ void    Server::HandleEvents() {
             // New connection
             struct sockaddr_in client_addr;
             socklen_t client_len = sizeof(client_addr);
-            int client_sock = accept(socket_, (struct sockaddr *) &client_addr, &client_len);
+            int client_sock = accept(socket_,
+                                     (struct sockaddr *) &client_addr,&client_len);
             CheckRequest(client_sock, client_addr);
+        } else if (events[i].events & EPOLLIN) {
+            HandleRequest(events[i].data.fd);
         }
     }
 }
@@ -148,28 +167,22 @@ void    Server::HandleEvents() {
 int Server::CheckRequest(int client_sock, const sockaddr_in &client_addr) {
     if (client_sock < 0) {
         Log("Error accepting connection!");
-    } else if (AddClientToEpoll(client_sock)) {
+    } else if (set_non_blocking(client_sock) &&
+               add_client_to_epoll(client_sock, epoll_fd_)) {
         Log("Accepted client connection from " +
             Utils::NbrToString(client_addr.sin_addr.s_addr) + "\n");
-        HandleRequest(client_sock);
     } else {
-        Log("Error adding client socket to epoll");
+        Log("Error adding client socket to epoll of set nonblocking");
+        close(client_sock);
     }
     return client_sock;
-}
-
-bool    Server::AddClientToEpoll(int client_sock) {
-    epoll_event event;
-    event.events = EPOLLIN | EPOLLET;
-    event.data.fd = client_sock;
-    return epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, client_sock, &event) != -1;
 }
 
 void Server::HandleRequest(int client_sock) {
     Location        response_location;
     ClientRequest   request;
-    ServerResponse  response(config_.GetServerName(), config_.GetPort());
-
+    ServerResponse  response(config_.GetServerName(),
+                             config_.GetPort());
     try {
         request.Init(client_sock);
         Log("Got client request:\n");
@@ -189,6 +202,7 @@ void Server::HandleRequest(int client_sock) {
     std::cout << response << std::endl;
     response.SendResponse(client_sock);
     Log("Response sent\n");
+    close(client_sock);
 }
 
 void Server::Log(const std::string &msg) const {

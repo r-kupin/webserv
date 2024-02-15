@@ -34,7 +34,7 @@
 #define BAD_HTTP_VERSION 505
 
 #define MAX_CLIENTS 100
-#define MAX_EVENTS 100
+#define MAX_EVENTS 1000
 
  class Server {
 public:
@@ -65,7 +65,6 @@ protected:
 //-------------------request handling-------------------------------------------
     void                        Start(int port);
     void                        HandleEvents();
-    bool                        AddClientToEpoll(int client_sock);
     int                         CheckRequest(int client_sock,
                                              const sockaddr_in &client_addr);
     void                        HandleRequest(int client_sock);

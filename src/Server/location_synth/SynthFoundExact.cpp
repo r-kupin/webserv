@@ -56,7 +56,7 @@ std::string Server::FindIndexToSend(const l_loc_c_it &found,
                 // found location is not a last directory in the request path
                 address = found->root_ + compliment + "/" + *it;
             }
-            if (Utils::CheckFilesystem(address) == FILE)
+            if (Utils::CheckFilesystem(address) == COMM_FILE)
                 return address;
         }
     } else {

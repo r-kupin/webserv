@@ -23,7 +23,7 @@ ClientRequest::ClientRequest(int client_sock) { Init(client_sock);}
 void ClientRequest::Init(int client_sock) {
     socket_ = client_sock;
     v_str request = ReadFromSocket(socket_, BUFFER_SIZE);
-//    CheckRequest(request);
+    CheckRequest(request);
     std::string url = ExtractUrl(request[0]);
     CheckURL(url);
     addr_ = ExtractAddr(url);

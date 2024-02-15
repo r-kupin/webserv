@@ -21,7 +21,7 @@
 #include <ostream>
 
 #define NOTHING 0
-#define FILE 1
+#define COMM_FILE 1
 #define DIRECTORY 2
 #define ELSE 3
 
