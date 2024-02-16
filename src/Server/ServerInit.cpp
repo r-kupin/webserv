@@ -102,6 +102,14 @@ void Server::SetSocketOptions(addrinfo *res) const {
         close(socket_);
         throw SocketSetOptionsFailureException();
     }
+    // Set receive buffer size
+    int recv_buffer_size = SOCKET_BUFFER_SIZE; // Example buffer size (in bytes)
+    if (setsockopt(socket_, SOL_SOCKET, SO_RCVBUF,
+                   &recv_buffer_size, sizeof(recv_buffer_size)) < 0) {
+        freeaddrinfo(res);
+        close(socket_);
+        throw SocketSetOptionsFailureException();
+    }
 }
 
 /**
@@ -138,7 +146,7 @@ void Server::BindSocket(addrinfo *res) {
  * new incoming connections.
  */
 void Server::ListenSocket()  {
-    if (listen(socket_, -1) < 0) {
+    if (listen(socket_, SOMAXCONN) < 0) {
         close(socket_);
         throw SocketListeningFailureException();
     }

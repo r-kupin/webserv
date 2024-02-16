@@ -35,6 +35,7 @@
 
 #define MAX_CLIENTS 100
 #define MAX_EVENTS 1000
+#define SOCKET_BUFFER_SIZE 8192
 
  class Server {
 public:
