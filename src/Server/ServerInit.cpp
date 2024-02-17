@@ -60,13 +60,6 @@ void Server::PresetAddress(addrinfo **addr) {
                     &hints, addr)) {
         throw AddrinfoCreationFailed();
     }
-
-//    char ipstr[INET_ADDRSTRLEN];
-//    struct sockaddr_in* addr_in = reinterpret_cast<struct sockaddr_in*>
-//            ((*addr)->ai_addr);
-//    inet_ntop(AF_INET, &(addr_in->sin_addr), ipstr, INET_ADDRSTRLEN);
-//    std::cout << "Server address: " << ipstr << '\n';
-//    std::cout << "Server port: " << ntohs(addr_in->sin_port) << '\n';
 }
 
 /**
@@ -139,11 +132,6 @@ void Server::BindSocket(addrinfo *res) {
  * connection is placed in a queue until the server is able to accept the
  * connection. The size of the queue is determined by the second argument
  * passed to the listen() function.
- *  When a connection is accepted by the server, a new socket is created for
- * communication between the client and the server. The server can then use
- * this new socket to send and receive data with the client. The original socket
- * created by the socket() function remains open and continues to listen for
- * new incoming connections.
  */
 void Server::ListenSocket()  {
     if (listen(socket_, SOMAXCONN) < 0) {
@@ -151,6 +139,15 @@ void Server::ListenSocket()  {
         throw SocketListeningFailureException();
     }
 }
+//-------------------epoll------------------------------------------------------
+/**
+ *    The epoll API performs monitoring of multiple file descriptors to see if
+ *    I/O is possible on any of them. The epoll API can be used either as an
+ *    edge-triggered or a level-triggered interface and scales well to large
+ *    numbers of watched file descriptors. The following system calls are
+ *    provided to create and manage an epoll instance.
+ *
+ */
 
 /**
  *  The epoll_create system call is used to create an epoll instance and
@@ -172,22 +169,7 @@ void Server::CreateEpoll() {
  *  The events in event_.events represent the types of events that the epoll
  * instance should monitor for a specific file descriptor. These events
  * indicate the readiness or availability of certain operations on the file
- * descriptor. Let's break down each event flag you mentioned:
- *  EPOLLIN: This event flag indicates that there is data available to be
- * read from the file descriptor without blocking. It typically means that a
- * read operation can be performed on the file descriptor.
- *  EPOLLET: This event flag enables edge-triggered behavior for the
- * associated file descriptor. With edge-triggered mode, an event is
- * triggered only when the state of the file descriptor changes, such as when
- * new data arrives or when a connection is established. It requires actively
- * reading or writing data from the file descriptor until it returns an error
- * (e.g., EAGAIN or EWOULDBLOCK) to avoid missing events.
- *  EPOLLONESHOT: This event flag ensures that the file descriptor is
- * monitored for events only once until it is re-armed. After an event is
- * triggered for the file descriptor, it is automatically disabled in the
- * epoll instance. To monitor for events again, the file descriptor needs to
- * be re-registered using EPOLL_CTL_MOD with the desired events. This flag is
- * useful in scenarios where you want to handle each event only once.
+ * descriptor.
  */
 void Server::AddEpollInstance() {
     std::memset(&event_, 0, sizeof(event_));

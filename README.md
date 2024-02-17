@@ -360,6 +360,29 @@ Stores data about all [locations](#location) mentioned in config:
     bool                    ghost_;
 ```
 ## Setting up servers
+the principle of how the server works is as follows:
+### Opening of a socket
+The external interface of a server is a socket. It is a data structure that represents an endpoint for communication. It's basically a like a file descriptor used by the kernel to manage network communication between processes. In order to open socket for communication several setup steps are required.
+#### Set socket options
+#### Bind socket
+#### Start listening
+
+When socket is set up to listen for the connections it is fully usable. 
+### Setting up epoll
+The **epoll** API performs monitoring of multiple file descriptors to see if I/O is possible on any of them. The **epoll** API can be used either as an edge-triggered or a level-triggered interface and scales well to large numbers of watched file descriptors. The following system calls are provided to create and manage an **epoll** instance:
+https://linux.die.net/man/7/epoll
+https://stackoverflow.com/questions/41582560/how-does-epolls-epollexclusive-mode-interact-with-level-triggering
+#### Create epoll instance
+`epoll_create`
+#### Add socket to the epoll watchlist
+`epoll_ctl`
+#### Wait for the event to happen
+`epoll_wait`
+## Accepting connections
+`accept`
+#### Set client's fd to non-blocking state
+#### Add client's fd to epoll
+#### Read client's message from socket
 ## [Request](https://developer.mozilla.org/en-US/docs/Web/HTTP/Messages#http_requests) handling
 HTTP request is a message sent by a client to a server:
 
@@ -482,7 +505,7 @@ Server creates response in a following way:
 		2. If an external or internal address is provided, sets the `Location` header accordingly.
 	4. If a body file is specified, its content is read.
 4. Sets additional headers like `Content-Type`, `Content-Length`, and `Connection`.
-
+### Sending response back to client
 #  Additional info
 ## Server response codes implemented
 ### OK
