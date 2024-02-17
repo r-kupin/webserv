@@ -159,7 +159,7 @@ void Server::ListenSocket()  {
  * and resources for the epoll instance.
  */
 void Server::CreateEpoll() {
-    epoll_fd_= epoll_create(1);
+    epoll_fd_= epoll_create1(0);
     if (epoll_fd_ < 0)
         throw EpollCreationFailed();
 }
@@ -192,7 +192,7 @@ void Server::CreateEpoll() {
 void Server::AddEpollInstance() {
     std::memset(&event_, 0, sizeof(event_));
     event_.data.fd = socket_;
-    event_.events = EPOLLIN | EPOLLET;
+    event_.events = EPOLLIN | EPOLLOUT;
     if (epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, socket_, &event_) < 0)
         throw EpollAddFailed();
 }

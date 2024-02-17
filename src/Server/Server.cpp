@@ -119,7 +119,10 @@ void Server::Start() {
 void Server::Start(int port) {
     if (epoll_fd_ > 0) {
         Log("started server at " + Utils::NbrToString(port) + " port");
-        while (true) {HandleEvents();}
+        std::map<int, ServerResponse> connection;
+        while (true) {
+            HandleEvents(
+                    connection);}
     } else {
         Log("It seems like " + Utils::NbrToString(port) +
             " port is already in use. Aborting.");
@@ -127,39 +130,53 @@ void Server::Start(int port) {
     close(socket_);
 }
 
-bool    add_client_to_epoll(int client_sock, int epoll_fd) {
+bool    add_client_to_epoll(int socket, int epoll_fd) {
     epoll_event event;
-    event.events = EPOLLIN | EPOLLET;
-    event.data.fd = client_sock;
-    return epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_sock, &event) != -1;
+    event.events = EPOLLIN | EPOLLOUT;
+    event.data.fd = socket;
+    return epoll_ctl(epoll_fd, EPOLL_CTL_ADD, socket, &event) != -1;
 }
 
-bool    set_non_blocking(int sockfd) {
-    int flags = fcntl(sockfd, F_GETFL, 0);
+bool    remove_epollin_flag(int socket, int epoll_fd) {
+    epoll_event event;
+    event.events = EPOLLOUT;
+    event.data.fd = socket;
+    return epoll_ctl(epoll_fd, EPOLL_CTL_MOD, socket, &event) != -1;
+}
+
+bool    set_non_blocking(int socket) {
+    int flags = fcntl(socket, F_GETFL, 0);
     if (flags == -1)
         return false;
-
     flags |= O_NONBLOCK;
-    return (fcntl(sockfd, F_SETFL, flags) != -1);
+    return fcntl(socket, F_SETFL, flags) != -1;
 }
 
-void    Server::HandleEvents() {
+void
+Server::HandleEvents(std::map<int, ServerResponse> &connection) {
     epoll_event events[MAX_EVENTS];
+
     int nfds = epoll_wait(epoll_fd_, events, MAX_EVENTS, -1);
     if (nfds == -1) {
         // Handle epoll_wait error
         return;
     }
     for (int i = 0; i < nfds; ++i) {
-        if (events[i].data.fd == socket_) {
+        int fd = events[i].data.fd;
+        if (fd == socket_) {
             // New connection
             struct sockaddr_in client_addr;
             socklen_t client_len = sizeof(client_addr);
-            int client_sock = accept(socket_,
-                                     (struct sockaddr *) &client_addr,&client_len);
+            int client_sock = accept(socket_, (struct sockaddr *) &client_addr,
+                                    &client_len);
             CheckRequest(client_sock, client_addr);
         } else if (events[i].events & EPOLLIN) {
-            HandleRequest(events[i].data.fd);
+            connection.insert(std::make_pair(fd, HandleRequest(fd)));
+        } else if (events[i].events & EPOLLOUT) {
+            connection[fd].SendResponse(fd);
+            connection.erase(fd);
+            Log("Response sent\n");
+            close(fd);
         }
     }
 }
@@ -167,8 +184,9 @@ void    Server::HandleEvents() {
 int Server::CheckRequest(int client_sock, const sockaddr_in &client_addr) {
     if (client_sock < 0) {
         Log("Error accepting connection!");
-    } else if (set_non_blocking(client_sock) &&
-               add_client_to_epoll(client_sock, epoll_fd_)) {
+//    } else if (set_non_blocking(client_sock) &&
+//            add_client_to_epoll(client_sock, epoll_fd_)) {
+    } else if (add_client_to_epoll(client_sock, epoll_fd_)) {
         Log("Accepted client connection from " +
             Utils::NbrToString(client_addr.sin_addr.s_addr) + "\n");
     } else {
@@ -178,7 +196,7 @@ int Server::CheckRequest(int client_sock, const sockaddr_in &client_addr) {
     return client_sock;
 }
 
-void Server::HandleRequest(int client_sock) {
+ServerResponse  Server::HandleRequest(int client_sock) {
     Location        response_location;
     ClientRequest   request;
     ServerResponse  response(config_.GetServerName(),
@@ -200,9 +218,8 @@ void Server::HandleRequest(int client_sock) {
     response.ComposeResponse(response_location);
     Log("Prepared response:\n");
     std::cout << response << std::endl;
-    response.SendResponse(client_sock);
-    Log("Response sent\n");
-    close(client_sock);
+    remove_epollin_flag(client_sock, epoll_fd_);
+    return response;
 }
 
 void Server::Log(const std::string &msg) const {
