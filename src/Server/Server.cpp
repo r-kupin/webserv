@@ -129,7 +129,7 @@ void Server::Start(int port) {
 
 bool    add_client_to_epoll(int client_sock, int epoll_fd) {
     epoll_event event;
-    event.events = EPOLLIN | EPOLLET;
+    event.events = EPOLLIN;
     event.data.fd = client_sock;
     return epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_sock, &event) != -1;
 }
