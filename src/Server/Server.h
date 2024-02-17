@@ -34,7 +34,7 @@
 #define BAD_HTTP_VERSION 505
 
 #define MAX_CLIENTS 100
-#define MAX_EVENTS 10000
+#define MAX_EVENTS 1000
 #define SOCKET_BUFFER_SIZE 8192
 
  class Server {
@@ -65,14 +65,10 @@ protected:
     void                        AddEpollInstance();
 //-------------------request handling-------------------------------------------
     void                        Start(int port);
-    void
-    HandleEvents(
-            std::map<int, ServerResponse> &connection);
+    void                        HandleEvents();
     int                         CheckRequest(int client_sock,
                                              const sockaddr_in &client_addr);
-    ServerResponse
-    HandleRequest(
-            int client_sock);
+    void                        HandleRequest(int client_sock);
 //-------------------request server-side processing-----------------------------
     Location                    ProcessRequest(ClientRequest&request,
                                                int socket = -1);
