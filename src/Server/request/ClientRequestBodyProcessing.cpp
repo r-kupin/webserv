@@ -38,8 +38,8 @@ void ClientRequest::TellClientToContinueIfNeed(int socket) const {
 }
 
 int ClientRequest::ReadBodyPart(int socket, int buffer_size, char *buffer) {
-//         int bytes_read = recv(socket, buffer, buffer_size - 1, 0);
-    int bytes_read = read(socket, buffer, buffer_size - 1);
+//    int bytes_read = read(socket, buffer, buffer_size - 1);
+    int bytes_read = recv(socket, buffer, buffer_size - 1, 0);
     if (bytes_read < 0)
         ThrowException("unable to read request's body", "ReadFailed");
     body_.insert(body_.end(), buffer, buffer + bytes_read);

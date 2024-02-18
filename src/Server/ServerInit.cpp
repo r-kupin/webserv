@@ -37,16 +37,6 @@ void Server::Init() {
     }
 }
 
-/**
- *  getaddrinfo() is a function provided by the operating system's networking
- * stack that resolves a domain name or IP address to a list of socket
- * addresses that can be used to establish a network connection.
- *  The getaddrinfo() function takes as input a hostname or IP address, a
- * service name or port number, and a set of hints that specify the desired
- * address family, socket type, and protocol. It then returns a linked list
- * of `struct addrinfo` structures that contain the socket addresses that can
- * be used to establish a network connection.
- */
 void Server::PresetAddress(addrinfo **addr) {
     struct addrinfo hints;
 
@@ -95,14 +85,6 @@ void Server::SetSocketOptions(addrinfo *res) const {
         close(socket_);
         throw SocketSetOptionsFailureException();
     }
-    // Set receive buffer size
-    int recv_buffer_size = SOCKET_BUFFER_SIZE; // Example buffer size (in bytes)
-    if (setsockopt(socket_, SOL_SOCKET, SO_RCVBUF,
-                   &recv_buffer_size, sizeof(recv_buffer_size)) < 0) {
-        freeaddrinfo(res);
-        close(socket_);
-        throw SocketSetOptionsFailureException();
-    }
 }
 
 /**
@@ -119,58 +101,19 @@ void Server::BindSocket(addrinfo *res) {
     }
 }
 
-/**
- *  The listen() function is a system call in the Linux/Unix operating
- * systems that sets up the specified socket to listen for incoming client
- * connections.
- *  The function takes two arguments: the first is the file descriptor of
- * the socket, and the second is the maximum number of client connections that
- * can be queued up and waiting for the server to accept them.
- *  Once the socket has been created and bound to a specific IP address and
- * port number, the listen() function enables the socket to begin accepting
- * incoming client connections. When a client connects to the server, the
- * connection is placed in a queue until the server is able to accept the
- * connection. The size of the queue is determined by the second argument
- * passed to the listen() function.
- */
 void Server::ListenSocket()  {
     if (listen(socket_, SOMAXCONN) < 0) {
         close(socket_);
         throw SocketListeningFailureException();
     }
 }
-//-------------------epoll------------------------------------------------------
-/**
- *    The epoll API performs monitoring of multiple file descriptors to see if
- *    I/O is possible on any of them. The epoll API can be used either as an
- *    edge-triggered or a level-triggered interface and scales well to large
- *    numbers of watched file descriptors. The following system calls are
- *    provided to create and manage an epoll instance.
- *
- */
 
-/**
- *  The epoll_create system call is used to create an epoll instance and
- * returns a file descriptor associated with it. Under the hood, epoll_create
- * interacts with the Linux kernel to set up the necessary data structures
- * and resources for the epoll instance.
- */
 void Server::CreateEpoll() {
     epoll_fd_= epoll_create(1);
     if (epoll_fd_ < 0)
         throw EpollCreationFailed();
 }
 
-/**
- *  The epoll_ctl function interacts with the Linux kernel to manipulate the
- * epoll instance and the registered file descriptors. It allows to add,
- * modify, or remove file descriptors from the epoll instance and specify
- * the events to monitor for each file descriptor
- *  The events in event_.events represent the types of events that the epoll
- * instance should monitor for a specific file descriptor. These events
- * indicate the readiness or availability of certain operations on the file
- * descriptor.
- */
 void Server::AddEpollInstance() {
     std::memset(&event_, 0, sizeof(event_));
     event_.data.fd = socket_;

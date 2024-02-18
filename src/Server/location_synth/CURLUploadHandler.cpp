@@ -20,17 +20,22 @@ int Server::FillBuffer(char *buffer, int socket, const size_t &size,
                        v_char &storage) const {
     int bytes_read;
     if (storage.empty()) {
-        bytes_read = read(socket, buffer,
-                          std::min(static_cast<size_t>(FILE_BUFFER_SIZE), size));
+//        bytes_read = read(socket, buffer,
+//                          std::min(static_cast<size_t>(FILE_BUFFER_SIZE), size));
+        bytes_read = recv(socket, buffer,
+                          std::min(static_cast<size_t>(FILE_BUFFER_SIZE), size), 0);
     } else {
         // it is first iteration after metadata processing, and body_ contains
         // data that was accidentally red. Now we copy it to buffer
         std::copy(storage.begin(), storage.end(), buffer);
         // and read the remaining amount of bytes, in order to fill buffer
         // fully, and not overwrite data we put there before
-        bytes_read = read(socket, buffer + storage.size(),
+//        bytes_read = read(socket, buffer + storage.size(),
+//                          std::min(static_cast<size_t>(FILE_BUFFER_SIZE), size) -
+//                                                                storage.size());
+        bytes_read = recv(socket, buffer + storage.size(),
                           std::min(static_cast<size_t>(FILE_BUFFER_SIZE), size) -
-                                                                storage.size());
+                                                                storage.size(), 0);
         bytes_read += storage.size();
         // all data in the buffer now
         storage.clear();
