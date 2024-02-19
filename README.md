@@ -22,6 +22,8 @@ I am not using `Makefile` in development process, so the **lists of source files
 # Features
 ## Done
 - Your program has to take a configuration file as argument, or use a default path.
+- poll() (or equivalent) must check read and write at the same time.
+- You must never do a read or a write operation without going through poll() (or equivalent).
 - Choose the [port](#listen) and [host](#server_name) of each server.
 - Setup default [error_pages](#error_page).
 - Setup routes with one or multiple of the following rules/configuration [return](#return)
@@ -39,12 +41,16 @@ I am not using `Makefile` in development process, so the **lists of source files
 - Clients must be able to upload files
 - upload_store implement
 - default client_max_body_size 1Mb
+- multiple simultaneous requests to the same server
+- client can be bounced properly if necessary.
+- Use only 1 poll() (or equivalent) for all the I/O operations between the client and the server (listen included).
 ## ToDo
+- Your server must never block
+- Non-blocking IO
 - Setup the server_names or not.
 - Turn on or off directory listing. (?)
 - Your server must be able to listen to multiple ports 
 	- multiple domains
-	- multiple simultaneous requests to the same server
 - A request to your server should never hang forever.
 - The first server for a host:port will be the default for this host:port (that means it will answer to all the requests that don’t belong to an other server).
 - Execute CGI based on certain file extension (for example .php).
