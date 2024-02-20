@@ -383,9 +383,9 @@ When socket is set up to listen for the connections it is fully usable.
 The **epoll** API performs monitoring of multiple file descriptors to see if I/O is possible on any of them. The **epoll** API can be used either as an edge-triggered or a level-triggered interface and scales well to large numbers of watched file descriptors.
 The following system calls are provided to create and manage an **epoll** instance:
 #### Create epoll instance
-`epoll_create` asks kernel to create epoll instance - red-black tree set of file descriptors being monitored. The integer returned by this call represents a file descriptor referring to the newly created epoll instance.
+`epoll_create` asks kernel to create **epoll** instance - red-black tree set of file descriptors being monitored. The integer returned by this call represents a file descriptor referring to the newly created **epoll** instance.
 #### Add socket to the epoll watchlist
-The `epoll_ctl` system call is used to control the behavior of the epoll instance, such as adding or removing file descriptors from its watch list, or changing the events of a file descriptor already in the list.
+The `epoll_ctl` system call is used to control the behavior of the **epoll** instance, such as adding or removing file descriptors from its watch list, or changing the events of a file descriptor already in the list.
 There are options on how do we want to get notified about events, and what particular events to monitor. This is done, by setting flags to `epoll_event.events`.
 ##### Kinds of events
 For example setting the flag `EPOLLIN` would mean that we'll get notified when on the client's end of the communication line `write` or similar operation will be performed. `EPOLLOUT` - same but for `read` or similar.
@@ -404,11 +404,11 @@ In the case of a byte stream, new events will be triggered every time new data c
 
 More on that [here](https://linux.die.net/man/7/epoll) and [here](https://stackoverflow.com/questions/41582560/how-does-epolls-epollexclusive-mode-interact-with-level-triggering). If you are super curious about the topic - check out [this](http://www.kegel.com/c10k.html) as well.
 
-When adding a socket to the epoll watch list, the `EPOLL_CTL_ADD` command is used. This command instructs the kernel to add the specified socket to the epoll instance's watch list, associating it with a set of events to monitor (e.g., read, write, error).
+When adding a socket to the **epoll** watch list, the `EPOLL_CTL_ADD` command is used. This command instructs the kernel to add the specified socket to the **epoll** instance's watch list, associating it with a set of events to monitor (e.g., read, write, error).
 #### Wait for the event to happen
-The `epoll_wait` system call is used to wait for events on the file descriptors registered with the epoll instance. When invoked, it blocks current thread until one or more file descriptors in the epoll instance's watch list become ready for the specified events, or until a timeout occurs. Upon completion, `epoll_wait` returns information about the ready file descriptors and the events that occurred by placing `epoll_event` structures in events array. Internally, the kernel efficiently scans the epoll instance's data structures to determine which file descriptors are ready for I/O operations, without the need for iterative polling. 
+The `epoll_wait` system call is used to wait for events on the file descriptors registered with the **epoll** instance. When invoked, it blocks current thread until one or more file descriptors in the **epoll** instance's watch list become ready for the specified events, or until a timeout occurs. Upon completion, `epoll_wait` returns information about the ready file descriptors and the events that occurred by placing `epoll_event` structures in events array. Internally, the kernel efficiently scans the **epoll** instance's data structures to determine which file descriptors are ready for I/O operations, without the need for iterative polling. 
 ## Accepting connections
-After setting up the epoll instance, the server proceeds with accepting incoming connections from clients using the `accept` system call to accept the connection request and create a new socket descriptor specifically for this connection. Internally, the Linux kernel performs several steps when accept is called:
+After setting up the **epoll** instance, the server proceeds with accepting incoming connections from clients using the `accept` system call to accept the connection request and create a new socket descriptor specifically for this connection. Internally, the Linux kernel performs several steps when accept is called:
 - It extracts the first connection request on the queue of pending connections for the listening `socket_` - main socket of the server
 - Once a connection request is received, the kernel creates a new socket descriptor `client_sock` and sets up a new file structure for it, representing the connection.
 - If successful, `accept` returns the new socket descriptor for the accepted connection.

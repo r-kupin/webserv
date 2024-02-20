@@ -129,7 +129,7 @@ void Server::Start(int port) {
 
 bool    add_client_to_epoll(int client_sock, int epoll_fd) {
     epoll_event event;
-    event.events = EPOLLIN;
+    event.events = EPOLLIN | EPOLLOUT;
     event.data.fd = client_sock;
     return epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_sock, &event) != -1;
 }
@@ -146,43 +146,73 @@ bool    set_non_blocking(int sockfd) {
 void    Server::HandleEvents() {
     epoll_event events[MAX_EVENTS];
     int nfds = epoll_wait(epoll_fd_, events, MAX_EVENTS, -1);
+
     if (nfds == -1) {
-        // Handle epoll_wait error
+        Log("epoll wait returned negative value");
         return;
-    }
-    for (int i = 0; i < nfds; ++i) {
-        if (events[i].data.fd == socket_) {
-            // New connection
-            struct sockaddr_in client_addr;
-            socklen_t client_len = sizeof(client_addr);
-            int client_sock = accept(socket_,
-                                     (struct sockaddr *) &client_addr,&client_len);
-            CheckRequest(client_sock, client_addr);
-        } else if (events[i].events & EPOLLIN) {
-            HandleRequest(events[i].data.fd);
+    } else if (nfds == 0) {
+        Log("No events occurred within the timeout period");
+    } else {
+        for (int i = 0; i < nfds; ++i) {
+            uint32_t event = events[i].events;
+            int fd = events[i].data.fd;
+
+            if (event & EPOLLERR) {
+                Log("Event error on file descriptor " + Utils::NbrToString(fd));
+                close(fd);
+            } else if (fd == socket_) {
+                CheckAddConnection();// New connection
+            }
+            if (event & EPOLLIN) {
+                if (event & EPOLLHUP) {
+                    // makes no sense to read, if socket closed right after and client doesn't expect for response
+                    Log("got EPOLLHUP from fd:" + Utils::NbrToString(fd));
+                    close(fd);
+                } else {
+                    ReadRequest(fd);
+                }
+            }
+            if (event & EPOLLOUT) {
+                if (communication_map_.find(fd) == communication_map_.end()) {
+                    Log("Client expects for response, but request wasn't made");
+                } else {
+                    communication_map_[fd].SendResponse(fd);
+                    Log("Response sent");
+                    std::cout << communication_map_[fd] << std::endl;
+                    communication_map_.erase(fd);
+                }
+                close(fd);
+            }
         }
     }
 }
 
-int Server::CheckRequest(int client_sock, const sockaddr_in &client_addr) {
-    if (client_sock < 0) {
-        Log("Error accepting connection!");
-    } else if (//set_non_blocking(client_sock) &&
-               add_client_to_epoll(client_sock, epoll_fd_)) {
+void Server::CheckAddConnection() {
+    struct sockaddr_in client_addr;
+    socklen_t client_len = sizeof(client_addr);
+    int fd = accept(socket_, (struct sockaddr *) &client_addr, &client_len);
+    if (fd < 0) {
+        if (errno != EAGAIN && errno != EWOULDBLOCK) {
+            Log("Error accepting connection!");
+        } else { // No more incoming connections
+            return;
+        }
+    } else if (//set_non_blocking(fd) &&
+    add_client_to_epoll(fd, epoll_fd_)) {
         Log("Accepted client connection from " +
-            Utils::NbrToString(client_addr.sin_addr.s_addr) + "\n");
+            Utils::NbrToString(client_addr.sin_addr.s_addr) +
+            " fd: " +  Utils::NbrToString(fd) + "\n");
     } else {
         Log("Error adding client socket to epoll of set nonblocking");
-        close(client_sock);
+        close(fd);
     }
-    return client_sock;
 }
 
-void Server::HandleRequest(int client_sock) {
+void Server::ReadRequest(int client_sock) {
     Location        response_location;
     ClientRequest   request;
-    ServerResponse  response(config_.GetServerName(),
-                             config_.GetPort());
+    ServerResponse  response(config_.GetServerName(), config_.GetPort());
+
     try {
         request.Init(client_sock);
         Log("Got client request:\n");
@@ -196,13 +226,8 @@ void Server::HandleRequest(int client_sock) {
     } catch (const ClientRequest::RequestException &) {
         response_location.SetReturnCode(BAD_REQUEST);
     }
-
     response.ComposeResponse(response_location);
-    Log("Prepared response:\n");
-    std::cout << response << std::endl;
-    response.SendResponse(client_sock);
-    Log("Response sent\n");
-    close(client_sock);
+    communication_map_.insert(std::make_pair(client_sock, response));
 }
 
 void Server::Log(const std::string &msg) const {
