@@ -129,7 +129,7 @@ void Server::Start(int port) {
 
 bool    add_client_to_epoll(int client_sock, int epoll_fd) {
     epoll_event event;
-    event.events = EPOLLIN;
+    event.events = EPOLLIN | EPOLLOUT;
     event.data.fd = client_sock;
     return epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_sock, &event) != -1;
 }
@@ -158,7 +158,7 @@ void    Server::HandleEvents() {
             int client_sock = accept(socket_,
                                      (struct sockaddr *) &client_addr,&client_len);
             CheckRequest(client_sock, client_addr);
-        } else if (events[i].events & EPOLLIN) {
+        } else if (events[i].events & EPOLLIN && events[i].events & EPOLLOUT) {
             HandleRequest(events[i].data.fd);
         }
     }

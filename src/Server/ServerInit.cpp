@@ -117,7 +117,7 @@ void Server::CreateEpoll() {
 void Server::AddEpollInstance() {
     std::memset(&event_, 0, sizeof(event_));
     event_.data.fd = socket_;
-    event_.events = EPOLLIN;
+    event_.events = EPOLLIN | EPOLLOUT;
     if (epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, socket_, &event_) < 0)
         throw EpollAddFailed();
 }
