@@ -16,43 +16,17 @@
 
 Server::Server(const ServerConfiguration &config) : AServer(config) {}
 
-/**
- *  TODO MAX_CLIENTS
- */
-void    Server::HandleEvents() {
-    epoll_event events[MAX_EVENTS];
-    int nfds = epoll_wait(GetEpollFd(), events, MAX_EVENTS, -1);
-    if (nfds == -1) {
-        // Handle epoll_wait error
-        return;
-    }
-    for (int i = 0; i < nfds; ++i) {
-        int fd = events[i].data.fd;
-        if (fd == GetSocket()) {
-            // New connection
-            struct sockaddr_in client_addr;
-            socklen_t client_len = sizeof(client_addr);
-            int client_sock = accept(GetSocket(), (struct sockaddr *) &client_addr,
-                    &client_len);
-            CheckRequest(client_sock, client_addr);
-        }
-        if (events[i].events & EPOLLIN && events[i].events & EPOLLOUT) {
-                HandleRequest(fd);
-        }
-    }
-}
-
-void Server::HandleRequest(int client_sock) {
+void Server::HandleRequest(int client_sock, std::ostream &os) {
     Location        response_location;
     ClientRequest   request;
     ServerResponse  response(GetConfig().GetServerName(),
                              GetConfig().GetPort());
     try {
         request.Init(client_sock);
-        Log("Got client request:\n");
+        Log("Got client request:\n", os);
         std::cout << request << std::endl;
-        response_location = ProcessRequest(request, client_sock);
-        Log("Request processed");
+        response_location = ProcessRequest(request, os, client_sock);
+        Log("Request processed", os);
     } catch (const HTTPVersionNotSupportedException &) {
         response_location.SetReturnCode(BAD_HTTP_VERSION);
     } catch (const ReadFromSocketFailedException &) {
@@ -62,10 +36,10 @@ void Server::HandleRequest(int client_sock) {
     }
 
     response.ComposeResponse(response_location);
-    Log("Prepared response:\n");
+    Log("Prepared response:\n", os);
     std::cout << response << std::endl;
     response.SendResponse(client_sock);
-    Log("Response sent\n");
+    Log("Response sent\n", os);
     close(client_sock);
 }
 

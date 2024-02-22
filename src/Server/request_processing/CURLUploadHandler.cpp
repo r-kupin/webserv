@@ -59,24 +59,22 @@ bool AServer::FlushBuffer(char *buffer, std::ofstream &file,
     return true;
 }
 
-int AServer::PerformUpload(const ClientRequest &request, int socket,
-                          std::ofstream &file, const std::string &delimiter,
-                          char *buffer, size_t bytes_left) {
+int AServer::PerformUpload(const ClientRequest &request, int socket, std::ofstream &file, const std::string &delimiter, char *buffer, size_t bytes_left, std::ostream &os) {
     // actual file contents will be stored here
     v_char      storage(request.GetBody());
 
     for (int bytes_read = 1; bytes_left > 0;) {
         if (bytes_read == 0) {
-            Log("specified body size is bigger then body actually is");
+            Log("specified body size is bigger then body actually is", os);
             return BAD_REQUEST;
         }
         bytes_read = FillBuffer(buffer, socket, bytes_left, storage);
         if (bytes_read < 0) {
-            Log("unable to read from socket");
+            Log("unable to read from socket", os);
             return FAILED_IO;
         }
         if (!FlushBuffer(buffer, file, delimiter, bytes_read)) {
-            Log("unable to write to file");
+            Log("unable to write to file", os);
             return FAILED_IO;
         }
         bytes_left -= bytes_read;
@@ -87,14 +85,14 @@ int AServer::PerformUpload(const ClientRequest &request, int socket,
 }
 
 int AServer::UploadFromCURL(ClientRequest &request, const std::string &filename,
-                           int socket) {
+                            int socket, std::ostream &os) {
     // Open the file in append mode
     std::ofstream       file(filename.c_str(), std::ios::app);
     const std::string   &content_type = request.GetHeaderValue("Content-Type");
     size_t              bound_pos = content_type.find(kBoundary);
 
     if (!file.is_open()) {
-        Log("Unable to open file to write uploaded data");
+        Log("Unable to open file to write uploaded data", os);
         return FAILED_TO_CREATE_OUTPUT_FILE;
     }
     if (bound_pos != std::string::npos) {
@@ -110,7 +108,7 @@ int AServer::UploadFromCURL(ClientRequest &request, const std::string &filename,
             size_t bytes_left = request.GetDeclaredBodySize() -
                                 request.ProcessCURLFileMetadata(socket,delimiter);
             return PerformUpload(request, socket, file, delimiter, buffer,
-                                 bytes_left);
+                                 bytes_left, os);
         } catch (const SendContinueFailedException & ) {
             return FAILED_IO;
         } catch (const ReadFromSocketFailedException & ) {
@@ -121,6 +119,6 @@ int AServer::UploadFromCURL(ClientRequest &request, const std::string &filename,
             return BAD_REQUEST;
         }
     }
-    Log("file bound delimitation is missing");
+    Log("file bound delimitation is missing", os);
     return BAD_REQUEST;
 }

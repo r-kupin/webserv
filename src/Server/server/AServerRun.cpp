@@ -67,3 +67,29 @@ int AServer::CheckRequest(int client_sock, const sockaddr_in &client_addr) {
     }
     return client_sock;
 }
+
+/**
+ *  TODO MAX_CLIENTS
+ */
+void    AServer::HandleEvents() {
+    epoll_event events[MAX_EVENTS];
+    int nfds = epoll_wait(epoll_fd_, events, MAX_EVENTS, -1);
+    if (nfds == -1) {
+        // Handle epoll_wait error
+        return;
+    }
+    for (int i = 0; i < nfds; ++i) {
+        int fd = events[i].data.fd;
+        if (fd == socket_) {
+            // New connection
+            struct sockaddr_in client_addr;
+            socklen_t client_len = sizeof(client_addr);
+            int client_sock = accept(socket_, (struct sockaddr *) &client_addr,
+                                     &client_len);
+            CheckRequest(client_sock, client_addr);
+        }
+        if (events[i].events & EPOLLIN && events[i].events & EPOLLOUT) {
+            HandleRequest(fd, std::cout);
+        }
+    }
+}

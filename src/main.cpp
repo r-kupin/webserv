@@ -74,7 +74,7 @@ int main(int ac, char** av) {
         std::cout << "Config is on path " + conf.getConfPath() +
                         " is loaded.  Creating servers.." << std::endl;
         ServerManager server_manager(conf);
-        server_manager.RunAll();
+        server_manager.RunAllST();
     } catch (const Config::ConfigException& e) {
         std::cout << "No config is loaded, startup failed!" << std::endl;
         return (1);

@@ -33,8 +33,22 @@ ServerManager::ServerManager(const Config &config) {
     }
 }
 
-void ServerManager::RunAll() {
+ServerManager::ServerManager(const Config &config, int n)
+: pool_(n) {
+    for (l_sc_c_it it = config.getConstServers().begin();
+         it != config.getConstServers().end(); ++it) {
+        mservers_.push_back(MultithreadServer(*it, pool_));
+    }
+}
+
+void ServerManager::RunAllST() {
     for (l_servers::iterator it = servers_.begin(); it != servers_.end(); ++it) {
+        it->Start();
+    }
+}
+
+void ServerManager::RunAllMT() {
+    for (l_mservers::iterator it = mservers_.begin(); it != mservers_.end(); ++it) {
         it->Start();
     }
 }

@@ -14,8 +14,7 @@
 #include <algorithm>
 #include "../server/Server.h"
 
-void    AServer::SynthIndex(Location &synth, const Srch_c_Res &res,
-                           int fs_status) const {
+void AServer::SynthIndex(Location &synth, const Srch_c_Res &res, int fs_status, std::ostream &os) const {
     l_loc_c_it found = res.location_;
     const std::string &index_address = FindIndexToSend(found,
                                                        res.leftower_address_);
@@ -23,11 +22,11 @@ void    AServer::SynthIndex(Location &synth, const Srch_c_Res &res,
         // index address not found
         if (fs_status != DIRECTORY) {
             // directory, where this index supposed to be doesn't exist
-            Log("\"" + index_address + "\" is not found");
+            Log("\"" + index_address + "\" is not found", os);
             synth.SetReturnCode(NOT_FOUND);
         } else {
             // directory exists  but there are no index to return
-            Log("directory index of " + found->root_ + "/ is forbidden" );
+            Log("directory index of " + found->root_ + "/ is forbidden", os);
             synth.SetReturnCode(ACCESS_FORBIDDEN);
         }
     } else {

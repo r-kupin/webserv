@@ -90,10 +90,12 @@ protected:
     void                        Start(int port);
     int                         CheckRequest(int client_sock,
                                              const sockaddr_in &client_addr);
-    virtual void                HandleEvents() = 0;
-    virtual void                HandleRequest(int client_sock) = 0;
+    virtual void                HandleEvents();
+    virtual void                HandleRequest(int client_sock,
+                                              std::ostream &os) = 0;
 //-------------------request server-side processing-----------------------------
-    Location                    ProcessRequest(ClientRequest&request,
+    Location                    ProcessRequest(ClientRequest &request,
+                                               std::ostream &os,
                                                int socket = -1);
     bool                        AccessForbidden(l_loc_c_it found,
                                                 Methods method) const;
@@ -103,23 +105,27 @@ protected:
     void                        HandleStatic(const ClientRequest &request,
                                              const Srch_c_Res &res,
                                              const l_loc_c_it &found,
-                                             Location &synth) const;
+                                             Location &synth,
+                                             std::ostream &os) const;
     void                        SynthIndex(Location &synth,
                                            const Srch_c_Res &res,
-                                           int fs_status) const;
+                                           int fs_status,
+                                           std::ostream &os) const;
     std::string                 FindIndexToSend(const l_loc_c_it &found,
                                                 const std::string &compliment) const;
     void                        SynthFile(Location &synth,
                                           const Srch_c_Res &res,
                                           int fs_status,
-                                          const std::string &request_address) const;
+                                          const std::string &request_address,
+                                          std::ostream &os) const;
 //-------------------upload request processing----------------------------------
     int                         UploadFile(ClientRequest &request,
                                            l_loc_c_it found,
-                                           int socket);
+                                           int socket,
+                                           std::ostream &os);
     int                         UploadFromCURL(ClientRequest &request,
                                                const std::string &filename,
-                                               int socket);
+                                               int socket, std::ostream &os);
     bool                        FlushBuffer(char *buffer, std::ofstream &file,
                                             const std::string &delimiter,
                                             int bytes_read);
@@ -127,15 +133,21 @@ protected:
                                            const size_t &size,
                                            v_char &storage) const;
     int                         PerformUpload(const ClientRequest &request,
-                                              int socket, std::ofstream &file,
+                                              int socket,
+                                              std::ofstream &file,
                                               const std::string &delimiter,
-                                              char *buffer, size_t bytes_left);
+                                              char *buffer,
+                                              size_t bytes_left,
+                                              std::ostream &os);
     bool                        TryCreateOutputFile(const std::string &dir,
                                                     const std::string &filename,
-                                                    size_t size) const;
+                                                    size_t size,
+                                                    std::ostream &os) const;
     void                        HandleUpload(ClientRequest &request,
-                                             int socket, l_loc_c_it &found,
-                                             Location &synth);
+                                             int socket,
+                                             l_loc_c_it &found,
+                                             Location &synth,
+                                             std::ostream &os);
     void                        Log(const std::string & msg,
                                     std::ostream &os = std::cout) const;
 private:

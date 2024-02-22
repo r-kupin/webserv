@@ -12,9 +12,15 @@
 #ifndef WEBSERV_LIB_MULTITHREADSERVER_H
 #define WEBSERV_LIB_MULTITHREADSERVER_H
 
-
 #include "AServer.h"
 #include "../thread_pool/ThreadPool.h"
+
+struct HandlerFunctor {
+    int fd_;
+
+    explicit HandlerFunctor(int fd);
+    std::string operator()();
+};
 
 class MultithreadServer : public AServer {
 public:
@@ -23,9 +29,10 @@ public:
     MultithreadServer(const MultithreadServer &server);
 protected:
     void HandleEvents();// override
-    void HandleRequest(int client_sock);// override
+    void HandleRequest(int client_sock, std::ostream &os);// override
 private:
-    ThreadPool  &pool_;
+    ThreadPool                  &pool_;
+    std::vector<std::string>    logs_buff_;
 };
 
 

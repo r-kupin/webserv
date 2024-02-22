@@ -20,6 +20,9 @@
 
 class ThreadPool {
 public:
+    //empty pool for single threaded servers
+    ThreadPool() {};
+
     ThreadPool(size_t numThreads) : stop(false) {
         for (size_t i = 0; i < numThreads; ++i) {
             pthread_t tid;

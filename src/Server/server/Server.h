@@ -21,9 +21,8 @@ public:
 
     Server &operator=(const Server &);
 protected:
-     void HandleEvents();// override
-     void HandleRequest(int client_sock);// override
- };
+    void HandleRequest(int client_sock, std::ostream &os);// override
+};
 
 #endif //WEBSERV_LIB_SERVER_H
 
