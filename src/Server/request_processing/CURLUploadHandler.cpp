@@ -13,7 +13,7 @@
 #include <iostream>
 #include <algorithm>
 #include <csignal>
-#include "../ServerExceptions.h"
+#include "../server/ServerExceptions.h"
 #include "../request/RequestExceptions.h"
 
 int Server::FillBuffer(char *buffer, int socket, const size_t &size,

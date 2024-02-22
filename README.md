@@ -619,3 +619,10 @@ Important notes:
 		 1. `0000000001`, `0000000021`, etc.. - in `./1`
 		 2. `0000000010`, `0000000210`, etc.. -  in `./0`
     3. So the first request's body would be saved to  `./1/0000000001`, second - `./2/0000000002`, etc..
+## Blocking
+Regarding subject's requirements:
+- Your server must *never block* and the client can be bounced properly if necessary.
+- It must* be non-blocking* and use only 1 poll() (or equivalent) for all the I/O operations between the client and the server (listen included).
+
+1. **Blocking**: In a blocking server, when a request comes in, the server handles it synchronously, meaning it waits for the entire request to be processed before moving on to the next request. During this time, the server thread handling the request is "blocked" from doing anything else. If there are many concurrent requests or if a request takes a long time to process, this can lead to inefficient resource utilization and poor responsiveness. 
+2. **Non-blocking**: In a non-blocking server, when a request comes in, the server initiates the request processing and then continues to handle other requests without waiting for the first request to complete. This allows the server to handle multiple requests concurrently without being blocked. Non-blocking servers typically use asynchronous I/O operations or event-driven models to achieve this.

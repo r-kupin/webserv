@@ -13,7 +13,7 @@
 #include <iostream>
 #include <algorithm>
 #include <csignal>
-#include "../ServerExceptions.h"
+#include "../server/ServerExceptions.h"
 
 /**
  * Depending on compliance between what was requested and what is being found

@@ -17,8 +17,8 @@
 #include <sys/socket.h>
 #include <sys/epoll.h>
 #include <netdb.h>
-#include "../Config/config/Config.h"
-#include "response/ServerResponse.h"
+#include "../../Config/config/Config.h"
+#include "../response/ServerResponse.h"
 
 #define OK 200
 #define REDIRECT 301

@@ -37,13 +37,26 @@ void Server::Init() {
     }
 }
 
+/**
+ * struct addrinfo {
+ *     int              ai_flags;     // AI_PASSIVE, AI_CANONNAME, etc.
+ *     int              ai_family;    // AF_INET, AF_INET6, AF_UNSPEC
+ *     int              ai_socktype;  // SOCK_STREAM, SOCK_DGRAM
+ *     int              ai_protocol;  // use 0 for "any"
+ *     size_t           ai_addrlen;   // size of ai_addr in bytes
+ *     struct sockaddr *ai_addr;      // struct sockaddr_in or _in6
+ *     char            *ai_canonname; // full canonical hostname
+ *
+ *     struct addrinfo *ai_next;      // linked list, next node
+ * };
+ */
 void Server::PresetAddress(addrinfo **addr) {
     struct addrinfo hints;
 
     std::memset(&hints, 0, sizeof(hints));
+    hints.ai_flags = AI_PASSIVE; // Use the local IP
     hints.ai_family = AF_INET; // address family - Internet (IPv4)
     hints.ai_socktype = SOCK_STREAM; // Stream socket (Not Datagram) TCP (not UDP)
-    hints.ai_flags = AI_PASSIVE; // Use the local IP
 
     if (getaddrinfo(config_.GetServerName().c_str(), // localhost
                     Utils::NbrToString(config_.GetPort()).c_str(), // port
@@ -55,7 +68,7 @@ void Server::PresetAddress(addrinfo **addr) {
 /**
  * Use the socket() function to create a new socket.
  * This function takes three arguments:
- *  the address family (AF_INET for IPv4),
+ *  the address family (PF_INET for IPv4),
  *  the socket type (e.g., SOCK_STREAM for a TCP socket),
  *  the protocol (usually set to 0 to let the operating system choose the
  *                                                        appropriate protocol).
@@ -90,8 +103,11 @@ void Server::SetSocketOptions(addrinfo *res) const {
 /**
  *  Use the bind() function to associate the socket with a specific port
  * number. This function takes two arguments: the socket file descriptor, and a
- * pointer to a sockaddr structure that contains the IP address and port number
- * to bind to.
+ * pointer to a sockaddr structure (res->ai_addr)
+ * struct sockaddr {
+ *     unsigned short    sa_family;    // address family, AF_xxx
+ *     char              sa_data[14];  // 14 bytes of protocol address
+ * };
  */
 void Server::BindSocket(addrinfo *res) {
     if (bind(socket_, res->ai_addr, res->ai_addrlen)) {

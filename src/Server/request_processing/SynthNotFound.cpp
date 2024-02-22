@@ -12,7 +12,7 @@
 
 #include <iostream>
 #include <algorithm>
-#include "../Server.h"
+#include "../server/Server.h"
 
 //Location Server::SynthForNotFound(const Srch_c_Res &found, Location &synth) {
 //    std::string address = found.location_->root_ + found.leftower_address_;

@@ -1,35 +1,12 @@
 /******************************************************************************/
 /*                                                                            */
 /*                                                         :::      ::::::::  */
-/*    ServerManager.h                                    :+:      :+:    :+:  */
+/*    ThreadPool.cpp                                     :+:      :+:    :+:  */
 /*                                                     +:+ +:+         +:+    */
 /*    By: rokupin <rokupin@student.42.fr>            +#+  +:+       +#+       */
 /*                                                 +#+#+#+#+#+   +#+          */
-/*    Created: 2023/04/11 12:15:17 by rokupin           #+#    #+#            */
+/*    Created: 2024/02/22 11:13:03 by rokupin           #+#    #+#            */
 /*                                                     ###   ########.fr      */
 /*                                                                            */
 /******************************************************************************/
-
-#ifndef WEBSERV_LIB_SERVERMANAGER_H
-#define WEBSERV_LIB_SERVERMANAGER_H
-
-#include "server/ServerExceptions.h"
-
-typedef std::list<Server> l_servers;
-
-class ServerManager {
-public:
-    ServerManager();
-    ServerManager(const ServerManager &);
-    ServerManager(const Config &config);
-    ServerManager &operator=(const ServerManager &);
-
-    ~ServerManager();
-
-    void RunAll();
-private:
-    l_servers servers_;
-};
-
-
-#endif //WEBSERV_LIB_SERVERMANAGER_H
+#include "ThreadPool.h"

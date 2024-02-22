@@ -13,7 +13,7 @@
 #include <iostream>
 #include <algorithm>
 #include <csignal>
-#include "../ServerExceptions.h"
+#include "../server/ServerExceptions.h"
 
 bool    Server::TryCreateOutputFile(const std::string & dir,
                                  const std::string & filename,

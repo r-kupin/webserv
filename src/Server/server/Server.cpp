@@ -96,7 +96,7 @@
 #include <unistd.h>
 #include <algorithm>
 #include <sys/fcntl.h>
-#include "request/RequestExceptions.h"
+#include "../request/RequestExceptions.h"
 #include "Server.h"
 
 Server::Server(const Server &other)
@@ -151,15 +151,17 @@ void    Server::HandleEvents() {
         return;
     }
     for (int i = 0; i < nfds; ++i) {
-        if (events[i].data.fd == socket_) {
+        int fd = events[i].data.fd;
+        if (fd == socket_) {
             // New connection
             struct sockaddr_in client_addr;
             socklen_t client_len = sizeof(client_addr);
-            int client_sock = accept(socket_,
-                                     (struct sockaddr *) &client_addr,&client_len);
+            int client_sock = accept(socket_, (struct sockaddr *) &client_addr,
+                    &client_len);
             CheckRequest(client_sock, client_addr);
-        } else if (events[i].events & EPOLLIN && events[i].events & EPOLLOUT) {
-            HandleRequest(events[i].data.fd);
+        }
+        if (events[i].events & EPOLLIN && events[i].events & EPOLLOUT) {
+                HandleRequest(fd);
         }
     }
 }
