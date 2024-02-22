@@ -14,7 +14,7 @@
 #include <algorithm>
 #include "../server/Server.h"
 
-//Location Server::SynthForNotFound(const Srch_c_Res &found, Location &synth) {
+//Location AServer::SynthForNotFound(const Srch_c_Res &found, Location &synth) {
 //    std::string address = found.location_->root_ + found.leftower_address_;
 //    struct stat fileInfo;
 //    if (stat(address.c_str(), &fileInfo) == 0) {

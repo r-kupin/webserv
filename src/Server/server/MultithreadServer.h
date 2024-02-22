@@ -1,38 +1,32 @@
 /******************************************************************************/
 /*                                                                            */
 /*                                                         :::      ::::::::  */
-/*    ServerManager.h                                    :+:      :+:    :+:  */
+/*    MultithreadServer.h                                :+:      :+:    :+:  */
 /*                                                     +:+ +:+         +:+    */
 /*    By: rokupin <rokupin@student.42.fr>            +#+  +:+       +#+       */
 /*                                                 +#+#+#+#+#+   +#+          */
-/*    Created: 2023/04/11 12:15:17 by rokupin           #+#    #+#            */
+/*    Created: 2024/02/22 11:51:56 by rokupin           #+#    #+#            */
 /*                                                     ###   ########.fr      */
 /*                                                                            */
 /******************************************************************************/
+#ifndef WEBSERV_LIB_MULTITHREADSERVER_H
+#define WEBSERV_LIB_MULTITHREADSERVER_H
 
-#ifndef WEBSERV_LIB_SERVERMANAGER_H
-#define WEBSERV_LIB_SERVERMANAGER_H
 
+#include "AServer.h"
+#include "../thread_pool/ThreadPool.h"
 
-#include "server/Server.h"
-#include "server/MultithreadServer.h"
-
-typedef std::list<Server> l_servers;
-typedef std::list<MultithreadServer> l_mservers;
-
-class ServerManager {
+class MultithreadServer : public AServer {
 public:
-    ServerManager();
-    ServerManager(const ServerManager &);
-    ServerManager(const Config &config);
-    ServerManager &operator=(const ServerManager &);
-
-    ~ServerManager();
-
-    void RunAll();
+    MultithreadServer(const AServer &server, ThreadPool &pool);
+    MultithreadServer(const ServerConfiguration &config, ThreadPool &pool);
+    MultithreadServer(const MultithreadServer &server);
+protected:
+    void HandleEvents();// override
+    void HandleRequest(int client_sock);// override
 private:
-    l_servers servers_;
+    ThreadPool  &pool_;
 };
 
 
-#endif //WEBSERV_LIB_SERVERMANAGER_H
+#endif //WEBSERV_LIB_MULTITHREADSERVER_H

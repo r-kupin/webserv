@@ -1,48 +1,30 @@
 /******************************************************************************/
 /*                                                                            */
 /*                                                         :::      ::::::::  */
-/*    Server.cpp                                         :+:      :+:    :+:  */
+/*    MultithreadServer.cpp                              :+:      :+:    :+:  */
 /*                                                     +:+ +:+         +:+    */
 /*    By: rokupin <rokupin@student.42.fr>            +#+  +:+       +#+       */
 /*                                                 +#+#+#+#+#+   +#+          */
-/*    Created: 2023/03/28 04:02:49 by rokupin           #+#    #+#            */
+/*    Created: 2024/02/22 11:51:56 by rokupin           #+#    #+#            */
 /*                                                     ###   ########.fr      */
 /*                                                                            */
 /******************************************************************************/
 
 #include <csignal>
-#include "Server.h"
+#include "MultithreadServer.h"
 #include "../request/RequestExceptions.h"
 
-Server::Server(const ServerConfiguration &config) : AServer(config) {}
+MultithreadServer::MultithreadServer(const ServerConfiguration &config,
+                                     ThreadPool &pool)
+: AServer(config), pool_(pool) {}
 
-/**
- *  TODO MAX_CLIENTS
- */
-void    Server::HandleEvents() {
-    epoll_event events[MAX_EVENTS];
-    int nfds = epoll_wait(GetEpollFd(), events, MAX_EVENTS, -1);
-    if (nfds == -1) {
-        // Handle epoll_wait error
-        return;
-    }
-    for (int i = 0; i < nfds; ++i) {
-        int fd = events[i].data.fd;
-        if (fd == GetSocket()) {
-            // New connection
-            struct sockaddr_in client_addr;
-            socklen_t client_len = sizeof(client_addr);
-            int client_sock = accept(GetSocket(), (struct sockaddr *) &client_addr,
-                    &client_len);
-            CheckRequest(client_sock, client_addr);
-        }
-        if (events[i].events & EPOLLIN && events[i].events & EPOLLOUT) {
-                HandleRequest(fd);
-        }
-    }
-}
+MultithreadServer::MultithreadServer(const AServer &server, ThreadPool &pool)
+: AServer(server), pool_(pool) {}
 
-void Server::HandleRequest(int client_sock) {
+MultithreadServer::MultithreadServer(const MultithreadServer &server)
+: AServer(server), pool_(server.pool_) {}
+
+void MultithreadServer::HandleRequest(int client_sock) {
     Location        response_location;
     ClientRequest   request;
     ServerResponse  response(GetConfig().GetServerName(),
@@ -69,8 +51,28 @@ void Server::HandleRequest(int client_sock) {
     close(client_sock);
 }
 
-Server &Server::operator=(const Server &other) {
-    if (this == &other)
-        return *this;
-    return *this;
+void MultithreadServer::HandleEvents() {
+    epoll_event events[MAX_EVENTS];
+    int nfds = epoll_wait(GetEpollFd(), events, MAX_EVENTS, -1);
+    if (nfds == -1) {
+        // Handle epoll_wait error
+        return;
+    }
+    for (int i = 0; i < nfds; ++i) {
+        int fd = events[i].data.fd;
+        if (fd == GetSocket()) {
+            // New connection
+            struct sockaddr_in client_addr;
+            socklen_t client_len = sizeof(client_addr);
+            int client_sock = accept(GetSocket(),
+                                     (struct sockaddr *) &client_addr,
+                                             &client_len);
+            CheckRequest(client_sock, client_addr);
+        }
+        if (events[i].events & EPOLLIN && events[i].events & EPOLLOUT) {
+//            pthread_t worker;
+//            void *arg = reinterpret_cast<void *>(fd);
+//            pthread_create(&worker, NULL, &MultithreadServer::HandleRequest, arg);
+        }
+    }
 }

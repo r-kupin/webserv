@@ -23,7 +23,7 @@
  * @param request
  * @return not-exact copy of a location found
  */
-Location Server::ProcessRequest(ClientRequest &request, int socket) {
+Location AServer::ProcessRequest(ClientRequest &request, int socket) {
     Srch_c_Res res = config_.FindConstLocation(request.GetAddress());
     l_loc_c_it found = res.location_;
     Location synth(*found);
@@ -48,7 +48,7 @@ Location Server::ProcessRequest(ClientRequest &request, int socket) {
     return synth;
 }
 
-void Server::HandleStatic(const ClientRequest &request, const Srch_c_Res &res,
+void AServer::HandleStatic(const ClientRequest &request, const Srch_c_Res &res,
                           const l_loc_c_it &found, Location &synth) const {
     // It seems like there is no reason to even read the body because it's
     // not clear how should static file handle it ?
@@ -70,7 +70,7 @@ void Server::HandleStatic(const ClientRequest &request, const Srch_c_Res &res,
     }
 }
 
-void Server::HandleUpload(ClientRequest &request, int socket,
+void AServer::HandleUpload(ClientRequest &request, int socket,
                           l_loc_c_it &found, Location &synth) {
     if (request.GetMethod() == POST) {
         // Try to perform upload
@@ -84,7 +84,7 @@ void Server::HandleUpload(ClientRequest &request, int socket,
     }
 }
 
-void Server::SynthFile(Location &synth, const Srch_c_Res &res, int fs_status,
+void AServer::SynthFile(Location &synth, const Srch_c_Res &res, int fs_status,
                        const std::string &request_address) const {
     const l_loc_c_it &found = res.location_;
     std::string address = found->root_ + res.leftower_address_;
@@ -103,7 +103,7 @@ void Server::SynthFile(Location &synth, const Srch_c_Res &res, int fs_status,
     }
 }
 
-bool Server::RequestBodyExceedsLimit(l_loc_c_it found, ClientRequest &request) {
+bool AServer::RequestBodyExceedsLimit(l_loc_c_it found, ClientRequest &request) {
     if (request.GetMethod() == POST || request.GetMethod() == DELETE) {
         if (found->client_max_body_size_ < request.GetDeclaredBodySize()) {
             return true;
@@ -112,7 +112,7 @@ bool Server::RequestBodyExceedsLimit(l_loc_c_it found, ClientRequest &request) {
     return false;
 }
 
-bool Server::AccessForbidden(l_loc_c_it found, Methods method) const {
+bool AServer::AccessForbidden(l_loc_c_it found, Methods method) const {
     if (found->limit_except_.except_.empty() ||
         found->limit_except_.except_.find(method) !=
             found->limit_except_.except_.end() ||

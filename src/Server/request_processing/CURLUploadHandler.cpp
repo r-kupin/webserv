@@ -16,7 +16,7 @@
 #include "../server/ServerExceptions.h"
 #include "../request/RequestExceptions.h"
 
-int Server::FillBuffer(char *buffer, int socket, const size_t &size,
+int AServer::FillBuffer(char *buffer, int socket, const size_t &size,
                        v_char &storage) const {
     int bytes_read;
     if (storage.empty()) {
@@ -43,7 +43,7 @@ int Server::FillBuffer(char *buffer, int socket, const size_t &size,
     return bytes_read;
 }
 
-bool Server::FlushBuffer(char *buffer, std::ofstream &file,
+bool AServer::FlushBuffer(char *buffer, std::ofstream &file,
                          const std::string &delimiter, int bytes_read) {
     if (bytes_read > 0) {
         // delimiter position marks the end of the file
@@ -59,7 +59,7 @@ bool Server::FlushBuffer(char *buffer, std::ofstream &file,
     return true;
 }
 
-int Server::PerformUpload(const ClientRequest &request, int socket,
+int AServer::PerformUpload(const ClientRequest &request, int socket,
                           std::ofstream &file, const std::string &delimiter,
                           char *buffer, size_t bytes_left) {
     // actual file contents will be stored here
@@ -86,7 +86,7 @@ int Server::PerformUpload(const ClientRequest &request, int socket,
     return OK;
 }
 
-int Server::UploadFromCURL(ClientRequest &request, const std::string &filename,
+int AServer::UploadFromCURL(ClientRequest &request, const std::string &filename,
                            int socket) {
     // Open the file in append mode
     std::ofstream       file(filename.c_str(), std::ios::app);

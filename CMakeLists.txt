@@ -16,9 +16,12 @@ add_executable(webserv src/main.cpp
         src/Server/request_processing/LocationSynth.cpp
         src/Server/request_processing/SynthNotFound.cpp
         src/Server/request_processing/CURLUploadHandler.cpp
-        src/Server/server/ServerInit.cpp
         src/Server/server/ServerExceptions.cpp
+        src/Server/server/MultithreadServer.cpp
         src/Server/server/Server.cpp
+        src/Server/server/Aserver.cpp
+        src/Server/server/AServerRun.cpp
+        src/Server/server/AServerInit.cpp
         src/Server/thread_pool/ThreadPool.cpp
         src/Server/request/ClientRequest.cpp
         src/Server/request/ClientRequestURLHandlers.cpp
@@ -50,9 +53,12 @@ add_library(webserv_lib
         src/Server/request_processing/LocationSynth.cpp
         src/Server/request_processing/SynthNotFound.cpp
         src/Server/request_processing/CURLUploadHandler.cpp
-        src/Server/server/ServerInit.cpp
         src/Server/server/ServerExceptions.cpp
+        src/Server/server/MultithreadServer.cpp
         src/Server/server/Server.cpp
+        src/Server/server/Aserver.cpp
+        src/Server/server/AServerRun.cpp
+        src/Server/server/AServerInit.cpp
         src/Server/thread_pool/ThreadPool.cpp
         src/Server/request/ClientRequest.cpp
         src/Server/request/ClientRequestURLHandlers.cpp

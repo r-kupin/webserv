@@ -15,7 +15,7 @@
 #include <csignal>
 #include "../server/ServerExceptions.h"
 
-bool    Server::TryCreateOutputFile(const std::string & dir,
+bool    AServer::TryCreateOutputFile(const std::string & dir,
                                  const std::string & filename,
                                  size_t size) const {
     try {
@@ -45,7 +45,7 @@ bool    Server::TryCreateOutputFile(const std::string & dir,
     return false;
 }
 
-int Server::UploadFile(ClientRequest &request, l_loc_c_it found, int socket) {
+int AServer::UploadFile(ClientRequest &request, l_loc_c_it found, int socket) {
     static int  files_uploaded_;
     std::string dirname;
 

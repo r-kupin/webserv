@@ -1,0 +1,69 @@
+/******************************************************************************/
+/*                                                                            */
+/*                                                         :::      ::::::::  */
+/*    AServerRun.cpp                                     :+:      :+:    :+:  */
+/*                                                     +:+ +:+         +:+    */
+/*    By: rokupin <rokupin@student.42.fr>            +#+  +:+       +#+       */
+/*                                                 +#+#+#+#+#+   +#+          */
+/*    Created: 2024/02/22 14:52:51 by rokupin           #+#    #+#            */
+/*                                                     ###   ########.fr      */
+/*                                                                            */
+/******************************************************************************/
+
+#include "AServer.h"
+
+#include <iostream>
+#include <netinet/in.h>
+#include <unistd.h>
+#include <sys/fcntl.h>
+
+/**
+ *  TODO MAX_CLIENTS
+ */
+void AServer::Start() {
+    Init();
+    Log("Server initialized successfully..\n");
+    std::cout << *this << std::endl;
+    Start(config_.GetPort());
+}
+
+void AServer::Start(int port) {
+    if (epoll_fd_ > 0) {
+        Log("started server at " + Utils::NbrToString(port) + " port");
+        while (true) {HandleEvents();}
+    } else {
+        Log("It seems like " + Utils::NbrToString(port) +
+            " port is already in use. Aborting.");
+    }
+    close(socket_);
+}
+
+bool    add_client_to_epoll(int client_sock, int epoll_fd) {
+    epoll_event event;
+    event.events = EPOLLIN | EPOLLOUT;
+    event.data.fd = client_sock;
+    return epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_sock, &event) != -1;
+}
+
+bool    set_non_blocking(int sockfd) {
+    int flags = fcntl(sockfd, F_GETFL, 0);
+    if (flags == -1)
+        return false;
+
+    flags |= O_NONBLOCK;
+    return (fcntl(sockfd, F_SETFL, flags) != -1);
+}
+
+int AServer::CheckRequest(int client_sock, const sockaddr_in &client_addr) {
+    if (client_sock < 0) {
+        Log("Error accepting connection!");
+    } else if (//set_non_blocking(client_sock) &&
+            add_client_to_epoll(client_sock, epoll_fd_)) {
+        Log("Accepted client connection from " +
+            Utils::NbrToString(client_addr.sin_addr.s_addr) + "\n");
+    } else {
+        Log("Error adding client socket to epoll of set nonblocking");
+        close(client_sock);
+    }
+    return client_sock;
+}

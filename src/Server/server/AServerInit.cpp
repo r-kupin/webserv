@@ -1,13 +1,24 @@
+/******************************************************************************/
+/*                                                                            */
+/*                                                         :::      ::::::::  */
+/*    AServerInit.cpp                                    :+:      :+:    :+:  */
+/*                                                     +:+ +:+         +:+    */
+/*    By: rokupin <rokupin@student.42.fr>            +#+  +:+       +#+       */
+/*                                                 +#+#+#+#+#+   +#+          */
+/*    Created: 2024/02/22 14:43:41 by rokupin           #+#    #+#            */
+/*                                                     ###   ########.fr      */
+/*                                                                            */
+/******************************************************************************/
+
+#include "AServer.h"
+
 #include <iostream>
 #include <sys/socket.h>
 #include <unistd.h>
 #include <cstring>
-#include <algorithm>
 #include "ServerExceptions.h"
-#include "Server.h"
 
-
-void Server::Init() {
+void AServer::Init() {
     try {
         struct addrinfo *addr = NULL;
 
@@ -50,7 +61,7 @@ void Server::Init() {
  *     struct addrinfo *ai_next;      // linked list, next node
  * };
  */
-void Server::PresetAddress(addrinfo **addr) {
+void AServer::PresetAddress(addrinfo **addr) {
     struct addrinfo hints;
 
     std::memset(&hints, 0, sizeof(hints));
@@ -74,7 +85,7 @@ void Server::PresetAddress(addrinfo **addr) {
  *                                                        appropriate protocol).
  * The function returns a file descriptor that we can use to refer to the socket.
  */
-void Server::CreateSocket(addrinfo *res) {
+void AServer::CreateSocket(addrinfo *res) {
     socket_ = socket(res->ai_family,res->ai_socktype,0);
     if (socket_ < 0) {
         freeaddrinfo(res);
@@ -90,7 +101,7 @@ void Server::CreateSocket(addrinfo *res) {
  * address that is already in use, as long as the original socket using that
  * @param res
  */
-void Server::SetSocketOptions(addrinfo *res) const {
+void AServer::SetSocketOptions(addrinfo *res) const {
     int opt = 1;
     if (setsockopt(socket_, SOL_SOCKET, SO_REUSEADDR,
                    &opt, sizeof(opt)) < 0) {
@@ -109,7 +120,7 @@ void Server::SetSocketOptions(addrinfo *res) const {
  *     char              sa_data[14];  // 14 bytes of protocol address
  * };
  */
-void Server::BindSocket(addrinfo *res) {
+void AServer::BindSocket(addrinfo *res) {
     if (bind(socket_, res->ai_addr, res->ai_addrlen)) {
         freeaddrinfo(res);
         close(socket_);
@@ -117,20 +128,20 @@ void Server::BindSocket(addrinfo *res) {
     }
 }
 
-void Server::ListenSocket()  {
+void AServer::ListenSocket()  {
     if (listen(socket_, SOMAXCONN) < 0) {
         close(socket_);
         throw SocketListeningFailureException();
     }
 }
 
-void Server::CreateEpoll() {
+void AServer::CreateEpoll() {
     epoll_fd_= epoll_create(1);
     if (epoll_fd_ < 0)
         throw EpollCreationFailed();
 }
 
-void Server::AddEpollInstance() {
+void AServer::AddEpollInstance() {
     std::memset(&event_, 0, sizeof(event_));
     event_.data.fd = socket_;
     event_.events = EPOLLIN | EPOLLOUT;
