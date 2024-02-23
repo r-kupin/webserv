@@ -16,17 +16,17 @@
 
 Server::Server(const ServerConfiguration &config) : AServer(config) {}
 
-void Server::HandleRequest(int client_sock, std::ostream &os) {
+void Server::HandleRequest(int client_sock) {
     Location        response_location;
     ClientRequest   request;
     ServerResponse  response(GetConfig().GetServerName(),
                              GetConfig().GetPort());
     try {
         request.Init(client_sock);
-        Log("Got client request:\n", os);
+        Log("Got client request:\n", std::cout);
         std::cout << request << std::endl;
-        response_location = ProcessRequest(request, os, client_sock);
-        Log("Request processed", os);
+        response_location = ProcessRequest(request, std::cout, client_sock);
+        Log("Request processed", std::cout);
     } catch (const HTTPVersionNotSupportedException &) {
         response_location.SetReturnCode(BAD_HTTP_VERSION);
     } catch (const ReadFromSocketFailedException &) {
@@ -36,10 +36,10 @@ void Server::HandleRequest(int client_sock, std::ostream &os) {
     }
 
     response.ComposeResponse(response_location);
-    Log("Prepared response:\n", os);
+    Log("Prepared response:\n", std::cout);
     std::cout << response << std::endl;
     response.SendResponse(client_sock);
-    Log("Response sent\n", os);
+    Log("Response sent\n", std::cout);
     close(client_sock);
 }
 

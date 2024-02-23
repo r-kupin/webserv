@@ -89,7 +89,7 @@ void    AServer::HandleEvents() {
             CheckRequest(client_sock, client_addr);
         }
         if (events[i].events & EPOLLIN && events[i].events & EPOLLOUT) {
-            HandleRequest(fd, std::cout);
+            HandleRequest(fd);
         }
     }
 }

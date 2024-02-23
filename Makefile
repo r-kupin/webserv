@@ -106,7 +106,7 @@ TEST_SRCS = test/unit_tests/utils_test/UtilsTest.cpp \
             test/unit_tests/config_test/server_configuration_class_test/functionality_test/CheckCorrectLocationContextTest.cpp \
             test/unit_tests/config_test/server_configuration_class_test/functionality_test/SimpleConfigLocationSearchTest.cpp
 
-TEST_LIB_DIR = unit_tests/lib
+TEST_LIB_DIR =		unit_tests/lib
 TEST_LIB_INCL_DIR =	$(TEST_LIB_DIR)/googletest/include
 TEST_LIB_BILD_DIR =	$(TEST_LIB_DIR)/build
 TEST_LIB_LIB_DIR =	$(TEST_LIB_BILD_DIR)/lib
@@ -114,17 +114,17 @@ TEST_LIB_CMAKE =	$(TEST_LIB_DIR)/Makefile
 TEST_LIBS =			$(TEST_LIB_LIB_DIR)/libgtest.a \
 					$(TEST_LIB_LIB_DIR)/libgtest_main.a
 
-OBJS = $(SRCS:.cpp=.o)
-LIB_OBJS = $(LIB_SRCS:.cpp=.o)
-TEST_OBJS = $(TEST_SRCS:.cpp=.o)
+OBJS =		$(SRCS:.cpp=.o)
+LIB_OBJS =	$(LIB_SRCS:.cpp=.o)
+TEST_OBJS =	$(TEST_SRCS:.cpp=.o)
 
-CXX = clang++
-GXX = g++
-LIB_CXX = ar rvs
+CXX =		clang++
+GXX =		g++
+LIB_CXX =	ar rvs
 
-CXXFLAGS = -Wall -Wextra -Werror -std=c++98
-LINKER_FLAGS = -lgtest -lgtest_main -pthread
-ASANFLAGS = -g -fsanitize=address
+CXXFLAGS =		-Wall -Wextra -Werror -std=c++98
+LINKER_FLAGS =	-lgtest -lgtest_main -pthread
+ASANFLAGS =		-g -fsanitize=address
 
 all: $(NAME)
 

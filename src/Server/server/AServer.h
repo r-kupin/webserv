@@ -90,9 +90,8 @@ protected:
     void                        Start(int port);
     int                         CheckRequest(int client_sock,
                                              const sockaddr_in &client_addr);
-    virtual void                HandleEvents();
-    virtual void                HandleRequest(int client_sock,
-                                              std::ostream &os) = 0;
+    void                        HandleEvents();
+    virtual void                HandleRequest(int client_sock) = 0;
 //-------------------request server-side processing-----------------------------
     Location                    ProcessRequest(ClientRequest &request,
                                                std::ostream &os,

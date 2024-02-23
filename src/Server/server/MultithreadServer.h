@@ -9,18 +9,12 @@
 /*                                                     ###   ########.fr      */
 /*                                                                            */
 /******************************************************************************/
+
 #ifndef WEBSERV_LIB_MULTITHREADSERVER_H
 #define WEBSERV_LIB_MULTITHREADSERVER_H
 
 #include "AServer.h"
 #include "../thread_pool/ThreadPool.h"
-
-struct HandlerFunctor {
-    int fd_;
-
-    explicit HandlerFunctor(int fd);
-    std::string operator()();
-};
 
 class MultithreadServer : public AServer {
 public:
@@ -28,11 +22,19 @@ public:
     MultithreadServer(const ServerConfiguration &config, ThreadPool &pool);
     MultithreadServer(const MultithreadServer &server);
 protected:
-    void HandleEvents();// override
-    void HandleRequest(int client_sock, std::ostream &os);// override
+    struct ThreadArgs {
+        ThreadArgs(int fd, MultithreadServer *obj);
+
+        int                 fd_;
+        MultithreadServer   *obj_;
+        pthread_mutex_t     *mutex_; // Mutex to protect std::cout
+    };
+
+    void            HandleRequest(int client_sock);// override
+    std::string     HandleRequestInThread(int client_sock);// override
+    static void     *ThreadSetup(void *arg);
 private:
     ThreadPool                  &pool_;
-    std::vector<std::string>    logs_buff_;
 };
 
 
