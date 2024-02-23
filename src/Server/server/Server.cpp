@@ -11,8 +11,10 @@
 /******************************************************************************/
 
 #include <csignal>
+#include <cstring>
 #include "Server.h"
 #include "../request/RequestExceptions.h"
+#include "ServerExceptions.h"
 
 Server::Server(const ServerConfiguration &config) : AServer(config) {}
 
@@ -41,6 +43,22 @@ void Server::HandleRequest(int client_sock) {
     response.SendResponse(client_sock);
     Log("Response sent\n", std::cout);
     close(client_sock);
+}
+
+bool Server::AddClientToEpoll(int client_sock, int epoll_fd) {
+    epoll_event event;
+    event.events = EPOLLIN | EPOLLOUT;
+    event.data.fd = client_sock;
+    return epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_sock, &event) != -1;
+}
+
+void Server::AddEpollInstance() {
+    epoll_event event;
+    std::memset(&event, 0, sizeof(event));
+    event.data.fd = GetSocket();
+    event.events = EPOLLIN | EPOLLOUT;
+    if (epoll_ctl(GetEpollFd(), EPOLL_CTL_ADD, GetSocket(), &event) < 0)
+        throw EpollAddFailed();
 }
 
 Server &Server::operator=(const Server &other) {

@@ -17,11 +17,12 @@
 
 class Server : public AServer {
 public:
-    explicit Server(const ServerConfiguration &config);
-
-    Server &operator=(const Server &);
+    explicit    Server(const ServerConfiguration &config);
+    Server      &operator=(const Server &);
 protected:
-    void HandleRequest(int client_sock);// override
+    void        HandleRequest(int client_sock);// override
+    bool        AddClientToEpoll(int client_sock, int epoll_fd);// override
+    void        AddEpollInstance();// override
 };
 
 #endif //WEBSERV_LIB_SERVER_H

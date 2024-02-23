@@ -30,6 +30,8 @@ protected:
         pthread_mutex_t     *mutex_; // Mutex to protect std::cout
     };
 
+    bool            AddClientToEpoll(int client_sock, int epoll_fd);// override
+    void            AddEpollInstance();// override
     void            HandleRequest(int client_sock);// override
     std::string     HandleRequestInThread(int client_sock);// override
     static void     *ThreadSetup(void *arg);

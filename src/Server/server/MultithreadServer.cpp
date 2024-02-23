@@ -12,8 +12,10 @@
 
 #include <csignal>
 #include <sstream>
+#include <cstring>
 #include "MultithreadServer.h"
 #include "../request/RequestExceptions.h"
+#include "ServerExceptions.h"
 
 MultithreadServer::MultithreadServer(const ServerConfiguration &config,
                                      ThreadPool &pool)
@@ -31,11 +33,13 @@ void MultithreadServer::HandleRequest(int client_sock) {
     pthread_mutex_init(args->mutex_, NULL);
 
     pthread_t tid;
+    Log("creating thread for socket: " + Utils::NbrToString(client_sock));
     pthread_create(&tid, NULL, &MultithreadServer::ThreadSetup, args);
-    pthread_join(tid, NULL);
 }
 
 void *MultithreadServer::ThreadSetup(void *arg) {
+    pthread_detach(pthread_self());
+
     ThreadArgs          *thread_args = static_cast<ThreadArgs*>(arg);
     const std::string   &thread_log = thread_args->obj_->HandleRequestInThread(thread_args->fd_);
 
@@ -77,6 +81,24 @@ std::string MultithreadServer::HandleRequestInThread(int client_sock) {
     return os.str();
 }
 
+bool MultithreadServer::AddClientToEpoll(int client_sock, int epoll_fd) {
+    epoll_event event;
+    std::memset(&event, 0, sizeof(event));
+    event.data.fd = client_sock;
+    event.events = EPOLLIN | EPOLLOUT | EPOLLET;
+//    event.events = EPOLLIN | EPOLLOUT;
+    return epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_sock, &event) != -1;
+}
+
+void MultithreadServer::AddEpollInstance() {
+    epoll_event event;
+    std::memset(&event, 0, sizeof(event));
+    event.data.fd = GetSocket();
+    event.events = EPOLLIN | EPOLLOUT | EPOLLET;
+//    event.events = EPOLLIN | EPOLLOUT;
+    if (epoll_ctl(GetEpollFd(), EPOLL_CTL_ADD, GetSocket(), &event) < 0)
+        throw EpollAddFailed();
+}
+
 MultithreadServer::ThreadArgs::ThreadArgs(int fd, MultithreadServer *obj)
-        : fd_(fd),
-          obj_(obj) {}
+: fd_(fd), obj_(obj) {}

@@ -38,13 +38,6 @@ void AServer::Start(int port) {
     close(socket_);
 }
 
-bool    add_client_to_epoll(int client_sock, int epoll_fd) {
-    epoll_event event;
-    event.events = EPOLLIN | EPOLLOUT;
-    event.data.fd = client_sock;
-    return epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_sock, &event) != -1;
-}
-
 bool    set_non_blocking(int sockfd) {
     int flags = fcntl(sockfd, F_GETFL, 0);
     if (flags == -1)
@@ -58,7 +51,7 @@ int AServer::CheckRequest(int client_sock, const sockaddr_in &client_addr) {
     if (client_sock < 0) {
         Log("Error accepting connection!");
     } else if (//set_non_blocking(client_sock) &&
-            add_client_to_epoll(client_sock, epoll_fd_)) {
+            AddClientToEpoll(client_sock, epoll_fd_)) {
         Log("Accepted client connection from " +
             Utils::NbrToString(client_addr.sin_addr.s_addr) + "\n");
     } else {

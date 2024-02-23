@@ -13,8 +13,7 @@
 #include "AServer.h"
 
 AServer::AServer(const AServer &other)
-        : config_(other.config_), socket_(other.socket_), epoll_fd_(other.epoll_fd_),
-          event_(other.event_) {}
+        : config_(other.config_), socket_(other.socket_), epoll_fd_(other.epoll_fd_) {}
 
 AServer::AServer(const ServerConfiguration &config)
         : config_(config), socket_(0), epoll_fd_(0) {}

@@ -85,11 +85,12 @@ protected:
     void                        BindSocket(addrinfo *res);
     void                        ListenSocket();
     void                        CreateEpoll();
-    void                        AddEpollInstance();
+    virtual void                AddEpollInstance() = 0;
 //-------------------request handling-------------------------------------------
     void                        Start(int port);
     int                         CheckRequest(int client_sock,
                                              const sockaddr_in &client_addr);
+    virtual bool                AddClientToEpoll(int client_sock, int epoll_fd) = 0;
     void                        HandleEvents();
     virtual void                HandleRequest(int client_sock) = 0;
 //-------------------request server-side processing-----------------------------
@@ -153,7 +154,6 @@ private:
     const ServerConfiguration   &config_;
     int                         socket_;
     int                         epoll_fd_;
-    epoll_event                 event_;
 };
 
 
