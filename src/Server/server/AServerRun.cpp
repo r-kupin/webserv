@@ -50,8 +50,7 @@ bool    set_non_blocking(int sockfd) {
 int AServer::CheckRequest(int client_sock, const sockaddr_in &client_addr) {
     if (client_sock < 0) {
         Log("Error accepting connection!");
-    } else if (//set_non_blocking(client_sock) &&
-            AddClientToEpoll(client_sock, epoll_fd_)) {
+    } else if (AddClientToEpoll(client_sock, epoll_fd_)) {
         Log("Accepted client connection from " +
             Utils::NbrToString(client_addr.sin_addr.s_addr) + "\n");
     } else {

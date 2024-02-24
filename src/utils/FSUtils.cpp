@@ -52,7 +52,6 @@ bool Utils::CheckPermissions(const std::string &address) {
 }
 
 std::string Utils::FileToString(const std::string &address) {
-    std::cout << address << std::endl;
     std::ifstream file(address.c_str());
 
     return std::string((std::istreambuf_iterator<char>(file)),

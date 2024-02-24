@@ -402,6 +402,11 @@ The event-merger rule is more complex: **events of the same type are only merged
 In the case of a listening socket, the `EPOLLIN` event will be triggered every time a client connects... unless no one is waiting for `epoll_wait` to return, in which case the next call for `epoll_wait` will return immediately and all the `EPOLLIN` events that occurred during that time will have been merged into a single event.
 In the case of a byte stream, new events will be triggered every time new data comes in... unless, of course, no one is waiting for `epoll_wait` to return, in which case the next call will return immediately for all the data that arrive util `epoll_wait` returned (even if it arrived in different chunks / events).
 
+###### OneShot mode
+The behavior of `EPOLLONESHOT` is such that after a successful call to `epoll_wait(2)` where the specified file descriptor was reported, no new events will be reported by `epoll_wait(2)` on the same file descriptor until you explicitly reactivate it with `epoll_ctl(2)`. You can look at it as a mechanism of temporarily disabling a file descriptor once it is returned by `epoll_wait(2)`.
+It does not prevent `epoll_wait(2)` from returning more than one event in the same call for the same file descriptor - in fact, if multiple events are available at the time of the call, they are all combined into the `events` field of `struct epoll_event`, whether or not `EPOLLONESHOT` is in effect for that file descriptor.
+In other words, `EPOLLONESHOT` controls under what conditions a file descriptor is _reported_ in a call to `epoll_wait(2)`; it does not play a role in event aggregation and detection.
+
 More on that [here](https://linux.die.net/man/7/epoll) and [here](https://stackoverflow.com/questions/41582560/how-does-epolls-epollexclusive-mode-interact-with-level-triggering). If you are super curious about the topic - check out [this](http://www.kegel.com/c10k.html) as well.
 
 When adding a socket to the epoll watch list, the `EPOLL_CTL_ADD` command is used. This command instructs the kernel to add the specified socket to the epoll instance's watch list, associating it with a set of events to monitor (e.g., read, write, error).

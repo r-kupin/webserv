@@ -40,6 +40,7 @@ std::ostream &operator<<(std::ostream &os, const AServer &server) {
 }
 
 void AServer::Log(const std::string &msg, std::ostream &os) const {
-    os << "Server " << config_.GetServerName();
-    os << ":" << config_.GetPort() << " : " << msg << std::endl;
+    pthread_t tid = pthread_self();
+    os << config_.GetServerName() << ":" << config_.GetPort() << " (" << tid << ")";
+    os << " : " << msg << std::endl;
 }
