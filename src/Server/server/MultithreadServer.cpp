@@ -47,7 +47,7 @@ void *MultithreadServer::ThreadSetup(void *arg) {
 
     const std::string   &thread_log = serv->HandleRequestInThread(sock);
     pthread_mutex_lock(thread_args->mutex_);
-//    serv->RearmFD(sock, serv->GetEpollFd());
+    serv->RearmFD(sock, serv->GetEpollFd());
     std::cout << thread_log;
     pthread_mutex_unlock(thread_args->mutex_);
     pthread_mutex_destroy(thread_args->mutex_);
@@ -91,7 +91,7 @@ bool MultithreadServer::AddClientToEpoll(int client_sock, int epoll_fd) {
     epoll_event event;
     std::memset(&event, 0, sizeof(event));
     event.data.fd = client_sock;
-    event.events = EPOLLIN | EPOLLOUT | EPOLLET;
+    event.events = EPOLLIN | EPOLLOUT | EPOLLONESHOT;
 //    event.events = EPOLLIN | EPOLLOUT;
     return epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_sock, &event) != -1;
 }
@@ -100,7 +100,7 @@ bool MultithreadServer::RearmFD(int client_sock, int epoll_fd) {
     epoll_event event;
     std::memset(&event, 0, sizeof(event));
     event.data.fd = client_sock;
-    event.events = EPOLLIN | EPOLLOUT | EPOLLET;
+    event.events = EPOLLIN | EPOLLOUT | EPOLLONESHOT;
 //    event.events = EPOLLIN | EPOLLOUT;
     return epoll_ctl(epoll_fd, EPOLL_CTL_MOD, client_sock, &event) != -1;
 }
@@ -109,8 +109,7 @@ void MultithreadServer::AddEpollInstance() {
     epoll_event event;
     std::memset(&event, 0, sizeof(event));
     event.data.fd = GetSocket();
-    event.events = EPOLLIN | EPOLLOUT | EPOLLET;
-//    event.events = EPOLLIN | EPOLLOUT;
+    event.events = EPOLLIN | EPOLLOUT;
     if (epoll_ctl(GetEpollFd(), EPOLL_CTL_ADD, GetSocket(), &event) < 0)
         throw EpollAddFailed();
 }

@@ -401,11 +401,20 @@ On the other hand, level triggered events will behave closer to how legacy `sele
 The event-merger rule is more complex: **events of the same type are only merged if no one is waiting for an event** (no one is waiting for `epoll_wait` to return), **or if multiple events happen before `epoll_wait` can return**... otherwise any event causes `epoll_wait` to return.
 In the case of a listening socket, the `EPOLLIN` event will be triggered every time a client connects... unless no one is waiting for `epoll_wait` to return, in which case the next call for `epoll_wait` will return immediately and all the `EPOLLIN` events that occurred during that time will have been merged into a single event.
 In the case of a byte stream, new events will be triggered every time new data comes in... unless, of course, no one is waiting for `epoll_wait` to return, in which case the next call will return immediately for all the data that arrive util `epoll_wait` returned (even if it arrived in different chunks / events).
-
+ + **nonblocking fds**
 ###### OneShot mode
 The behavior of `EPOLLONESHOT` is such that after a successful call to `epoll_wait(2)` where the specified file descriptor was reported, no new events will be reported by `epoll_wait(2)` on the same file descriptor until you explicitly reactivate it with `epoll_ctl(2)`. You can look at it as a mechanism of temporarily disabling a file descriptor once it is returned by `epoll_wait(2)`.
 It does not prevent `epoll_wait(2)` from returning more than one event in the same call for the same file descriptor - in fact, if multiple events are available at the time of the call, they are all combined into the `events` field of `struct epoll_event`, whether or not `EPOLLONESHOT` is in effect for that file descriptor.
 In other words, `EPOLLONESHOT` controls under what conditions a file descriptor is _reported_ in a call to `epoll_wait(2)`; it does not play a role in event aggregation and detection.
+1. **Edge-triggered mode with EPOLLONESHOT:**
+    - In edge-triggered mode, EPOLLONESHOT means that once an event occurs on a file descriptor and is reported by epoll_wait(), the associated file descriptor is deactivated until it is re-armed using epoll_ctl() with EPOLL_CTL_MOD and EPOLLONESHOT again.
+    - In this mode, epoll_wait() will report an event only once for a given file descriptor until it is re-armed. Subsequent events on the same file descriptor will not be reported until it is re-armed.
+2. **Level-triggered mode with EPOLLONESHOT:**
+    - In level-triggered mode, EPOLLONESHOT behaves differently. Once an event occurs on a file descriptor and is reported by epoll_wait(), the associated file descriptor remains active, and epoll_wait() will continue to report events on that file descriptor as long as the condition for the event remains true.
+    - In this mode, EPOLLONESHOT doesn't mean the file descriptor is deactivated after one event. Instead, it indicates that epoll_wait() will not report further events on the file descriptor until the current event condition changes and then resets the EPOLLONESHOT flag.
+*In summary*:
+- With edge-triggered mode, EPOLLONESHOT means the file descriptor is deactivated until rearmed.
+- With level-triggered mode, EPOLLONESHOT means the file descriptor remains active, but epoll_wait() will not report further events until the current event condition changes.
 
 More on that [here](https://linux.die.net/man/7/epoll) and [here](https://stackoverflow.com/questions/41582560/how-does-epolls-epollexclusive-mode-interact-with-level-triggering). If you are super curious about the topic - check out [this](http://www.kegel.com/c10k.html) as well.
 
