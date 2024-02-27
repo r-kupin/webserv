@@ -29,14 +29,16 @@ MultithreadServer::MultithreadServer(const MultithreadServer &server)
 
 void MultithreadServer::HandleRequest(int client_sock) {
     if (!fd_set_[client_sock]) {
+        fd_set_[client_sock] = true;
         ThreadArgs *args = new ThreadArgs(client_sock, this);
         args->mutex_ = new pthread_mutex_t;
         pthread_mutex_init(args->mutex_, NULL);
 
         pthread_t tid;
         Log("creating thread for socket: " + Utils::NbrToString(client_sock));
-        fd_set_[client_sock] = true;
         pthread_create(&tid, NULL, &MultithreadServer::ThreadSetup, args);
+    } else {
+        std::cout << "false call on fd " << client_sock << std::endl;
     }
 }
 
@@ -47,11 +49,9 @@ void *MultithreadServer::ThreadSetup(void *arg) {
     MultithreadServer   *serv = thread_args->obj_;
     int                 sock = thread_args->fd_;
 
-
     const std::string   &thread_log = serv->HandleRequestInThread(sock);
     serv->fd_set_[sock] = false;
     pthread_mutex_lock(thread_args->mutex_);
-//    serv->RearmFD(sock, serv->GetEpollFd());
     std::cout << thread_log;
     pthread_mutex_unlock(thread_args->mutex_);
     pthread_mutex_destroy(thread_args->mutex_);

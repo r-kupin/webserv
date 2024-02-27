@@ -395,7 +395,6 @@ Alongside with `EPOLLIN` and/or `EPOLLOUT` the `EPOLLET` flag might be specified
 Events are triggered only if they change the state of the `fd` - meaning that only the first event is triggered and no new events will get triggered until that event is fully handled. 
 This design is explicitly meant to prevent `epoll_wait` from returning due to an event that is in the process of being handled (i.e., when new data arrives while the `EPOLLIN` was already raised but `read` hadn't been called or not all of the data was read). The edge-triggered event rule is simple **all same-type (i.e. `EPOLLIN`) events are _merged_ until all available data was processed**. 
 In the case of a listening socket, the `EPOLLIN` event won't be triggered again until all existing `listen` "backlog" sockets have been accepted using `accept`.
-In the case of a byte stream, new events won't be triggered until all the the available bytes have been read from the stream (the buffer was emptied).    
 ###### Level Triggered
 On the other hand, level triggered events will behave closer to how legacy `select` (or `poll`) operates, allowing `epoll` to be used with older code.
 The event-merger rule is more complex: **events of the same type are only merged if no one is waiting for an event** (no one is waiting for `epoll_wait` to return), **or if multiple events happen before `epoll_wait` can return**... otherwise any event causes `epoll_wait` to return.
