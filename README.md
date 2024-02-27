@@ -400,13 +400,158 @@ In the case of a byte stream, new events won't be triggered until all the the av
 On the other hand, level triggered events will behave closer to how legacy `select` (or `poll`) operates, allowing `epoll` to be used with older code.
 The event-merger rule is more complex: **events of the same type are only merged if no one is waiting for an event** (no one is waiting for `epoll_wait` to return), **or if multiple events happen before `epoll_wait` can return**... otherwise any event causes `epoll_wait` to return.
 In the case of a listening socket, the `EPOLLIN` event will be triggered every time a client connects... unless no one is waiting for `epoll_wait` to return, in which case the next call for `epoll_wait` will return immediately and all the `EPOLLIN` events that occurred during that time will have been merged into a single event.
-In the case of a byte stream, new events will be triggered every time new data comes in... unless, of course, no one is waiting for `epoll_wait` to return, in which case the next call will return immediately for all the data that arrive util `epoll_wait` returned (even if it arrived in different chunks / events).
-
+In the case of a byte stream, new events will be triggered every time new data comes in... unless, of course, no one is waiting for `epoll_wait` to return, in which case the next call will return immediately for all the data that arrive util `epoll_wait` returned (even if it arrived in different chunks / events)
 ###### OneShot mode
 The behavior of `EPOLLONESHOT` is such that after a successful call to `epoll_wait(2)` where the specified file descriptor was reported, no new events will be reported by `epoll_wait(2)` on the same file descriptor until you explicitly reactivate it with `epoll_ctl(2)`. You can look at it as a mechanism of temporarily disabling a file descriptor once it is returned by `epoll_wait(2)`.
 It does not prevent `epoll_wait(2)` from returning more than one event in the same call for the same file descriptor - in fact, if multiple events are available at the time of the call, they are all combined into the `events` field of `struct epoll_event`, whether or not `EPOLLONESHOT` is in effect for that file descriptor.
 In other words, `EPOLLONESHOT` controls under what conditions a file descriptor is _reported_ in a call to `epoll_wait(2)`; it does not play a role in event aggregation and detection.
+1. **Edge-triggered mode with EPOLLONESHOT:**
+    - In edge-triggered mode, EPOLLONESHOT means that once an event occurs on a file descriptor and is reported by epoll_wait(), the associated file descriptor is deactivated until it is re-armed using epoll_ctl() with EPOLL_CTL_MOD and EPOLLONESHOT again.
+    - In this mode, epoll_wait() will report an event only once for a given file descriptor until it is re-armed. Subsequent events on the same file descriptor will not be reported until it is re-armed.
+2. **Level-triggered mode with EPOLLONESHOT:**
+    - In level-triggered mode, EPOLLONESHOT behaves differently. Once an event occurs on a file descriptor and is reported by epoll_wait(), the associated file descriptor remains active, and epoll_wait() will continue to report events on that file descriptor as long as the condition for the event remains true.
+    - In this mode, EPOLLONESHOT doesn't mean the file descriptor is deactivated after one event. Instead, it indicates that epoll_wait() will not report further events on the file descriptor until the current event condition changes and then resets the EPOLLONESHOT flag.
+*In summary*:
+- With edge-triggered mode, EPOLLONESHOT means the file descriptor is deactivated until rearmed.
+- With level-triggered mode, EPOLLONESHOT means the file descriptor remains active, but epoll_wait() will not report further events until the current event condition changes.
 
+```cpp
+// server.cc
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <assert.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <errno.h>
+#include <string.h>
+#include <fcntl.h>
+#include <stdlib.h>
+#include <sys/epoll.h>
+#include <pthread.h>
+
+#define MAX_EVENT_NUMBER 1024
+
+int setnonblocking(int fd)
+{
+    int old_option = fcntl(fd, F_GETFL);
+    int new_option = old_option | O_NONBLOCK;
+    fcntl(fd, F_SETFL, new_option);
+    return old_option;
+}
+
+void addfd(int epollfd, int fd, bool oneshot)
+{
+    epoll_event event;
+    event.data.fd = fd;
+    event.events = EPOLLIN | EPOLLET;
+    if(oneshot)
+        event.events |= EPOLLONESHOT;
+    epoll_ctl(epollfd, EPOLL_CTL_ADD, fd, &event);
+    setnonblocking(fd);
+}
+// reset the fd with EPOLLONESHOT
+void reset_oneshot(int epollfd, int fd)
+{
+    epoll_event event;
+    event.data.fd = fd;
+    event.events = EPOLLIN | EPOLLET | EPOLLONESHOT;
+    epoll_ctl(epollfd, EPOLL_CTL_MOD, fd, &event);
+}
+
+int main(int argc, char** argv)
+{
+    if(argc <= 2)
+    {
+        printf("usage: %s ip_address port_number\n", basename(argv[0]));
+        return 1;
+    }
+    const char* ip = argv[1];
+    int port = atoi(argv[2]);
+
+    int ret = 0;
+    struct sockaddr_in address;
+    bzero(&address, sizeof(address));
+    address.sin_family = AF_INET;
+    inet_pton(AF_INET, ip, &address.sin_addr);
+    address.sin_port = htons(port);
+
+    int listenfd = socket(PF_INET, SOCK_STREAM, 0);
+    assert(listenfd >= 0);
+    ret = bind(listenfd, (struct sockaddr*)&address, sizeof(address));
+    assert(ret != -1);
+
+    ret = listen(listenfd, 5);
+    assert(ret != -1);
+
+    epoll_event events[MAX_EVENT_NUMBER];
+    int epollfd = epoll_create(5);
+    addfd(epollfd, listenfd, false);
+    while(1)
+    {
+        printf("next loop: -----------------------------");
+        int ret = epoll_wait(epollfd, events, MAX_EVENT_NUMBER, -1);
+        if(ret < 0)
+        {
+            printf("epoll failure\n");
+            break;
+        }
+        for(int i = 0; i < ret; i++)
+        {
+            int sockfd = events[i].data.fd;
+            if(sockfd == listenfd)
+            {
+                printf("into listenfd part\n");
+                struct sockaddr_in client_address;
+                socklen_t client_addrlength = sizeof(client_address);
+                int connfd = accept(listenfd, (struct sockaddr*)&client_address,
+                     &client_addrlength);
+                printf("receive connfd: %d\n", connfd);
+                addfd(epollfd, connfd, true);
+                // reset_oneshot(epollfd, listenfd);
+            }
+            else if(events[i].events & EPOLLIN)
+            {
+                printf("into linkedfd part\n");
+                printf("start new thread to receive data on fd: %d\n", sockfd);
+                char buf[2];
+                memset(buf, '\0', 2);
+                // just read one byte, and reset the fd with EPOLLONESHOT, check whether still EPOLLIN event
+                int ret = recv(sockfd, buf, 2 - 1, 0);
+
+                if(ret == 0)
+                {
+                    close(sockfd);
+                    printf("foreigner closed the connection\n");
+                    break;
+                }
+                else if(ret < 0)
+                {
+                    if(errno == EAGAIN)
+                    {
+                        printf("wait to the client send the new data, check the oneshot memchnism\n");
+                        sleep(10);
+                        reset_oneshot(epollfd, sockfd);
+                        printf("read later\n");
+                        break;
+                    }
+                }
+                else {
+                    printf("receive the content: %s\n", buf);
+                    reset_oneshot(epollfd, sockfd);
+                    printf("reset the oneshot successfully\n");
+                }
+            }
+            else 
+                printf("something unknown happend\n");
+        }
+        sleep(1);
+    }
+    close(listenfd);
+    return 0;
+}
+```
 More on that [here](https://linux.die.net/man/7/epoll) and [here](https://stackoverflow.com/questions/41582560/how-does-epolls-epollexclusive-mode-interact-with-level-triggering). If you are super curious about the topic - check out [this](http://www.kegel.com/c10k.html) as well.
 
 When adding a socket to the epoll watch list, the `EPOLL_CTL_ADD` command is used. This command instructs the kernel to add the specified socket to the epoll instance's watch list, associating it with a set of events to monitor (e.g., read, write, error).

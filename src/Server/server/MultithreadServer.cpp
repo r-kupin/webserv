@@ -28,13 +28,16 @@ MultithreadServer::MultithreadServer(const MultithreadServer &server)
 : AServer(server), fd_set_(SOMAXCONN, false), pool_(server.pool_) {}
 
 void MultithreadServer::HandleRequest(int client_sock) {
-    ThreadArgs *args = new ThreadArgs(client_sock, this);
-    args->mutex_ = new pthread_mutex_t;
-    pthread_mutex_init(args->mutex_, NULL);
+    if (!fd_set_[client_sock]) {
+        ThreadArgs *args = new ThreadArgs(client_sock, this);
+        args->mutex_ = new pthread_mutex_t;
+        pthread_mutex_init(args->mutex_, NULL);
 
-    pthread_t tid;
-    Log("creating thread for socket: " + Utils::NbrToString(client_sock));
-    pthread_create(&tid, NULL, &MultithreadServer::ThreadSetup, args);
+        pthread_t tid;
+        Log("creating thread for socket: " + Utils::NbrToString(client_sock));
+        fd_set_[client_sock] = true;
+        pthread_create(&tid, NULL, &MultithreadServer::ThreadSetup, args);
+    }
 }
 
 void *MultithreadServer::ThreadSetup(void *arg) {
@@ -46,6 +49,7 @@ void *MultithreadServer::ThreadSetup(void *arg) {
 
 
     const std::string   &thread_log = serv->HandleRequestInThread(sock);
+    serv->fd_set_[sock] = false;
     pthread_mutex_lock(thread_args->mutex_);
 //    serv->RearmFD(sock, serv->GetEpollFd());
     std::cout << thread_log;
@@ -91,7 +95,7 @@ bool MultithreadServer::AddClientToEpoll(int client_sock, int epoll_fd) {
     epoll_event event;
     std::memset(&event, 0, sizeof(event));
     event.data.fd = client_sock;
-    event.events = EPOLLIN | EPOLLOUT | EPOLLET;
+    event.events = EPOLLIN | EPOLLOUT;
 //    event.events = EPOLLIN | EPOLLOUT;
     return epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_sock, &event) != -1;
 }
@@ -109,7 +113,7 @@ void MultithreadServer::AddEpollInstance() {
     epoll_event event;
     std::memset(&event, 0, sizeof(event));
     event.data.fd = GetSocket();
-    event.events = EPOLLIN | EPOLLOUT | EPOLLET;
+    event.events = EPOLLIN | EPOLLOUT;
 //    event.events = EPOLLIN | EPOLLOUT;
     if (epoll_ctl(GetEpollFd(), EPOLL_CTL_ADD, GetSocket(), &event) < 0)
         throw EpollAddFailed();
