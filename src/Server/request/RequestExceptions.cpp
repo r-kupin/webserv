@@ -3,8 +3,8 @@
 
 void ClientRequest::ThrowException(const std::string& msg,
                                    const std::string &e) const {
-    std::cout << "ClientRequest: " + msg << std::endl;
-
+//    std::cout << "ClientRequest: " + msg << std::endl;
+    (void)msg;
     if (e == "BadURL")
         throw BadURL();
     else if (e == "BadRequestException")
@@ -19,6 +19,8 @@ void ClientRequest::ThrowException(const std::string& msg,
         throw SendContinueFailedException();
     else if (e == "ReadFailed")
         throw ReadFromSocketFailedException();
+    else if (e == "NothingLeftToRead")
+        throw NothingLeftToRead();
 }
 
 const char *ReadFromSocketFailedException::what() const throw() {
@@ -46,5 +48,9 @@ const char *RequestBodySizeExceedsLimitException::what() const throw() {
 }
 
 const char *SendContinueFailedException::what() const throw() {
+    return exception::what();
+}
+
+const char *NothingLeftToRead::what() const throw() {
     return exception::what();
 }

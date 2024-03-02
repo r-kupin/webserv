@@ -23,9 +23,10 @@ public:
     MultithreadServer(const MultithreadServer &server);
 protected:
     struct ThreadArgs {
-        ThreadArgs(int fd, MultithreadServer *obj);
+        ThreadArgs(int fd, int threadN, MultithreadServer *obj);
 
         int                 fd_;
+        int                 thread_n_;
         MultithreadServer   *obj_;
         pthread_mutex_t     *mutex_; // Mutex to protect std::cout
     };
@@ -37,8 +38,9 @@ protected:
     std::string         HandleRequestInThread(int client_sock);// override
     static void         *ThreadSetup(void *arg);
 private:
-    std::vector<bool>   fd_set_;
     ThreadPool          &pool_;
+    int                 thread_n_;
+    std::ofstream       file_;
 };
 
 

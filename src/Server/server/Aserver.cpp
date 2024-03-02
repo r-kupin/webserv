@@ -13,10 +13,10 @@
 #include "AServer.h"
 
 AServer::AServer(const AServer &other)
-        : config_(other.config_), socket_(other.socket_), epoll_fd_(other.epoll_fd_) {}
+        : config_(other.config_), socket_(other.socket_), epoll_fd_(other.epoll_fd_), epoll_returns_count_(0) {}
 
 AServer::AServer(const ServerConfiguration &config)
-        : config_(config), socket_(0), epoll_fd_(0) {}
+        : config_(config), socket_(0), epoll_fd_(0), epoll_returns_count_(0) {}
 
 AServer::~AServer() {}
 
@@ -40,7 +40,6 @@ std::ostream &operator<<(std::ostream &os, const AServer &server) {
 }
 
 void AServer::Log(const std::string &msg, std::ostream &os) const {
-    pthread_t tid = pthread_self();
-    os << config_.GetServerName() << ":" << config_.GetPort() << " (" << tid << ")";
+    os << config_.GetServerName() << ":" << config_.GetPort();
     os << " : " << msg << std::endl;
 }

@@ -4,6 +4,13 @@
 #include "ClientRequest.h"
 
 
+class NothingLeftToRead : public ClientRequest::RequestException {
+public:
+    NothingLeftToRead() : ClientRequest::RequestException() {}
+
+    const char *what() const throw();
+};
+
 class ReadFromSocketFailedException : public ClientRequest::RequestException {
 public:
     ReadFromSocketFailedException() : ClientRequest::RequestException() {}

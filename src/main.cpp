@@ -29,6 +29,7 @@
 */
 #include <iostream>
 #include <cassert>
+#include <csignal>
 #include "Config/config/ConfigExceptions.h"
 #include "Server/ServerManager.h"
 
@@ -73,6 +74,7 @@ int main(int ac, char** av) {
         Config conf = try_open_configs(ac, av);
         std::cout << "Config is on path " + conf.getConfPath() +
                         " is loaded.  Creating servers.." << std::endl;
+        signal(SIGINT, Server::Stop);
         ServerManager server_manager(conf, 10);
         server_manager.RunAllMT();
     } catch (const Config::ConfigException& e) {

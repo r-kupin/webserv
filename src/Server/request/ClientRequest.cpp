@@ -60,27 +60,31 @@ v_str ClientRequest::ReadFromSocket(int socket, int buffer_size) {
     while (true) {
          int bytes_read = recv(socket, buffer, buffer_size - 1, 0);
 //        int bytes_read = read(socket, buffer, buffer_size);
-        if (bytes_read <= 0)
+        if (bytes_read < 0) {
             ThrowException("unable to read request", "ReadFailed");
-        storage.insert(storage.end(), buffer, buffer + bytes_read);
+        } else if (bytes_read == 0) {
+            ThrowException("socket's buffer is empty", "NothingLeftToRead");
+        } else {
+            storage.insert(storage.end(), buffer, buffer + bytes_read);
 
-        size_t line_break = Utils::FindInCharVect(storage, kHTTPNewline);
+            size_t line_break = Utils::FindInCharVect(storage, kHTTPNewline);
 
-        while (!storage.empty() && line_break != std::string::npos) {
-            v_char header_line(storage.begin(), storage.begin() + line_break);
-            if (header_line.empty()) {
-                // start of body section
-                body_ = v_char(storage.begin(), storage.end());
-                return request;
+            while (!storage.empty() && line_break != std::string::npos) {
+                v_char header_line(storage.begin(), storage.begin() + line_break);
+                if (header_line.empty()) {
+                    // start of body section
+                    body_ = v_char(storage.begin(), storage.end());
+                    return request;
+                }
+                request.push_back(std::string(header_line.begin(),
+                                              header_line.end()));
+                storage.erase(storage.begin(), storage.begin() + line_break + 2);
+                line_break = Utils::FindInCharVect(storage, "\r\n");
             }
-            request.push_back(std::string(header_line.begin(),
-                                          header_line.end()));
-            storage.erase(storage.begin(), storage.begin() + line_break + 2);
-            line_break = Utils::FindInCharVect(storage, "\r\n");
+            // Request without body
+            if (bytes_read < buffer_size - 1)
+                return request;
         }
-        // Request without body
-        if (bytes_read < buffer_size - 1)
-            return request;
     }
 }
 

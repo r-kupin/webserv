@@ -10,9 +10,11 @@
 /*                                                                            */
 /******************************************************************************/
 
+#include <csignal>
 #include "ServerManager.h"
 
-ServerManager::ServerManager() {}
+ServerManager::ServerManager() {
+}
 
 ServerManager::ServerManager(const ServerManager &other) {
     (void)other;

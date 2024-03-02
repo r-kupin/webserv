@@ -61,6 +61,8 @@
 #define MAX_EVENTS 1000
 #define SOCKET_BUFFER_SIZE 8192
 
+static volatile bool        is_running_ = true;
+
 class AServer {
 public:
     class ServerException : public std::exception {};
@@ -71,6 +73,7 @@ public:
     virtual ~AServer();
 
     void                        Start();
+    static void                 Stop(int signal);
     const ServerConfiguration   &GetConfig() const;
     int                         GetSocket() const;
     int                         GetEpollFd() const;
@@ -154,6 +157,7 @@ private:
     const ServerConfiguration   &config_;
     int                         socket_;
     int                         epoll_fd_;
+    int                         epoll_returns_count_;
 };
 
 
