@@ -32,7 +32,7 @@ bool    set_non_blocking(int sockfd) {
  */
 void AServer::Start() {
     Init();
-    set_non_blocking(epoll_fd_);
+//    set_non_blocking(epoll_fd_);
     Log("Server initialized successfully..\n");
     std::cout << *this << std::endl;
     Start(config_.GetPort());
@@ -42,8 +42,8 @@ void AServer::Start(int port) {
     if (epoll_fd_ > 0) {
         Log("started server at " + Utils::NbrToString(port) + " port");
         while (is_running_) {HandleEvents();}
-        epoll_ctl(GetEpollFd(), EPOLL_CTL_DEL, GetEpollFd(), NULL);
-        close(GetEpollFd());
+        epoll_ctl(epoll_fd_, EPOLL_CTL_DEL, epoll_fd_, NULL);
+        close(epoll_fd_);
         Log("stpopped");
     } else {
         Log("It seems like " + Utils::NbrToString(port) +
@@ -62,7 +62,8 @@ void AServer::Stop(int signal) {
 int AServer::CheckRequest(int client_sock, const sockaddr_in &client_addr) {
     if (client_sock < 0) {
         Log("Error accepting connection!");
-    } else if (AddClientToEpoll(client_sock, epoll_fd_)) {
+    } else if (AddClientToEpoll(client_sock, epoll_fd_)
+            && set_non_blocking(client_sock)) {
         Log("Accepted client connection from " +
             Utils::NbrToString(client_addr.sin_addr.s_addr));
     } else {

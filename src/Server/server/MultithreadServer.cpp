@@ -33,7 +33,8 @@ void MultithreadServer::HandleRequest(int client_sock) {
         pthread_mutex_init(args->mutex_, NULL);
 
         pthread_t tid;
-        Log("creating thread #" + Utils::NbrToString(thread_n_) + " for socket: " + Utils::NbrToString(client_sock));
+        Log("creating thread #" + Utils::NbrToString(thread_n_) +
+            " for socket: " + Utils::NbrToString(client_sock));
         pthread_create(&tid, NULL, &MultithreadServer::ThreadSetup, args);
 }
 
@@ -44,9 +45,7 @@ void *MultithreadServer::ThreadSetup(void *arg) {
     MultithreadServer   *serv = thread_args->obj_;
     int                 sock = thread_args->fd_;
 
-
-    const std::string   &thread_log =
-            serv->HandleRequestInThread(sock) +
+    const std::string   &thread_log = serv->HandleRequestInThread(sock) +
             "Thread #" + Utils::NbrToString(thread_args->thread_n_) + " done";
     pthread_mutex_lock(thread_args->mutex_);
     serv->file_ << thread_log << std::endl;
@@ -59,11 +58,12 @@ void *MultithreadServer::ThreadSetup(void *arg) {
 
 std::string MultithreadServer::HandleRequestInThread(int client_sock) {
     std::stringstream   os;
-    Location            response_location;
-    ClientRequest       request;
-    ServerResponse      response(GetConfig().GetServerName(),
-                                 GetConfig().GetPort());
+
     while (true) {
+        Location        response_location;
+        ClientRequest   request;
+        ServerResponse  response(GetConfig().GetServerName(),
+                                 GetConfig().GetPort());
         try {
             request.Init(client_sock);
             Log("Handling socket: " + Utils::NbrToString(client_sock), os);
@@ -75,13 +75,12 @@ std::string MultithreadServer::HandleRequestInThread(int client_sock) {
             response_location.SetReturnCode(BAD_HTTP_VERSION);
         } catch (const NothingLeftToRead &) {
             Log("Nothing left to read", os);
-//            RearmFD(client_sock, GetEpollFd());
             epoll_ctl(GetEpollFd(), EPOLL_CTL_DEL, client_sock, NULL);
             close(client_sock);
             return os.str();
         } catch (const ReadFromSocketFailedException &) {
             if (errno == EAGAIN || errno == EWOULDBLOCK) {
-                Log("buffer of fd: " + Utils::NbrToString(client_sock) + "is not empty", os);
+                Log("buffer of fd: " + Utils::NbrToString(client_sock) + " is not empty", os);
                 break;
             } else {
                 Log("read operation failed, stopping request processing."
@@ -98,6 +97,7 @@ std::string MultithreadServer::HandleRequestInThread(int client_sock) {
         response.SendResponse(client_sock);
         Log("Response sent", os);
     }
+    Log("request processing went wrong. Closing everything", os);
     epoll_ctl(GetEpollFd(), EPOLL_CTL_DEL, client_sock, NULL);
     close(client_sock);
     return os.str();
@@ -111,19 +111,11 @@ bool MultithreadServer::AddClientToEpoll(int client_sock, int epoll_fd) {
     return epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_sock, &event) != -1;
 }
 
-bool MultithreadServer::RearmFD(int client_sock, int epoll_fd) {
-    epoll_event event;
-    std::memset(&event, 0, sizeof(event));
-    event.data.fd = client_sock;
-    event.events = EPOLLIN | EPOLLOUT | EPOLLET | EPOLLONESHOT;
-    return epoll_ctl(epoll_fd, EPOLL_CTL_MOD, client_sock, &event) != -1;
-}
-
 void MultithreadServer::AddEpollInstance() {
     epoll_event event;
     std::memset(&event, 0, sizeof(event));
     event.data.fd = GetSocket();
-    event.events = EPOLLIN | EPOLLOUT | EPOLLET;
+    event.events = EPOLLIN | EPOLLOUT;
     if (epoll_ctl(GetEpollFd(), EPOLL_CTL_ADD, GetSocket(), &event) < 0)
         throw EpollAddFailed();
 }
