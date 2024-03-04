@@ -80,7 +80,7 @@ std::string MultithreadServer::HandleRequestInThread(int client_sock) {
             return os.str();
         } catch (const ReadFromSocketFailedException &) {
             if (errno == EAGAIN || errno == EWOULDBLOCK) {
-                Log("buffer of fd: " + Utils::NbrToString(client_sock) + " is not empty", os);
+                Log("errno == EAGAIN || errno == EWOULDBLOCK", os);
                 break;
             } else {
                 Log("read operation failed, stopping request processing."
@@ -97,7 +97,6 @@ std::string MultithreadServer::HandleRequestInThread(int client_sock) {
         response.SendResponse(client_sock);
         Log("Response sent", os);
     }
-    Log("request processing went wrong. Closing everything", os);
     epoll_ctl(GetEpollFd(), EPOLL_CTL_DEL, client_sock, NULL);
     close(client_sock);
     return os.str();
@@ -107,7 +106,7 @@ bool MultithreadServer::AddClientToEpoll(int client_sock, int epoll_fd) {
     epoll_event event;
     std::memset(&event, 0, sizeof(event));
     event.data.fd = client_sock;
-    event.events = EPOLLIN | EPOLLOUT | EPOLLET | EPOLLONESHOT;
+    event.events = EPOLLIN | EPOLLOUT | EPOLLET /*| EPOLLONESHOT*/;
     return epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_sock, &event) != -1;
 }
 

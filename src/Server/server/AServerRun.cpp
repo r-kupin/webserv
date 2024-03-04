@@ -27,12 +27,19 @@ bool    set_non_blocking(int sockfd) {
     return (fcntl(sockfd, F_SETFL, flags) != -1);
 }
 
+bool    set_timeout(int sockfd) {
+    struct timeval tv;
+    tv.tv_sec = 0;
+    tv.tv_usec = 10;
+    return (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv) != -1);
+}
+
 /**
  *  TODO MAX_CLIENTS
  */
 void AServer::Start() {
     Init();
-//    set_non_blocking(epoll_fd_);
+    /*set_non_blocking(epoll_fd_);*/
     Log("Server initialized successfully..\n");
     std::cout << *this << std::endl;
     Start(config_.GetPort());
@@ -63,7 +70,7 @@ int AServer::CheckRequest(int client_sock, const sockaddr_in &client_addr) {
     if (client_sock < 0) {
         Log("Error accepting connection!");
     } else if (AddClientToEpoll(client_sock, epoll_fd_)
-            && set_non_blocking(client_sock)) {
+            && set_timeout(client_sock)) {
         Log("Accepted client connection from " +
             Utils::NbrToString(client_addr.sin_addr.s_addr));
     } else {
