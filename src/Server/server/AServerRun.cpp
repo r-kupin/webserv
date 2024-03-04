@@ -80,6 +80,35 @@ int AServer::CheckRequest(int client_sock, const sockaddr_in &client_addr) {
     return client_sock;
 }
 
+void    print_event_info(int events,
+                         int fd,
+                         int socket_,
+                         int i,
+                         int epoll_returns_count_,
+                         int &epoll_events_count_,
+                         int &epoll_in_out_count_,
+                         int &epoll_connection_count_) {
+    epoll_events_count_++;
+    if (events == 5)
+        epoll_in_out_count_++;
+    if (events == EPOLLIN && fd == socket_ )
+        epoll_connection_count_++;
+
+    std::cout << "\n== returns " << epoll_returns_count_ <<
+              " == events " << epoll_events_count_ <<
+              " == connections " << epoll_connection_count_ <<
+              " == IO " << epoll_in_out_count_ << std::endl;
+
+    std::cout << "nfd: " << i << "\n" << "fd: " << fd << std::endl;
+    if (events & EPOLLIN)
+        std::cout << "EPOLLIN " << EPOLLIN << std::endl;
+    if (events & EPOLLOUT)
+        std::cout << "EPOLLOUT " << EPOLLOUT << std::endl;
+    if (events & EPOLLERR)
+        std::cout << "EPOLLERR " << EPOLLERR << std::endl;
+    std::cout << events << std::endl;
+}
+
 /**
  *  TODO MAX_CLIENTS
  */
@@ -88,21 +117,15 @@ void    AServer::HandleEvents() {
     int nfds = epoll_wait(epoll_fd_, events, MAX_EVENTS, -1);
     if (is_running_) {
         epoll_returns_count_++;
-        std::cout << "\n========" << epoll_returns_count_ << "========" << std::endl;
         if (nfds == -1) {
             // Handle epoll_wait error
             return;
         }
         for (int i = 0; i < nfds; ++i) {
             int fd = events[i].data.fd;
-            std::cout << "nfd: " << i << "\n" << "fd: " << fd << std::endl;
-            if (events[i].events & EPOLLIN)
-                std::cout << "EPOLLIN " << EPOLLIN << std::endl;
-            if (events[i].events & EPOLLOUT)
-                std::cout << "EPOLLOUT " << EPOLLOUT << std::endl;
-            if (events[i].events & EPOLLERR)
-                std::cout << "EPOLLERR " << EPOLLERR << std::endl;
-            std::cout << events[i].events << std::endl;
+            print_event_info(events[i].events, fd, socket_, i,
+                             epoll_returns_count_, epoll_events_count_,
+                             epoll_in_out_count_, epoll_connection_count_);
             if (fd == socket_) {
                 // New connection
                 struct sockaddr_in client_addr;
@@ -116,3 +139,5 @@ void    AServer::HandleEvents() {
         }
     }
 }
+//== returns 1041 == events 2823 == connections 1001 == IO 1001
+//== returns 1546 == events 3227 == connections 1513 == IO 1001

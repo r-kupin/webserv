@@ -13,10 +13,22 @@
 #include "AServer.h"
 
 AServer::AServer(const AServer &other)
-        : config_(other.config_), socket_(other.socket_), epoll_fd_(other.epoll_fd_), epoll_returns_count_(0) {}
+        : config_(other.config_),
+        socket_(other.socket_),
+        epoll_fd_(other.epoll_fd_),
+        epoll_returns_count_(0),
+        epoll_events_count_(0),
+        epoll_connection_count_(0),
+        epoll_in_out_count_(0) {}
 
 AServer::AServer(const ServerConfiguration &config)
-        : config_(config), socket_(0), epoll_fd_(0), epoll_returns_count_(0) {}
+        : config_(config),
+        socket_(0),
+        epoll_fd_(0),
+        epoll_returns_count_(0),
+        epoll_events_count_(0),
+        epoll_connection_count_(0),
+        epoll_in_out_count_(0) {}
 
 AServer::~AServer() {}
 

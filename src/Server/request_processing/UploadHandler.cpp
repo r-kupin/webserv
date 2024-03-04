@@ -52,7 +52,7 @@ int AServer::UploadFile(ClientRequest &request, l_loc_c_it found, int socket, st
     else
         dirname = config_.GetConstRoot().root_ + "/" + found->uploads_path_;
 
-    std::string filename(dirname + "/" + Utils::NbrToString(files_uploaded_));
+    std::string filename(dirname + "/" + Utils::NbrToString(files_uploaded_++));
     if (request.HasHeader("User-Agent") &&
         request.HasHeader("Content-Type") &&
         request.HasHeader("Content-Length")) {
@@ -60,9 +60,17 @@ int AServer::UploadFile(ClientRequest &request, l_loc_c_it found, int socket, st
                                 request.GetDeclaredBodySize(), os)) {
             // file created successfully
             if (request.IsCurlRequest()) {
+
+
+                struct timeval tv;
+                tv.tv_sec = 10;
+                tv.tv_usec = 0;
+                setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
+
+
                 int status = UploadFromCURL(request, filename, socket, os);
-                if (status == OK)
-                    files_uploaded_++;
+//                if (status == OK)
+//                    files_uploaded_++;
                 return status;
             }
             // wget doesn't work on nginx - sends file without tailing linebreak

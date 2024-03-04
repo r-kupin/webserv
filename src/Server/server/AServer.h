@@ -158,6 +158,9 @@ private:
     int                         socket_;
     int                         epoll_fd_;
     int                         epoll_returns_count_;
+    int                         epoll_events_count_;
+    int                         epoll_connection_count_;
+    int                         epoll_in_out_count_;
 };
 
 
