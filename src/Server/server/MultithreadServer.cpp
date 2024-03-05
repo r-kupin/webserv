@@ -106,7 +106,7 @@ bool MultithreadServer::AddClientToEpoll(int client_sock, int epoll_fd) {
     epoll_event event;
     std::memset(&event, 0, sizeof(event));
     event.data.fd = client_sock;
-    event.events = EPOLLIN | EPOLLOUT | EPOLLET | EPOLLONESHOT;
+    event.events = EPOLLIN | EPOLLOUT | EPOLLET /*| EPOLLONESHOT*/;
     return epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_sock, &event) != -1;
 }
 
