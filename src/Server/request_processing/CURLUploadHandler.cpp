@@ -105,8 +105,10 @@ int AServer::UploadFromCURL(ClientRequest &request, const std::string &filename,
             // If request has "Expect: 100-continue" header - it will wait here
             request.TellClientToContinueIfNeed(socket);
             // Body contains metadata before file contents. Write it to body_
-            size_t bytes_left = request.GetDeclaredBodySize() -
-                                request.ProcessCURLFileMetadata(socket,delimiter);
+            size_t curl_metadata_size = request.ProcessCURLFileMetadata(socket, delimiter);
+            // 2 is added, because the after the ending delimiter "\r\n" is present
+            // and it's not accounted into BodySize header value
+            size_t bytes_left = (request.GetDeclaredBodySize() + 2) - curl_metadata_size;
             return PerformUpload(request, socket, file, delimiter, buffer,
                                  bytes_left, os);
         } catch (const SendContinueFailedException & ) {

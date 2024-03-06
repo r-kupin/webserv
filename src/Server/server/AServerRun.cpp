@@ -66,13 +66,13 @@ void AServer::Stop(int signal) {
     }
 }
 
-int AServer::CheckRequest(int client_sock, const sockaddr_in &client_addr) {
+int AServer::CheckRequest(int client_sock) {
     if (client_sock < 0) {
         Log("Error accepting connection!");
     } else if (AddClientToEpoll(client_sock, epoll_fd_)
             && set_timeout(client_sock)) {
-        Log("Accepted client connection from " +
-            Utils::NbrToString(client_addr.sin_addr.s_addr));
+        Log("Accepted client connection from socket " +
+            Utils::NbrToString(client_sock));
     } else {
         Log("Error adding client socket to epoll");
         close(client_sock);
@@ -132,7 +132,7 @@ void    AServer::HandleEvents() {
                 socklen_t client_len = sizeof(client_addr);
                 int client_sock = accept(socket_, (struct sockaddr *) &client_addr,
                                          &client_len);
-                CheckRequest(client_sock, client_addr);
+                CheckRequest(client_sock);
             } else if (events[i].events & EPOLLIN && events[i].events & EPOLLOUT) {
                 HandleRequest(fd);
             }
