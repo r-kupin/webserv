@@ -13,6 +13,7 @@
 #include <iostream>
 #include <algorithm>
 #include <csignal>
+#include <cstring>
 #include "../server/ServerExceptions.h"
 
 bool AServer::TryCreateOutputFile(const std::string &dir, const std::string &filename, size_t size, std::ostream &os) const {
@@ -51,7 +52,7 @@ int AServer::UploadFile(ClientRequest &request, l_loc_c_it found, int socket, st
         dirname = found->uploads_path_;
     else
         dirname = config_.GetConstRoot().root_ + "/" + found->uploads_path_;
-
+// todo: fileneme assignation should be more resilient
     std::string filename(dirname + "/" + Utils::NbrToString(files_uploaded_++));
     if (request.HasHeader("User-Agent") &&
         request.HasHeader("Content-Type") &&
@@ -61,14 +62,30 @@ int AServer::UploadFile(ClientRequest &request, l_loc_c_it found, int socket, st
             // file created successfully
             if (request.IsCurlRequest()) {
 
-
+// todo: need refactor
                 struct timeval tv;
                 tv.tv_sec = 10;
                 tv.tv_usec = 0;
                 setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
 
+                epoll_event event;
+                std::memset(&event, 0, sizeof(event));
+                event.data.fd = socket;
+                event.events = EPOLLIN | EPOLLOUT | EPOLLET | EPOLLONESHOT;
+                epoll_ctl(GetEpollFd(), EPOLL_CTL_MOD, socket, &event);
 
                 int status = UploadFromCURL(request, filename, socket, os);
+
+                tv.tv_sec = 0;
+                tv.tv_usec = 10;
+                setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
+
+                std::memset(&event, 0, sizeof(event));
+                event.data.fd = socket;
+                event.events = EPOLLIN | EPOLLOUT | EPOLLET /*| EPOLLONESHOT*/;
+                epoll_ctl(GetEpollFd(), EPOLL_CTL_MOD, socket, &event);
+
+
 //                if (status == OK)
 //                    files_uploaded_++;
                 return status;
