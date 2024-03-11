@@ -19,23 +19,32 @@
 
 MultithreadServer::MultithreadServer(const ServerConfiguration &config,
                                      ThreadPool &pool)
-: AServer(config), pool_(pool), thread_n_(0), file_("srv_output") {}
+: AServer(config),
+    pool_(pool),
+    thread_n_(0),
+    file_((GetConfig().GetServerName() + "_" +
+            Utils::NbrToString(GetConfig().GetPort())).c_str()) {}
 
 MultithreadServer::MultithreadServer(const AServer &server, ThreadPool &pool)
-: AServer(server), pool_(pool), thread_n_(0), file_("srv_output") {}
+: AServer(server),
+    pool_(pool),
+    thread_n_(0),
+    file_((GetConfig().GetServerName() + "_" +
+            Utils::NbrToString(GetConfig().GetPort())).c_str()) {}
 
 MultithreadServer::MultithreadServer(const MultithreadServer &server)
-: AServer(server), pool_(server.pool_), thread_n_(0), file_("srv_output") {}
+: AServer(server),
+    pool_(server.pool_),
+    thread_n_(0),
+    file_((GetConfig().GetServerName() + "_" +
+        Utils::NbrToString(GetConfig().GetPort())).c_str()) {}
 
 void MultithreadServer::HandleRequest(int client_sock) {
-        ThreadArgs *args = new ThreadArgs(client_sock, ++thread_n_, this);
-        args->mutex_ = new pthread_mutex_t;
-        pthread_mutex_init(args->mutex_, NULL);
+    ThreadArgs *args = new ThreadArgs(client_sock, ++thread_n_, this);
 
-        pthread_t tid;
-        Log("creating thread #" + Utils::NbrToString(thread_n_) +
-            " for socket: " + Utils::NbrToString(client_sock));
-        pthread_create(&tid, NULL, &MultithreadServer::ThreadSetup, args);
+    pool_.AddTask(args);
+    Log("creating thread #" + Utils::NbrToString(thread_n_) +
+        " for socket: " + Utils::NbrToString(client_sock));
 }
 
 void *MultithreadServer::ThreadSetup(void *arg) {
@@ -46,7 +55,7 @@ void *MultithreadServer::ThreadSetup(void *arg) {
     int                 sock = thread_args->fd_;
 
     const std::string   &thread_log = serv->HandleRequestInThread(sock) +
-            "Thread #" + Utils::NbrToString(thread_args->thread_n_) + " done";
+            "ThreadContext #" + Utils::NbrToString(thread_args->thread_n_) + " done";
     pthread_mutex_lock(thread_args->mutex_);
     serv->file_ << thread_log << std::endl;
     pthread_mutex_unlock(thread_args->mutex_);

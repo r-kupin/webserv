@@ -21,22 +21,20 @@ public:
     MultithreadServer(const AServer &server, ThreadPool &pool);
     MultithreadServer(const ServerConfiguration &config, ThreadPool &pool);
     MultithreadServer(const MultithreadServer &server);
-protected:
+
+    static void         *ThreadSetup(void *arg);
+    std::string         HandleRequestInThread(int client_sock);// override
     struct ThreadArgs {
         ThreadArgs(int fd, int threadN, MultithreadServer *obj);
 
         int                 fd_;
         int                 thread_n_;
         MultithreadServer   *obj_;
-        pthread_mutex_t     *mutex_; // Mutex to protect std::cout
     };
-
+protected:
     bool                AddClientToEpoll(int client_sock, int epoll_fd);// override
     void                AddEpollInstance();// override
-    bool                RearmFD(int client_sock, int epoll_fd);
     void                HandleRequest(int client_sock);// override
-    std::string         HandleRequestInThread(int client_sock);// override
-    static void         *ThreadSetup(void *arg);
 private:
     ThreadPool          &pool_;
     int                 thread_n_;
