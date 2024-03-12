@@ -159,9 +159,8 @@ void    Server::HandleEvents() {
             int client_sock = accept(socket_, (struct sockaddr *) &client_addr,
                     &client_len);
             CheckRequest(client_sock, client_addr);
-        }
-        if (events[i].events & EPOLLIN && events[i].events & EPOLLOUT) {
-                HandleRequest(fd);
+        } else if (events[i].events & EPOLLIN && events[i].events & EPOLLOUT) {
+            HandleRequest(fd);
         }
     }
 }
