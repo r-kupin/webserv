@@ -27,12 +27,12 @@ bool    set_non_blocking(int sockfd) {
     return (fcntl(sockfd, F_SETFL, flags) != -1);
 }
 
-bool    set_timeout(int sockfd) {
-    struct timeval tv;
-    tv.tv_sec = 0;
-    tv.tv_usec = 10;
-    return (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv) != -1);
-}
+//bool    set_timeout(int sockfd) {
+//    struct timeval tv;
+//    tv.tv_sec = 0;
+//    tv.tv_usec = 10;
+//    return (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv) != -1);
+//}
 
 /**
  *  TODO MAX_CLIENTS
@@ -69,8 +69,7 @@ void AServer::Stop(int signal) {
 int AServer::CheckRequest(int client_sock) {
     if (client_sock < 0) {
         Log("Error accepting connection!");
-    } else if (AddClientToEpoll(client_sock, epoll_fd_)
-            && set_timeout(client_sock)) {
+    } else if (AddClientToEpoll(client_sock, epoll_fd_)) {
         Log("Accepted client connection from socket " +
             Utils::NbrToString(client_sock));
     } else {
@@ -123,9 +122,9 @@ void    AServer::HandleEvents() {
         }
         for (int i = 0; i < nfds; ++i) {
             int fd = events[i].data.fd;
-            print_event_info(events[i].events, fd, socket_, i,
-                             epoll_returns_count_, epoll_events_count_,
-                             epoll_in_out_count_, epoll_connection_count_);
+//            print_event_info(events[i].events, fd, socket_, i,
+//                             epoll_returns_count_, epoll_events_count_,
+//                             epoll_in_out_count_, epoll_connection_count_);
             if (fd == socket_) {
                 // New connection
                 struct sockaddr_in client_addr;

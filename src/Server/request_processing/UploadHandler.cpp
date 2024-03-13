@@ -84,8 +84,6 @@ int AServer::UploadFile(ClientRequest &request, l_loc_c_it found, int socket, st
                 event.data.fd = socket;
                 event.events = EPOLLIN | EPOLLOUT | EPOLLET /*| EPOLLONESHOT*/;
                 epoll_ctl(GetEpollFd(), EPOLL_CTL_MOD, socket, &event);
-
-
 //                if (status == OK)
 //                    files_uploaded_++;
                 return status;

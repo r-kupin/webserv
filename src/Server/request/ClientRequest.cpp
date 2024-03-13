@@ -58,13 +58,11 @@ v_str ClientRequest::ReadFromSocket(int socket, int buffer_size) {
     v_str               request;
 
     while (true) {
-         int bytes_read = recv(socket, buffer, buffer_size - 1, 0);
+         int bytes_read = recv(socket, buffer, buffer_size - 1, MSG_DONTWAIT);
 //        int bytes_read = read(socket, buffer, buffer_size);
         if (bytes_read < 0) {
             ThrowException("unable to read request", "ReadFailed");
-        } else if (bytes_read == 0) {
-            ThrowException("socket's buffer is empty", "NothingLeftToRead");
-        } else {
+        } else if (bytes_read != 0) {
             storage.insert(storage.end(), buffer, buffer + bytes_read);
 
             size_t line_break = Utils::FindInCharVect(storage, kHTTPNewline);
@@ -81,9 +79,9 @@ v_str ClientRequest::ReadFromSocket(int socket, int buffer_size) {
                 storage.erase(storage.begin(), storage.begin() + line_break + 2);
                 line_break = Utils::FindInCharVect(storage, "\r\n");
             }
-            // Request without body
-            if (bytes_read < buffer_size - 1)
-                return request;
+//            // Request without body
+//            if (bytes_read < buffer_size - 1)
+//                return request;
         }
     }
 }
