@@ -18,22 +18,6 @@
 #include <sys/fcntl.h>
 #include <csignal>
 
-bool    set_non_blocking(int sockfd) {
-    int flags = fcntl(sockfd, F_GETFL, 0);
-    if (flags == -1)
-        return false;
-
-    flags |= O_NONBLOCK;
-    return (fcntl(sockfd, F_SETFL, flags) != -1);
-}
-
-//bool    set_timeout(int sockfd) {
-//    struct timeval tv;
-//    tv.tv_sec = 0;
-//    tv.tv_usec = 10;
-//    return (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv) != -1);
-//}
-
 /**
  *  TODO MAX_CLIENTS
  */
@@ -96,15 +80,15 @@ void    print_event_info(int events,
     std::cout << "\n== returns " << epoll_returns_count_ <<
               " == events " << epoll_events_count_ <<
               " == connections " << epoll_connection_count_ <<
-              " == IO " << epoll_in_out_count_ << std::endl;
+              " == IO " << epoll_in_out_count_ << "\n";
 
-    std::cout << "nfd: " << i << "\n" << "fd: " << fd << std::endl;
+    std::cout << "nfd: " << i << "\n" << "fd: " << fd << "\n";
     if (events & EPOLLIN)
-        std::cout << "EPOLLIN " << EPOLLIN << std::endl;
+        std::cout << "EPOLLIN " << EPOLLIN << "\n";
     if (events & EPOLLOUT)
-        std::cout << "EPOLLOUT " << EPOLLOUT << std::endl;
+        std::cout << "EPOLLOUT " << EPOLLOUT << "\n";
     if (events & EPOLLERR)
-        std::cout << "EPOLLERR " << EPOLLERR << std::endl;
+        std::cout << "EPOLLERR " << EPOLLERR << "\n";
     std::cout << events << std::endl;
 }
 
@@ -122,9 +106,9 @@ void    AServer::HandleEvents() {
         }
         for (int i = 0; i < nfds; ++i) {
             int fd = events[i].data.fd;
-//            print_event_info(events[i].events, fd, socket_, i,
-//                             epoll_returns_count_, epoll_events_count_,
-//                             epoll_in_out_count_, epoll_connection_count_);
+            print_event_info(events[i].events, fd, socket_, i,
+                             epoll_returns_count_, epoll_events_count_,
+                             epoll_in_out_count_, epoll_connection_count_);
             if (fd == socket_) {
                 // New connection
                 struct sockaddr_in client_addr;
@@ -138,5 +122,3 @@ void    AServer::HandleEvents() {
         }
     }
 }
-//== returns 1041 == events 2823 == connections 1001 == IO 1001
-//== returns 1546 == events 3227 == connections 1513 == IO 1001

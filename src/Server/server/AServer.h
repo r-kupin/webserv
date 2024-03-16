@@ -91,7 +91,7 @@ protected:
     virtual void                AddEpollInstance() = 0;
 //-------------------request handling-------------------------------------------
     void                        Start(int port);
-    int CheckRequest(int client_sock);
+    int                         CheckRequest(int client_sock);
     virtual bool                AddClientToEpoll(int client_sock, int epoll_fd) = 0;
     void                        HandleEvents();
     virtual void                HandleRequest(int client_sock) = 0;
@@ -128,7 +128,7 @@ protected:
     int                         UploadFromCURL(ClientRequest &request,
                                                const std::string &filename,
                                                int socket, std::ostream &os);
-    bool                        FlushBuffer(char *buffer, std::ofstream &file,
+    bool                        FlushBuffer(char *buffer, int file_fd,
                                             const std::string &delimiter,
                                             int bytes_read);
     int                         FillBuffer(char *buffer, int socket,
@@ -136,7 +136,7 @@ protected:
                                            v_char &storage) const;
     int                         PerformUpload(const ClientRequest &request,
                                               int socket,
-                                              std::ofstream &file,
+                                              int file_fd,
                                               const std::string &delimiter,
                                               char *buffer,
                                               size_t bytes_left,

@@ -31,6 +31,7 @@ void Config::CreateSrvConfigs(Node& root) {
         if (root.child_nodes_[i].main_[0] == "server") {
             servers_.push_front(ServerConfiguration());
             CheckServer(root.child_nodes_[i], servers_.front());
+//            todo: there can be multiple servers with different names on the same port and server(s) with same name(s) on different ports
             if (HasServerWithSameNameOrPort(servers_.front()))
                 ThrowSyntaxError("Server name and port needs to be unique "
                                  "amongst all servers");

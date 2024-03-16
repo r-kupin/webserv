@@ -14,6 +14,7 @@
 #include <iostream>
 #include <algorithm>
 #include <sstream>
+#include <cerrno>
 #include "ClientRequest.h"
 
 void ClientRequest::TellClientToContinueIfNeed(int socket) const {
@@ -38,14 +39,33 @@ void ClientRequest::TellClientToContinueIfNeed(int socket) const {
 }
 
 int ClientRequest::ReadBodyPart(int socket, int buffer_size, char *buffer) {
-//    int bytes_read = read(socket, buffer, buffer_size - 1);
-    int bytes_read = recv(socket, buffer, buffer_size - 1, 0);
-    if (bytes_read < 0)
-        ThrowException("unable to read request's body", "ReadFailed");
-    body_.insert(body_.end(), buffer, buffer + bytes_read);
-    if (body_.size() > GetDeclaredBodySize())
-        ThrowException("request body size exceeds value, specified in header",
-                       "BodyIsTooLarge");
+    int     bytes_read = 0;
+    int     zeros_in_row = 0;
+
+    while (bytes_read == 0) {
+        bytes_read = recv(socket, buffer, buffer_size - 1, MSG_DONTWAIT);
+
+        if (bytes_read < 0) {
+            if (errno == EWOULDBLOCK || errno == EAGAIN) {
+                // all file's body was red while reading headers block (it's super small)
+                return 0;
+            } else
+                ThrowException("recv returned -1 due to recv failure while reading curl metadata",
+                               "ReadFailed");
+        }
+        if (bytes_read == 0)
+            zeros_in_row++;
+        if (zeros_in_row > 100)
+            // sometimes, instead of returning -1 and setting errno recv just keeps returning 0
+            return 0;
+        if (bytes_read > 0) {
+            body_.insert(body_.end(), buffer, buffer + bytes_read);
+            if (body_.size() > GetDeclaredBodySize())
+                ThrowException("request body size exceeds value, specified in header",
+                               "BodyIsTooLarge");
+            break;
+        }
+    }
     return bytes_read;
 }
 
@@ -70,17 +90,17 @@ int ClientRequest::ReadBodyToRequest(int socket) {
 void    ClientRequest::ReadCURLFileMetadata(const std::string &delimiter,
                                             char *buffer, int socket) {
     while (Utils::FindInCharVect(body_, delimiter) == std::string::npos) {
-        if (ReadBodyPart(socket, METADATA_BUFFER_SIZE, buffer) == 0)
-            ThrowException("Curl request's body intended to upload a file "
-                           "should start with delimiter, seems like it's "
-                           "missing", "BadRequestException");
+        ReadBodyPart(socket, METADATA_BUFFER_SIZE, buffer);
+//            ThrowException("Curl request's body intended to upload a file "
+//                           "should start with delimiter, seems like it's "
+//                           "missing", "BadRequestException");
     }
     while (Utils::FindInCharVect(body_, delimiter) != std::string::npos &&
            Utils::FindInCharVect(body_, kHTTPEndBlock) == std::string::npos) {
-        if (ReadBodyPart(socket, METADATA_BUFFER_SIZE, buffer) == 0)
-            ThrowException("Curl request's body intended to upload a file "
-                           "should start with delimiter, followed by "
-                           "\"\\r\\n\\r\\\"", "BadRequestException");
+        ReadBodyPart(socket, METADATA_BUFFER_SIZE, buffer);
+//            ThrowException("Curl request's body intended to upload a file "
+//                           "should start with delimiter, followed by "
+//                           "\"\\r\\n\\r\\\"", "BadRequestException");
     }
 }
 

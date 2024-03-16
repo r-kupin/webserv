@@ -4,9 +4,16 @@
 #include "ClientRequest.h"
 
 
-class NothingLeftToRead : public ClientRequest::RequestException {
+class EwouldblockEagain : public ClientRequest::RequestException {
 public:
-    NothingLeftToRead() : ClientRequest::RequestException() {}
+    EwouldblockEagain() : ClientRequest::RequestException() {}
+
+    const char *what() const throw();
+};
+
+class MultipleZeroReturns : public ClientRequest::RequestException {
+public:
+    MultipleZeroReturns() : ClientRequest::RequestException() {}
 
     const char *what() const throw();
 };

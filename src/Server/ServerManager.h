@@ -30,7 +30,7 @@ public:
 
     ~ServerManager();
 
-    void RunAllST();
+    void RunAll();
     void RunAllMT();
 private:
     ThreadPool  pool_;

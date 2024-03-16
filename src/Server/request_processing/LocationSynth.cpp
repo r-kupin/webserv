@@ -29,11 +29,11 @@ Location AServer::ProcessRequest(ClientRequest &request, std::ostream &os, int s
     Location synth(*found);
 
     if (RequestBodyExceedsLimit(found, request)) {
-        Log("client intended to send too large body", os);
+        Log("client intended to send too large body");
         synth.SetReturnCode(BODY_TOO_LARGE);
     } else if (AccessForbidden(found, request.GetMethod())) {
         // limit_access rule prohibits request
-        Log("access forbidden by rule", os);
+        Log("access forbidden by rule");
         synth.SetReturnCode(ACCESS_FORBIDDEN);
     } else if (found->return_code_ == 0) {
         // return redirection rule isn't set
@@ -59,7 +59,7 @@ void AServer::HandleStatic(const ClientRequest &request,
     if (fs_status == ELSE) {
         // something exist on specified address, but it is neither a file nor a directory
         Log(address + " is neither a file nor a directory.."
-                      "I don't know what to do with it..", os);
+                      "I don't know what to do with it..");
         synth.SetReturnCode(REQUESTED_FILE_IS_NOT_A_FILE);
     } else {
         if (request.IsIndexRequest()) {
@@ -81,7 +81,7 @@ void AServer::HandleUpload(ClientRequest &request, int socket, l_loc_c_it &found
         if (synth.return_code_ == OK)
             synth.return_custom_message_ = "Upload successful";
     } else {
-        Log("only POST method should be used for upload locations", os);
+        Log("only POST method should be used for upload locations");
         synth.SetReturnCode(UNAPROPRIATE_METHOD);
     }
 }
@@ -89,12 +89,13 @@ void AServer::HandleUpload(ClientRequest &request, int socket, l_loc_c_it &found
 void AServer::SynthFile(Location &synth, const Srch_c_Res &res, int fs_status,
                         const std::string &request_address,
                         std::ostream &os) const {
+    (void)os;
     const l_loc_c_it &found = res.location_;
     std::string address = found->root_ + res.leftower_address_;
     // request's address part of URI has an address after last "/" check with
     // leftower-address
     if (fs_status == NOTHING) {
-        Log("open() \"" + address + "\" failed", os);
+        Log("open() \"" + address + "\" failed");
         synth.SetReturnCode(NOT_FOUND);
     } else if (fs_status == DIRECTORY) {
         // redirect to index request

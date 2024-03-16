@@ -20,10 +20,10 @@ Server::Server(const ServerConfiguration &config) : AServer(config) {}
 
 void Server::HandleRequest(int client_sock) {
     while (is_running_) {
-        Location response_location;
-        ClientRequest request;
-        ServerResponse response(GetConfig().GetServerName(),
-                                GetConfig().GetPort());
+        Location        response_location;
+        ClientRequest   request;
+        ServerResponse  response(GetConfig().GetServerName(),
+                                 GetConfig().GetPort());
         try {
             request.Init(client_sock);
             Log("Got client request:\n", std::cout);
@@ -32,20 +32,15 @@ void Server::HandleRequest(int client_sock) {
             Log("Request processed", std::cout);
         } catch (const HTTPVersionNotSupportedException &) {
             response_location.SetReturnCode(BAD_HTTP_VERSION);
-        } catch (const NothingLeftToRead &) {
-            Log("Nothing left to read");
-            epoll_ctl(GetEpollFd(), EPOLL_CTL_DEL, client_sock, NULL);
-            close(client_sock);
-            return;
         } catch (const ReadFromSocketFailedException &) {
-            if (errno == EAGAIN || errno == EWOULDBLOCK) {
-                Log("errno == EAGAIN || errno == EWOULDBLOCK");
-                break;
-            } else {
-                Log("read operation failed, stopping request processing."
-                    "Response will not be sent back.");
-                break;
-            }
+            Log("read operation failed");
+            break;
+        } catch (const MultipleZeroReturns &) {
+            response_location.SetReturnCode(BAD_REQUEST);
+            break;
+        } catch (const EwouldblockEagain &){
+            Log("Done with all available events");
+            break;
         } catch (const ClientRequest::RequestException &) {
             response_location.SetReturnCode(BAD_REQUEST);
         }

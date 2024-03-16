@@ -43,7 +43,7 @@ ServerManager::ServerManager(const Config &config, int n)
     }
 }
 
-void ServerManager::RunAllST() {
+void ServerManager::RunAll() {
     for (l_servers::iterator it = servers_.begin(); it != servers_.end(); ++it) {
         it->Start();
     }

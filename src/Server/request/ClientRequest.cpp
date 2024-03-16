@@ -13,6 +13,7 @@
 #include <csignal>
 #include <iostream>
 #include <algorithm>
+#include <cerrno>
 #include "ClientRequest.h"
 #include "RequestExceptions.h"
 
@@ -56,13 +57,34 @@ v_str ClientRequest::ReadFromSocket(int socket, int buffer_size) {
     char                buffer[buffer_size];
     v_char              storage;
     v_str               request;
+    int                 zeros_in_row = 0;
 
+    if (recv(socket, buffer, 0, MSG_DONTWAIT) < 0) {
+        // it's ok: we just processed all available data and this request creation call is false.
+        // return without sending anything to client
+        ThrowException("The probing recv returned -1 with EWOULDBLOCK || EAGAIN "
+                       "Nothing left to read on this socket, all events processed",
+                       "EwouldblockEagain");
+    }
     while (true) {
-         int bytes_read = recv(socket, buffer, buffer_size - 1, MSG_DONTWAIT);
-//        int bytes_read = read(socket, buffer, buffer_size);
+        int bytes_read = recv(socket, buffer, buffer_size - 1, MSG_DONTWAIT);
+
         if (bytes_read < 0) {
-            ThrowException("unable to read request", "ReadFailed");
-        } else if (bytes_read != 0) {
+            if (errno == EWOULDBLOCK || errno == EAGAIN) {
+                ThrowException("recv returned -1 and set errno - No \\r\\n\\r\\n"
+                               " after the request's headers section",
+                               "BadRequestException");
+            } else
+                ThrowException("recv returned -1 due to read failure", "ReadFailed");
+        }
+        if (bytes_read == 0)
+            zeros_in_row++;
+        if (zeros_in_row > 100)
+            ThrowException("hundred recvs returned 0 - No \\r\\n\\r\\n"
+                           " after the request's headers section",
+                           "100ZerosInRow");
+        if (bytes_read > 0) {
+            zeros_in_row = 0;
             storage.insert(storage.end(), buffer, buffer + bytes_read);
 
             size_t line_break = Utils::FindInCharVect(storage, kHTTPNewline);
@@ -79,9 +101,6 @@ v_str ClientRequest::ReadFromSocket(int socket, int buffer_size) {
                 storage.erase(storage.begin(), storage.begin() + line_break + 2);
                 line_break = Utils::FindInCharVect(storage, "\r\n");
             }
-//            // Request without body
-//            if (bytes_read < buffer_size - 1)
-//                return request;
         }
     }
 }

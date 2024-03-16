@@ -66,25 +66,25 @@ std::string MultithreadServer::HandleRequestInThread(int client_sock) {
                                  GetConfig().GetPort());
         try {
             request.Init(client_sock);
-            Log("Handling socket: " + Utils::NbrToString(client_sock), os);
-            Log("Got client request:\n", os);
+            Log("Handling socket: " + Utils::NbrToString(client_sock));
+            Log("Got client request:\n");
             os << request << std::endl;
             response_location = ProcessRequest(request, os, client_sock);
-            Log("Request processed", os);
+            Log("Request processed");
         } catch (const HTTPVersionNotSupportedException &) {
             response_location.SetReturnCode(BAD_HTTP_VERSION);
-        } catch (const NothingLeftToRead &) {
-            Log("Nothing left to read", os);
+        } catch (const MultipleZeroReturns &) {
+            Log("Nothing left to read");
             epoll_ctl(GetEpollFd(), EPOLL_CTL_DEL, client_sock, NULL);
             close(client_sock);
             return os.str();
         } catch (const ReadFromSocketFailedException &) {
             if (errno == EAGAIN || errno == EWOULDBLOCK) {
-                Log("errno == EAGAIN || errno == EWOULDBLOCK", os);
+                Log("errno == EAGAIN || errno == EWOULDBLOCK");
                 break;
             } else {
                 Log("read operation failed, stopping request processing."
-                    "Response will not be sent back.", os);
+                    "Response will not be sent back.");
                 break;
             }
         } catch (const ClientRequest::RequestException &) {
@@ -92,10 +92,10 @@ std::string MultithreadServer::HandleRequestInThread(int client_sock) {
         }
 
         response.ComposeResponse(response_location);
-        Log("Prepared response:\n", os);
+        Log("Prepared response:\n");
         os << response << std::endl;
         response.SendResponse(client_sock);
-        Log("Response sent", os);
+        Log("Response sent");
     }
     epoll_ctl(GetEpollFd(), EPOLL_CTL_DEL, client_sock, NULL);
     close(client_sock);

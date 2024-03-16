@@ -3,8 +3,7 @@
 
 void ClientRequest::ThrowException(const std::string& msg,
                                    const std::string &e) const {
-//    std::cout << "ClientRequest: " + msg << std::endl;
-    (void)msg;
+    std::cout << "ClientRequest: " + msg + "\n" << std::endl;
     if (e == "BadURL")
         throw BadURL();
     else if (e == "BadRequestException")
@@ -19,8 +18,10 @@ void ClientRequest::ThrowException(const std::string& msg,
         throw SendContinueFailedException();
     else if (e == "ReadFailed")
         throw ReadFromSocketFailedException();
-    else if (e == "NothingLeftToRead")
-        throw NothingLeftToRead();
+    else if (e == "100ZerosInRow")
+        throw MultipleZeroReturns();
+    else if (e == "EwouldblockEagain")
+        throw EwouldblockEagain();
 }
 
 const char *ReadFromSocketFailedException::what() const throw() {
@@ -51,6 +52,10 @@ const char *SendContinueFailedException::what() const throw() {
     return exception::what();
 }
 
-const char *NothingLeftToRead::what() const throw() {
+const char *MultipleZeroReturns::what() const throw() {
+    return exception::what();
+}
+
+const char *EwouldblockEagain::what() const throw() {
     return exception::what();
 }
