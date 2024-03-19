@@ -16,14 +16,15 @@
     +---------+-------------------------------------------------+
     | GET     | Transfer a current representation of the target |
     |         | resource.                                       |
-    | HEAD    | Same as GET, but only transfer the status line  |
-    |         | and header section.                             |
     | POST    | Perform resource-specific processing on the     |
     |         | request payload.                                |
-    | PUT     | Replace all current representations of the      |
-    |         | target resource with the request payload.       |
     | DELETE  | Remove all current representations of the       |
     |         | target resource.                                |
+    |---------+-------------------------------------------------|
+    | HEAD    | Same as GET, but only transfer the status line  |
+    |         | and header section.                             |
+    | PUT     | Replace all current representations of the      |
+    |         | target resource with the request payload.       |
     | CONNECT | Establish a tunnel to the server identified by  |
     |         | the target resource.                            |
     | OPTIONS | Describe the communication options for the      |
@@ -41,8 +42,7 @@
 #include <netdb.h>
 #include <ostream>
 #include "../../Config/config/Config.h"
-#include "../response/ServerResponse.h"
-#include "AServer.h"
+#include "response/ServerResponse.h"
 
 #define OK 200
 #define REDIRECT 301
@@ -57,7 +57,7 @@
 #define FAILED_TO_CREATE_OUTPUT_FILE 503
 #define BAD_HTTP_VERSION 505
 
-#define MAX_CLIENTS 100
+#define MAX_CLIENTS 2048
 #define MAX_EVENTS 1000
 #define SOCKET_BUFFER_SIZE 8192
 
@@ -127,20 +127,17 @@ protected:
                                            std::ostream &os);
     int                         UploadFromCURL(ClientRequest &request,
                                                const std::string &filename,
-                                               int socket, std::ostream &os);
+                                               int socket);
     bool                        FlushBuffer(char *buffer, int file_fd,
                                             const std::string &delimiter,
                                             int bytes_read);
     int                         FillBuffer(char *buffer, int socket,
-                                           const size_t &size,
-                                           v_char &storage) const;
+                                           const size_t &size, v_char &storage,
+                                           size_t metadata_size) const;
     int                         PerformUpload(const ClientRequest &request,
-                                              int socket,
-                                              int file_fd,
-                                              const std::string &delimiter,
-                                              char *buffer,
-                                              size_t bytes_left,
-                                              std::ostream &os);
+                                              int socket, int file_fd,
+                                              const std::string &delimiter);
+//    int PerformUpload(const ClientRequest &request, int socket, int file_fd, const std::string &delimiter, char *buffer, size_t curl_meta_size);
     bool                        TryCreateOutputFile(const std::string &dir,
                                                     const std::string &filename,
                                                     size_t size,
@@ -161,6 +158,5 @@ private:
     int                         epoll_connection_count_;
     int                         epoll_in_out_count_;
 };
-
 
 #endif //WEBSERV_LIB_ASERVER_H

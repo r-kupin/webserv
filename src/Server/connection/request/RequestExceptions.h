@@ -4,6 +4,13 @@
 #include "ClientRequest.h"
 
 
+class FalseCall : public ClientRequest::RequestException {
+public:
+    FalseCall() : ClientRequest::RequestException() {}
+
+    const char *what() const throw();
+};
+
 class EwouldblockEagain : public ClientRequest::RequestException {
 public:
     EwouldblockEagain() : ClientRequest::RequestException() {}
@@ -11,9 +18,9 @@ public:
     const char *what() const throw();
 };
 
-class MultipleZeroReturns : public ClientRequest::RequestException {
+class ZeroRead : public ClientRequest::RequestException {
 public:
-    MultipleZeroReturns() : ClientRequest::RequestException() {}
+    ZeroRead() : ClientRequest::RequestException() {}
 
     const char *what() const throw();
 };
@@ -41,9 +48,9 @@ public:
     const char *what() const throw();
 };
 
-class BadURL : public ClientRequest::RequestException {
+class BadURLException : public ClientRequest::RequestException {
 public:
-    BadURL() : ClientRequest::RequestException() {}
+    BadURLException() : ClientRequest::RequestException() {}
 
     const char *what() const throw();
 };

@@ -34,7 +34,7 @@ for file in *.txt *.iso; do
                 file_size=$(stat -c%s "$target_file")
                 printf "\t%s size: %d\n" "$i" "$file_size"
 
-                printf "%s\n" "$diff_result"
+#                printf "%s\n" "$diff_result"
             fi
             ((i++));
             echo "";

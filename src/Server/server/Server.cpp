@@ -13,51 +13,103 @@
 #include <csignal>
 #include <cstring>
 #include "Server.h"
-#include "../request/RequestExceptions.h"
+#include "../connection/request/RequestExceptions.h"
 #include "ServerExceptions.h"
 
-Server::Server(const ServerConfiguration &config) : AServer(config) {}
+Server::Server(const ServerConfiguration &config)
+    : AServer(config), connections_(MAX_CLIENTS) {}
 
 void Server::HandleRequest(int client_sock) {
-    while (is_running_) {
-        Location        response_location;
-        ClientRequest   request;
-        ServerResponse  response(GetConfig().GetServerName(),
-                                 GetConfig().GetPort());
-        try {
-            request.Init(client_sock);
-            Log("Got client request:\n", std::cout);
-            std::cout << request << std::endl;
-            response_location = ProcessRequest(request, std::cout, client_sock);
-            Log("Request processed", std::cout);
-        } catch (const HTTPVersionNotSupportedException &) {
-            response_location.SetReturnCode(BAD_HTTP_VERSION);
-        } catch (const ReadFromSocketFailedException &) {
-            Log("read operation failed");
-            break;
-        } catch (const MultipleZeroReturns &) {
-            response_location.SetReturnCode(BAD_REQUEST);
-            break;
-        } catch (const EwouldblockEagain &){
-            Log("Done with all available events");
-            break;
-        } catch (const ClientRequest::RequestException &) {
-            response_location.SetReturnCode(BAD_REQUEST);
-        }
+    Connection      &connection = connections_[client_sock];
 
-        response.ComposeResponse(response_location);
-        Log("Prepared response:\n", std::cout);
-        std::cout << response << std::endl;
-        response.SendResponse(client_sock);
-        Log("Response sent\n", std::cout);
+    while (is_running_) {
+        connection.fd_ = client_sock;
+        if (!connection.url_headers_done_) {
+            try {
+                connection.request_.Init(client_sock);
+                Log("Got client request:\n", std::cout);
+                std::cout << connection.request_ << std::endl;
+                connection.url_headers_done_ = true;
+            } catch (const ZeroRead &e) {
+                // socket is closed on the client's side. Remove connection
+                Log("Done with all available request data, response already sent");
+                connections_[client_sock] = Connection();
+                epoll_ctl(GetEpollFd(), EPOLL_CTL_DEL, client_sock, NULL);
+                close(client_sock);
+                return;
+            } catch (const EwouldblockEagain &e) {
+                // socket is still active, but no data is available
+                Log("Red all available data, but request is incomplete. "
+                    "We'll come back later. Maybe.");
+                return;
+            } catch (const ReadFromSocketFailedException &) {
+                // Probably, client wouldn't even be able to read our response
+                // so just shut down this connection
+                Log("Read operation failed");
+                connections_[client_sock] = Connection();
+                epoll_ctl(GetEpollFd(), EPOLL_CTL_DEL, client_sock, NULL);
+                close(client_sock);
+                return;
+            } catch (const ClientRequest::RequestException &) {
+                // notify client about it
+                Log("Request misconfigured");
+                connection.location_.SetReturnCode(BAD_REQUEST);
+            }
+        }
+        if (connection.url_headers_done_ && !connection.body_done_) {
+            try {
+                connection.location_ = ProcessRequest(connection.request_,
+                                                      std::cout, client_sock);
+                Log("Request processed", std::cout);
+                connection.body_done_ = true;
+            } catch (const ZeroRead &) {
+                Log("Client closed connection while we were reading curl file "
+                    "metadata");
+                connections_[client_sock] = Connection();
+                epoll_ctl(GetEpollFd(), EPOLL_CTL_DEL, client_sock, NULL);
+                close(client_sock);
+                return;
+            } catch (const ZeroReadUpload &) {
+                Log("Client closed connection while we were uploading file");
+                connections_[client_sock] = Connection();
+                epoll_ctl(GetEpollFd(), EPOLL_CTL_DEL, client_sock, NULL);
+                close(client_sock);
+                return;
+            } catch (const SendContinueFailedException &) {
+                Log("Can't send 100 Continue. "
+                    "Seems like client won't receive our response as well");
+                break;
+            } catch (const EwouldblockEagain &) {
+                return;
+            } catch (const EwouldblockEagainUpload &) {
+                return;
+            } catch (const ReadFromSocketFailedException &) {
+                Log("Read operation failed");
+                connections_[client_sock] = Connection();
+                epoll_ctl(GetEpollFd(), EPOLL_CTL_DEL, client_sock, NULL);
+                close(client_sock);
+                return;
+            } catch (const ClientRequest::RequestException &) {
+                Log("Request misconfigured");
+                connection.location_.SetReturnCode(BAD_REQUEST);
+            }
+        }
+        if (connection.body_done_) {
+            ServerResponse response(GetConfig().GetServerName(),
+                                    GetConfig().GetPort());
+            response.ComposeResponse(connection.location_);
+            Log("Prepared response:\n", std::cout);
+            std::cout << response << std::endl;
+            response.SendResponse(client_sock);
+            Log("Response sent\n", std::cout);
+            connections_[client_sock] = Connection();
+        }
     }
-    epoll_ctl(GetEpollFd(), EPOLL_CTL_DEL, client_sock, NULL);
-    close(client_sock);
 }
 
 bool Server::AddClientToEpoll(int client_sock, int epoll_fd) {
     epoll_event event;
-    event.events = EPOLLIN | EPOLLOUT | EPOLLET ;
+    event.events = EPOLLIN | EPOLLOUT | EPOLLET;
     event.data.fd = client_sock;
     return epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_sock, &event) != -1;
 }

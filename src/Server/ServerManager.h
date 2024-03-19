@@ -14,10 +14,8 @@
 #define WEBSERV_LIB_SERVERMANAGER_H
 
 #include "server/Server.h"
-#include "server/MultithreadServer.h"
 
 typedef std::list<Server>               l_servers;
-typedef std::list<MultithreadServer>    l_mservers;
 typedef std::list<AServer>              l_aservers;
 
 class ServerManager {
@@ -33,9 +31,7 @@ public:
     void RunAll();
     void RunAllMT();
 private:
-    ThreadPool  pool_;
     l_servers   servers_;
-    l_mservers  mservers_;
 };
 
 

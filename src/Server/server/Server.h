@@ -14,8 +14,9 @@
 #define WEBSERV_LIB_SERVER_H
 
 #include "AServer.h"
+#include "../connection/Connection.h"
 
-class Server : public AServer {
+ class Server : public AServer {
 public:
     explicit    Server(const ServerConfiguration &config);
     Server      &operator=(const Server &);
@@ -23,6 +24,8 @@ protected:
     void        HandleRequest(int client_sock);// override
     bool        AddClientToEpoll(int client_sock, int epoll_fd);// override
     void        AddEpollInstance();// override
+private:
+    std::vector<Connection> connections_;
 };
 
 #endif //WEBSERV_LIB_SERVER_H

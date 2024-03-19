@@ -6,66 +6,64 @@ add_compile_options(-gdwarf-4 -O1 -fno-limit-debug-info  -Wall -Wextra -Werror)
 set(CMAKE_CXX_STANDARD 98)
 
 add_executable(webserv src/main.cpp
-        src/utils/Utils.cpp
-        src/utils/StringUtils.cpp
-        src/utils/FSUtils.cpp
-        src/Server/response/ResponseStaticUtils.cpp
-        src/Server/response/ServerResponse.cpp
-        src/Server/request_processing/UploadHandler.cpp
-        src/Server/request_processing/SynthFoundExact.cpp
-        src/Server/request_processing/LocationSynth.cpp
-        src/Server/request_processing/SynthNotFound.cpp
-        src/Server/request_processing/CURLUploadHandler.cpp
-        src/Server/server/ServerExceptions.cpp
-        src/Server/server/MultithreadServer.cpp
+                src/utils/Utils.cpp
+                src/utils/StringUtils.cpp
+                src/utils/FSUtils.cpp
+                src/Server/server/response/ResponseStaticUtils.cpp
+                src/Server/server/response/ServerResponse.cpp
+                src/Server/server/ServerExceptions.cpp
         src/Server/server/Server.cpp
-        src/Server/server/Aserver.cpp
-        src/Server/server/AServerRun.cpp
-        src/Server/server/AServerInit.cpp
-        src/Server/thread_pool/ThreadPool.cpp
-        src/Server/request/ClientRequest.cpp
-        src/Server/request/ClientRequestURLHandlers.cpp
-        src/Server/request/ClientRequestBodyProcessing.cpp
-        src/Server/request/ClientRequestRequestHandlers.cpp
-        src/Server/request/ClientRequestURLParamsHandlers.cpp
-        src/Server/request/RequestExceptions.cpp
-        src/Server/ServerManager.cpp
-        src/Config/config/ConfigCreate.cpp
-        src/Config/config/Config.cpp
-        src/Config/config/ConfigParse.cpp
-        src/Config/Node.cpp
-        src/Config/server_configuration/ServerConfiguration.cpp
-        src/Config/server_configuration/ServerConfigurationLocationSearch.cpp
-        src/Config/server_configuration/ServerConfigurationLocationHandler.cpp
-        src/Config/location/ErrPage.cpp
-        src/Config/location/Location.cpp
-        src/Config/location/LocationHandleReturn.cpp
-        src/Config/location/LimitExcept.cpp
+                src/Server/server/Aserver.cpp
+                src/Server/server/AServerRun.cpp
+                src/Server/server/AServerInit.cpp
+                src/Server/connection/request_processing/UploadHandler.cpp
+                src/Server/connection/request_processing/SynthFoundExact.cpp
+                src/Server/connection/request_processing/LocationSynth.cpp
+                src/Server/connection/request_processing/SynthNotFound.cpp
+                src/Server/connection/request_processing/CURLUploadHandler.cpp
+                src/Server/connection/Connection.cpp
+                src/Server/connection/request/ClientRequest.cpp
+                src/Server/connection/request/ClientRequestURLHandlers.cpp
+                src/Server/connection/request/ClientRequestBodyProcessing.cpp
+                src/Server/connection/request/ClientRequestRequestHandlers.cpp
+                src/Server/connection/request/ClientRequestURLParamsHandlers.cpp
+                src/Server/connection/request/RequestExceptions.cpp
+                src/Server/ServerManager.cpp
+                src/Config/config/ConfigCreate.cpp
+                src/Config/config/Config.cpp
+                src/Config/config/ConfigParse.cpp
+                src/Config/Node.cpp
+                src/Config/server_configuration/ServerConfiguration.cpp
+                src/Config/server_configuration/ServerConfigurationLocationSearch.cpp
+                src/Config/server_configuration/ServerConfigurationLocationHandler.cpp
+                src/Config/location/ErrPage.cpp
+                src/Config/location/Location.cpp
+                src/Config/location/LocationHandleReturn.cpp
+                src/Config/location/LimitExcept.cpp
 )
 add_library(webserv_lib
         src/utils/Utils.cpp
         src/utils/StringUtils.cpp
         src/utils/FSUtils.cpp
-        src/Server/response/ResponseStaticUtils.cpp
-        src/Server/response/ServerResponse.cpp
-        src/Server/request_processing/UploadHandler.cpp
-        src/Server/request_processing/SynthFoundExact.cpp
-        src/Server/request_processing/LocationSynth.cpp
-        src/Server/request_processing/SynthNotFound.cpp
-        src/Server/request_processing/CURLUploadHandler.cpp
+        src/Server/server/response/ResponseStaticUtils.cpp
+        src/Server/server/response/ServerResponse.cpp
         src/Server/server/ServerExceptions.cpp
-        src/Server/server/MultithreadServer.cpp
         src/Server/server/Server.cpp
         src/Server/server/Aserver.cpp
         src/Server/server/AServerRun.cpp
         src/Server/server/AServerInit.cpp
-        src/Server/thread_pool/ThreadPool.cpp
-        src/Server/request/ClientRequest.cpp
-        src/Server/request/ClientRequestURLHandlers.cpp
-        src/Server/request/ClientRequestBodyProcessing.cpp
-        src/Server/request/ClientRequestRequestHandlers.cpp
-        src/Server/request/ClientRequestURLParamsHandlers.cpp
-        src/Server/request/RequestExceptions.cpp
+        src/Server/connection/request_processing/UploadHandler.cpp
+        src/Server/connection/request_processing/SynthFoundExact.cpp
+        src/Server/connection/request_processing/LocationSynth.cpp
+        src/Server/connection/request_processing/SynthNotFound.cpp
+        src/Server/connection/request_processing/CURLUploadHandler.cpp
+        src/Server/connection/Connection.cpp
+        src/Server/connection/request/ClientRequest.cpp
+        src/Server/connection/request/ClientRequestURLHandlers.cpp
+        src/Server/connection/request/ClientRequestBodyProcessing.cpp
+        src/Server/connection/request/ClientRequestRequestHandlers.cpp
+        src/Server/connection/request/ClientRequestURLParamsHandlers.cpp
+        src/Server/connection/request/RequestExceptions.cpp
         src/Server/ServerManager.cpp
         src/Config/config/ConfigCreate.cpp
         src/Config/config/Config.cpp

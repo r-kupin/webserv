@@ -14,8 +14,8 @@
 #define WEBSERV_LIB_SEVRERRESPONSE_H
 
 #include <ostream>
-#include "../../Config/location/Location.h"
-#include "../request/ClientRequest.h"
+#include "../../connection/request/ClientRequest.h"
+#include "../../../Config/location/Location.h"
 
 class ServerResponse {
 public:
@@ -37,9 +37,6 @@ public:
     const m_str_str             &GetHeaders() const;
 
     ServerResponse              &operator=(const ServerResponse &);
-
-
-
 protected:
 //-------------------satic utils------------------------------------------------
     static std::string          GeneratePage(int code);

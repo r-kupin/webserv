@@ -15,17 +15,35 @@
 #include <algorithm>
 #include <cerrno>
 #include "ClientRequest.h"
-#include "RequestExceptions.h"
 
-ClientRequest::ClientRequest() {}
+ClientRequest::ClientRequest() : bytes_left_(0) {}
 
 ClientRequest::ClientRequest(int client_sock) { Init(client_sock);}
 
+ClientRequest& ClientRequest::operator=(const ClientRequest& other) {
+    if (this != &other) { // Check for self-assignment
+        // Copy data members from other to this object
+        raw_request_ = other.raw_request_;
+        bytes_left_ = other.bytes_left_;
+        method_ = other.method_;
+        addr_ = other.addr_;
+        addr_last_step_ = other.addr_last_step_;
+        index_request_ = other.index_request_;
+        body_ = other.body_;
+        fragment_ = other.fragment_;
+        params_ = other.params_;
+        headers_ = other.headers_;
+        socket_ = other.socket_;
+        associated_filename_ = other.associated_filename_;
+    }
+    return *this;
+}
+
 void ClientRequest::Init(int client_sock) {
     socket_ = client_sock;
-    v_str request = ReadFromSocket(socket_, BUFFER_SIZE);
-    CheckRequest(request);
-    std::string url = ExtractUrl(request[0]);
+    ReadFromSocket(socket_, BUFFER_SIZE);
+    CheckRequest(raw_request_);
+    std::string url = ExtractUrl(raw_request_[0]);
     CheckURL(url);
     addr_ = ExtractAddr(url);
     addr_last_step_ = ExtractLastAddrStep(addr_);
@@ -40,8 +58,8 @@ void ClientRequest::Init(int client_sock) {
         fragment_ = ExtractFragment(url);
     if (HasQuery(url))
         FillUrlParams(url);
-    if (HasHeaders(request))
-        FillHeaders(request);
+    if (HasHeaders(raw_request_))
+        FillHeaders(raw_request_);
 }
 
 /**
@@ -53,38 +71,66 @@ void ClientRequest::Init(int client_sock) {
  * @param socket
  * @return
  */
-v_str ClientRequest::ReadFromSocket(int socket, int buffer_size) {
-    char                buffer[buffer_size];
-    v_char              storage;
-    v_str               request;
-    int                 zeros_in_row = 0;
+v_str &ClientRequest::ReadFromSocket(int socket, int buffer_size) {
+    char    buffer[buffer_size];
+    v_char  storage;
 
-    if (recv(socket, buffer, 0, MSG_DONTWAIT) < 0) {
-        // it's ok: we just processed all available data and this request creation call is false.
-        // return without sending anything to client
-        ThrowException("The probing recv returned -1 with EWOULDBLOCK || EAGAIN "
-                       "Nothing left to read on this socket, all events processed",
-                       "EwouldblockEagain");
+    // Because multiple events on the same fd might be stacked we are reading
+    // them in the infinite loop.
+    // As there is no way to find out how much do we have available - we got to
+    // read while recv wouldn't return 0 or -1 and set errno tp EWOULDBLOCK || EAGAIN.
+    // In this section we simply probe socket - if there is something to read -
+    // recv will return 1.
+    ssize_t probe = recv(socket, buffer, 1, MSG_PEEK | MSG_DONTWAIT);
+
+    if (probe < 1) {
+        ThrowException("probing - nothing to read",
+                       "ZeroRead");
     }
+//    if (probe == 0) {
+//        ThrowException("The probing recv returned 0 - client closed connection",
+//                       "ZeroRead");
+//    } else if (probe < 0) {
+//        if (errno == EWOULDBLOCK || errno == EAGAIN) {
+//
+//            usleep(500);
+//            probe = recv(socket, buffer, 1, MSG_PEEK | MSG_DONTWAIT);
+//            if (probe == 0) {
+//                ThrowException("The probing recv returned 0 - client closed "
+//                               "connection", "ZeroRead");
+//            } else if (probe < 0 && (errno == EWOULDBLOCK || errno == EAGAIN)) {
+//                // it's ok: we just processed all available data on this socket
+//                // fd and this request creation call is false.
+//                // return without sending anything to client
+//                ThrowException("The probing recv returned -1 with errno set. "
+//                               "Nothing left to read on this socket for now, but "
+//                               "connection is still open on the client's side.",
+//                               "EwouldblockEagain");
+//            }
+//        } else {
+//            // We're in trouble!
+//            ThrowException("recv returned -1 due to IO failure", "ReadFailed");
+//        }
+//    }
+
     while (true) {
         int bytes_read = recv(socket, buffer, buffer_size - 1, MSG_DONTWAIT);
 
-        if (bytes_read < 0) {
-            if (errno == EWOULDBLOCK || errno == EAGAIN) {
+        if (bytes_read < 1) {
+            if (bytes_read == 0) {
+                ThrowException("recv returned 0 while request is incomplete",
+                               "ZeroRead");
+            } else if (errno == EWOULDBLOCK || errno == EAGAIN) {
+                // All available data was red but it's not enough to finish
+                // request processing at this moment. We'll come back later
+                // if client would send more data.
                 ThrowException("recv returned -1 and set errno - No \\r\\n\\r\\n"
                                " after the request's headers section",
-                               "BadRequestException");
-            } else
+                               "EwouldblockEagain");
+            } else {
                 ThrowException("recv returned -1 due to read failure", "ReadFailed");
-        }
-        if (bytes_read == 0)
-            zeros_in_row++;
-        if (zeros_in_row > 100)
-            ThrowException("hundred recvs returned 0 - No \\r\\n\\r\\n"
-                           " after the request's headers section",
-                           "100ZerosInRow");
-        if (bytes_read > 0) {
-            zeros_in_row = 0;
+            }
+        } else {
             storage.insert(storage.end(), buffer, buffer + bytes_read);
 
             size_t line_break = Utils::FindInCharVect(storage, kHTTPNewline);
@@ -92,12 +138,12 @@ v_str ClientRequest::ReadFromSocket(int socket, int buffer_size) {
             while (!storage.empty() && line_break != std::string::npos) {
                 v_char header_line(storage.begin(), storage.begin() + line_break);
                 if (header_line.empty()) {
-                    // start of body section
+                    // Done with headers. Start of the body section.
                     body_ = v_char(storage.begin(), storage.end());
-                    return request;
+                    return raw_request_;
                 }
-                request.push_back(std::string(header_line.begin(),
-                                              header_line.end()));
+                raw_request_.push_back(std::string(header_line.begin(),
+                                                   header_line.end()));
                 storage.erase(storage.begin(), storage.begin() + line_break + 2);
                 line_break = Utils::FindInCharVect(storage, "\r\n");
             }
@@ -138,6 +184,22 @@ std::ostream &operator<<(std::ostream &os, const ClientRequest &request) {
         Utils::OutputMap(request.GetHeaders(), os);
     }
     return os;
+}
+
+const std::string &ClientRequest::GetAssociatedFilename() const {
+    return associated_filename_;
+}
+
+void ClientRequest::SetAssociatedFilename(const std::string &associatedFilename) {
+    associated_filename_ = associatedFilename;
+}
+
+size_t ClientRequest::GetBytesLeft() const {
+    return bytes_left_;
+}
+
+void ClientRequest::SetBytesLeft(size_t bytesLeft) {
+    bytes_left_ = bytesLeft;
 }
 
 Methods ClientRequest::GetMethod() const {

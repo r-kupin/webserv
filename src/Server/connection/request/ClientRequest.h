@@ -37,7 +37,7 @@
 #include <netinet/in.h>
 #include <vector>
 #include <map>
-#include "../../Config/location/LimitExcept.h"
+#include "../../../Config/location/LimitExcept.h"
 
 #define BUFFER_SIZE 64
 #define METADATA_BUFFER_SIZE 16
@@ -52,8 +52,10 @@ class ClientRequest {
 public:
     class RequestException : public std::exception {};
 
-    ClientRequest();
-    explicit ClientRequest(int client_sock);
+                        ClientRequest();
+    explicit            ClientRequest(int client_sock);
+
+    ClientRequest       &operator=(const ClientRequest& other);
 
     void                Init(int client_sock);
 
@@ -63,22 +65,28 @@ public:
     const v_char        &GetBody() const;
     const m_str_str     &GetParams() const;
     const m_str_str     &GetHeaders() const;
+    size_t              GetBytesLeft() const;
     bool                HasHeader(const std::string &key) const;
     std::string         GetHeaderValue(const std::string &key) const;
     size_t              GetDeclaredBodySize() const;
     bool                IsCurlRequest() const;
-
     bool                IsIndexRequest() const;
     const std::string   &GetFragment() const;
+    size_t              GetCurlMetadataLength(const std::string &delimiter) const;
+    const std::string   &GetAssociatedFilename() const;
+
+    void                SetAssociatedFilename(const std::string &associatedFilename);
+    void                SetBytesLeft(size_t bytesLeft);
     void                SetMethod(Methods method);
 //-------------------manual body processing-------------------------------------
     void                TellClientToContinueIfNeed(int socket) const;
     size_t              ProcessCURLFileMetadata(int socket,
                                                 const std::string &delimiter);
     int                 ReadBodyToRequest(int socket);
+    bool                BodyHasAllCURLMetadata(const std::string &delimiter) const;
 protected:
 //-------------------socket-level-----------------------------------------------
-    v_str               ReadFromSocket(int socket, int buffer_size);
+    v_str               &ReadFromSocket(int socket, int buffer_size);
     int                 ReadBodyPart(int socket, int buffer_size, char *buffer);
     void                ReadCURLFileMetadata(const std::string &delimiter,
                                              char *buffer, int socket);
@@ -87,30 +95,35 @@ protected:
     bool                HasHeaders(const v_str &request);
     void                FillHeaders(const v_str &request);
 //-------------------request main line level------------------------------------
-    std::string         ExtractUrl(const std::string& request);
+    std::string         ExtractUrl(const std::string &request);
     Methods             ExtractMethod(const std::string &request);
 //-------------------URL level--------------------------------------------------
     void                CheckURL(const std::string &url);
-    bool                HasQuery(const std::string& url);
-    bool                HasFragment(const std::string& url);
-    std::string         ExtractAddr(const std::string& url);
+    bool                HasQuery(const std::string &url);
+    bool                HasFragment(const std::string &url);
+    std::string         ExtractAddr(const std::string &url);
     std::string         ExtractQuery(const std::string &url);
     void                FillUrlParams(const std::string &url);
-    std::string         ExtractFragment(const std::string& url);
-    std::string         ExtractLastAddrStep(const std::string& address);
+    std::string         ExtractFragment(const std::string &url);
+    std::string         ExtractLastAddrStep(const std::string &address);
 
-    void                ThrowException(const std::string& msg,
+    void                ThrowException(const std::string &msg,
                                        const std::string &e) const;
 private:
-    Methods                             method_;
-    std::string                         addr_;
-    std::string                         addr_last_step_;
-    bool                                index_request_;
-    v_char                              body_;
-    std::string                         fragment_;
-    m_str_str                           params_;
-    m_str_str                           headers_;
-    int                                 socket_;
+//-------------------processing-time data---------------------------------------
+    v_str               raw_request_;
+    size_t              bytes_left_;
+    std::string         associated_filename_;
+//-------------------actual request data----------------------------------------
+    Methods             method_;
+    std::string         addr_;
+    std::string         addr_last_step_;
+    bool                index_request_;
+    v_char              body_;
+    std::string         fragment_;
+    m_str_str           params_;
+    m_str_str           headers_;
+    int                 socket_;
 };
 std::ostream &operator<<(std::ostream &os, const ClientRequest &request);
 

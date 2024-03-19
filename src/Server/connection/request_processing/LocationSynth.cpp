@@ -13,7 +13,7 @@
 #include <iostream>
 #include <algorithm>
 #include <csignal>
-#include "../server/ServerExceptions.h"
+#include "../../server/AServer.h"
 
 /**
  * Depending on compliance between what was requested and what is being found
@@ -58,7 +58,7 @@ void AServer::HandleStatic(const ClientRequest &request,
     int fs_status = Utils::CheckFilesystem(address);
     if (fs_status == ELSE) {
         // something exist on specified address, but it is neither a file nor a directory
-        Log(address + " is neither a file nor a directory.."
+        Log(address + " is neither a file nor a directory.. "
                       "I don't know what to do with it..");
         synth.SetReturnCode(REQUESTED_FILE_IS_NOT_A_FILE);
     } else {

@@ -5,7 +5,7 @@ void ClientRequest::ThrowException(const std::string& msg,
                                    const std::string &e) const {
     std::cout << "ClientRequest: " + msg + "\n" << std::endl;
     if (e == "BadURL")
-        throw BadURL();
+        throw BadURLException();
     else if (e == "BadRequestException")
         throw BadRequestException();
     else if (e == "UnsupportedClientMethodException")
@@ -14,14 +14,16 @@ void ClientRequest::ThrowException(const std::string& msg,
         throw HTTPVersionNotSupportedException();
     else if (e == "BodyIsTooLarge")
         throw RequestBodySizeExceedsLimitException();
-    else if (e == "SendContinue")
+    else if (e == "SendContinueFailed")
         throw SendContinueFailedException();
     else if (e == "ReadFailed")
         throw ReadFromSocketFailedException();
-    else if (e == "100ZerosInRow")
-        throw MultipleZeroReturns();
+    else if (e == "ZeroRead")
+        throw ZeroRead();
     else if (e == "EwouldblockEagain")
         throw EwouldblockEagain();
+    else if (e == "FalseCall")
+        throw FalseCall();
 }
 
 const char *ReadFromSocketFailedException::what() const throw() {
@@ -36,7 +38,7 @@ const char *HTTPVersionNotSupportedException::what() const throw() {
     return exception::what();
 }
 
-const char *BadURL::what() const throw() {
+const char *BadURLException::what() const throw() {
     return exception::what();
 }
 
@@ -52,10 +54,14 @@ const char *SendContinueFailedException::what() const throw() {
     return exception::what();
 }
 
-const char *MultipleZeroReturns::what() const throw() {
+const char *ZeroRead::what() const throw() {
     return exception::what();
 }
 
 const char *EwouldblockEagain::what() const throw() {
+    return exception::what();
+}
+
+const char *FalseCall::what() const throw() {
     return exception::what();
 }

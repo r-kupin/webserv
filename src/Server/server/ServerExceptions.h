@@ -70,8 +70,19 @@ public:
 
     const char *what() const throw();
 };
+//--
+class EwouldblockEagainUpload : public AServer::ServerException {
+public:
+    EwouldblockEagainUpload() : AServer::ServerException() {}
 
+    const char *what() const throw();
+};
 
+class ZeroReadUpload : public AServer::ServerException {
+public:
+    ZeroReadUpload() : AServer::ServerException() {}
 
+    const char *what() const throw();
+};
 
 #endif //WEBSERV_LIB_SERVEREXCEPTIONS_H

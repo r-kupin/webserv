@@ -42,6 +42,7 @@ std::string ClientRequest::ExtractFragment(const std::string &url) {
 bool ClientRequest::HasFragment(const std::string &url) {
     unsigned long param_separator = url.find_first_of('?');
     unsigned long fragm_separator = url.find_first_of('#');
+
     if (param_separator == std::string::npos &&
         fragm_separator == std::string::npos) {
         return false;

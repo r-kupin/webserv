@@ -44,9 +44,9 @@ I am not using `Makefile` in development process, so the **lists of source files
 - multiple simultaneous requests to the same server
 - client can be bounced properly if necessary.
 - Use only 1 poll() (or equivalent) for all the I/O operations between the client and the server (listen included).
+- Non-blocking IO
 ## ToDo
 - Your server must never block
-- Non-blocking IO
 - Setup the server_names or not.
 - Turn on or off directory listing. (?)
 - Your server must be able to listen to multiple ports 

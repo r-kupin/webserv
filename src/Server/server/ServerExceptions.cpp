@@ -31,3 +31,11 @@ const char *EpollAddFailed::what() const throw() {
 const char *NotFoundException::what() const throw() {
     return exception::what();
 }
+
+const char *EwouldblockEagainUpload::what() const throw() {
+    return exception::what();
+}
+
+const char *ZeroReadUpload::what() const throw() {
+    return exception::what();
+}

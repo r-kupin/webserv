@@ -66,6 +66,5 @@ bool        ClientRequest::HasQuery(const std::string& url) {
         }
     }
     return querry_ok(url.substr(param_separator + 1,
-                                fragm_separator - param_separator - 1),
-                     url);
+                                fragm_separator - param_separator - 1), url);
 }
