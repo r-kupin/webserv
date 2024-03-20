@@ -23,10 +23,10 @@ bool AServer::TryCreateOutputFile(const std::string &dir, const std::string &fil
                                      "file does not exist");
             return false;
         }
-//        if (Utils::FileExists(filename)) {
-//            Log("file " + filename + " already exists");
-//            return false;
-//        }
+        if (Utils::FileExists(filename)) {
+            Log("file " + filename + " already exists");
+            return false;
+        }
         if (!Utils::CheckPermissions(filename)) {
             Log("server doesn't have proper permissions to create " +
                 filename + " file");
@@ -53,24 +53,26 @@ int AServer::UploadFile(ClientRequest &request, l_loc_c_it found, int socket, st
     else
         dirname = config_.GetConstRoot().root_ + "/" + found->uploads_path_;
 
-    if (request.GetAssociatedFilename().empty()) {
-        request.SetAssociatedFilename(dirname + "/" +
-                                        Utils::NbrToString(files_uploaded_++));
-    }
-
     if (request.HasHeader("User-Agent") &&
         request.HasHeader("Content-Type") &&
         request.HasHeader("Content-Length")) {
-        if (TryCreateOutputFile(dirname, request.GetAssociatedFilename(),
-                                request.GetDeclaredBodySize(), os)) {
-            // file created successfully
-            if (request.IsCurlRequest())
-                return UploadFromCURL(request, request.GetAssociatedFilename(), socket);
-            // wget doesn't work on nginx - sends file without tailing linebreak
-            Log("Only uploads via curl are supported for now");
-            return ONLY_CURL_UPLOADS_SUPPORTED;
+
+        if (request.GetAssociatedFilename().empty()) {
+            request.SetAssociatedFilename(dirname + "/" +
+                                          Utils::NbrToString(files_uploaded_++));
+            if (TryCreateOutputFile(dirname, request.GetAssociatedFilename(),
+                                    request.GetDeclaredBodySize(), os)) {
+                // file created successfully
+                if (request.IsCurlRequest())
+                    return UploadFromCURL(request, request.GetAssociatedFilename(), socket);
+                // wget doesn't work on nginx - sends file without tailing linebreak
+                Log("Only uploads via curl are supported for now");
+                return ONLY_CURL_UPLOADS_SUPPORTED;
+            }
+            return FAILED_TO_CREATE_OUTPUT_FILE;
+        } else {
+            return UploadFromCURL(request, request.GetAssociatedFilename(), socket);
         }
-        return FAILED_TO_CREATE_OUTPUT_FILE;
     }
     Log("Mandatory headers User-Agent, Content-Type and/or Content-Length are "
         "missing");

@@ -44,7 +44,6 @@ int AServer::UploadFromCURL(ClientRequest &request, const std::string &filename,
         delimiter = kHTTPNewline + "--" + delimiter;
         try {
             request.ProcessCURLFileMetadata(socket, delimiter);
-            set_non_blocking(file_fd);
             return PerformUpload(request, socket, file_fd, delimiter);
         } catch (const SendContinueFailedException & ) {
             return FAILED_IO;
@@ -79,10 +78,12 @@ int AServer::PerformUpload(const ClientRequest &request, int socket, int file_fd
         if (bytes_read < 1) {
             if (bytes_read == 0) {
                 Log("recv returned 0 while reading file contents.");
+                close(file_fd);
                 throw ZeroReadUpload();
             } else if (errno == EWOULDBLOCK || errno == EAGAIN) {
                 Log("recv returned -1 with EWOULDBLOCK || EAGAIN set while reading "
                     "file contents. We'll try later.");
+                close(file_fd);
                 throw EwouldblockEagainUpload();
             } else {
                 Log("recv returned -1 due to recv failure while reading file contents.");
@@ -96,8 +97,9 @@ int AServer::PerformUpload(const ClientRequest &request, int socket, int file_fd
                 else
                     return OK;
             } else {
-                if (write(file_fd, buffer, bytes_read) == -1)
+                if (write(file_fd, buffer, bytes_read + body.size()) == -1)
                     Log("Write to file failed");
+                body.clear();
             }
         }
     }

@@ -23,7 +23,6 @@ void Server::HandleRequest(int client_sock) {
     Connection      &connection = connections_[client_sock];
 
     while (is_running_) {
-        connection.fd_ = client_sock;
         if (!connection.url_headers_done_) {
             try {
                 connection.request_.Init(client_sock);

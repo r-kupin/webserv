@@ -83,15 +83,11 @@ v_str &ClientRequest::ReadFromSocket(int socket, int buffer_size) {
     // recv will return 1.
     ssize_t probe = recv(socket, buffer, 1, MSG_PEEK | MSG_DONTWAIT);
 
-    if (probe < 1) {
-        ThrowException("probing - nothing to read",
+    if (probe == 0) {
+        ThrowException("The probing recv returned 0 - client closed connection",
                        "ZeroRead");
-    }
-//    if (probe == 0) {
-//        ThrowException("The probing recv returned 0 - client closed connection",
-//                       "ZeroRead");
-//    } else if (probe < 0) {
-//        if (errno == EWOULDBLOCK || errno == EAGAIN) {
+    } else if (probe < 0) {
+        if (errno == EWOULDBLOCK || errno == EAGAIN) {
 //
 //            usleep(500);
 //            probe = recv(socket, buffer, 1, MSG_PEEK | MSG_DONTWAIT);
@@ -99,19 +95,19 @@ v_str &ClientRequest::ReadFromSocket(int socket, int buffer_size) {
 //                ThrowException("The probing recv returned 0 - client closed "
 //                               "connection", "ZeroRead");
 //            } else if (probe < 0 && (errno == EWOULDBLOCK || errno == EAGAIN)) {
-//                // it's ok: we just processed all available data on this socket
-//                // fd and this request creation call is false.
-//                // return without sending anything to client
-//                ThrowException("The probing recv returned -1 with errno set. "
-//                               "Nothing left to read on this socket for now, but "
-//                               "connection is still open on the client's side.",
-//                               "EwouldblockEagain");
+                // it's ok: we just processed all available data on this socket
+                // fd and this request creation call is false.
+                // return without sending anything to client
+                ThrowException("The probing recv returned -1 with errno set. "
+                               "Nothing left to read on this socket for now, but "
+                               "connection is still open on the client's side.",
+                               "EwouldblockEagain");
 //            }
-//        } else {
-//            // We're in trouble!
-//            ThrowException("recv returned -1 due to IO failure", "ReadFailed");
-//        }
-//    }
+        } else {
+            // We're in trouble!
+            ThrowException("recv returned -1 due to IO failure", "ReadFailed");
+        }
+    }
 
     while (true) {
         int bytes_read = recv(socket, buffer, buffer_size - 1, MSG_DONTWAIT);
