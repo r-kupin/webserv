@@ -13,9 +13,9 @@
 #include <iostream>
 #include <algorithm>
 #include <csignal>
-#include "../../server/AServer.h"
+#include "../../server/Server.h"
 
-bool AServer::TryCreateOutputFile(const std::string &dir, const std::string &filename, size_t size, std::ostream &os) const {
+bool Server::TryCreateOutputFile(const std::string &dir, const std::string &filename, size_t size, std::ostream &os) const {
     (void)os;
     try {
         if (Utils::CheckFilesystem(dir) != DIRECTORY) {
@@ -44,7 +44,7 @@ bool AServer::TryCreateOutputFile(const std::string &dir, const std::string &fil
     return false;
 }
 
-int AServer::UploadFile(ClientRequest &request, l_loc_c_it found, int socket, std::ostream &os) {
+int Server::UploadFile(ClientRequest &request, l_loc_c_it found, int socket, std::ostream &os) {
     static int  files_uploaded_;
 
     std::string dirname;

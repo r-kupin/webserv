@@ -13,9 +13,8 @@ add_executable(webserv src/main.cpp
                 src/Server/server/response/ServerResponse.cpp
                 src/Server/server/ServerExceptions.cpp
         src/Server/server/Server.cpp
-                src/Server/server/Aserver.cpp
-                src/Server/server/AServerRun.cpp
-                src/Server/server/AServerInit.cpp
+        src/Server/server/ServerRun.cpp
+        src/Server/server/ServerInit.cpp
                 src/Server/connection/request_processing/UploadHandler.cpp
                 src/Server/connection/request_processing/SynthFoundExact.cpp
                 src/Server/connection/request_processing/LocationSynth.cpp
@@ -49,9 +48,8 @@ add_library(webserv_lib
         src/Server/server/response/ServerResponse.cpp
         src/Server/server/ServerExceptions.cpp
         src/Server/server/Server.cpp
-        src/Server/server/Aserver.cpp
-        src/Server/server/AServerRun.cpp
-        src/Server/server/AServerInit.cpp
+        src/Server/server/ServerRun.cpp
+        src/Server/server/ServerInit.cpp
         src/Server/connection/request_processing/UploadHandler.cpp
         src/Server/connection/request_processing/SynthFoundExact.cpp
         src/Server/connection/request_processing/LocationSynth.cpp

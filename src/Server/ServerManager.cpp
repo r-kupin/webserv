@@ -16,16 +16,6 @@
 ServerManager::ServerManager() {
 }
 
-ServerManager::ServerManager(const ServerManager &other) {
-    (void)other;
-}
-
-ServerManager &ServerManager::operator=(const ServerManager &other) {
-    if (this == &other)
-        return *this;
-    return *this;
-}
-
 ServerManager::~ServerManager() {}
 
 ServerManager::ServerManager(const Config &config) {

@@ -13,7 +13,7 @@
 #include <iostream>
 #include <algorithm>
 #include <csignal>
-#include "../../server/AServer.h"
+#include "../../server/Server.h"
 
 /**
  * Depending on compliance between what was requested and what is being found
@@ -23,7 +23,7 @@
  * @param request
  * @return not-exact copy of a location found
  */
-Location AServer::ProcessRequest(ClientRequest &request, std::ostream &os, int socket) {
+Location Server::ProcessRequest(ClientRequest &request, std::ostream &os, int socket) {
     Srch_c_Res res = config_.FindConstLocation(request.GetAddress());
     l_loc_c_it found = res.location_;
     Location synth(*found);
@@ -48,7 +48,7 @@ Location AServer::ProcessRequest(ClientRequest &request, std::ostream &os, int s
     return synth;
 }
 
-void AServer::HandleStatic(const ClientRequest &request,
+void Server::HandleStatic(const ClientRequest &request,
                            const Srch_c_Res &res,
                            const l_loc_c_it &found,
                            Location &synth, std::ostream &os) const {
@@ -72,7 +72,7 @@ void AServer::HandleStatic(const ClientRequest &request,
     }
 }
 
-void AServer::HandleUpload(ClientRequest &request, int socket, l_loc_c_it &found,
+void Server::HandleUpload(ClientRequest &request, int socket, l_loc_c_it &found,
                            Location &synth, std::ostream &os) {
     if (request.GetMethod() == POST) {
         // Try to perform upload
@@ -86,7 +86,7 @@ void AServer::HandleUpload(ClientRequest &request, int socket, l_loc_c_it &found
     }
 }
 
-void AServer::SynthFile(Location &synth, const Srch_c_Res &res, int fs_status,
+void Server::SynthFile(Location &synth, const Srch_c_Res &res, int fs_status,
                         const std::string &request_address,
                         std::ostream &os) const {
     (void)os;
@@ -107,7 +107,7 @@ void AServer::SynthFile(Location &synth, const Srch_c_Res &res, int fs_status,
     }
 }
 
-bool AServer::RequestBodyExceedsLimit(l_loc_c_it found, ClientRequest &request) {
+bool Server::RequestBodyExceedsLimit(l_loc_c_it found, ClientRequest &request) {
     if (request.GetMethod() == POST || request.GetMethod() == DELETE) {
         if (found->client_max_body_size_ < request.GetDeclaredBodySize()) {
             return true;
@@ -116,7 +116,7 @@ bool AServer::RequestBodyExceedsLimit(l_loc_c_it found, ClientRequest &request) 
     return false;
 }
 
-bool AServer::AccessForbidden(l_loc_c_it found, Methods method) const {
+bool Server::AccessForbidden(l_loc_c_it found, Methods method) const {
     if (found->limit_except_.except_.empty() ||
         found->limit_except_.except_.find(method) !=
             found->limit_except_.except_.end() ||

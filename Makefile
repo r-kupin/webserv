@@ -18,8 +18,8 @@ SRCS =	src/main.cpp \
 		src/Server/server/MultithreadServer.cpp \
 		src/Server/server/Server.cpp \
 		src/Server/server/Aserver.cpp \
-		src/Server/server/AServerRun.cpp \
-		src/Server/server/AServerInit.cpp \
+		src/Server/server/ServerRun.cpp \
+		src/Server/server/ServerInit.cpp \
 		src/Server/thread_pool/ThreadPool.cpp \
 		src/Server/request/ClientRequest.cpp \
 		src/Server/request/ClientRequestURLHandlers.cpp \
@@ -53,8 +53,8 @@ LIB_SRCS = 	src/utils/Utils.cpp \
 			src/Server/server/MultithreadServer.cpp \
 			src/Server/server/Server.cpp \
 			src/Server/server/Aserver.cpp \
-			src/Server/server/AServerRun.cpp \
-			src/Server/server/AServerInit.cpp \
+			src/Server/server/ServerRun.cpp \
+			src/Server/server/ServerInit.cpp \
 			src/Server/thread_pool/ThreadPool.cpp \
 			src/Server/request/ClientRequest.cpp \
 			src/Server/request/ClientRequestURLHandlers.cpp \

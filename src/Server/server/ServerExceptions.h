@@ -13,74 +13,74 @@
 #ifndef WEBSERV_LIB_SERVEREXCEPTIONS_H
 #define WEBSERV_LIB_SERVEREXCEPTIONS_H
 
-#include "AServer.h"
+#include "Server.h"
 
-class AddrinfoCreationFailed : public AServer::ServerException {
+class AddrinfoCreationFailed : public Server::ServerException {
 public:
-    AddrinfoCreationFailed() : AServer::ServerException() {}
+    AddrinfoCreationFailed() : Server::ServerException() {}
 
     const char *what() const throw();
 };
 
-class SocketOpeningFailureException : public AServer::ServerException {
+class SocketOpeningFailureException : public Server::ServerException {
 public:
-    SocketOpeningFailureException() : AServer::ServerException() {}
+    SocketOpeningFailureException() : Server::ServerException() {}
 
     const char *what() const throw();
 };
 
-class SocketSetOptionsFailureException : public AServer::ServerException {
+class SocketSetOptionsFailureException : public Server::ServerException {
 public:
-    SocketSetOptionsFailureException() : AServer::ServerException() {}
+    SocketSetOptionsFailureException() : Server::ServerException() {}
 
     const char *what() const throw();
 };
 
-class SocketBindingFailureException : public AServer::ServerException {
+class SocketBindingFailureException : public Server::ServerException {
 public:
-    SocketBindingFailureException() : AServer::ServerException() {}
+    SocketBindingFailureException() : Server::ServerException() {}
 
     const char *what() const throw();
 };
 
-class SocketListeningFailureException : public AServer::ServerException {
+class SocketListeningFailureException : public Server::ServerException {
 public:
-    SocketListeningFailureException() : AServer::ServerException() {}
+    SocketListeningFailureException() : Server::ServerException() {}
 
     const char *what() const throw();
 };
 
-class EpollCreationFailed : public AServer::ServerException {
+class EpollCreationFailed : public Server::ServerException {
 public:
-    EpollCreationFailed() : AServer::ServerException() {}
+    EpollCreationFailed() : Server::ServerException() {}
 
     const char *what() const throw();
 };
 
-class EpollAddFailed : public AServer::ServerException {
+class EpollAddFailed : public Server::ServerException {
 public:
-    EpollAddFailed() : AServer::ServerException() {}
+    EpollAddFailed() : Server::ServerException() {}
 
     const char *what() const throw();
 };
 
-class NotFoundException : public AServer::ServerException {
+class NotFoundException : public Server::ServerException {
 public:
-    NotFoundException() : AServer::ServerException() {}
+    NotFoundException() : Server::ServerException() {}
 
     const char *what() const throw();
 };
 //--
-class EwouldblockEagainUpload : public AServer::ServerException {
+class EwouldblockEagainUpload : public Server::ServerException {
 public:
-    EwouldblockEagainUpload() : AServer::ServerException() {}
+    EwouldblockEagainUpload() : Server::ServerException() {}
 
     const char *what() const throw();
 };
 
-class ZeroReadUpload : public AServer::ServerException {
+class ZeroReadUpload : public Server::ServerException {
 public:
-    ZeroReadUpload() : AServer::ServerException() {}
+    ZeroReadUpload() : Server::ServerException() {}
 
     const char *what() const throw();
 };

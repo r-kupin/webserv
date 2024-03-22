@@ -16,20 +16,15 @@
 #include "server/Server.h"
 
 typedef std::list<Server>               l_servers;
-typedef std::list<AServer>              l_aservers;
 
 class ServerManager {
 public:
     ServerManager();
-    ServerManager(const ServerManager &);
     ServerManager(const Config &config);
-    ServerManager(const Config &config, int n);
-    ServerManager &operator=(const ServerManager &);
 
     ~ServerManager();
 
     void RunAll();
-    void RunAllMT();
 private:
     l_servers   servers_;
 };

@@ -14,7 +14,7 @@
 #include <algorithm>
 #include "../../server/Server.h"
 
-void AServer::SynthIndex(Location &synth, const Srch_c_Res &res, int fs_status, std::ostream &os) const {
+void Server::SynthIndex(Location &synth, const Srch_c_Res &res, int fs_status, std::ostream &os) const {
     (void )os;
     l_loc_c_it found = res.location_;
     const std::string &index_address = FindIndexToSend(found,
@@ -37,7 +37,7 @@ void AServer::SynthIndex(Location &synth, const Srch_c_Res &res, int fs_status, 
     }
 }
 
-std::string AServer::FindIndexToSend(const l_loc_c_it &found,
+std::string Server::FindIndexToSend(const l_loc_c_it &found,
                                     const std::string &compliment) const {
     const Location &root = found->GetMyRootRef();
     const l_str &indeces = found->GetIndeces();
