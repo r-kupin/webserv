@@ -18,18 +18,9 @@
 #include "../../server/AServer.h"
 #include "../../server/ServerExceptions.h"
 
-bool    set_non_blocking(int sockfd) {
-    int flags = fcntl(sockfd, F_GETFL, 0);
-    if (flags == -1)
-        return false;
-
-    flags |= O_NONBLOCK;
-    return (fcntl(sockfd, F_SETFL, flags) != -1);
-}
-
 int AServer::UploadFromCURL(ClientRequest &request, const std::string &filename,
                             int socket) {
-    int                 file_fd = open(filename.c_str(), O_WRONLY);
+    int                 file_fd = open(filename.c_str(), O_WRONLY | O_APPEND | O_NONBLOCK);
     const std::string   &content_type = request.GetHeaderValue("Content-Type");
     // Start of "boundary=" value of "Content-Type" header
     size_t              bound_pos = content_type.find(kBoundary);
@@ -74,7 +65,7 @@ int AServer::PerformUpload(const ClientRequest &request, int socket, int file_fd
     while (is_running_) {
         ssize_t bytes_read = recv(socket, buffer + body.size(),
                                   static_cast<size_t>(FILE_BUFFER_SIZE) - body.size(),
-                                  MSG_DONTWAIT);
+                                  /*MSG_DONTWAIT*/ 0);
         if (bytes_read < 1) {
             if (bytes_read == 0) {
                 Log("recv returned 0 while reading file contents.");
@@ -150,7 +141,7 @@ int AServer::FillBuffer(char *buffer, int socket, const size_t &size, v_char &st
     if (storage.empty() || storage.size() - metadata_size == 0) {
         // its not a first call
         bytes_read = recv(socket, buffer,
-                          std::min(static_cast<size_t>(FILE_BUFFER_SIZE), size), MSG_DONTWAIT);
+                          std::min(static_cast<size_t>(FILE_BUFFER_SIZE), size), /*MSG_DONTWAIT*/ 0);
     } else {
         int to_take_from_storage = storage.size() - metadata_size;
         // it is first iteration after metadata processing, and body_ contains
@@ -163,7 +154,7 @@ int AServer::FillBuffer(char *buffer, int socket, const size_t &size, v_char &st
 //                                                                storage.size());
         bytes_read = recv(socket, buffer + storage.size(),
                           std::min(static_cast<size_t>(FILE_BUFFER_SIZE), size) -
-                                                                to_take_from_storage, MSG_DONTWAIT);
+                                                                to_take_from_storage, /*MSG_DONTWAIT*/ 0);
         bytes_read += to_take_from_storage;
         // all data in the buffer now
         storage.clear();

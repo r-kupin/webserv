@@ -103,7 +103,7 @@ void ServerResponse::SendResponse(int dest) {
     const char *response_buffer = response_string.c_str();
     size_t response_size = response_string.size();
 
-    if (send(dest, response_buffer, response_size, MSG_DONTWAIT) < 0)
+    if (send(dest, response_buffer, response_size, /*MSG_DONTWAIT*/ 0) < 0)
         ThrowResponseException("send() returned negative number!");
 }
 

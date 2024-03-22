@@ -59,7 +59,7 @@ int ClientRequest::ReadBodyToRequest(int socket) {
 }
 
 int ClientRequest::ReadBodyPart(int socket, int buffer_size, char *buffer) {
-    int bytes_read = recv(socket, buffer, buffer_size - 1, MSG_DONTWAIT);
+    int bytes_read = recv(socket, buffer, buffer_size - 1, /*MSG_DONTWAIT*/ 0);
 
     if (bytes_read < 1) {
         if (bytes_read == 0) {

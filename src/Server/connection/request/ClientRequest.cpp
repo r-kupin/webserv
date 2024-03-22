@@ -81,7 +81,7 @@ v_str &ClientRequest::ReadFromSocket(int socket, int buffer_size) {
     // read while recv wouldn't return 0 or -1 and set errno tp EWOULDBLOCK || EAGAIN.
     // In this section we simply probe socket - if there is something to read -
     // recv will return 1.
-    ssize_t probe = recv(socket, buffer, 1, MSG_PEEK | MSG_DONTWAIT);
+    ssize_t probe = recv(socket, buffer, 1, MSG_PEEK | /*MSG_DONTWAIT*/ 0);
 
     if (probe == 0) {
         ThrowException("The probing recv returned 0 - client closed connection",
@@ -90,7 +90,7 @@ v_str &ClientRequest::ReadFromSocket(int socket, int buffer_size) {
         if (errno == EWOULDBLOCK || errno == EAGAIN) {
 //
 //            usleep(500);
-//            probe = recv(socket, buffer, 1, MSG_PEEK | MSG_DONTWAIT);
+//            probe = recv(socket, buffer, 1, MSG_PEEK | /*MSG_DONTWAIT*/ 0);
 //            if (probe == 0) {
 //                ThrowException("The probing recv returned 0 - client closed "
 //                               "connection", "ZeroRead");
@@ -110,7 +110,7 @@ v_str &ClientRequest::ReadFromSocket(int socket, int buffer_size) {
     }
 
     while (true) {
-        int bytes_read = recv(socket, buffer, buffer_size - 1, MSG_DONTWAIT);
+        int bytes_read = recv(socket, buffer, buffer_size - 1, /*MSG_DONTWAIT*/ 0);
 
         if (bytes_read < 1) {
             if (bytes_read == 0) {

@@ -12,6 +12,7 @@
 
 #include <csignal>
 #include <cstring>
+#include <fcntl.h>
 #include "Server.h"
 #include "../connection/request/RequestExceptions.h"
 #include "ServerExceptions.h"
@@ -106,10 +107,20 @@ void Server::HandleRequest(int client_sock) {
     }
 }
 
+bool    set_non_blocking(int sockfd) {
+    int flags = fcntl(sockfd, F_GETFL, 0);
+    if (flags == -1)
+        return false;
+
+    flags |= O_NONBLOCK;
+    return (fcntl(sockfd, F_SETFL, flags) != -1);
+}
+
 bool Server::AddClientToEpoll(int client_sock, int epoll_fd) {
     epoll_event event;
     event.events = EPOLLIN | EPOLLOUT | EPOLLET;
     event.data.fd = client_sock;
+    set_non_blocking(client_sock);
     return epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_sock, &event) != -1;
 }
 
