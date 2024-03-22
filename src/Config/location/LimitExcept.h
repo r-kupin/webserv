@@ -10,8 +10,8 @@
 /*                                                                            */
 /******************************************************************************/
 
-#ifndef WEBSERV_LIB_LIMITEXCEPT_H
-#define WEBSERV_LIB_LIMITEXCEPT_H
+#ifndef WEBSERV_LIMITEXCEPT_H
+#define WEBSERV_LIMITEXCEPT_H
 
 #include <string>
 #include <vector>
@@ -44,4 +44,4 @@ struct Limit {
 };
 std::ostream &operator<<(std::ostream &os, const Limit &limit);
 
-#endif //WEBSERV_LIB_LIMITEXCEPT_H
+#endif //WEBSERV_LIMITEXCEPT_H

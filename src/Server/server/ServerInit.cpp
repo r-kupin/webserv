@@ -10,13 +10,12 @@
 /*                                                                            */
 /******************************************************************************/
 
-#include "Server.h"
-
 #include <iostream>
-#include <sys/socket.h>
 #include <unistd.h>
 #include <cstring>
 #include "ServerExceptions.h"
+
+#include "Server.h"
 
 void Server::Init() {
     try {
@@ -144,8 +143,8 @@ void Server::CreateEpoll() {
 void Server::AddEpollInstance() {
     epoll_event event;
     std::memset(&event, 0, sizeof(event));
-    event.data.fd = GetSocket();
+    event.data.fd = socket_;
     event.events = EPOLLIN | EPOLLOUT;
-    if (epoll_ctl(GetEpollFd(), EPOLL_CTL_ADD, GetSocket(), &event) < 0)
+    if (epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, socket_, &event) < 0)
         throw EpollAddFailed();
 }

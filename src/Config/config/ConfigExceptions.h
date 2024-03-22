@@ -10,8 +10,8 @@
 /*                                                                            */
 /******************************************************************************/
 
-#ifndef WEBSERV_LIB_CONFIGEXCEPTIONS_H
-#define WEBSERV_LIB_CONFIGEXCEPTIONS_H
+#ifndef WEBSERV_CONFIGEXCEPTIONS_H
+#define WEBSERV_CONFIGEXCEPTIONS_H
 
 #include "Config.h"
 
@@ -25,4 +25,4 @@ public:
     const char *what() const throw();
 };
 
-#endif //WEBSERV_LIB_CONFIGEXCEPTIONS_H
+#endif //WEBSERV_CONFIGEXCEPTIONS_H

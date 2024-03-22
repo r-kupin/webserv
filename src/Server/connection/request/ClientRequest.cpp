@@ -16,15 +16,13 @@
 #include <cerrno>
 #include "ClientRequest.h"
 
-ClientRequest::ClientRequest() : bytes_left_(0) {}
+ClientRequest::ClientRequest() {}
 
 ClientRequest::ClientRequest(int client_sock) { Init(client_sock);}
 
 ClientRequest& ClientRequest::operator=(const ClientRequest& other) {
-    if (this != &other) { // Check for self-assignment
-        // Copy data members from other to this object
+    if (this != &other) {
         raw_request_ = other.raw_request_;
-        bytes_left_ = other.bytes_left_;
         method_ = other.method_;
         addr_ = other.addr_;
         addr_last_step_ = other.addr_last_step_;
@@ -81,28 +79,17 @@ v_str &ClientRequest::ReadFromSocket(int socket, int buffer_size) {
     // read while recv wouldn't return 0 or -1 and set errno tp EWOULDBLOCK || EAGAIN.
     // In this section we simply probe socket - if there is something to read -
     // recv will return 1.
-    ssize_t probe = recv(socket, buffer, 1, MSG_PEEK | /*MSG_DONTWAIT*/ 0);
+    ssize_t probe = recv(socket, buffer, 1, MSG_PEEK);
 
     if (probe == 0) {
         ThrowException("The probing recv returned 0 - client closed connection",
                        "ZeroRead");
     } else if (probe < 0) {
         if (errno == EWOULDBLOCK || errno == EAGAIN) {
-//
-//            usleep(500);
-//            probe = recv(socket, buffer, 1, MSG_PEEK | /*MSG_DONTWAIT*/ 0);
-//            if (probe == 0) {
-//                ThrowException("The probing recv returned 0 - client closed "
-//                               "connection", "ZeroRead");
-//            } else if (probe < 0 && (errno == EWOULDBLOCK || errno == EAGAIN)) {
-                // it's ok: we just processed all available data on this socket
-                // fd and this request creation call is false.
-                // return without sending anything to client
                 ThrowException("The probing recv returned -1 with errno set. "
-                               "Nothing left to read on this socket for now, but "
+                               "Nothing to read on this socket for now, but "
                                "connection is still open on the client's side.",
                                "EwouldblockEagain");
-//            }
         } else {
             // We're in trouble!
             ThrowException("recv returned -1 due to IO failure", "ReadFailed");
@@ -110,7 +97,7 @@ v_str &ClientRequest::ReadFromSocket(int socket, int buffer_size) {
     }
 
     while (true) {
-        int bytes_read = recv(socket, buffer, buffer_size - 1, /*MSG_DONTWAIT*/ 0);
+        int bytes_read = recv(socket, buffer, buffer_size - 1,  0);
 
         if (bytes_read < 1) {
             if (bytes_read == 0) {
@@ -190,14 +177,6 @@ void ClientRequest::SetAssociatedFilename(const std::string &associatedFilename)
     associated_filename_ = associatedFilename;
 }
 
-size_t ClientRequest::GetBytesLeft() const {
-    return bytes_left_;
-}
-
-void ClientRequest::SetBytesLeft(size_t bytesLeft) {
-    bytes_left_ = bytesLeft;
-}
-
 Methods ClientRequest::GetMethod() const {
     return method_;
 }
@@ -228,10 +207,6 @@ bool ClientRequest::IsIndexRequest() const {
 
 const std::string &ClientRequest::GetFragment() const {
     return fragment_;
-}
-
-void ClientRequest::SetMethod(Methods method) {
-    method_ = method;
 }
 
 bool        ClientRequest::HasHeaders(const v_str &request) {

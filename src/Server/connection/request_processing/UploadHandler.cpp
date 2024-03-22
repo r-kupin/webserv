@@ -44,7 +44,10 @@ bool Server::TryCreateOutputFile(const std::string &dir, const std::string &file
     return false;
 }
 
-int Server::UploadFile(ClientRequest &request, l_loc_c_it found, int socket, std::ostream &os) {
+int Server::UploadFile(ClientRequest &request,
+                       l_loc_c_it found,
+                       int socket,
+                       std::ostream &os) {
     static int  files_uploaded_;
 
     std::string dirname;

@@ -10,8 +10,8 @@
 /*                                                                            */
 /******************************************************************************/
 
-#ifndef WEBSERV_LIB_SERVEREXCEPTIONS_H
-#define WEBSERV_LIB_SERVEREXCEPTIONS_H
+#ifndef WEBSERV_SERVEREXCEPTIONS_H
+#define WEBSERV_SERVEREXCEPTIONS_H
 
 #include "Server.h"
 
@@ -63,14 +63,14 @@ public:
 
     const char *what() const throw();
 };
-
-class NotFoundException : public Server::ServerException {
+//--
+class IOFailedException : public Server::ServerException {
 public:
-    NotFoundException() : Server::ServerException() {}
+    IOFailedException() : Server::ServerException() {}
 
     const char *what() const throw();
 };
-//--
+
 class EwouldblockEagainUpload : public Server::ServerException {
 public:
     EwouldblockEagainUpload() : Server::ServerException() {}
@@ -85,4 +85,4 @@ public:
     const char *what() const throw();
 };
 
-#endif //WEBSERV_LIB_SERVEREXCEPTIONS_H
+#endif //WEBSERV_SERVEREXCEPTIONS_H

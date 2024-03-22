@@ -10,8 +10,8 @@
 /*                                                                            */
 /******************************************************************************/
 
-#ifndef WEBSERV_LIB_UTILS_H
-#define WEBSERV_LIB_UTILS_H
+#ifndef WEBSERV_UTILS_H
+#define WEBSERV_UTILS_H
 
 #include <set>
 #include <string>
@@ -81,4 +81,4 @@ private:
 };
 
 
-#endif //WEBSERV_LIB_UTILS_H
+#endif //WEBSERV_UTILS_H

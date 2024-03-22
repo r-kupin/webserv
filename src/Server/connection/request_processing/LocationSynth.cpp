@@ -16,10 +16,10 @@
 #include "../../server/Server.h"
 
 /**
- * Depending on compliance between what was requested and what is being found
- * creates a synthetic location - a copy of the location that was found, but
- * with altered return code, and redirect-related fields, or with a body file
- * set.
+ * Depending on compliance between what was requested and what is being
+ * found, server creates a synthetic location - a copy of the location that
+ * was found, but with altered return code, and redirect-related fields, or
+ * with a body file set.
  * @param request
  * @return not-exact copy of a location found
  */

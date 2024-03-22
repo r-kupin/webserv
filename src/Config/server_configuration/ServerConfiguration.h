@@ -10,8 +10,8 @@
 /*                                                                            */
 /******************************************************************************/
 
-#ifndef WEBSERV_LIB_SERVERCONFIGURATION_H
-#define WEBSERV_LIB_SERVERCONFIGURATION_H
+#ifndef WEBSERV_SERVERCONFIGURATION_H
+#define WEBSERV_SERVERCONFIGURATION_H
 
 #include <string>
 #include <vector>
@@ -101,4 +101,4 @@ typedef ServerConfiguration::LocConstSearchResult       Srch_c_Res;
 
 std::ostream &operator<<(std::ostream &os, const ServerConfiguration &config);
 
-#endif //WEBSERV_LIB_SERVERCONFIGURATION_H
+#endif //WEBSERV_SERVERCONFIGURATION_H

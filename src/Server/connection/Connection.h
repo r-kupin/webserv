@@ -9,8 +9,8 @@
 /*                                                     ###   ########.fr      */
 /*                                                                            */
 /******************************************************************************/
-#ifndef WEBSERV_LIB_CONNECTION_H
-#define WEBSERV_LIB_CONNECTION_H
+#ifndef WEBSERV_CONNECTION_H
+#define WEBSERV_CONNECTION_H
 
 
 #include "request/ClientRequest.h"
@@ -32,4 +32,4 @@ struct Connection {
 };
 
 
-#endif //WEBSERV_LIB_CONNECTION_H
+#endif //WEBSERV_CONNECTION_H

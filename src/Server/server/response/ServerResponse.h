@@ -10,8 +10,8 @@
 /*                                                                            */
 /******************************************************************************/
 
-#ifndef WEBSERV_LIB_SEVRERRESPONSE_H
-#define WEBSERV_LIB_SEVRERRESPONSE_H
+#ifndef WEBSERV_SEVRERRESPONSE_H
+#define WEBSERV_SEVRERRESPONSE_H
 
 #include <ostream>
 #include "../../connection/request/ClientRequest.h"
@@ -59,4 +59,4 @@ private:
 
 std::ostream &operator<<(std::ostream &os, const ServerResponse &response);
 
-#endif //WEBSERV_LIB_SEVRERRESPONSE_H
+#endif //WEBSERV_SEVRERRESPONSE_H

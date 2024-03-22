@@ -10,8 +10,8 @@
 /*                                                                            */
 /******************************************************************************/
 
-#ifndef WEBSERV_LIB_ERRPAGE_H
-#define WEBSERV_LIB_ERRPAGE_H
+#ifndef WEBSERV_ERRPAGE_H
+#define WEBSERV_ERRPAGE_H
 
 #include "../../utils/Utils.h"
 
@@ -27,4 +27,4 @@ struct ErrPage {
 };
 std::ostream &operator<<(std::ostream &os, const ErrPage &page);
 
-#endif //WEBSERV_LIB_ERRPAGE_H
+#endif //WEBSERV_ERRPAGE_H

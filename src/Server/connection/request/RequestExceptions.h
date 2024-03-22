@@ -1,5 +1,5 @@
-#ifndef WEBSERV_LIB_REQUESTEXCEPTIONS_H
-#define WEBSERV_LIB_REQUESTEXCEPTIONS_H
+#ifndef WEBSERV_REQUESTEXCEPTIONS_H
+#define WEBSERV_REQUESTEXCEPTIONS_H
 
 #include "ClientRequest.h"
 
@@ -78,4 +78,4 @@ public:
     const char *what() const throw();
 };
 
-#endif //WEBSERV_LIB_REQUESTEXCEPTIONS_H
+#endif //WEBSERV_REQUESTEXCEPTIONS_H

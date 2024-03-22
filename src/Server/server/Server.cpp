@@ -38,29 +38,11 @@ Server &Server::operator=(const Server &other) {
     return *this;
 }
 
-const ServerConfiguration & Server::GetConfig() const {
-    return config_;
-}
-
-int Server::GetSocket() const {
-    return socket_;
-}
-
-int Server::GetEpollFd() const {
-    return epoll_fd_;
-}
-
 std::ostream &operator<<(std::ostream &os, const Server &server) {
     os << "config_:\n" << server.config_ <<
        "socket_: " << server.socket_ <<
        "\nepoll_fd_: " << server.epoll_fd_ << std::endl;
     return os;
 }
-
-void Server::Log(const std::string &msg, std::ostream &os) const {
-    os << config_.GetServerName() << ":" << config_.GetPort();
-    os << " : " << msg << std::endl;
-}
-
 
 

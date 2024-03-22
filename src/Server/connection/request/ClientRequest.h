@@ -10,8 +10,8 @@
 /*                                                                            */
 /******************************************************************************/
 
-#ifndef WEBSERV_LIB_CLIENTREQUEST_H
-#define WEBSERV_LIB_CLIENTREQUEST_H
+#ifndef WEBSERV_CLIENTREQUEST_H
+#define WEBSERV_CLIENTREQUEST_H
 
 /**
  *  Question Mark "?" in a URL:The question mark is used to indicate the
@@ -65,7 +65,6 @@ public:
     const v_char        &GetBody() const;
     const m_str_str     &GetParams() const;
     const m_str_str     &GetHeaders() const;
-    size_t              GetBytesLeft() const;
     bool                HasHeader(const std::string &key) const;
     std::string         GetHeaderValue(const std::string &key) const;
     size_t              GetDeclaredBodySize() const;
@@ -76,8 +75,6 @@ public:
     const std::string   &GetAssociatedFilename() const;
 
     void                SetAssociatedFilename(const std::string &associatedFilename);
-    void                SetBytesLeft(size_t bytesLeft);
-    void                SetMethod(Methods method);
 //-------------------manual body processing-------------------------------------
     void                TellClientToContinueIfNeed(int socket) const;
     size_t              ProcessCURLFileMetadata(int socket,
@@ -112,7 +109,6 @@ protected:
 private:
 //-------------------processing-time data---------------------------------------
     v_str               raw_request_;
-    size_t              bytes_left_;
     std::string         associated_filename_;
 //-------------------actual request data----------------------------------------
     Methods             method_;
@@ -127,4 +123,4 @@ private:
 };
 std::ostream &operator<<(std::ostream &os, const ClientRequest &request);
 
-#endif //WEBSERV_LIB_CLIENTREQUEST_H
+#endif //WEBSERV_CLIENTREQUEST_H

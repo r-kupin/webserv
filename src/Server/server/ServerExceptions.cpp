@@ -28,7 +28,7 @@ const char *EpollAddFailed::what() const throw() {
     return exception::what();
 }
 
-const char *NotFoundException::what() const throw() {
+const char *IOFailedException::what() const throw() {
     return exception::what();
 }
 

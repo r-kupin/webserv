@@ -10,8 +10,8 @@
 /*                                                                            */
 /******************************************************************************/
 
-#ifndef WEBSERV_LIB_SERVERMANAGER_H
-#define WEBSERV_LIB_SERVERMANAGER_H
+#ifndef WEBSERV_SERVERMANAGER_H
+#define WEBSERV_SERVERMANAGER_H
 
 #include "server/Server.h"
 
@@ -30,4 +30,4 @@ private:
 };
 
 
-#endif //WEBSERV_LIB_SERVERMANAGER_H
+#endif //WEBSERV_SERVERMANAGER_H
