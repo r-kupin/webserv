@@ -114,7 +114,7 @@ TEST_F(SynthIndexCheck_RootRedefined, Loc_1_index_1) {
     Srch_c_Res res = GetConfig().FindConstLocation("/loc_1/index_1.html");
     l_loc_c_it found = res.location_;
     Location synth(*found);
-    SynthIndex(synth, res, FILE);
+    SynthIndex(synth, res, COMM_FILE);
 
     EXPECT_EQ(synth.return_code_, 404);
     EXPECT_TRUE(synth.body_file_.empty());
@@ -124,7 +124,7 @@ TEST_F(SynthIndexCheck_RootRedefined, Loc_5) {
     Srch_c_Res res = GetConfig().FindConstLocation("/loc_5");
     l_loc_c_it found = res.location_;
     Location synth(*found);
-    SynthIndex(synth, res, FILE);
+    SynthIndex(synth, res, COMM_FILE);
 
     EXPECT_EQ(synth.return_code_, 404);
     EXPECT_TRUE(synth.body_file_.empty());

@@ -10,26 +10,24 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef WEBSERV_LIB_SERVERMANAGER_H
-#define WEBSERV_LIB_SERVERMANAGER_H
+#ifndef WEBSERV_SERVERMANAGER_H
+#define WEBSERV_SERVERMANAGER_H
 
-#include "ServerExceptions.h"
+#include "server/Server.h"
 
-typedef std::list<Server> l_servers;
+typedef std::list<Server>               l_servers;
 
 class ServerManager {
 public:
     ServerManager();
-    ServerManager(const ServerManager &);
     ServerManager(const Config &config);
-    ServerManager &operator=(const ServerManager &);
 
     ~ServerManager();
 
     void RunAll();
 private:
-    l_servers servers_;
+    l_servers   servers_;
 };
 
 
-#endif //WEBSERV_LIB_SERVERMANAGER_H
+#endif //WEBSERV_SERVERMANAGER_H

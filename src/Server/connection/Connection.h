@@ -1,21 +1,35 @@
 /******************************************************************************/
 /*                                                                            */
 /*                                                         :::      ::::::::  */
-/*    UtilsTest.cpp                                      :+:      :+:    :+:  */
+/*    Connection.h                                       :+:      :+:    :+:  */
 /*                                                     +:+ +:+         +:+    */
 /*    By: rokupin <rokupin@student.42.fr>            +#+  +:+       +#+       */
 /*                                                 +#+#+#+#+#+   +#+          */
-/*    Created: 2024/01/04 16:45:06 by rokupin           #+#    #+#            */
+/*    Created: 2024/03/17 12:34:26 by rokupin           #+#    #+#            */
 /*                                                     ###   ########.fr      */
 /*                                                                            */
 /******************************************************************************/
+#ifndef WEBSERV_CONNECTION_H
+#define WEBSERV_CONNECTION_H
 
-#include <gtest/gtest.h>
-#include "../../../src/utils/Utils.h"
 
-TEST(CheckFS, CheckFilesystemExist) {
-    std::string def_res_address_ = "test_resources/nested_locations";
-    EXPECT_EQ(Utils::CheckFilesystem(def_res_address_ + "/nginx.conf"), COMM_FILE);
-    EXPECT_EQ(Utils::CheckFilesystem(def_res_address_ + "/www/X"), NOTHING);
-    EXPECT_EQ(Utils::CheckFilesystem(def_res_address_ + "/www"), DIRECTORY);
-}
+#include "request/ClientRequest.h"
+#include "../../Config/location/Location.h"
+
+struct Connection {
+    Connection();
+    Connection(int fd, const ClientRequest &request);
+    Connection(const Connection &other);
+
+    Connection &operator=(const Connection &);
+
+    bool            url_headers_done_;
+    bool            body_done_;
+
+    int             fd_;
+    ClientRequest   request_;
+    Location        location_;
+};
+
+
+#endif //WEBSERV_CONNECTION_H

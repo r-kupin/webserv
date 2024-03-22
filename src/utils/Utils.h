@@ -10,8 +10,8 @@
 /*                                                                            */
 /******************************************************************************/
 
-#ifndef WEBSERV_LIB_UTILS_H
-#define WEBSERV_LIB_UTILS_H
+#ifndef WEBSERV_UTILS_H
+#define WEBSERV_UTILS_H
 
 #include <set>
 #include <string>
@@ -21,7 +21,7 @@
 #include <ostream>
 
 #define NOTHING 0
-#define FILE 1
+#define COMM_FILE 1
 #define DIRECTORY 2
 #define ELSE 3
 
@@ -81,4 +81,4 @@ private:
 };
 
 
-#endif //WEBSERV_LIB_UTILS_H
+#endif //WEBSERV_UTILS_H

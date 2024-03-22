@@ -29,6 +29,7 @@
 */
 #include <iostream>
 #include <cassert>
+#include <csignal>
 #include "Config/config/ConfigExceptions.h"
 #include "Server/ServerManager.h"
 
@@ -65,19 +66,20 @@ Config try_open_configs(int ac, char **av) {
 }
 
 int main(int ac, char** av) {
-	assert(ac < 3 &&
-		"webserv accepts only one argument, and it should be a config file");
-	std::cout << "Starting webserv..." << std::endl;
-	std::cout <<"Loading config..." << std::endl;
-	try {
-		Config conf = try_open_configs(ac, av);
-		std::cout << "Config is on path " + conf.getConfPath() +
-						" is loaded.  Creating servers.." << std::endl;
-		ServerManager server_manager(conf);
-		server_manager.RunAll();
-	} catch (const Config::ConfigException& e) {
-		std::cout << "No config is loaded, startup failed!" << std::endl;
-		return (1);
-	}
-	return 0;
+    assert(ac < 3 &&
+        "webserv accepts only one argument, and it should be a config file");
+    std::cout << "Starting webserv..." << std::endl;
+    std::cout <<"Loading config..." << std::endl;
+    try {
+        Config conf = try_open_configs(ac, av);
+        std::cout << "Config is on path " + conf.getConfPath() +
+                        " is loaded.  Creating servers.." << std::endl;
+        signal(SIGINT, Server::Stop);
+        ServerManager server_manager(conf);
+        server_manager.RunAll();
+    } catch (const Config::ConfigException& e) {
+        std::cout << "No config is loaded, startup failed!" << std::endl;
+        return (1);
+    }
+    return 0;
 }

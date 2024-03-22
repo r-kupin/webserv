@@ -96,7 +96,7 @@ uri ends:
 8. If the requested resource is a static file, the server reads the file from disk and sends it back to the client in the response. If a session ID cookie is present, the server adds the session ID to the cookie and sets an expiry date.
 9. If the requested resource is a dynamic content generator, the server invokes the appropriate handler module, such as mod_cgi or mod_php, to generate the content. If a session ID cookie is present, the server passes the session data to the handler as an environment variable or input parameter.
 10. After generating the response, the server adds a Set-Cookie header to the response containing the session ID and expiry date, if a session was created or updated.
-11. The server sends the response back to the client and closes the connection. The thread or worker process is terminated or returned to the pool.
+11. The server sends the response back to the client and closes the connection. The thread or worker process is terminated or returned to the pool_.
 12. The server periodically saves the session data to a storage medium to ensure that sessions persist across server restarts.
 13. The server can be configured to use SSL/TLS encryption for secure
 	connections.
@@ -184,3 +184,12 @@ fd_set workflow:
 						1. perform **`send(fd, response buffer retrieved from map by "fd")`**
 						2. remove **fd** from _send_fd_pool
 						3. add **fd** to _recv_fd_pool
+
+Multithreading way:
+1. each server is a running thread and has a ref to thread pool
+2. when epoll signals new connection: 
+	1. accept in server's thread
+3. when epoll signals event:
+	1. pushes task to the thread pool, task that has references to all data in server required to handle it
+	2. task is associated with a buffer, where thread's log stored 
+	3. when thread is done - server prints out contents of dedicated buffer

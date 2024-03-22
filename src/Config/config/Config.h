@@ -13,13 +13,13 @@
 #ifndef WEBSERV_CONFIGPARSER_H
 #define WEBSERV_CONFIGPARSER_H
 
-#include <fstream>
 #include <string>
 #include <map>
 #include <vector>
 #include <set>
 #include <iostream>
 #include <list>
+#include <fstream>
 #include "../server_configuration/ServerConfiguration.h"
 
 /**
