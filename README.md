@@ -62,9 +62,8 @@ I am not using `Makefile` in development process, so the **lists of source files
 - Setup the server_names or not.
 - Execute CGI based on certain file extension (for example .php)
 - Turn on or off directory listing. (?)
-- Execute CGI based on certain file extension (for example .php).
 # Config
-Like `nginx.conf` but with less functional supported. This project follows philosophy of forward compatibility - meaning that all valid configs for WebServ will be also valid for NGINX, and will work in exact same way.
+Like `nginx.conf` but with less functional supported. This project follows philosophy of forward compatibility - meaning that all valid configs for WebServ will be also valid for NGINX, and will work in exact same way *EXCEPT* for the [log](#log) and [upload_store](#upload_store) directive. More on that in dedicated sections.
 Feel free to consult the test configs provided in `test/test_resources`. 
 ## Config structure
 Config consists of **contexts** and **directives**.
@@ -79,6 +78,7 @@ For now, webserv supports the following contexts:
 #### Server
 The main context of the instance of the HTTP server. At least one should be defined in the config. 
 Server context can't be empty - it should contain mandatory server-level directives: 
+- *[log](#log)* (unique)
 - *[server_name](#server_name)* (unique)
 - *[listen](#listen)* (unique)
 
@@ -221,6 +221,8 @@ directive [ ARG1 ] [ ARG... ];
 Has only one *arg* which sets the port, used by the server for requests listening.
 ##### server_name
 Should define server's host name, but only works for *localhost* right now
+##### log
+Path to directory where log file named `servername_port.log` is going to be located. Actual nginx creates 2 log files : `access.log` and `error.log`. Nginx only outputs basic information to that logs, such as what was requested and what was returned.
 #### Location-level directives
 ##### root
 Can have only one arg, which is a path for a location, or server's root directory. For example:

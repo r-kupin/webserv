@@ -53,7 +53,8 @@ int Server::UploadFromCURL(ClientRequest &request, const std::string &filename,
 void    prepare_buffer(v_char &body, char *buffer, const ClientRequest &request,
                        const std::string &delimiter) {
         // remove metadata
-        body.erase(body.begin(), body.begin() + request.GetCurlMetadataLength(delimiter));
+        body.erase(body.begin(), body.begin() +
+                    request.GetCurlMetadataLength(delimiter));
         if (!body.empty()) {
             // it is first iteration after metadata processing, and body_ might contain
             // data that was accidentally red. Now we copy it to buffer
