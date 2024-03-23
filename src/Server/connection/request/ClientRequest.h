@@ -37,6 +37,7 @@
 #include <netinet/in.h>
 #include <vector>
 #include <map>
+#include <fstream>
 #include "../../../Config/location/LimitExcept.h"
 
 #define BUFFER_SIZE 64
@@ -57,7 +58,7 @@ public:
 
     ClientRequest       &operator=(const ClientRequest& other);
 
-    void                Init(int client_sock);
+    void                Init(int client_sock, std::ofstream *log_file);
 
     Methods             GetMethod() const;
     const std::string   &GetAddress() const;
@@ -108,6 +109,7 @@ protected:
                                        const std::string &e) const;
 private:
 //-------------------processing-time data---------------------------------------
+    std::ofstream       *log_file_;
     v_str               raw_request_;
     std::string         associated_filename_;
 //-------------------actual request data----------------------------------------

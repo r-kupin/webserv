@@ -23,9 +23,9 @@
  */
 bool Server::ProcessHeaders(int client_sock, Connection &connection) {
     try {
-        connection.request_.Init(client_sock);
-        Log("Got client request:\n", std::cout);
-        std::cout << connection.request_ << std::endl;
+        connection.request_.Init(client_sock, &log_file_);
+        Log("Got client request:", log_file_);
+        log_file_ << connection.request_ << std::endl;
         connection.url_headers_done_ = true;
     } catch (const ZeroRead &e) {
         // socket is closed on the client's side. Remove connection
@@ -36,7 +36,7 @@ bool Server::ProcessHeaders(int client_sock, Connection &connection) {
     } catch (const EwouldblockEagain &e) {
         // socket is still active, but no data is available.
         Log("Red all available data, but request is incomplete. "
-            "We'll come back later. Maybe.");
+            "We'll come back later. Maybe.", log_file_);
         return false;
     } catch (const ReadFromSocketFailedException &) {
         // Probably, client wouldn't even be able to read our response
@@ -45,7 +45,7 @@ bool Server::ProcessHeaders(int client_sock, Connection &connection) {
         return false;
     } catch (const ClientRequest::RequestException &) {
         // notify client about it
-        Log("Request misconfigured");
+        Log("Request misconfigured", log_file_);
         connection.location_.SetReturnCode(BAD_REQUEST);
         connection.url_headers_done_ = true;
         connection.body_done_ = true;
@@ -55,9 +55,8 @@ bool Server::ProcessHeaders(int client_sock, Connection &connection) {
 
 bool Server::ProcessBody(int client_sock, Connection &connection) {
     try {
-        connection.location_ = ProcessRequest(connection.request_,
-                                              std::cout, client_sock);
-        Log("Request processed", std::cout);
+        connection.location_ = ProcessRequest(connection.request_, client_sock);
+        Log("Request processed", log_file_);
         connection.body_done_ = true;
     } catch (const ZeroRead &) {
         CloseConnectionWithLogMessage(client_sock,
@@ -70,12 +69,17 @@ bool Server::ProcessBody(int client_sock, Connection &connection) {
                                       "uploading file");
         return false;
     } catch (const EwouldblockEagain &) {
+        // socket is still active, but no data is available.
+        Log("Red all available data, but request is incomplete. "
+            "We'll come back later. Maybe.", log_file_);
         return false;
     } catch (const EwouldblockEagainUpload &) {
+        Log("Red all available data, but request is incomplete. "
+            "We'll come back later. Maybe.", log_file_);
         return false;
     } catch (const SendContinueFailedException &) {
         Log("Can't send 100 Continue. Seems like client won't receive "
-            "our response as well");
+            "our response as well", log_file_);
         return false;
     } catch (const ReadFromSocketFailedException &) {
         CloseConnectionWithLogMessage(client_sock, "IO failed");
@@ -84,7 +88,7 @@ bool Server::ProcessBody(int client_sock, Connection &connection) {
         CloseConnectionWithLogMessage(client_sock, "IO failed");
         return false;
     } catch (const ClientRequest::RequestException &) {
-        Log("Request misconfigured");
+        Log("Request misconfigured", log_file_);
         connection.location_.SetReturnCode(BAD_REQUEST);
         connection.body_done_ = true;
     }
@@ -92,13 +96,14 @@ bool Server::ProcessBody(int client_sock, Connection &connection) {
 }
 
 void Server::Respond(int client_sock, const Connection &connection) {
-    ServerResponse response(config_.GetServerName(), config_.GetPort());
+    ServerResponse response(config_.GetServerName(), config_.GetPort(),
+                            &log_file_);
 
     response.ComposeResponse(connection.location_);
-    Log("Prepared response:\n", std::cout);
-    std::cout << response << std::endl;
+    Log("Prepared response:", log_file_);
+    log_file_ << response << std::endl;
     response.SendResponse(client_sock);
-    Log("Response sent\n", std::cout);
+    Log("Response sent", log_file_);
     // response sent: reset the connection for potentially more requests on
     // this socket
     connections_[client_sock] = Connection();

@@ -9,7 +9,7 @@
 /*   Updated: 2024/03/18 19:55:51 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-
+/**
 		Description
 
 		1. The server starts by reading the nginx configuration file, which
@@ -74,9 +74,9 @@ int main(int ac, char** av) {
         Config conf = try_open_configs(ac, av);
         std::cout << "Config is on path " + conf.getConfPath() +
                         " is loaded.  Creating servers.." << std::endl;
-        signal(SIGINT, Server::Stop);
-        ServerManager server_manager(conf);
-        server_manager.RunAll();
+        ServerManager server_manager;
+        server_manager.Init(conf);
+        server_manager.Start();
     } catch (const Config::ConfigException& e) {
         std::cout << "No config is loaded, startup failed!" << std::endl;
         return (1);

@@ -13,38 +13,32 @@
 #include <iostream>
 #include <unistd.h>
 #include <cstring>
-#include "ServerExceptions.h"
 
 #include "Server.h"
 
 void Server::Init() {
-    try {
-        struct addrinfo *addr = NULL;
+    struct addrinfo *addr = NULL;
 
-        PresetAddress(&addr);
-        CreateSocket(addr);
-        SetSocketOptions(addr);
-        BindSocket(addr);
-        freeaddrinfo(addr);
-        ListenSocket();
-        CreateEpoll();
-        AddEpollInstance();
-    } catch (const AddrinfoCreationFailed &) {
-        std::cout << "Failed getting address info! Unable to resolve a domain"
-                     " name or IP address or port" << std::endl;
-    } catch (const SocketOpeningFailureException &) {
-        std::cout << "Failed to create new socket" << std::endl;
-    } catch (const SocketSetOptionsFailureException &) {
-        std::cout << "Failed to set socket options" << std::endl;
-    } catch (const SocketBindingFailureException &) {
-        std::cout << "Failed to Bind Socket" << std::endl;
-    } catch (const SocketListeningFailureException &) {
-        std::cout << "Failed to Listen Socket" << std::endl;
-    } catch (const EpollCreationFailed &) {
-        std::cout << "Failed to Create Epoll Instance" << std::endl;
-    } catch (const EpollAddFailed &) {
-        std::cout << "Failed to add socket to Epoll Instance" << std::endl;
-    }
+    CreateLogFile();
+    PresetAddress(&addr);
+    CreateSocket(addr);
+    SetSocketOptions(addr);
+    BindSocket(addr);
+    freeaddrinfo(addr);
+    ListenSocket();
+    CreateEpoll();
+    AddEpollInstance();
+}
+
+void Server::CreateLogFile() {
+    std::string log_file_name = config_.GetServerName() + "_" +
+                                Utils::NbrToString(config_.GetPort()) + ".log";
+    if (!config_.GetLogDirAddress().empty())
+        log_file_name = config_.GetLogDirAddress() + "/" + log_file_name;
+    log_file_.open(log_file_name.c_str(), std::ios::app);
+    if (!log_file_.is_open())
+        ThrowException("Failed to open log file: " +
+                        config_.GetLogDirAddress() + "/" + log_file_name);
 }
 
 /**
@@ -71,7 +65,9 @@ void Server::PresetAddress(addrinfo **addr) {
     if (getaddrinfo(config_.GetServerName().c_str(), // localhost
                     Utils::NbrToString(config_.GetPort()).c_str(), // port
                     &hints, addr)) {
-        throw AddrinfoCreationFailed();
+        ThrowException("Failed getting address info! "
+                       "Unable to resolve a domain name or IP address or port",
+                       log_file_);
     }
 }
 
@@ -88,7 +84,7 @@ void Server::CreateSocket(addrinfo *res) {
     socket_ = socket(res->ai_family,res->ai_socktype,0);
     if (socket_ < 0) {
         freeaddrinfo(res);
-        throw SocketOpeningFailureException();
+        ThrowException("Failed to create new socket", log_file_);
     }
 }
 
@@ -100,13 +96,13 @@ void Server::CreateSocket(addrinfo *res) {
  * address that is already in use, as long as the original socket using that
  * @param res
  */
-void Server::SetSocketOptions(addrinfo *res) const {
+void Server::SetSocketOptions(addrinfo *res) {
     int opt = 1;
     if (setsockopt(socket_, SOL_SOCKET, SO_REUSEADDR,
                    &opt, sizeof(opt)) < 0) {
         freeaddrinfo(res);
         close(socket_);
-        throw SocketSetOptionsFailureException();
+        ThrowException("Failed to set socket options", log_file_);
     }
 }
 
@@ -123,21 +119,22 @@ void Server::BindSocket(addrinfo *res) {
     if (bind(socket_, res->ai_addr, res->ai_addrlen)) {
         freeaddrinfo(res);
         close(socket_);
-        throw SocketBindingFailureException();
+        ThrowException("Failed to Bind Socket", log_file_);
     }
 }
 
 void Server::ListenSocket()  {
     if (listen(socket_, SOMAXCONN) < 0) {
         close(socket_);
-        throw SocketListeningFailureException();
+        ThrowException("Failed to Listen Socket", log_file_);
     }
 }
 
 void Server::CreateEpoll() {
     epoll_fd_= epoll_create(1);
-    if (epoll_fd_ < 0)
-        throw EpollCreationFailed();
+    if (epoll_fd_ < 0) {
+        ThrowException("Failed to Create Epoll Instance", log_file_);
+    }
 }
 
 void Server::AddEpollInstance() {
@@ -146,5 +143,5 @@ void Server::AddEpollInstance() {
     event.data.fd = socket_;
     event.events = EPOLLIN | EPOLLOUT;
     if (epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, socket_, &event) < 0)
-        throw EpollAddFailed();
+        ThrowException("Failed to add socket to Epoll Instance", log_file_);
 }

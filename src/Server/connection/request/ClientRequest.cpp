@@ -18,7 +18,7 @@
 
 ClientRequest::ClientRequest() {}
 
-ClientRequest::ClientRequest(int client_sock) { Init(client_sock);}
+ClientRequest::ClientRequest(int client_sock) { Init(client_sock, NULL);}
 
 ClientRequest& ClientRequest::operator=(const ClientRequest& other) {
     if (this != &other) {
@@ -37,7 +37,8 @@ ClientRequest& ClientRequest::operator=(const ClientRequest& other) {
     return *this;
 }
 
-void ClientRequest::Init(int client_sock) {
+void ClientRequest::Init(int client_sock, std::ofstream *log_file) {
+    log_file_ = log_file;
     socket_ = client_sock;
     ReadFromSocket(socket_, BUFFER_SIZE);
     CheckRequest(raw_request_);

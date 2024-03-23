@@ -15,69 +15,65 @@
 #include <csignal>
 #include "../../server/Server.h"
 
-bool Server::TryCreateOutputFile(const std::string &dir, const std::string &filename, size_t size, std::ostream &os) const {
-    (void)os;
+bool Server::TryCreateOutputFile(const std::string &dir,
+                                 const std::string &filename, size_t size) {
     try {
         if (Utils::CheckFilesystem(dir) != DIRECTORY) {
             Log("directory " + dir + " where server is trying to create a "
-                                     "file does not exist");
+                                     "file does not exist", log_file_);
             return false;
         }
         if (Utils::FileExists(filename)) {
-            Log("file " + filename + " already exists");
+            Log("file " + filename + " already exists", log_file_);
             return false;
         }
         if (!Utils::CheckPermissions(filename)) {
             Log("server doesn't have proper permissions to create " +
-                filename + " file");
+                filename + " file", log_file_);
             return false;
         }
         if (!Utils::CheckSpace(filename, size)) {
             Log("not enough disk space to create a file with size " +
-                Utils::NbrToString(size));
+                Utils::NbrToString(size), log_file_);
             return false;
         }
         return true;
     } catch (const Utils::StatvfsException &) {
-        Log("can't check available space with statvfs");
+        Log("can't check available space with statvfs", log_file_);
     }
     return false;
 }
 
-int Server::UploadFile(ClientRequest &request,
-                       l_loc_c_it found,
-                       int socket,
-                       std::ostream &os) {
-    static int  files_uploaded_;
+bool        request_has_all_required_headers(const ClientRequest &request) {
+    return request.HasHeader("User-Agent") &&
+            request.HasHeader("Content-Type") &&
+            request.HasHeader("Content-Length");
+}
 
-    std::string dirname;
-    if (found->uploads_path_.at(0) == '/')
-        dirname = found->uploads_path_;
-    else
-        dirname = config_.GetConstRoot().root_ + "/" + found->uploads_path_;
-
-    if (request.HasHeader("User-Agent") &&
-        request.HasHeader("Content-Type") &&
-        request.HasHeader("Content-Length")) {
-
+int Server::UploadFile(ClientRequest &request, l_loc_c_it found, int socket) {
+    std::string dirname = Utils::DirName(found->uploads_path_,
+                                         config_.GetConstRoot().root_);
+    if (request_has_all_required_headers(request)) {
         if (request.GetAssociatedFilename().empty()) {
+            // file supposed to store upload doesn't exist
             request.SetAssociatedFilename(dirname + "/" +
                                           Utils::NbrToString(files_uploaded_++));
             if (TryCreateOutputFile(dirname, request.GetAssociatedFilename(),
-                                    request.GetDeclaredBodySize(), os)) {
+                                    request.GetDeclaredBodySize())) {
                 // file created successfully
                 if (request.IsCurlRequest())
                     return UploadFromCURL(request, request.GetAssociatedFilename(), socket);
                 // wget doesn't work on nginx - sends file without tailing linebreak
-                Log("Only uploads via curl are supported for now");
+                Log("Only uploads via curl are supported for now", log_file_);
                 return ONLY_CURL_UPLOADS_SUPPORTED;
             }
             return FAILED_TO_CREATE_OUTPUT_FILE;
         } else {
+            // continue upload to already existing file
             return UploadFromCURL(request, request.GetAssociatedFilename(), socket);
         }
     }
     Log("Mandatory headers User-Agent, Content-Type and/or Content-Length are "
-        "missing");
+        "missing", log_file_);
     return BAD_REQUEST;
 }

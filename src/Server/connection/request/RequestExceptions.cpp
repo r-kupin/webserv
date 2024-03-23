@@ -3,7 +3,7 @@
 
 void ClientRequest::ThrowException(const std::string& msg,
                                    const std::string &e) const {
-    std::cout << "ClientRequest: " + msg + "\n" << std::endl;
+    *log_file_ << "ClientRequest: " + msg + "\n" << std::endl;
     if (e == "BadURL")
         throw BadURLException();
     else if (e == "BadRequestException")

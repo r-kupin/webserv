@@ -57,3 +57,12 @@ std::string Utils::FileToString(const std::string &address) {
     return std::string((std::istreambuf_iterator<char>(file)),
                        std::istreambuf_iterator<char>());
 }
+
+std::string Utils::DirName(const std::string &address, const std::string &root) {
+    if (address.at(0) == '/') {
+        // absolute address
+        return address;
+    }
+    // relative address - append to root
+    return root + "/" + address;
+}

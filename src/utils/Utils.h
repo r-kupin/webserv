@@ -51,6 +51,8 @@ public:
     static bool         CheckSpace(const std::string &address, size_t size);
     static bool         CheckPermissions(const std::string &address);
     static std::string  FileToString(const std::string &address);
+    static std::string  DirName(const std::string &address,
+                                const std::string &root);
 //-------------------string/container utils-------------------------------------
     static std::string  NiceTimestamp();
     static std::string  NbrToString(size_t n);

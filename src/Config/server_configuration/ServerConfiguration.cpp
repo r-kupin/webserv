@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /*                                                         :::      ::::::::  */
-/*    ConfigSubmodules.cpp                               :+:      :+:    :+:  */
+/*    ServerConfiguration.cpp                            :+:      :+:    :+:  */
 /*                                                     +:+ +:+         +:+    */
 /*    By: rokupin <rokupin@student.42.fr>            +#+  +:+       +#+       */
 /*                                                 +#+#+#+#+#+   +#+          */
@@ -28,6 +28,7 @@ ServerConfiguration::ServerConfiguration()
 ServerConfiguration::ServerConfiguration(const ServerConfiguration &other)
 : port_(other.port_),
 server_name_(other.server_name_),
+log_dir_address_(other.log_dir_address_),
 locations_(other.locations_) {}
 //-------------------satic utils------------------------------------------------
 bool        ServerConfiguration::MarkDefined(const std::string &key,
@@ -54,12 +55,15 @@ bool        ServerConfiguration::UMarkDefined(const std::string &key, bool &flag
 //-------------------setup directives handlers----------------------------------
 void        ServerConfiguration::ProcessDirectives(
                                               std::vector<v_str> &directives) {
+//-------------------server level
     bool srv_name = false;
+    bool port = false;
+    bool log = false;
+//-------------------root location level
     bool cl_max_bd_size = false;
     bool err = false;
     bool index = false;
     bool root = false;
-    bool port = false;
     bool uploads = false;
 
     if (directives.empty())
@@ -70,6 +74,8 @@ void        ServerConfiguration::ProcessDirectives(
                 server_name_ = directives[i][1];
             } else if (UMarkDefined("listen", port, directives[i])) {
                 HandlePort(directives[i]);
+            } else if (UMarkDefined("log", log, directives[i])) {
+                HandleLog(directives[i]);
             } else if (UMarkDefined("client_max_body_size", cl_max_bd_size,
                                     directives[i])) {
                 GetRoot().HandleClientMaxBodySize(directives[i]);
@@ -99,6 +105,14 @@ void ServerConfiguration::HandlePort(const v_str &directive) {
         }
     }
     ThrowServerConfigError("port directive is wrong");
+}
+
+void ServerConfiguration::HandleLog(const v_str &directive) {
+    if (directive.size() == 2 && !directive[1].empty()) {
+        log_dir_address_ = directive[1];
+        return;
+    }
+    ThrowServerConfigError("log address directive is wrong");
 }
 
 //-------------------operator overloads & exceptions----------------------------
@@ -135,6 +149,10 @@ const l_loc &ServerConfiguration::GetLocations() const {
     return locations_;
 }
 
+const std::string &ServerConfiguration::GetLogDirAddress() const {
+    return log_dir_address_;
+}
+
 bool        ServerConfiguration::operator==(
                                         const ServerConfiguration &rhs) const {
     if (port_ != rhs.port_)
@@ -160,6 +178,7 @@ ServerConfiguration &ServerConfiguration::operator=(
 std::ostream &operator<<(std::ostream &os, const ServerConfiguration &config) {
     os << "hostname: " << config.GetServerName() << "\n";
     os << "port: " << config.GetPort() << "\n";
+    os << "log directory: " << config.GetLogDirAddress() << "\n";
     os << config.GetConstRoot() << "\n";
     os << std::endl;
     return os;

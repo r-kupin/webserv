@@ -25,7 +25,8 @@ public:
     ServerResponse(const Location &synth,
                    const std::string &server_name, int port);
 
-    ServerResponse(const std::string &serverName, int port);
+    ServerResponse(const std::string &serverName, int port,
+                   std::ofstream *log_file);
 
     ~ServerResponse();
 
@@ -50,6 +51,8 @@ protected:
     void                        AddHeader(const std::string &key,
                                           const std::string &value);
 private:
+    std::ofstream   *log_file_;
+
     std::string     top_header_;
     std::string     body_str_;
     std::string     server_name_;

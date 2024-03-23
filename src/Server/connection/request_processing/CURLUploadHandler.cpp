@@ -26,7 +26,7 @@ int Server::UploadFromCURL(ClientRequest &request, const std::string &filename,
     size_t              bound_pos = content_type.find(kBoundary);
 
     if (file_fd < 0) {
-        Log("Unable to open file to write uploaded data");
+        Log("Unable to open file to write uploaded data", log_file_);
         return FAILED_TO_CREATE_OUTPUT_FILE;
     } else if (bound_pos != std::string::npos) {
         // get delimiter from "Content-Type" header
@@ -46,7 +46,7 @@ int Server::UploadFromCURL(ClientRequest &request, const std::string &filename,
             return BAD_REQUEST;
         }
     }
-    Log("file bound delimitation is missing");
+    Log("file bound delimitation is missing", log_file_);
     return BAD_REQUEST;
 }
 
@@ -71,18 +71,18 @@ int Server::PerformUpload(const ClientRequest &request, int socket, int file_fd,
         ssize_t bytes_read = recv(socket, buffer + body.size(),
                                   static_cast<size_t>(FILE_BUFFER_SIZE) - body.size(), 0);
         if (bytes_read < 1) {
-            UpoladNoDataAvailable(file_fd, bytes_read);
+            NoUpoladDataAvailable(file_fd, bytes_read);
         } else {
             size_t  end = Utils::FindInBuffer(buffer, bytes_read + body.size(), delimiter);
 
             if (end != std::string::npos) {
                 if (write(file_fd, buffer, end) == -1)
-                    Log("Write to file failed");
+                    Log("Write to file failed", log_file_);
                 else
                     return OK;
             } else {
                 if (write(file_fd, buffer, bytes_read + body.size()) == -1)
-                    Log("Write to file failed");
+                    Log("Write to file failed", log_file_);
                 body.clear();
             }
         }
@@ -90,18 +90,20 @@ int Server::PerformUpload(const ClientRequest &request, int socket, int file_fd,
     return OK;
 }
 
-void Server::UpoladNoDataAvailable(int file_fd, ssize_t bytes_read) const {
+void Server::NoUpoladDataAvailable(int file_fd, ssize_t bytes_read) {
     if (bytes_read == 0) {
-        Log("recv returned 0 while reading file contents.");
+        Log("recv returned 0 while reading file contents.", log_file_);
         close(file_fd);
         throw ZeroReadUpload();
     } else if (errno == EWOULDBLOCK || errno == EAGAIN) {
         Log("recv returned -1 with EWOULDBLOCK || EAGAIN set while reading "
-            "file contents. We'll try later.");
+            "file contents. We'll try later.", log_file_);
         close(file_fd);
         throw EwouldblockEagainUpload();
     } else {
-        Log("recv returned -1 due to recv failure while reading file contents.");
+        Log("recv returned -1 due to recv failure while reading file contents"
+            ".", log_file_);
+        close(file_fd);
         throw IOFailedException();
     }
 }

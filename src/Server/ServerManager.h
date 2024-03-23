@@ -15,18 +15,24 @@
 
 #include "server/Server.h"
 
-typedef std::list<Server>               l_servers;
+typedef std::vector<Server>       v_servers;
+typedef std::vector<pthread_t>    v_threads;
+
+static volatile bool        is_running_ = true;
 
 class ServerManager {
 public:
     ServerManager();
-    ServerManager(const Config &config);
 
     ~ServerManager();
 
-    void RunAll();
+    void            Init(const Config &config);
+    void            Start();
+    static void     Stop(int signal);
+    static void     *StartServer(void *srv);
 private:
-    l_servers   servers_;
+    v_servers   servers_;
+    v_threads   threads_;
 };
 
 

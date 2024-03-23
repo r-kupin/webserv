@@ -32,11 +32,9 @@ void ClientRequest::TellClientToContinueIfNeed(int socket) const {
         size_t response_size = response.size();
 
         if (send(socket, response_buffer, response_size, 0) < 0)
-            std::cout << "Server has \"Expect\": \"100-continue\" header set, "
-                         "but server is unable to send this response" << std::endl;
-//        ThrowException("Server has \"Expect\": \"100-continue\" header "
-//                       "set, but server is unable to send this response",
-//                       "SendContinueFailed");
+            ThrowException("Server has \"Expect\": \"100-continue\" header "
+                       "set, but server is unable to send this response",
+                       "SendContinueFailed");
     }
 }
 

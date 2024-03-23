@@ -71,6 +71,7 @@ public:
     l_loc_c_it              GetConstRootIt() const;
     int                     GetPort() const;
     const l_loc             &GetLocations() const;
+    const std::string       &GetLogDirAddress() const;
 
     bool                    operator==(const ServerConfiguration &rhs) const;
     ServerConfiguration&    operator=(const ServerConfiguration& rhs);
@@ -90,9 +91,11 @@ private:
     static bool             UMarkDefined(const std::string &key, bool &flag,
                                      const v_str &directive);
     void                    HandlePort(const v_str &directive);
+    void                    HandleLog(const v_str &directive);
 
     int                     port_;
     std::string             server_name_;
+    std::string             log_dir_address_;
     std::list<Location>     locations_;
 };
 

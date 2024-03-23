@@ -16,8 +16,8 @@
 
 ServerResponse::ServerResponse() {}
 
-ServerResponse::ServerResponse(const std::string &serverName, int port)
-        : server_name_(serverName), port_(port) {}
+ServerResponse::ServerResponse(const std::string &serverName, int port, std::ofstream *log_file)
+        : log_file_(log_file),server_name_(serverName), port_(port) {}
 
 ServerResponse::ServerResponse(const Location &synth,
                                const std::string &server_name, int port)
@@ -113,7 +113,7 @@ void ServerResponse::AddHeader(const std::string &key,
 }
 
 void    ServerResponse::ThrowResponseException(const std::string& msg) {
-    std::cout << "Response creation failed: " << msg << std::endl;
+    *log_file_ << "Response creation failed: " << msg << std::endl;
     throw ResponseException();
 }
 

@@ -73,9 +73,8 @@ void Config::CheckServer(Node &node, ServerConfiguration &current) {
 bool Config::HasServerWithSameNameOrPort(const ServerConfiguration &config) {
     for (l_sc_c_it it = servers_.begin(); it != servers_.end(); ++it) {
         if (it != servers_.begin()) {
-            if (it->GetServerName() == config.GetServerName())
-                return true;
-            if (it->GetPort() == config.GetPort())
+            if (it->GetServerName() == config.GetServerName() &&
+            it->GetPort() == config.GetPort())
                 return true;
         }
     }

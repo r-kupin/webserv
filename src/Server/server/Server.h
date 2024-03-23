@@ -61,28 +61,26 @@
 
 #define MAX_CLIENTS 2048
 #define MAX_EVENTS 1000
-#define SOCKET_BUFFER_SIZE 8192
-
- static volatile bool        is_running_ = true;
 
 class Server {
 public:
     class ServerException : public std::exception {};
 
     Server(const Server &);
-    explicit Server(const ServerConfiguration &config);
+    explicit Server(const ServerConfiguration &config,
+                    const volatile bool &is_running_ref);
 
     void                        Start();
-    static void                 Stop(int signal);
 
-    Server                      &operator=(const Server &);
     friend std::ostream         &operator<<(std::ostream &os, const Server &server);
 protected:
 //-------------------initialisation: open sockets, create epoll...--------------
     void                        Init();
+
+    void                        CreateLogFile();
     void                        PresetAddress(addrinfo **addr);
     void                        CreateSocket(addrinfo *res);
-    void                        SetSocketOptions(addrinfo *res) const;
+    void                        SetSocketOptions(addrinfo *res);
     void                        BindSocket(addrinfo *res);
     void                        ListenSocket();
     void                        CreateEpoll();
@@ -99,9 +97,7 @@ protected:
                                             Connection &connection);
     void                        Respond(int client_sock,
                                         const Connection &connection);
-    Location                    ProcessRequest(ClientRequest &request,
-                                               std::ostream &os,
-                                               int socket = -1);
+    Location                    ProcessRequest(ClientRequest &request, int socket);
     bool                        AccessForbidden(l_loc_c_it found,
                                                 Methods method) const;
     bool                        RequestBodyExceedsLimit(l_loc_c_it found,
@@ -110,24 +106,20 @@ protected:
     void                        HandleStatic(const ClientRequest &request,
                                              const Srch_c_Res &res,
                                              const l_loc_c_it &found,
-                                             Location &synth,
-                                             std::ostream &os) const;
+                                             Location &synth);
     void                        SynthIndex(Location &synth,
                                            const Srch_c_Res &res,
-                                           int fs_status,
-                                           std::ostream &os) const;
+                                           int fs_status);
     std::string                 FindIndexToSend(const l_loc_c_it &found,
                                                 const std::string &compliment) const;
     void                        SynthFile(Location &synth,
                                           const Srch_c_Res &res,
                                           int fs_status,
-                                          const std::string &request_address,
-                                          std::ostream &os) const;
+                                          const std::string &request_address);
 //-------------------upload request processing----------------------------------
     int                         UploadFile(ClientRequest &request,
                                            l_loc_c_it found,
-                                           int socket,
-                                           std::ostream &os);
+                                           int socket);
     int                         UploadFromCURL(ClientRequest &request,
                                                const std::string &filename,
                                                int socket);
@@ -136,22 +128,24 @@ protected:
                                               const std::string &delimiter);
     bool                        TryCreateOutputFile(const std::string &dir,
                                                     const std::string &filename,
-                                                    size_t size,
-                                                    std::ostream &os) const;
+                                                    size_t size);
     void                        HandleUpload(ClientRequest &request,
                                              int socket,
                                              l_loc_c_it &found,
-                                             Location &synth,
-                                             std::ostream &os);
+                                             Location &synth);
 //-------------------misc utils-------------------------------------------------
-    static bool                 SetDescriptorNonBlocking(int sockfd);
+    bool                        SetDescriptorNonBlocking(int sockfd);
     void                        PrintEventInfo(int events, int fd, int i);
     void                        Log(const std::string & msg,
                                     std::ostream &os = std::cout) const;
     void                        CloseConnectionWithLogMessage(int client_sock,
                                                               const std::string &msg);
+    void                        ThrowException(const std::string & msg,
+                                               std::ostream &os = std::cout) const;
 private:
+    const volatile bool         &is_running_;
     const ServerConfiguration   &config_;
+    int                         files_uploaded_;
     int                         socket_;
     int                         epoll_fd_;
     int                         epoll_returns_count_;
@@ -159,8 +153,9 @@ private:
     int                         epoll_connection_count_;
     int                         epoll_in_out_count_;
     std::vector<Connection>     connections_;
+    std::ofstream               log_file_;
 
-    void UpoladNoDataAvailable(int file_fd, ssize_t bytes_read) const;
+    void NoUpoladDataAvailable(int file_fd, ssize_t bytes_read);
 };
 
 #endif //WEBSERV_SERVER_H

@@ -18,26 +18,22 @@
 
 void Server::Start() {
     Init();
-    Log("Server initialized successfully..\n");
-    std::cout << *this << std::endl;
+    Log("Server initialized successfully!", log_file_);
+    log_file_ << *this << std::endl;
     if (epoll_fd_ > 0) {
-        Log("started server at " + Utils::NbrToString(config_.GetPort()) + " port");
+        Log("Started server at " +
+            Utils::NbrToString(config_.GetPort()) + " port.", log_file_);
         while (is_running_)
             EventLoop();
         epoll_ctl(epoll_fd_, EPOLL_CTL_DEL, epoll_fd_, NULL);
         close(epoll_fd_);
-        Log("stpopped");
+        Log("Server stopped.", log_file_);
+        close(socket_);
     } else {
-        Log("It seems like " + Utils::NbrToString(config_.GetPort()) +
-            " port is already in use. Aborting.");
-    }
-    close(socket_);
-}
-
-void Server::Stop(int signal) {
-    if (signal == SIGINT) {
-        std::cout << "stopping servers" << std::endl;
-        is_running_ = false;
+        close(socket_);
+        ThrowException("It seems like " +
+                        Utils::NbrToString(config_.GetPort()) +
+                        " port is already in use. Aborting.", log_file_);
     }
 }
 
@@ -58,25 +54,26 @@ void Server::Stop(int signal) {
  */
 void    Server::EventLoop() {
     epoll_event events[MAX_EVENTS];
-    int nfds = epoll_wait(epoll_fd_, events, MAX_EVENTS, -1);
+    int nfds = epoll_wait(epoll_fd_, events, MAX_EVENTS, 500);
     if (is_running_) {
         epoll_returns_count_++;
         if (nfds == -1) {
-            // Handle epoll_wait error
-            return;
-        }
-        for (int i = 0; i < nfds; ++i) {
-            int fd = events[i].data.fd;
-            PrintEventInfo(events[i].events, fd, i);
-            if (fd == socket_) {
-                // New connection
-                struct sockaddr_in client_addr;
-                socklen_t client_len = sizeof(client_addr);
-                int client_sock = accept(socket_, (struct sockaddr *) &client_addr,
-                                         &client_len);
-                CheckRequest(client_sock);
-            } else if (events[i].events & EPOLLIN && events[i].events & EPOLLOUT) {
-                HandleEvents(fd);
+            ThrowException("Epoll wait failed. Shutting down.", log_file_);
+        } else {
+            for (int i = 0; i < nfds; ++i) {
+                int fd = events[i].data.fd;
+                PrintEventInfo(events[i].events, fd, i);
+                if (fd == socket_) {
+                    // New connection
+                    struct sockaddr_in client_addr;
+                    socklen_t client_len = sizeof(client_addr);
+                    int client_sock = accept(socket_,
+                                             (struct sockaddr *) &client_addr,
+                                             &client_len);
+                    CheckRequest(client_sock);
+                } else if (events[i].events & EPOLLIN && events[i].events & EPOLLOUT) {
+                    HandleEvents(fd);
+                }
             }
         }
     }
@@ -109,12 +106,12 @@ void Server::HandleEvents(int client_sock) {
 
 int Server::CheckRequest(int client_sock) {
     if (client_sock < 0) {
-        Log("Error accepting connection!");
+        Log("Error accepting connection!", log_file_);
     } else if (AddClientToEpoll(client_sock)) {
         Log("Accepted client connection from socket " +
-            Utils::NbrToString(client_sock));
+            Utils::NbrToString(client_sock), log_file_);
     } else {
-        Log("Error adding client socket to epoll");
+        Log("Error adding client socket to epoll", log_file_);
         close(client_sock);
     }
     return client_sock;
@@ -127,6 +124,9 @@ bool Server::AddClientToEpoll(int client_sock) {
     epoll_event event;
     event.events = EPOLLIN | EPOLLOUT | EPOLLET;
     event.data.fd = client_sock;
-    SetDescriptorNonBlocking(client_sock);
-    return epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, client_sock, &event) != -1;
+    if (SetDescriptorNonBlocking(client_sock))
+        return epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, client_sock, &event) != -1;
+    Log("Can't set descriptor " + Utils::NbrToString(client_sock) +
+        " to nonblocking mode.", log_file_);
+    return false;
 }
