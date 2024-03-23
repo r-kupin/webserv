@@ -1,6 +1,7 @@
 Minimalist re-implementation of nginx web server.
 # HowTo
-**WARNING** 
+**WARNING**
+*TESTS ARE OUTDATED*
 I am not using `Makefile` in development process, so the **lists of source files might be outdated**, and therefore - project might not compile. However - it is quite easy to get up-to-date source lists:
 - Enter repository root
 - *SRCS*: all project sources `find src/ -name \*.cpp -print `
@@ -22,37 +23,45 @@ I am not using `Makefile` in development process, so the **lists of source files
 # Features
 ## Done
 - Your program has to take a configuration file as argument, or use a default path.
+- Your server must never block.
+- Client can be bounced properly if necessary. (? return, I guess)
+- It must be non-blocking
+- Use only 1 poll() (or equivalent) for all the I/O operations between the client and the server (listen included).
 - poll() (or equivalent) must check read and write at the same time.
+- Never do a read or a write operation without going through poll() (or equivalent).
+- %% errno %%
 - You must never do a read or a write operation without going through poll() (or equivalent).
-- Choose the [port](#listen) and [host](#server_name) of each server.
-- Setup default [error_pages](#error_page).
-- Setup routes with one or multiple of the following rules/configuration [return](#return)
-	- Define a list of accepted HTTP methods for the route.
-	- Define a HTTP redirection.
-	- Define a directory or a file from where the file should be searched
-	- Make the route able to accept uploaded files and configure where they should be saved
-- Set a default file to answer if the request is a directory ([index](#index)).
-- Make it work with POST and GET methods.
+- Non-blocking IO
+- %% A request to your server should never hang forever. %%
 - Your server must be compatible with the web browser of your choice
 - Your HTTP response status codes must be accurate.
 - You server must have default error pages if none are provided.
 - You must be able to serve a fully static website.
-- Limit client body size.
-- Clients must be able to upload files
-- upload_store implement
-- default client_max_body_size 1Mb
-- multiple simultaneous requests to the same server
-- client can be bounced properly if necessary.
-- Use only 1 poll() (or equivalent) for all the I/O operations between the client and the server (listen included).
-- Non-blocking IO
+- Clients must be able to upload files. ([upload_store](#upload_store))
+- Make it work with %% DELETE, %%POST and GET methods.
+- Stress test resilience
+- %% Multiple ports %%
+- Choose the [port](#listen) and [host](#server_name) of each server.
+- %% server_names %%
+- %% default server for host:port %%
+- Setup default [error_pages](#error_page).
+- Limit [client_max_body_size](#client_max_body_size).
+- Setup routes with one or multiple of the following rules/configuration:
+	- Define a list of accepted HTTP methods for the route. ([limit_except](#Limit_except))
+	- Define a HTTP redirection. ([return](#return))
+	- Define a directory or a file from where the file should be searched. ([root](#root))
+- Set a default file to answer if the request is a directory ([index](#index)).
+- %% CGI %%
+- Make the route able to accept uploaded files and configure where they should be saved. ([upload_store](#upload_store))
 ## ToDo
-- Your server must never block
-- Setup the server_names or not.
-- Turn on or off directory listing. (?)
-- Your server must be able to listen to multiple ports 
-	- multiple domains
+- Stop checking the value of **errno**
 - A request to your server should never hang forever.
+- DELETE method handling
+- One server listening to multiple ports & multiple domains
 - The first server for a host:port will be the default for this host:port (that means it will answer to all the requests that don’t belong to an other server).
+- Setup the server_names or not.
+- Execute CGI based on certain file extension (for example .php)
+- Turn on or off directory listing. (?)
 - Execute CGI based on certain file extension (for example .php).
 # Config
 Like `nginx.conf` but with less functional supported. This project follows philosophy of forward compatibility - meaning that all valid configs for WebServ will be also valid for NGINX, and will work in exact same way.
