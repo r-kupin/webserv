@@ -64,13 +64,11 @@ int ClientRequest::ReadBodyPart(int socket, int buffer_size, char *buffer) {
             ThrowException("recv returned 0 while reading curl metadata. "
                            "We'll try later.",
                            "ZeroRead");
-        } else if (errno == EWOULDBLOCK || errno == EAGAIN) {
+        } else {
+            // errno == EWOULDBLOCK || errno == EAGAIN
             ThrowException("recv returned -1 with EWOULDBLOCK || EAGAIN set "
                            "while reading curl metadata. We'll try later.",
                            "EwouldblockEagain");
-        } else {
-            ThrowException("recv returned -1 due to recv failure while reading curl metadata",
-                           "ReadFailed");
         }
     } else {
         body_.insert(body_.end(), buffer, buffer + bytes_read);

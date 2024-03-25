@@ -4,7 +4,8 @@
 
 class ParsedRequestLevelTest : public ::testing::Test, public ClientRequest {
 public:
-    ParsedRequestLevelTest() : ClientRequest() {}
+    ParsedRequestLevelTest() : ClientRequest(), ClientRequest(<#initializer#>),
+                               ClientRequest(<#initializer#>) {}
 protected:
     v_str firefox_GET_req_;
     v_str example_POST_req_;

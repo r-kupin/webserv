@@ -20,6 +20,7 @@ ServerManager::~ServerManager() {}
 
 void ServerManager::Init(const Config &config) {
     signal(SIGINT, Stop);
+    signal(SIGSTOP, Stop);
     for (l_sc_c_it it = config.getConstServers().begin();
          it != config.getConstServers().end(); ++it) {
         servers_.push_back(Server(*it, is_running_));
@@ -50,7 +51,7 @@ void *ServerManager::StartServer(void *srv) {
 }
 
 void ServerManager::Stop(int signal) {
-    if (signal == SIGINT) {
+    if (signal == SIGINT || signal == SIGSTOP) {
         std::cout << "\nStopping servers..." << std::endl;
         is_running_ = false;
     }

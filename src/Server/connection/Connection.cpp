@@ -11,21 +11,20 @@
 /******************************************************************************/
 #include "Connection.h"
 
-Connection::Connection()
-        : url_headers_done_(false),
-        body_done_(false),
-        fd_(0),
-        request_() {}
 
-Connection::Connection(int fd, const ClientRequest &request)
-        : fd_(fd),
-        request_(request) {}
+Connection::Connection(v_c_b &is_running)
+    : is_running_(is_running),
+    url_headers_done_(false),
+    body_done_(false),
+    fd_(0),
+    request_(is_running) {}
 
 Connection::Connection(const Connection &other)
-        : url_headers_done_(other.url_headers_done_),
-        body_done_(other.body_done_),
-        fd_(other.fd_),
-        request_(other.request_) {}
+    : is_running_(other.is_running_),
+    url_headers_done_(other.url_headers_done_),
+    body_done_(other.body_done_),
+    fd_(other.fd_),
+    request_(other.request_) {}
 
 Connection &Connection::operator=(const Connection &other) {
     if (this == &other)

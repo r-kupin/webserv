@@ -106,5 +106,5 @@ void Server::Respond(int client_sock, const Connection &connection) {
     Log("Response sent", log_file_);
     // response sent: reset the connection for potentially more requests on
     // this socket
-    connections_[client_sock] = Connection();
+    connections_[client_sock] = Connection(is_running_);
 }

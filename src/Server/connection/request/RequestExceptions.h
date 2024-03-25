@@ -4,6 +4,13 @@
 #include "ClientRequest.h"
 
 
+class Stopped : public ClientRequest::RequestException {
+public:
+    Stopped() : ClientRequest::RequestException() {}
+
+    const char *what() const throw();
+};
+
 class FalseCall : public ClientRequest::RequestException {
 public:
     FalseCall() : ClientRequest::RequestException() {}

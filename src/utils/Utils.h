@@ -25,6 +25,7 @@
 #define DIRECTORY 2
 #define ELSE 3
 
+typedef volatile const bool                                 v_c_b;
 typedef std::set<std::string>::const_iterator               s_str_c_it;
 
 typedef std::vector<char>                                   v_char;

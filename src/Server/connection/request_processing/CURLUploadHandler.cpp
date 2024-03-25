@@ -96,15 +96,11 @@ void Server::NoUpoladDataAvailable(int file_fd, ssize_t bytes_read) {
         Log("recv returned 0 while reading file contents.", log_file_);
         close(file_fd);
         throw ZeroReadUpload();
-    } else if (errno == EWOULDBLOCK || errno == EAGAIN) {
+    } else {
+        // errno == EWOULDBLOCK || errno == EAGAIN
         Log("recv returned -1 with EWOULDBLOCK || EAGAIN set while reading "
             "file contents. We'll try later.", log_file_);
-        close(file_fd);
+        close(file_fd); // why ?
         throw EwouldblockEagainUpload();
-    } else {
-        Log("recv returned -1 due to recv failure while reading file contents"
-            ".", log_file_);
-        close(file_fd);
-        throw IOFailedException();
     }
 }

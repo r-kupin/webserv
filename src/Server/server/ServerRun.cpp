@@ -54,7 +54,8 @@ void Server::Start() {
  */
 void    Server::EventLoop() {
     epoll_event events[MAX_EVENTS];
-    int nfds = epoll_wait(epoll_fd_, events, MAX_EVENTS, 500);
+    // change timeout from -1 to be able to shut down server with ^C
+    int nfds = epoll_wait(epoll_fd_, events, MAX_EVENTS, -1);
     if (is_running_) {
         epoll_returns_count_++;
         if (nfds == -1) {

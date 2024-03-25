@@ -38,6 +38,7 @@
 #include <vector>
 #include <map>
 #include <fstream>
+
 #include "../../../Config/location/LimitExcept.h"
 
 #define BUFFER_SIZE 64
@@ -53,8 +54,8 @@ class ClientRequest {
 public:
     class RequestException : public std::exception {};
 
-                        ClientRequest();
-    explicit            ClientRequest(int client_sock);
+    ClientRequest(v_c_b &is_running);
+    explicit ClientRequest(int client_sock, v_c_b &is_running);
 
     ClientRequest       &operator=(const ClientRequest& other);
 
@@ -109,6 +110,7 @@ protected:
                                        const std::string &e) const;
 private:
 //-------------------processing-time data---------------------------------------
+    v_c_b &is_running_;
     std::ofstream       *log_file_;
     v_str               raw_request_;
     std::string         associated_filename_;
@@ -122,6 +124,10 @@ private:
     m_str_str           params_;
     m_str_str           headers_;
     int                 socket_;
+
+    void ProbeSocket(int socket, char *buffer) const;
+
+    void NothingToRead(int bytes_read) const;
 };
 std::ostream &operator<<(std::ostream &os, const ClientRequest &request);
 

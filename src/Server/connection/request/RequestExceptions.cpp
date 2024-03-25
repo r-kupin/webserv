@@ -24,6 +24,8 @@ void ClientRequest::ThrowException(const std::string& msg,
         throw EwouldblockEagain();
     else if (e == "FalseCall")
         throw FalseCall();
+    else if (e == "Stopped")
+        throw Stopped();
 }
 
 const char *ReadFromSocketFailedException::what() const throw() {
@@ -63,5 +65,9 @@ const char *EwouldblockEagain::what() const throw() {
 }
 
 const char *FalseCall::what() const throw() {
+    return exception::what();
+}
+
+const char *Stopped::what() const throw() {
     return exception::what();
 }

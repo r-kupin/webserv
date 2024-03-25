@@ -62,7 +62,9 @@
 #define MAX_CLIENTS 2048
 #define MAX_EVENTS 1000
 
-class Server {
+ typedef std::vector<Connection> v_conn;
+
+ class Server {
 public:
     class ServerException : public std::exception {};
 
@@ -77,6 +79,8 @@ protected:
 //-------------------initialisation: open sockets, create epoll...--------------
     void                        Init();
 
+    static v_conn               CreateConnections(int n,
+                                                  const volatile bool &running);
     void                        CreateLogFile();
     void                        PresetAddress(addrinfo **addr);
     void                        CreateSocket(addrinfo *res);
@@ -97,7 +101,8 @@ protected:
                                             Connection &connection);
     void                        Respond(int client_sock,
                                         const Connection &connection);
-    Location                    ProcessRequest(ClientRequest &request, int socket);
+    Location                    ProcessRequest(ClientRequest &request,
+                                               int socket);
     bool                        AccessForbidden(l_loc_c_it found,
                                                 Methods method) const;
     bool                        RequestBodyExceedsLimit(l_loc_c_it found,
@@ -133,6 +138,8 @@ protected:
                                              int socket,
                                              l_loc_c_it &found,
                                              Location &synth);
+    void                        NoUpoladDataAvailable(int file_fd,
+                                                      ssize_t bytes_read);
 //-------------------misc utils-------------------------------------------------
     bool                        SetDescriptorNonBlocking(int sockfd);
     void                        PrintEventInfo(int events, int fd, int i);
@@ -152,10 +159,8 @@ private:
     int                         epoll_events_count_;
     int                         epoll_connection_count_;
     int                         epoll_in_out_count_;
-    std::vector<Connection>     connections_;
+    v_conn                      connections_;
     std::ofstream               log_file_;
-
-    void NoUpoladDataAvailable(int file_fd, ssize_t bytes_read);
 };
 
 #endif //WEBSERV_SERVER_H

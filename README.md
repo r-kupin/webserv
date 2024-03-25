@@ -32,7 +32,7 @@ I am not using `Makefile` in development process, so the **lists of source files
 - %% errno %%
 - You must never do a read or a write operation without going through poll() (or equivalent).
 - Non-blocking IO
-- %% A request to your server should never hang forever. %%
+- A request to your server should never hang forever.
 - Your server must be compatible with the web browser of your choice
 - Your HTTP response status codes must be accurate.
 - You server must have default error pages if none are provided.
@@ -62,6 +62,64 @@ I am not using `Makefile` in development process, so the **lists of source files
 - Setup the server_names or not.
 - Execute CGI based on certain file extension (for example .php)
 - Turn on or off directory listing. (?)
+# Checklist
+## Check the code and ask questions
+- [x] Launch the installation of siege with homebrew.
+- [x] Ask explanations about the basics of an HTTP server.
+- [x] Ask what function the group used for I/O Multiplexing.
+- [x] Ask for an explanation of how does select() (or equivalent) work.
+- [x] Ask if they use only one select() (or equivalent) and how they've managed the server to accept and the client to read/write.
+- [x] The select() (or equivalent) should be in the main loop and should check file descriptors for read and write AT THE SAME TIME. If not, the grade is 0 and the evaluation process ends now.
+- [x] There should be only one read or one write per client per select() (or equivalent). Ask the group to show you the code from the select() (or equivalent) to the read and write of a client.
+- [ ] Search for all read/recv/write/send on a socket and check that, if an error is returned, the client is removed.
+- [ ] Search for all read/recv/write/send and check if the returned value is correctly checked (checking only -1 or 0 values is not enough, both should be checked).
+- [ ] If errno is checked after read/recv/write/send, the grade is 0 and the evaluation process ends now.
+- [ ] Writing or reading ANY file descriptor without going through the select() (or equivalent) is strictly FORBIDDEN.
+- [ ] The project must compile without any re-link issue. If not, use the 'Invalid compilation' flag.
+- [ ] If any point is unclear or is not correct, the evaluation stops.
+## Configuration
+In the configuration file, check whether you can do the following and  
+test the result:
+- [ ] Search for the HTTP response status codes list on the internet. During this evaluation, if any status codes is wrong, don't give any related points.
+- [ ] Setup multiple servers with different ports.
+- [ ] Setup multiple servers with different hostnames (use something like: curl --resolve example.com:80:127.0.0.1 [http://example.com/](http://example.com/)).
+- [ ] Setup default error page (try to change the error 404).
+- [ ] Limit the client body (use: curl -X POST -H "Content-Type: plain/text" --data "BODY IS HERE write something shorter or longer than body limit").
+- [ ] Setup routes in a server to different directories.
+- [ ] Setup a default file to search for if you ask for a directory.
+- [ ] Setup a list of methods accepted for a certain route (e.g., try to delete something with and without permission).
+## Basic checks
+Using telnet, curl, prepared files, demonstrate that the following
+features work properly:
+- [ ] GET, POST and DELETE requests should work.
+- [ ] UNKNOWN requests should not result in a crash.
+- [ ] For every test you should receive the appropriate status code.
+- [ ] Upload some file to the server and get it back.
+## Check CGI
+Pay attention to the following:
+- [ ] The server is working fine using a CGI.
+- [ ] The CGI should be run in the correct directory for relative path file access.
+- [ ] With the help of the students you should check that everything is working properly. You have to test the CGI with the "GET" and "POST" methods.
+- [ ] You need to test with files containing errors to see if the error handling works properly. You can use a script containing an infinite loop or an error; you are free to do whatever tests you want within the limits of acceptability that remain at your discretion. The group being evaluated should help you with this.
+## Check with a browser
+- [ ] Use the reference browser of the team. Open the network part of it, and try to connect to the server using it.
+- [ ] Look at the request header and response header.
+- [ ] It should be compatible to serve a fully static website.
+- [ ] Try a wrong URL on the server.
+- [ ] Try to list a directory.
+- [ ] Try a redirected URL.
+- [ ] Try anything you want to.
+## Port issues
+- [ ] In the configuration file setup multiple ports and use different websites. Use the browser to ensure that the configuration works as expected and shows the right website.
+- [ ] In the configuration, try to setup the same port multiple times. It should not work.
+- [ ] Launch multiple servers at the same time with different configurations but with common ports. Does it work? If it does, ask why the server should work if one of the configurations isn't functional. Keep going.
+## Siege & stress test
+- [ ] Use Siege to run some stress tests.
+- [ ] Availability should be above 99.5% for a simple GET on an empty page with a siege -b on that page.
+- [ ] Verify there is no memory leak (Monitor the process memory usage. It should not go up indefinitely).
+- [ ] Check if there is no hanging connection.
+- [ ] You should be able to use siege indefinitely without having to restart the server (take a look at siege -b).
+
 # Config
 Like `nginx.conf` but with less functional supported. This project follows philosophy of forward compatibility - meaning that all valid configs for WebServ will be also valid for NGINX, and will work in exact same way *EXCEPT* for the [log](#log) and [upload_store](#upload_store) directive. More on that in dedicated sections.
 Feel free to consult the test configs provided in `test/test_resources`. 

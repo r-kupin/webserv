@@ -9,26 +9,26 @@
 /*                                                     ###   ########.fr      */
 /*                                                                            */
 /******************************************************************************/
+
 #ifndef WEBSERV_CONNECTION_H
 #define WEBSERV_CONNECTION_H
-
 
 #include "request/ClientRequest.h"
 #include "../../Config/location/Location.h"
 
 struct Connection {
-    Connection();
-    Connection(int fd, const ClientRequest &request);
+    Connection(const volatile bool &is_running);
     Connection(const Connection &other);
 
     Connection &operator=(const Connection &);
 
-    bool            url_headers_done_;
-    bool            body_done_;
+    const volatile bool &is_running_;
+    bool                url_headers_done_;
+    bool                body_done_;
 
-    int             fd_;
-    ClientRequest   request_;
-    Location        location_;
+    int                 fd_;
+    ClientRequest       request_;
+    Location            location_;
 };
 
 

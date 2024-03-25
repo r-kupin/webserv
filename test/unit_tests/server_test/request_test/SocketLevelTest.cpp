@@ -4,7 +4,8 @@
 
 class SocketLevelTest : public ::testing::Test, public ClientRequest {
 public:
-    SocketLevelTest() : ClientRequest() {}
+    SocketLevelTest() : ClientRequest(), ClientRequest(<#initializer#>),
+                        ClientRequest(<#initializer#>) {}
 
 protected:
     std::string firefox_GET_req_;

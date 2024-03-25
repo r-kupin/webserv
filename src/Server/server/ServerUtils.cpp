@@ -13,12 +13,11 @@
 #include <sys/fcntl.h>
 #include <csignal>
 #include <sys/time.h>
-
 #include "Server.h"
 
 void Server::CloseConnectionWithLogMessage(int client_sock, const std::string &msg) {
     Log(msg, log_file_);
-    connections_[client_sock] = Connection();
+    connections_[client_sock] = Connection(is_running_);
     epoll_ctl(epoll_fd_, EPOLL_CTL_DEL, client_sock, NULL);
     close(client_sock);
 }
@@ -52,8 +51,8 @@ void Server::PrintEventInfo(int events, int fd, int i) {
     if (events == EPOLLIN && fd == socket_ )
         epoll_connection_count_++;
 
-    log_file_ << "\n== returns " << epoll_returns_count_ <<
-              " == events " << epoll_events_count_ <<
+    log_file_ << /*"\n== returns " << epoll_returns_count_ <<*/
+              "\n== events " << epoll_events_count_ <<
               " == connections " << epoll_connection_count_ <<
               " == IO " << epoll_in_out_count_ << "\n";
 

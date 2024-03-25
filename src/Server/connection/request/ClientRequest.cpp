@@ -13,12 +13,14 @@
 #include <csignal>
 #include <iostream>
 #include <algorithm>
-#include <cerrno>
 #include "ClientRequest.h"
+#include "RequestExceptions.h"
 
-ClientRequest::ClientRequest() {}
+ClientRequest::ClientRequest(v_c_b &is_running)
+        : is_running_(is_running) {}
 
-ClientRequest::ClientRequest(int client_sock) { Init(client_sock, NULL);}
+ClientRequest::ClientRequest(int client_sock, v_c_b &is_running)
+        : is_running_(is_running) { Init(client_sock, NULL);}
 
 ClientRequest& ClientRequest::operator=(const ClientRequest& other) {
     if (this != &other) {
@@ -74,46 +76,12 @@ v_str &ClientRequest::ReadFromSocket(int socket, int buffer_size) {
     char    buffer[buffer_size];
     v_char  storage;
 
-    // Because multiple events on the same fd might be stacked we are reading
-    // them in the infinite loop.
-    // As there is no way to find out how much do we have available - we got to
-    // read while recv wouldn't return 0 or -1 and set errno tp EWOULDBLOCK || EAGAIN.
-    // In this section we simply probe socket - if there is something to read -
-    // recv will return 1.
-    ssize_t probe = recv(socket, buffer, 1, MSG_PEEK);
-
-    if (probe == 0) {
-        ThrowException("The probing recv returned 0 - client closed connection",
-                       "ZeroRead");
-    } else if (probe < 0) {
-        if (errno == EWOULDBLOCK || errno == EAGAIN) {
-                ThrowException("The probing recv returned -1 with errno set. "
-                               "Nothing to read on this socket for now, but "
-                               "connection is still open on the client's side.",
-                               "EwouldblockEagain");
-        } else {
-            // We're in trouble!
-            ThrowException("recv returned -1 due to IO failure", "ReadFailed");
-        }
-    }
-
-    while (true) {
+    ProbeSocket(socket, buffer);
+    while (is_running_) {
         int bytes_read = recv(socket, buffer, buffer_size - 1,  0);
 
         if (bytes_read < 1) {
-            if (bytes_read == 0) {
-                ThrowException("recv returned 0 while request is incomplete",
-                               "ZeroRead");
-            } else if (errno == EWOULDBLOCK || errno == EAGAIN) {
-                // All available data was red but it's not enough to finish
-                // request processing at this moment. We'll come back later
-                // if client would send more data.
-                ThrowException("recv returned -1 and set errno - No \\r\\n\\r\\n"
-                               " after the request's headers section",
-                               "EwouldblockEagain");
-            } else {
-                ThrowException("recv returned -1 due to read failure", "ReadFailed");
-            }
+            NothingToRead(bytes_read);
         } else {
             storage.insert(storage.end(), buffer, buffer + bytes_read);
 
@@ -132,6 +100,47 @@ v_str &ClientRequest::ReadFromSocket(int socket, int buffer_size) {
                 line_break = Utils::FindInCharVect(storage, "\r\n");
             }
         }
+    }
+    throw Stopped(); // cant use ThrowException() here...
+}
+
+void ClientRequest::NothingToRead(int bytes_read) const {
+    if (bytes_read == 0) {
+        // Client shut down connection
+        ThrowException("recv returned 0 while request is incomplete",
+                       "ZeroRead");
+    } else {
+        // All available data was red but it's not enough to finish
+        // request processing at this moment. We'll come back later
+        // if client would send more data.
+        // errno == EAGAIN || errno == EWOULDBLOCK
+        ThrowException("recv returned -1 and set errno - No \\r\\n\\r\\n"
+                       " after the request's headers section",
+                       "EwouldblockEagain");
+    }
+}
+
+/**
+ *  Because multiple events on the same fd might be stacked we are reading
+ * them in the infinite loop.
+ *  As there is no way to find out how much do we have available - we got to
+ * read while recv wouldn't return 0 or -1 and set errno tp EWOULDBLOCK ||
+ * EAGAIN.
+ *  In this section we simply probe socket - if there is something to read -
+ * recv will return 1.
+ */
+void ClientRequest::ProbeSocket(int socket, char *buffer) const {
+    ssize_t probe = recv(socket, buffer, 1, MSG_PEEK);
+
+    if (probe == 0) {
+        ThrowException("The probing recv returned 0 - client closed connection",
+                       "ZeroRead");
+    } else if (probe < 0) {
+        // errno == EAGAIN || errno == EWOULDBLOCK
+        ThrowException("The probing recv returned -1 with errno set. "
+                       "Nothing to read on this socket for now, but connection "
+                       "is still open on the client's side.",
+                       "EwouldblockEagain");
     }
 }
 
