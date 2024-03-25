@@ -1,14 +1,14 @@
- /******************************************************************************/
+/* ************************************************************************** */
 /*                                                                            */
-/*                                                         :::      ::::::::  */
-/*    Server.h                                           :+:      :+:    :+:  */
-/*                                                     +:+ +:+         +:+    */
-/*    By: rokupin <rokupin@student.42.fr>            +#+  +:+       +#+       */
-/*                                                 +#+#+#+#+#+   +#+          */
-/*    Created: 2023/03/28 04:02:49 by rokupin           #+#    #+#            */
-/*                                                     ###   ########.fr      */
+/*                                                        :::      ::::::::   */
+/*   Server.h                                           :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/03/25 22:13:40 by mede-mas          #+#    #+#             */
+/*   Updated: 2024/03/25 22:14:13 by mede-mas         ###   ########.fr       */
 /*                                                                            */
-/******************************************************************************/
+/* ************************************************************************** */
 
 #ifndef WEBSERV_LIB_SERVER_H
 #define WEBSERV_LIB_SERVER_H
@@ -35,86 +35,86 @@
 
  class Server {
 public:
-    class ServerException : public std::exception {};
+	class ServerException : public std::exception {};
 
-    Server(const Server &);
-    Server(const ServerConfiguration &config);
+	Server(const Server &);
+	Server(const ServerConfiguration &config);
 
-    Server &operator=(const Server &);
+	Server &operator=(const Server &);
 
-    ~Server();
+	~Server();
 
-    void                        Start();
-    const ServerConfiguration   &GetConfig() const;
-    int                         GetSocket() const;
-    int                         GetEpollFd() const;
+	void                        Start();
+	const ServerConfiguration   &GetConfig() const;
+	int                         GetSocket() const;
+	int                         GetEpollFd() const;
 
 protected:
 //-------------------initialisation: open sockets, create epoll...--------------
-    void                        Init();
-    void                        PresetAddress(addrinfo **addr);
-    void                        CreateSocket(addrinfo *res);
-    void                        SetSocketOptions(addrinfo *res) const;
-    void                        BindSocket(addrinfo *res);
-    void                        ListenSocket();
-    void                        CreateEpoll();
-    void                        AddEpollInstance();
+	void                        Init();
+	void                        PresetAddress(addrinfo **addr);
+	void                        CreateSocket(addrinfo *res);
+	void                        SetSocketOptions(addrinfo *res) const;
+	void                        BindSocket(addrinfo *res);
+	void                        ListenSocket();
+	void                        CreateEpoll();
+	void                        AddEpollInstance();
 //-------------------request handling-------------------------------------------
-    void                        Start(int port);
-    int                         CheckRequest(int client_sock,
-                                             const sockaddr_in &client_addr);
-    void                        HandleRequest(int client_sock);
+	void                        Start(int port);
+	int                         CheckRequest(int client_sock,
+											 const sockaddr_in &client_addr);
+	void                        HandleRequest(int client_sock);
 //-------------------request server-side processing-----------------------------
-    Location                    ProcessRequest(ClientRequest&request,
-                                               int socket = -1);
-    bool                        AccessForbidden(l_loc_c_it found,
-                                                Methods method) const;
-    bool                        RequestBodyExceedsLimit(l_loc_c_it found,
-                                                        ClientRequest &request);
+	Location                    ProcessRequest(ClientRequest&request,
+											   int socket = -1);
+	bool                        AccessForbidden(l_loc_c_it found,
+												Methods method) const;
+	bool                        RequestBodyExceedsLimit(l_loc_c_it found,
+														ClientRequest &request);
 //-------------------static request processing----------------------------------
-    void                        HandleStatic(const ClientRequest &request,
-                                              const Srch_c_Res &res,
-                                              const l_loc_c_it &found,
-                                              Location &synth) const;
-    void                        SynthIndex(Location &synth,
-                                           const Srch_c_Res &res,
-                                           int fs_status) const;
-    std::string                 FindIndexToSend(const l_loc_c_it &found,
-                                                const std::string &compliment) const;
-    void                        SynthFile(Location &synth,
-                                          const Srch_c_Res &res,
-                                          int fs_status,
-                                          const std::string &request_address) const;
+	void                        HandleStatic(const ClientRequest &request,
+											  const Srch_c_Res &res,
+											  const l_loc_c_it &found,
+											  Location &synth) const;
+	void                        SynthIndex(Location &synth,
+										   const Srch_c_Res &res,
+										   int fs_status) const;
+	std::string                 FindIndexToSend(const l_loc_c_it &found,
+												const std::string &compliment) const;
+	void                        SynthFile(Location &synth,
+										  const Srch_c_Res &res,
+										  int fs_status,
+										  const std::string &request_address) const;
 //-------------------upload request processing----------------------------------
-    int                         UploadFile(ClientRequest &request,
-                                           l_loc_c_it found,
-                                           int socket);
-    int                         UploadFromCURL(ClientRequest &request,
-                                               const std::string &filename,
-                                               int socket);
-    bool                        FlushBuffer(char *buffer, std::ofstream &file,
-                                            const std::string &delimiter,
-                                            int bytes_read);
-    int                         FillBuffer(char *buffer, int socket,
-                                           const size_t &size,
-                                           v_char &storage) const;
-    int                        PerformUpload(const ClientRequest &request,
-                                             int socket, std::ofstream &file,
-                                             const std::string &delimiter,
-                                             char *buffer, size_t bytes_left);
-    bool                        TryCreateOutputFile(const std::string &dir,
-                                                    const std::string &filename,
-                                                    size_t size) const;
-    void                        HandleUpload(ClientRequest &request,
-                                             int socket, l_loc_c_it &found,
-                                             Location &synth);
+	int                         UploadFile(ClientRequest &request,
+										   l_loc_c_it found,
+										   int socket);
+	int                         UploadFromCURL(ClientRequest &request,
+											   const std::string &filename,
+											   int socket);
+	bool                        FlushBuffer(char *buffer, std::ofstream &file,
+											const std::string &delimiter,
+											int bytes_read);
+	int                         FillBuffer(char *buffer, int socket,
+										   const size_t &size,
+										   v_char &storage) const;
+	int                        PerformUpload(const ClientRequest &request,
+											 int socket, std::ofstream &file,
+											 const std::string &delimiter,
+											 char *buffer, size_t bytes_left);
+	bool                        TryCreateOutputFile(const std::string &dir,
+													const std::string &filename,
+													size_t size) const;
+	void                        HandleUpload(ClientRequest &request,
+											 int socket, l_loc_c_it &found,
+											 Location &synth);
 private:
-    void                        Log(const std::string & msg) const;
+	void                        Log(const std::string & msg) const;
 
-    const ServerConfiguration   &config_;
-    int                         socket_;
-    int                         epoll_fd_;
-    epoll_event                 event_;
+	const ServerConfiguration   &config_;
+	int                         socket_;
+	int                         epoll_fd_;
+	epoll_event                 event_;
  };
 
 std::ostream &operator<<(std::ostream &os, const Server &server);
