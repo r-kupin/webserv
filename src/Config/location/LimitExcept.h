@@ -10,8 +10,8 @@
 /*                                                                            */
 /******************************************************************************/
 
-#ifndef WEBSERV_LIB_LIMITEXCEPT_H
-#define WEBSERV_LIB_LIMITEXCEPT_H
+#ifndef WEBSERV_LIMITEXCEPT_H
+#define WEBSERV_LIMITEXCEPT_H
 
 #include <string>
 #include <vector>
@@ -19,7 +19,7 @@
 #include <ostream>
 #include "../Node.h"
 
-enum Methods {GET, POST, DELETE};
+enum Methods {GET, POST, DELETE, UNSUPPORTED};
 
 struct Limit {
     class LimitExceptException : public std::exception {};
@@ -44,4 +44,4 @@ struct Limit {
 };
 std::ostream &operator<<(std::ostream &os, const Limit &limit);
 
-#endif //WEBSERV_LIB_LIMITEXCEPT_H
+#endif //WEBSERV_LIMITEXCEPT_H

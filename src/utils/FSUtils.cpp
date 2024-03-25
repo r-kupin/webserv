@@ -21,7 +21,7 @@ int Utils::CheckFilesystem(const std::string &address) {
 
     if (stat(address.c_str(), &fileInfo) == 0) {
         if (S_ISREG(fileInfo.st_mode))
-            return FILE;
+            return COMM_FILE;
         if (S_ISDIR(fileInfo.st_mode))
             return DIRECTORY;
         return ELSE;
@@ -52,9 +52,17 @@ bool Utils::CheckPermissions(const std::string &address) {
 }
 
 std::string Utils::FileToString(const std::string &address) {
-    std::cout << address << std::endl;
     std::ifstream file(address.c_str());
 
     return std::string((std::istreambuf_iterator<char>(file)),
                        std::istreambuf_iterator<char>());
+}
+
+std::string Utils::DirName(const std::string &address, const std::string &root) {
+    if (address.at(0) == '/') {
+        // absolute address
+        return address;
+    }
+    // relative address - append to root
+    return root + "/" + address;
 }

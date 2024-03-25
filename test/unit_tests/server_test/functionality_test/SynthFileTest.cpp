@@ -24,7 +24,7 @@ TEST_F(SynthFileTest_SimpleIndexCheck, Found) {
     Srch_c_Res res = GetConfig().FindConstLocation("/loc_4/index.html");
     l_loc_c_it found = res.location_;
     Location synth(*found);
-    SynthFile(synth, res, FILE, "/loc_4/index.html");
+    SynthFile(synth, res, COMM_FILE, "/loc_4/index.html");
 
     EXPECT_EQ(synth.return_code_, 200);
     EXPECT_EQ(synth.body_file_,

@@ -10,8 +10,8 @@
 /*                                                                            */
 /******************************************************************************/
 
-#ifndef WEBSERV_LIB_LOCATION_H
-#define WEBSERV_LIB_LOCATION_H
+#ifndef WEBSERV_LOCATION_H
+#define WEBSERV_LOCATION_H
 
 #include <list>
 #include <ostream>
@@ -117,4 +117,4 @@ struct LocationByAddress {
 };
 
 
-#endif //WEBSERV_LIB_LOCATION_H
+#endif //WEBSERV_LOCATION_H

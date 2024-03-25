@@ -49,7 +49,7 @@ ClientRequest   request;
 ServerResponse  response(GetConfig().GetServerName(), GetConfig().GetPort());
 
 pipe_reguest_to_fd("GET /loc_X HTTP/1.1\r\n");
-    request.Init(fd_);
+    request.Init(fd_, NULL);
 response_location = ProcessRequest(request);
 response.ComposeResponse(response_location);
 
@@ -64,7 +64,7 @@ ClientRequest   request;
 ServerResponse  response(GetConfig().GetServerName(), GetConfig().GetPort());
 
 pipe_reguest_to_fd("GET /loc_X/ HTTP/1.1\r\n");
-    request.Init(fd_);
+    request.Init(fd_, NULL);
 response_location = ProcessRequest(request);
 response.ComposeResponse(response_location);
 
@@ -79,7 +79,7 @@ TEST_F(SimpleIndexConfigResponseTest, Loc4) {
     ServerResponse  response(GetConfig().GetServerName(), GetConfig().GetPort());
 
     pipe_reguest_to_fd("GET /loc_4 HTTP/1.1\r\n");
-    request.Init(fd_);
+    request.Init(fd_, NULL);
     response_location = ProcessRequest(request);
     response.ComposeResponse(response_location);
 
@@ -96,7 +96,7 @@ TEST_F(SimpleIndexConfigResponseTest, Loc4Index) {
     ServerResponse  response(GetConfig().GetServerName(), GetConfig().GetPort());
 
     pipe_reguest_to_fd("GET /loc_4/ HTTP/1.1\r\n");
-    request.Init(fd_);
+    request.Init(fd_, NULL);
     response_location = ProcessRequest(request);
     response.ComposeResponse(response_location);
 
@@ -111,7 +111,7 @@ TEST_F(SimpleIndexConfigResponseTest, Loc4File) {
     ServerResponse  response(GetConfig().GetServerName(), GetConfig().GetPort());
 
     pipe_reguest_to_fd("GET /loc_4/index.html HTTP/1.1\r\n");
-    request.Init(fd_);
+    request.Init(fd_, NULL);
     response_location = ProcessRequest(request);
     response.ComposeResponse(response_location);
 
@@ -126,7 +126,7 @@ TEST_F(SimpleIndexConfigResponseTest, loc1) {
     ServerResponse  response(GetConfig().GetServerName(), GetConfig().GetPort());
 
     pipe_reguest_to_fd("GET /loc_1 HTTP/1.1\r\n");
-    request.Init(fd_);
+    request.Init(fd_, NULL);
     response_location = ProcessRequest(request);
     response.ComposeResponse(response_location);
 
@@ -144,7 +144,7 @@ TEST_F(SimpleIndexConfigResponseTest, loc1Index) {
     ServerResponse  response(GetConfig().GetServerName(), GetConfig().GetPort());
 
     pipe_reguest_to_fd("GET /loc_1/ HTTP/1.1\r\n");
-    request.Init(fd_);
+    request.Init(fd_, NULL);
     response_location = ProcessRequest(request);
     response.ComposeResponse(response_location);
 

@@ -4,7 +4,8 @@
 
 class URLLevelTest : public ::testing::Test, public ClientRequest {
 public:
-    URLLevelTest() : ClientRequest() {}
+    URLLevelTest() : ClientRequest(), ClientRequest(<#initializer#>),
+                     ClientRequest(<#initializer#>) {}
 
 protected:
     std::string req_;

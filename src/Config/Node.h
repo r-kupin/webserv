@@ -1,5 +1,5 @@
-#ifndef WEBSERV_LIB_NODE_H
-#define WEBSERV_LIB_NODE_H
+#ifndef WEBSERV_NODE_H
+#define WEBSERV_NODE_H
 
 #include <vector>
 #include <string>
@@ -36,4 +36,4 @@ struct Node {
     const std::string & LocationContextGetAddress() const;
 };
 
-#endif //WEBSERV_LIB_NODE_H
+#endif //WEBSERV_NODE_H

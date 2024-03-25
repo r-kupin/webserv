@@ -4,7 +4,8 @@
 
 class RequestLineLevelTest : public ::testing::Test, public ClientRequest {
 public:
-    RequestLineLevelTest() : ClientRequest() {}
+    RequestLineLevelTest() : ClientRequest(), ClientRequest(<#initializer#>),
+                             ClientRequest(<#initializer#>) {}
 
 protected:
     std::string req_;

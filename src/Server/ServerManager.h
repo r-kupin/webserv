@@ -10,26 +10,30 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef WEBSERV_LIB_SERVERMANAGER_H
-#define WEBSERV_LIB_SERVERMANAGER_H
+#ifndef WEBSERV_SERVERMANAGER_H
+#define WEBSERV_SERVERMANAGER_H
 
-#include "ServerExceptions.h"
+#include "server/Server.h"
 
-typedef std::list<Server> l_servers;
+typedef std::vector<Server>       v_servers;
+typedef std::vector<pthread_t>    v_threads;
+
+static volatile bool        is_running_ = true;
 
 class ServerManager {
 public:
     ServerManager();
-    ServerManager(const ServerManager &);
-    ServerManager(const Config &config);
-    ServerManager &operator=(const ServerManager &);
 
     ~ServerManager();
 
-    void RunAll();
+    void            Init(const Config &config);
+    void            Start();
+    static void     Stop(int signal);
+    static void     *StartServer(void *srv);
 private:
-    l_servers servers_;
+    v_servers   servers_;
+    v_threads   threads_;
 };
 
 
-#endif //WEBSERV_LIB_SERVERMANAGER_H
+#endif //WEBSERV_SERVERMANAGER_H

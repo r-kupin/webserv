@@ -1,6 +1,7 @@
 Minimalist re-implementation of nginx web server.
 # HowTo
-**WARNING** 
+**WARNING**
+*TESTS ARE OUTDATED*
 I am not using `Makefile` in development process, so the **lists of source files might be outdated**, and therefore - project might not compile. However - it is quite easy to get up-to-date source lists:
 - Enter repository root
 - *SRCS*: all project sources `find src/ -name \*.cpp -print `
@@ -22,34 +23,105 @@ I am not using `Makefile` in development process, so the **lists of source files
 # Features
 ## Done
 - Your program has to take a configuration file as argument, or use a default path.
-- Choose the [port](#listen) and [host](#server_name) of each server.
-- Setup default [error_pages](#error_page).
-- Setup routes with one or multiple of the following rules/configuration [return](#return)
-	- Define a list of accepted HTTP methods for the route.
-	- Define a HTTP redirection.
-	- Define a directory or a file from where the file should be searched
-	- Make the route able to accept uploaded files and configure where they should be saved
-- Set a default file to answer if the request is a directory ([index](#index)).
-- Make it work with POST and GET methods.
+- Your server must never block.
+- Client can be bounced properly if necessary. (? return, I guess)
+- It must be non-blocking
+- Use only 1 poll() (or equivalent) for all the I/O operations between the client and the server (listen included).
+- poll() (or equivalent) must check read and write at the same time.
+- Never do a read or a write operation without going through poll() (or equivalent).
+- %% errno %%
+- You must never do a read or a write operation without going through poll() (or equivalent).
+- Non-blocking IO
+- A request to your server should never hang forever.
 - Your server must be compatible with the web browser of your choice
 - Your HTTP response status codes must be accurate.
 - You server must have default error pages if none are provided.
 - You must be able to serve a fully static website.
-- Limit client body size.
-- Clients must be able to upload files
-- upload_store implement
-- default client_max_body_size 1Mb
+- Clients must be able to upload files. ([upload_store](#upload_store))
+- Make it work with %% DELETE, %%POST and GET methods.
+- Stress test resilience
+- %% Multiple ports %%
+- Choose the [port](#listen) and [host](#server_name) of each server.
+- %% server_names %%
+- %% default server for host:port %%
+- Setup default [error_pages](#error_page).
+- Limit [client_max_body_size](#client_max_body_size).
+- Setup routes with one or multiple of the following rules/configuration:
+	- Define a list of accepted HTTP methods for the route. ([limit_except](#Limit_except))
+	- Define a HTTP redirection. ([return](#return))
+	- Define a directory or a file from where the file should be searched. ([root](#root))
+- Set a default file to answer if the request is a directory ([index](#index)).
+- %% CGI %%
+- Make the route able to accept uploaded files and configure where they should be saved. ([upload_store](#upload_store))
 ## ToDo
-- Setup the server_names or not.
-- Turn on or off directory listing. (?)
-- Your server must be able to listen to multiple ports 
-	- multiple domains
-	- multiple simultaneous requests to the same server
+- Stop checking the value of **errno**
 - A request to your server should never hang forever.
+- DELETE method handling
+- One server listening to multiple ports & multiple domains
 - The first server for a host:port will be the default for this host:port (that means it will answer to all the requests that don’t belong to an other server).
-- Execute CGI based on certain file extension (for example .php).
+- Setup the server_names or not.
+- Execute CGI based on certain file extension (for example .php)
+- Turn on or off directory listing. (?)
+# Checklist
+## Check the code and ask questions
+- [x] Launch the installation of siege with homebrew.
+- [x] Ask explanations about the basics of an HTTP server.
+- [x] Ask what function the group used for I/O Multiplexing.
+- [x] Ask for an explanation of how does select() (or equivalent) work.
+- [x] Ask if they use only one select() (or equivalent) and how they've managed the server to accept and the client to read/write.
+- [x] The select() (or equivalent) should be in the main loop and should check file descriptors for read and write AT THE SAME TIME. If not, the grade is 0 and the evaluation process ends now.
+- [x] There should be only one read or one write per client per select() (or equivalent). Ask the group to show you the code from the select() (or equivalent) to the read and write of a client.
+- [ ] Search for all read/recv/write/send on a socket and check that, if an error is returned, the client is removed.
+- [ ] Search for all read/recv/write/send and check if the returned value is correctly checked (checking only -1 or 0 values is not enough, both should be checked).
+- [ ] If errno is checked after read/recv/write/send, the grade is 0 and the evaluation process ends now.
+- [ ] Writing or reading ANY file descriptor without going through the select() (or equivalent) is strictly FORBIDDEN.
+- [ ] The project must compile without any re-link issue. If not, use the 'Invalid compilation' flag.
+- [ ] If any point is unclear or is not correct, the evaluation stops.
+## Configuration
+In the configuration file, check whether you can do the following and  
+test the result:
+- [ ] Search for the HTTP response status codes list on the internet. During this evaluation, if any status codes is wrong, don't give any related points.
+- [ ] Setup multiple servers with different ports.
+- [ ] Setup multiple servers with different hostnames (use something like: curl --resolve example.com:80:127.0.0.1 [http://example.com/](http://example.com/)).
+- [ ] Setup default error page (try to change the error 404).
+- [ ] Limit the client body (use: curl -X POST -H "Content-Type: plain/text" --data "BODY IS HERE write something shorter or longer than body limit").
+- [ ] Setup routes in a server to different directories.
+- [ ] Setup a default file to search for if you ask for a directory.
+- [ ] Setup a list of methods accepted for a certain route (e.g., try to delete something with and without permission).
+## Basic checks
+Using telnet, curl, prepared files, demonstrate that the following
+features work properly:
+- [ ] GET, POST and DELETE requests should work.
+- [ ] UNKNOWN requests should not result in a crash.
+- [ ] For every test you should receive the appropriate status code.
+- [ ] Upload some file to the server and get it back.
+## Check CGI
+Pay attention to the following:
+- [ ] The server is working fine using a CGI.
+- [ ] The CGI should be run in the correct directory for relative path file access.
+- [ ] With the help of the students you should check that everything is working properly. You have to test the CGI with the "GET" and "POST" methods.
+- [ ] You need to test with files containing errors to see if the error handling works properly. You can use a script containing an infinite loop or an error; you are free to do whatever tests you want within the limits of acceptability that remain at your discretion. The group being evaluated should help you with this.
+## Check with a browser
+- [ ] Use the reference browser of the team. Open the network part of it, and try to connect to the server using it.
+- [ ] Look at the request header and response header.
+- [ ] It should be compatible to serve a fully static website.
+- [ ] Try a wrong URL on the server.
+- [ ] Try to list a directory.
+- [ ] Try a redirected URL.
+- [ ] Try anything you want to.
+## Port issues
+- [ ] In the configuration file setup multiple ports and use different websites. Use the browser to ensure that the configuration works as expected and shows the right website.
+- [ ] In the configuration, try to setup the same port multiple times. It should not work.
+- [ ] Launch multiple servers at the same time with different configurations but with common ports. Does it work? If it does, ask why the server should work if one of the configurations isn't functional. Keep going.
+## Siege & stress test
+- [ ] Use Siege to run some stress tests.
+- [ ] Availability should be above 99.5% for a simple GET on an empty page with a siege -b on that page.
+- [ ] Verify there is no memory leak (Monitor the process memory usage. It should not go up indefinitely).
+- [ ] Check if there is no hanging connection.
+- [ ] You should be able to use siege indefinitely without having to restart the server (take a look at siege -b).
+
 # Config
-Like `nginx.conf` but with less functional supported. This project follows philosophy of forward compatibility - meaning that all valid configs for WebServ will be also valid for NGINX, and will work in exact same way.
+Like `nginx.conf` but with less functional supported. This project follows philosophy of forward compatibility - meaning that all valid configs for WebServ will be also valid for NGINX, and will work in exact same way *EXCEPT* for the [log](#log) and [upload_store](#upload_store) directive. More on that in dedicated sections.
 Feel free to consult the test configs provided in `test/test_resources`. 
 ## Config structure
 Config consists of **contexts** and **directives**.
@@ -64,6 +136,7 @@ For now, webserv supports the following contexts:
 #### Server
 The main context of the instance of the HTTP server. At least one should be defined in the config. 
 Server context can't be empty - it should contain mandatory server-level directives: 
+- *[log](#log)* (unique)
 - *[server_name](#server_name)* (unique)
 - *[listen](#listen)* (unique)
 
@@ -206,6 +279,8 @@ directive [ ARG1 ] [ ARG... ];
 Has only one *arg* which sets the port, used by the server for requests listening.
 ##### server_name
 Should define server's host name, but only works for *localhost* right now
+##### log
+Path to directory where log file named `servername_port.log` is going to be located. Actual nginx creates 2 log files : `access.log` and `error.log`. Nginx only outputs basic information to that logs, such as what was requested and what was returned.
 #### Location-level directives
 ##### root
 Can have only one arg, which is a path for a location, or server's root directory. For example:
@@ -360,6 +435,207 @@ Stores data about all [locations](#location) mentioned in config:
     bool                    ghost_;
 ```
 ## Setting up servers
+Each server gets initialized in a following way:
+### Opening of a socket
+The external interface of a server is a socket. It is a data structure that represents an endpoint for communication. It's basically a like a file descriptor used by the kernel to manage network communication between processes. In order to open socket for communication several setup steps are required.
+#### Create socket
+When the `socket` system call is invoked, the Linux kernel allocates a new file descriptor and initializes data structures for the socket. Internally, this involves allocating memory for the socket control block and setting up pointers to various kernel functions related to socket operations. Additionally, the kernel initializes the socket's state and other attributes, such as its protocol family, type, and communication semantics (e.g., TCP, UDP, stream-oriented, datagram-oriented).
+#### Set socket options
+After the socket is created, certain options may need to be configured to customize its behavior. For instance, the `SO_REUSEADDR` option, set using the `setsockopt` system call, modifies the socket's behavior regarding address reuse. When this option is set, the kernel updates the socket's internal data structures to indicate that the address and port associated with the socket can be reused even if it's still in a `TIME_WAIT` state from a previous connection. This enables faster server restarts and prevents "address already in use" errors.
+#### Bind socket
+Binding a socket to a specific address and port is achieved through the `bind` system call. When this call is made, the kernel updates its internal routing tables to include an entry mapping the specified address and port to the socket's file descriptor. This essentially tells the networking subsystem of the kernel to direct incoming packets destined for the specified address and port to the socket for processing. The kernel also checks for permissions and ensures that the requested address and port are available for binding.
+#### Start listening
+Once the socket is bound to an address and port, it needs to start listening for incoming connections. Invoking the `listen` system call sets the socket's state to listening and configures it to accept incoming connections. Internally, the kernel sets up a queue for pending connections associated with the socket and begins accepting incoming connection requests. The backlog(last) parameter passed to `listen` determines the maximum length of this queue. In my case it is `SOMAXCONN` - a maximum amount of connections, which is **4096** on 42's computers.  As new connection requests arrive, the kernel adds them to the queue, up to the specified backlog limit. If  the queue is full, subsequent connection requests may be rejected.
+
+When socket is set up to listen for the connections it is fully usable. 
+### Setting up epoll
+The **epoll** API performs monitoring of multiple file descriptors to see if I/O is possible on any of them. The **epoll** API can be used either as an edge-triggered or a level-triggered interface and scales well to large numbers of watched file descriptors.
+The following system calls are provided to create and manage an **epoll** instance:
+#### Create epoll instance
+`epoll_create` asks kernel to create epoll instance - red-black tree set of file descriptors being monitored. The integer returned by this call represents a file descriptor referring to the newly created epoll instance.
+#### Add socket to the epoll watchlist
+The `epoll_ctl` system call is used to control the behavior of the epoll instance, such as adding or removing file descriptors from its watch list, or changing the events of a file descriptor already in the list.
+There are options on how do we want to get notified about events, and what particular events to monitor. This is done, by setting flags to `epoll_event.events`.
+##### Kinds of events
+For example setting the flag `EPOLLIN` would mean that we'll get notified when on the client's end of the communication line `write` or similar operation will be performed. `EPOLLOUT` - same but for `read` or similar.
+##### Notification strategy
+Alongside with `EPOLLIN` and/or `EPOLLOUT` the `EPOLLET` flag might be specified - if so, notifications on this file descriptor would be **Edge Triggered**. Otherwise the default **Level Triggered** strategy will be applied.
+###### Edge Triggered notifications
+Events are triggered only if they change the state of the `fd` - meaning that only the first event is triggered and no new events will get triggered until that event is fully handled. 
+This design is explicitly meant to prevent `epoll_wait` from returning due to an event that is in the process of being handled (i.e., when new data arrives while the `EPOLLIN` was already raised but `read` hadn't been called or not all of the data was read). The edge-triggered event rule is simple **all same-type (i.e. `EPOLLIN`) events are _merged_ until all available data was processed**. 
+In the case of a listening socket, the `EPOLLIN` event won't be triggered again until all existing `listen` "backlog" sockets have been accepted using `accept`.
+###### Level Triggered
+On the other hand, level triggered events will behave closer to how legacy `select` (or `poll`) operates, allowing `epoll` to be used with older code.
+The event-merger rule is more complex: **events of the same type are only merged if no one is waiting for an event** (no one is waiting for `epoll_wait` to return), **or if multiple events happen before `epoll_wait` can return**... otherwise any event causes `epoll_wait` to return.
+In the case of a listening socket, the `EPOLLIN` event will be triggered every time a client connects... unless no one is waiting for `epoll_wait` to return, in which case the next call for `epoll_wait` will return immediately and all the `EPOLLIN` events that occurred during that time will have been merged into a single event.
+In the case of a byte stream, new events will be triggered every time new data comes in... unless, of course, no one is waiting for `epoll_wait` to return, in which case the next call will return immediately for all the data that arrive util `epoll_wait` returned (even if it arrived in different chunks / events)
+###### OneShot mode
+The behavior of `EPOLLONESHOT` is such that after a successful call to `epoll_wait(2)` where the specified file descriptor was reported, no new events will be reported by `epoll_wait(2)` on the same file descriptor until you explicitly reactivate it with `epoll_ctl(2)`. You can look at it as a mechanism of temporarily disabling a file descriptor once it is returned by `epoll_wait(2)`.
+It does not prevent `epoll_wait(2)` from returning more than one event in the same call for the same file descriptor - in fact, if multiple events are available at the time of the call, they are all combined into the `events` field of `struct epoll_event`, whether or not `EPOLLONESHOT` is in effect for that file descriptor.
+In other words, `EPOLLONESHOT` controls under what conditions a file descriptor is _reported_ in a call to `epoll_wait(2)`; it does not play a role in event aggregation and detection.
+1. **Edge-triggered mode with EPOLLONESHOT:**
+    - In edge-triggered mode, EPOLLONESHOT means that once an event occurs on a file descriptor and is reported by epoll_wait(), the associated file descriptor is deactivated until it is re-armed using epoll_ctl() with EPOLL_CTL_MOD and EPOLLONESHOT again.
+    - In this mode, epoll_wait() will report an event only once for a given file descriptor until it is re-armed. Subsequent events on the same file descriptor will not be reported until it is re-armed.
+2. **Level-triggered mode with EPOLLONESHOT:**
+    - In level-triggered mode, EPOLLONESHOT behaves differently. Once an event occurs on a file descriptor and is reported by epoll_wait(), the associated file descriptor remains active, and epoll_wait() will continue to report events on that file descriptor as long as the condition for the event remains true.
+    - In this mode, EPOLLONESHOT doesn't mean the file descriptor is deactivated after one event. Instead, it indicates that epoll_wait() will not report further events on the file descriptor until the current event condition changes and then resets the EPOLLONESHOT flag.
+*In summary*:
+- With edge-triggered mode, EPOLLONESHOT means the file descriptor is deactivated until rearmed.
+- With level-triggered mode, EPOLLONESHOT means the file descriptor remains active, but epoll_wait() will not report further events until the current event condition changes.
+
+```cpp
+// server.cc
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <assert.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <errno.h>
+#include <string.h>
+#include <fcntl.h>
+#include <stdlib.h>
+#include <sys/epoll.h>
+#include <pthread.h>
+
+#define MAX_EVENT_NUMBER 1024
+
+int setnonblocking(int fd)
+{
+    int old_option = fcntl(fd, F_GETFL);
+    int new_option = old_option | O_NONBLOCK;
+    fcntl(fd, F_SETFL, new_option);
+    return old_option;
+}
+
+void addfd(int epollfd, int fd, bool oneshot)
+{
+    epoll_event event;
+    event.data.fd = fd;
+    event.events = EPOLLIN | EPOLLET;
+    if(oneshot)
+        event.events |= EPOLLONESHOT;
+    epoll_ctl(epollfd, EPOLL_CTL_ADD, fd, &event);
+    setnonblocking(fd);
+}
+// reset the fd with EPOLLONESHOT
+void reset_oneshot(int epollfd, int fd)
+{
+    epoll_event event;
+    event.data.fd = fd;
+    event.events = EPOLLIN | EPOLLET | EPOLLONESHOT;
+    epoll_ctl(epollfd, EPOLL_CTL_MOD, fd, &event);
+}
+
+int main(int argc, char** argv)
+{
+    if(argc <= 2)
+    {
+        printf("usage: %s ip_address port_number\n", basename(argv[0]));
+        return 1;
+    }
+    const char* ip = argv[1];
+    int port = atoi(argv[2]);
+
+    int ret = 0;
+    struct sockaddr_in address;
+    bzero(&address, sizeof(address));
+    address.sin_family = AF_INET;
+    inet_pton(AF_INET, ip, &address.sin_addr);
+    address.sin_port = htons(port);
+
+    int listenfd = socket(PF_INET, SOCK_STREAM, 0);
+    assert(listenfd >= 0);
+    ret = bind(listenfd, (struct sockaddr*)&address, sizeof(address));
+    assert(ret != -1);
+
+    ret = listen(listenfd, 5);
+    assert(ret != -1);
+
+    epoll_event events[MAX_EVENT_NUMBER];
+    int epollfd = epoll_create(5);
+    addfd(epollfd, listenfd, false);
+    while(1)
+    {
+        printf("next loop: -----------------------------");
+        int ret = epoll_wait(epollfd, events, MAX_EVENT_NUMBER, -1);
+        if(ret < 0)
+        {
+            printf("epoll failure\n");
+            break;
+        }
+        for(int i = 0; i < ret; i++)
+        {
+            int sockfd = events[i].data.fd;
+            if(sockfd == listenfd)
+            {
+                printf("into listenfd part\n");
+                struct sockaddr_in client_address;
+                socklen_t client_addrlength = sizeof(client_address);
+                int connfd = accept(listenfd, (struct sockaddr*)&client_address,
+                     &client_addrlength);
+                printf("receive connfd: %d\n", connfd);
+                addfd(epollfd, connfd, true);
+                // reset_oneshot(epollfd, listenfd);
+            }
+            else if(events[i].events & EPOLLIN)
+            {
+                printf("into linkedfd part\n");
+                printf("start new thread to receive data on fd: %d\n", sockfd);
+                char buf[2];
+                memset(buf, '\0', 2);
+                // just read one byte, and reset the fd with EPOLLONESHOT, check whether still EPOLLIN event
+                int ret = recv(sockfd, buf, 2 - 1, 0);
+
+                if(ret == 0)
+                {
+                    close(sockfd);
+                    printf("foreigner closed the connection\n");
+                    break;
+                }
+                else if(ret < 0)
+                {
+                    if(errno == EAGAIN)
+                    {
+                        printf("wait to the client send the new data, check the oneshot memchnism\n");
+                        sleep(10);
+                        reset_oneshot(epollfd, sockfd);
+                        printf("read later\n");
+                        break;
+                    }
+                }
+                else {
+                    printf("receive the content: %s\n", buf);
+                    reset_oneshot(epollfd, sockfd);
+                    printf("reset the oneshot successfully\n");
+                }
+            }
+            else 
+                printf("something unknown happend\n");
+        }
+        sleep(1);
+    }
+    close(listenfd);
+    return 0;
+}
+```
+More on that [here](https://linux.die.net/man/7/epoll) and [here](https://stackoverflow.com/questions/41582560/how-does-epolls-epollexclusive-mode-interact-with-level-triggering). If you are super curious about the topic - check out [this](http://www.kegel.com/c10k.html) as well.
+
+When adding a socket to the epoll watch list, the `EPOLL_CTL_ADD` command is used. This command instructs the kernel to add the specified socket to the epoll instance's watch list, associating it with a set of events to monitor (e.g., read, write, error).
+#### Wait for the event to happen
+The `epoll_wait` system call is used to wait for events on the file descriptors registered with the epoll instance. When invoked, it blocks current thread until one or more file descriptors in the epoll instance's watch list become ready for the specified events, or until a timeout occurs. Upon completion, `epoll_wait` returns information about the ready file descriptors and the events that occurred by placing `epoll_event` structures in events array. Internally, the kernel efficiently scans the epoll instance's data structures to determine which file descriptors are ready for I/O operations, without the need for iterative polling. 
+## Accepting connections
+After setting up the epoll instance, the server proceeds with accepting incoming connections from clients using the `accept` system call to accept the connection request and create a new socket descriptor specifically for this connection. Internally, the Linux kernel performs several steps when accept is called:
+- It extracts the first connection request on the queue of pending connections for the listening `socket_` - main socket of the server
+- Once a connection request is received, the kernel creates a new socket descriptor `client_sock` and sets up a new file structure for it, representing the connection.
+- If successful, `accept` returns the new socket descriptor for the accepted connection.
+#### Set client's fd to non-blocking state
+After accepting the connection and obtaining the new socket descriptor `client_sock`, the server sets this socket to non-blocking mode using the `fcntl` system call. This step ensures that subsequent I/O operations on this socket will not block the calling thread. It's done by adding `O_NONBLOCK` flag to those already set.
+#### Add client's fd to epoll
+Just like with server's sockets - this way we'll be monitoring the events happening on it.
+#### Read client's message from socket
+As simple as it is - just use nonblocking `read` or socket-specific `recv` to read from fd.
 ## [Request](https://developer.mozilla.org/en-US/docs/Web/HTTP/Messages#http_requests) handling
 HTTP request is a message sent by a client to a server:
 
@@ -482,7 +758,7 @@ Server creates response in a following way:
 		2. If an external or internal address is provided, sets the `Location` header accordingly.
 	4. If a body file is specified, its content is read.
 4. Sets additional headers like `Content-Type`, `Content-Length`, and `Connection`.
-
+### Sending response back to client
 #  Additional info
 ## Server response codes implemented
 ### OK
@@ -561,3 +837,10 @@ Important notes:
 		 1. `0000000001`, `0000000021`, etc.. - in `./1`
 		 2. `0000000010`, `0000000210`, etc.. -  in `./0`
     3. So the first request's body would be saved to  `./1/0000000001`, second - `./2/0000000002`, etc..
+## Blocking
+Regarding subject's requirements:
+- Your server must *never block* and the client can be bounced properly if necessary.
+- It must* be non-blocking* and use only 1 poll() (or equivalent) for all the I/O operations between the client and the server (listen included).
+
+1. **Blocking**: In a blocking server, when a request comes in, the server handles it synchronously, meaning it waits for the entire request to be processed before moving on to the next request. During this time, the server thread handling the request is "blocked" from doing anything else. If there are many concurrent requests or if a request takes a long time to process, this can lead to inefficient resource utilization and poor responsiveness. 
+2. **Non-blocking**: In a non-blocking server, when a request comes in, the server initiates the request processing and then continues to handle other requests without waiting for the first request to complete. This allows the server to handle multiple requests concurrently without being blocked. Non-blocking servers typically use asynchronous I/O operations or event-driven models to achieve this.

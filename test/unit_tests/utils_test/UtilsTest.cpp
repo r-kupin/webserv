@@ -15,7 +15,7 @@
 
 TEST(CheckFS, CheckFilesystemExist) {
     std::string def_res_address_ = "test_resources/nested_locations";
-    EXPECT_EQ(Utils::CheckFilesystem(def_res_address_ + "/nginx.conf"), FILE);
+    EXPECT_EQ(Utils::CheckFilesystem(def_res_address_ + "/nginx.conf"), COMM_FILE);
     EXPECT_EQ(Utils::CheckFilesystem(def_res_address_ + "/www/X"), NOTHING);
     EXPECT_EQ(Utils::CheckFilesystem(def_res_address_ + "/www"), DIRECTORY);
 }
