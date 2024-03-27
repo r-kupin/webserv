@@ -5,12 +5,13 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/03/27 16:06:01 by  rokupin          #+#    #+#             */
-/*   Updated: 2024/03/27 14:04:11 by mede-mas         ###   ########.fr       */
+/*   Created: Invalid date        by                   #+#    #+#             */
+/*   Updated: 2024/03/27 17:07:12 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-/*        Description
+
+        Description
 
 		1. The server starts by reading the nginx configuration file, which
 		specifies the port number, server root_ directory, and any other
