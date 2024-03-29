@@ -13,8 +13,6 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
-#include <sys/stat.h>
-#include <sys/statvfs.h>
 #include <ctime>
 #include <unistd.h>
 #include <cstdlib>

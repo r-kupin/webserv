@@ -10,6 +10,7 @@
 /*                                                                            */
 /******************************************************************************/
 
+#include <sys/time.h>
 #include "Server.h"
 
 Server::Server(const Server &other)
@@ -22,7 +23,8 @@ Server::Server(const Server &other)
         epoll_events_count_(0),
         epoll_connection_count_(0),
         epoll_in_out_count_(0),
-        connections_(CreateConnections(MAX_CLIENTS, is_running_)) {}
+        connections_(CreateConnections(MAX_CLIENTS, is_running_)),
+        startup_time_(other.startup_time_) {}
 
 Server::Server(const ServerConfiguration &config,
                const volatile bool &is_running_ref)
@@ -35,7 +37,8 @@ Server::Server(const ServerConfiguration &config,
         epoll_events_count_(0),
         epoll_connection_count_(0),
         epoll_in_out_count_(0),
-        connections_(CreateConnections(MAX_CLIENTS, is_running_ref)) {}
+        connections_(CreateConnections(MAX_CLIENTS, is_running_ref)),
+        startup_time_(Utils::TimeNow()) {}
 
 v_conn Server::CreateConnections(int n, const volatile bool &running) {
     std::vector<Connection> connections;

@@ -11,6 +11,7 @@
 /******************************************************************************/
 
 #include <iostream>
+#include <sys/time.h>
 #include "Utils.h"
 
 m_codes Utils::err_codes;
@@ -146,4 +147,10 @@ std::string Utils::GetCodeDescription(int code) {
     } else {
         return ok_codes.find(code)->second;
     }
+}
+
+long Utils::TimeNow() {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return (tv.tv_sec) * 1000LL + tv.tv_usec / 1000;
 }

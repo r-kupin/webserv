@@ -921,7 +921,7 @@ It used to be people would hardcode these values, and you can absolutely still d
 
 Anyway, enough of that. What you really want to do is use the values from the results of the call to `getaddrinfo()`, and feed them into `socket()` directly like this:
 
-```
+```cpp
 int s;
 struct addrinfo hints, *res;
 

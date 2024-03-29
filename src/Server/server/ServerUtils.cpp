@@ -28,9 +28,7 @@ void Server::ThrowException(const std::string &msg, std::ostream &os) const {
 }
 
 void    Server::Log(const std::string &msg, std::ostream &os) const {
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    os << "[ " << ((tv.tv_sec) * 1000LL + tv.tv_usec / 1000) << " ] ";
+    os << "[ " << Utils::TimeNow() - startup_time_ << " ] ";
     os << msg << std::endl;
 }
 

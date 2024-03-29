@@ -56,6 +56,7 @@ public:
                                 const std::string &root);
 //-------------------string/container utils-------------------------------------
     static std::string  NiceTimestamp();
+
     static std::string  NbrToString(size_t n);
     static size_t       StringToULong(const std::string & str);
     static long         StringToNbr(const std::string & str);
@@ -71,6 +72,8 @@ public:
     static bool         IsRedirectCode(int code);
     static bool         IsValidHTTPCode(int code);
     static std::string  GetCodeDescription(int code);
+//-------------------Misc-------------------------------------------------------
+    static long         TimeNow();
 private:
     static m_codes err_codes;
     static m_codes ok_codes;

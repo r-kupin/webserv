@@ -161,6 +161,7 @@ private:
     int                         epoll_in_out_count_;
     v_conn                      connections_;
     std::ofstream               log_file_;
+    long                        startup_time_;
 };
 
 #endif //WEBSERV_SERVER_H

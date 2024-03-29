@@ -13,6 +13,7 @@
 #include <iostream>
 #include <unistd.h>
 #include <cstring>
+#include <arpa/inet.h>
 
 #include "Server.h"
 
@@ -35,10 +36,12 @@ void Server::CreateLogFile() {
                                 Utils::NbrToString(config_.GetPort()) + ".log";
     if (!config_.GetLogDirAddress().empty())
         log_file_name = config_.GetLogDirAddress() + "/" + log_file_name;
-    log_file_.open(log_file_name.c_str(), std::ios::app);
-    if (!log_file_.is_open())
-        ThrowException("Failed to open log file: " +
-                        config_.GetLogDirAddress() + "/" + log_file_name);
+    log_file_.open(log_file_name.c_str(), std::ios::out);
+    if (!log_file_.is_open()) {
+        std::string err_msg(strerror(errno));
+        ThrowException("Failed to open log file " + config_.GetLogDirAddress() +
+                       "/" + log_file_name + " : " + err_msg);
+    }
 }
 
 /**
@@ -65,9 +68,8 @@ void Server::PresetAddress(addrinfo **addr) {
     if (getaddrinfo(config_.GetServerName().c_str(), // localhost
                     Utils::NbrToString(config_.GetPort()).c_str(), // port
                     &hints, addr)) {
-        ThrowException("Failed getting address info! "
-                       "Unable to resolve a domain name or IP address or port",
-                       log_file_);
+        std::string err_msg(strerror(errno));
+        ThrowException("Failed getting address info : " + err_msg, log_file_);
     }
 }
 
@@ -83,9 +85,11 @@ void Server::PresetAddress(addrinfo **addr) {
 void Server::CreateSocket(addrinfo *res) {
     socket_ = socket(res->ai_family,res->ai_socktype,0);
     if (socket_ < 0) {
+        std::string err_msg(strerror(errno));
         freeaddrinfo(res);
-        ThrowException("Failed to create new socket", log_file_);
+        ThrowException("Failed to create new socket : " + err_msg, log_file_);
     }
+    Log("Socket created", log_file_);
 }
 
 /**
@@ -100,10 +104,12 @@ void Server::SetSocketOptions(addrinfo *res) {
     int opt = 1;
     if (setsockopt(socket_, SOL_SOCKET, SO_REUSEADDR,
                    &opt, sizeof(opt)) < 0) {
+        std::string err_msg(strerror(errno));
         freeaddrinfo(res);
         close(socket_);
-        ThrowException("Failed to set socket options", log_file_);
+        ThrowException("Failed to set socket options : " + err_msg, log_file_);
     }
+    Log("Socket options set", log_file_);
 }
 
 /**
@@ -117,24 +123,31 @@ void Server::SetSocketOptions(addrinfo *res) {
  */
 void Server::BindSocket(addrinfo *res) {
     if (bind(socket_, res->ai_addr, res->ai_addrlen)) {
+        std::string err_msg(strerror(errno));
         freeaddrinfo(res);
         close(socket_);
-        ThrowException("Failed to Bind Socket", log_file_);
+        ThrowException("Failed to Bind Socket : " + err_msg, log_file_);
     }
+    Log("Socket bind()-ed", log_file_);
 }
 
 void Server::ListenSocket()  {
     if (listen(socket_, SOMAXCONN) < 0) {
+        std::string err_msg(strerror(errno));
         close(socket_);
-        ThrowException("Failed to Listen Socket", log_file_);
+        ThrowException("Failed to Listen Socket : " + err_msg, log_file_);
     }
+    Log("Listening to socket " + Utils::NbrToString(socket_), log_file_);
 }
 
 void Server::CreateEpoll() {
     epoll_fd_= epoll_create(1);
     if (epoll_fd_ < 0) {
-        ThrowException("Failed to Create Epoll Instance", log_file_);
+        std::string err_msg(strerror(errno));
+        ThrowException("Failed to Create Epoll Instance : " + err_msg,
+                       log_file_);
     }
+    Log("Epoll instance created", log_file_);
 }
 
 void Server::AddEpollInstance() {
@@ -142,6 +155,10 @@ void Server::AddEpollInstance() {
     std::memset(&event, 0, sizeof(event));
     event.data.fd = socket_;
     event.events = EPOLLIN | EPOLLOUT;
-    if (epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, socket_, &event) < 0)
-        ThrowException("Failed to add socket to Epoll Instance", log_file_);
+    if (epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, socket_, &event) < 0) {
+        std::string err_msg(strerror(errno));
+        ThrowException("Failed to add socket to Epoll Instance : " + err_msg,
+                       log_file_);
+    }
+    Log("Listening socket added to epoll instance", log_file_);
 }
