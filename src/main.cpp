@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 /**
-		Description
+        Description
 
 		1. The server starts by reading the nginx configuration file, which
 		specifies the port number, server root_ directory, and any other

@@ -12,11 +12,10 @@
 
 #include <netinet/in.h>
 #include <unistd.h>
-#include <csignal>
 
 #include "Server.h"
 
-void Server::Start() {
+void    Server::Start() {
     Init();
     Log("Server initialized successfully!", log_file_);
     log_file_ << *this << std::endl;
@@ -50,7 +49,7 @@ void Server::Start() {
  * event.data.fd == already-accepted-socket-fd and
  * event.events & EPOLLIN && event.events & EPOLLOUT. In this case server
  * accepts needs to read incoming data, create the Request, process it and
- * aend the response.
+ * append the response.
  */
 void    Server::EventLoop() {
     epoll_event events[MAX_EVENTS];

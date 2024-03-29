@@ -39,6 +39,7 @@ Server::Server(const ServerConfiguration &config,
 
 v_conn Server::CreateConnections(int n, const volatile bool &running) {
     std::vector<Connection> connections;
+
     for (int i = 0; i < n; ++i) {
         connections.push_back(Connection(running));
     }

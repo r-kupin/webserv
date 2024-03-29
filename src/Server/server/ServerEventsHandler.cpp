@@ -27,6 +27,8 @@ bool Server::ProcessHeaders(int client_sock, Connection &connection) {
         Log("Got client request:", log_file_);
         log_file_ << connection.request_ << std::endl;
         connection.url_headers_done_ = true;
+    } catch (const Stopped &e) {
+        return true;
     } catch (const ZeroRead &e) {
         // socket is closed on the client's side. Remove connection
         CloseConnectionWithLogMessage(client_sock,

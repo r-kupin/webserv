@@ -54,7 +54,6 @@ I am not using `Makefile` in development process, so the **lists of source files
 - %% CGI %%
 - Make the route able to accept uploaded files and configure where they should be saved. ([upload_store](#upload_store))
 ## ToDo
-- Stop checking the value of **errno**
 - A request to your server should never hang forever.
 - DELETE method handling
 - One server listening to multiple ports & multiple domains
@@ -71,17 +70,17 @@ I am not using `Makefile` in development process, so the **lists of source files
 - [x] Ask if they use only one select() (or equivalent) and how they've managed the server to accept and the client to read/write.
 - [x] The select() (or equivalent) should be in the main loop and should check file descriptors for read and write AT THE SAME TIME. If not, the grade is 0 and the evaluation process ends now.
 - [x] There should be only one read or one write per client per select() (or equivalent). Ask the group to show you the code from the select() (or equivalent) to the read and write of a client.
-- [ ] Search for all read/recv/write/send on a socket and check that, if an error is returned, the client is removed.
-- [ ] Search for all read/recv/write/send and check if the returned value is correctly checked (checking only -1 or 0 values is not enough, both should be checked).
-- [ ] If errno is checked after read/recv/write/send, the grade is 0 and the evaluation process ends now.
-- [ ] Writing or reading ANY file descriptor without going through the select() (or equivalent) is strictly FORBIDDEN.
-- [ ] The project must compile without any re-link issue. If not, use the 'Invalid compilation' flag.
-- [ ] If any point is unclear or is not correct, the evaluation stops.
+- [x] Search for all read/recv/write/send on a socket and check that, if an error is returned, the client is removed.
+- [x] Search for all read/recv/write/send and check if the returned value is correctly checked (checking only -1 or 0 values is not enough, both should be checked).
+- [x] If errno is checked after read/recv/write/send, the grade is 0 and the evaluation process ends now.
+- [x] Writing or reading ANY file descriptor without going through the select() (or equivalent) is strictly FORBIDDEN.
+- [x] The project must compile without any re-link issue. If not, use the 'Invalid compilation' flag.
+- [x] If any point is unclear or is not correct, the evaluation stops.
 ## Configuration
 In the configuration file, check whether you can do the following and  
 test the result:
-- [ ] Search for the HTTP response status codes list on the internet. During this evaluation, if any status codes is wrong, don't give any related points.
-- [ ] Setup multiple servers with different ports.
+- [x] Search for the HTTP response status codes list on the internet. During this evaluation, if any status codes is wrong, don't give any related points.
+- [x] Setup multiple servers with different ports.
 - [ ] Setup multiple servers with different hostnames (use something like: curl --resolve example.com:80:127.0.0.1 [http://example.com/](http://example.com/)).
 - [ ] Setup default error page (try to change the error 404).
 - [ ] Limit the client body (use: curl -X POST -H "Content-Type: plain/text" --data "BODY IS HERE write something shorter or longer than body limit").

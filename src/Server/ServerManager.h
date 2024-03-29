@@ -31,8 +31,8 @@ public:
     static void     Stop(int signal);
     static void     *StartServer(void *srv);
 private:
-    v_servers   servers_;
-    v_threads   threads_;
+    v_servers       servers_;
+    v_threads       threads_;
 };
 
 

@@ -19,9 +19,6 @@
 ClientRequest::ClientRequest(v_c_b &is_running)
         : is_running_(is_running) {}
 
-ClientRequest::ClientRequest(int client_sock, v_c_b &is_running)
-        : is_running_(is_running) { Init(client_sock, NULL);}
-
 ClientRequest& ClientRequest::operator=(const ClientRequest& other) {
     if (this != &other) {
         raw_request_ = other.raw_request_;

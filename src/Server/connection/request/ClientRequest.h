@@ -55,7 +55,6 @@ public:
     class RequestException : public std::exception {};
 
     ClientRequest(v_c_b &is_running);
-    explicit ClientRequest(int client_sock, v_c_b &is_running);
 
     ClientRequest       &operator=(const ClientRequest& other);
 
@@ -86,9 +85,11 @@ public:
 protected:
 //-------------------socket-level-----------------------------------------------
     v_str               &ReadFromSocket(int socket, int buffer_size);
+    void                ProbeSocket(int socket, char *buffer) const;
     int                 ReadBodyPart(int socket, int buffer_size, char *buffer);
     void                ReadCURLFileMetadata(const std::string &delimiter,
                                              char *buffer, int socket);
+    void                NothingToRead(int bytes_read) const;
 //-------------------vector-of-strings parsed input level----------------------
     void                CheckRequest(const v_str &request);
     bool                HasHeaders(const v_str &request);
@@ -110,7 +111,7 @@ protected:
                                        const std::string &e) const;
 private:
 //-------------------processing-time data---------------------------------------
-    v_c_b &is_running_;
+    v_c_b               &is_running_;
     std::ofstream       *log_file_;
     v_str               raw_request_;
     std::string         associated_filename_;
@@ -124,10 +125,6 @@ private:
     m_str_str           params_;
     m_str_str           headers_;
     int                 socket_;
-
-    void ProbeSocket(int socket, char *buffer) const;
-
-    void NothingToRead(int bytes_read) const;
 };
 std::ostream &operator<<(std::ostream &os, const ClientRequest &request);
 
