@@ -77,18 +77,22 @@ public:
     friend std::ostream         &operator<<(std::ostream &os, const Server &server);
 protected:
 //-------------------initialisation: open sockets, create epoll...--------------
-    void                        Init();
+    bool                        Init();
 
     static v_conn               CreateConnections(int n,
                                                   const volatile bool &running);
-    void                        CreateLogFile();
-    void                        PresetAddress(addrinfo **addr);
-    void                        CreateSocket(addrinfo *res);
-    void                        SetSocketOptions(addrinfo *res);
-    void                        BindSocket(addrinfo *res);
-    void                        ListenSocket();
-    void                        CreateEpoll();
-    void                        AddEpollInstance();
+     void                        CreateLogFile();
+     void                        CreateEpollInstance();
+     void                        PresetAddress(addrinfo **addr,
+                                              const std::string &host,
+                                              const std::string &port_str);
+     int                         CreateSocket(addrinfo *res,
+                                             const std::string &host,
+                                             const std::string &port_str);
+     void                        SetSocketOptions(addrinfo *res, int socket);
+     void                        BindSocket(addrinfo *res, int socket);
+     void                        ListenSocket(int socket);
+     void                        AddSocketToEpollInstance(int socket);
 //-------------------event handling---------------------------------------------
     void                        EventLoop();
     int                         CheckRequest(int client_sock);
@@ -149,11 +153,13 @@ protected:
                                                               const std::string &msg);
     void                        ThrowException(const std::string & msg,
                                                std::ostream &os = std::cout) const;
+    bool                        IsSocketFd(int fd) const;
+    void                        Cleanup();
 private:
     const volatile bool         &is_running_;
     const ServerConfiguration   &config_;
     int                         files_uploaded_;
-    int                         socket_;
+    std::map<int, std::string>  socket_to_address_;
     int                         epoll_fd_;
     int                         epoll_returns_count_;
     int                         epoll_events_count_;
@@ -162,6 +168,6 @@ private:
     v_conn                      connections_;
     std::ofstream               log_file_;
     long                        startup_time_;
-};
+ };
 
 #endif //WEBSERV_SERVER_H

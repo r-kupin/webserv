@@ -46,7 +46,7 @@ protected:
 TEST_F(SimpleIndexConfigResponseTest, LocX) {
 Location        response_location;
 ClientRequest   request;
-ServerResponse  response(GetConfig().GetServerName(), GetConfig().GetPort());
+ServerResponse  response(GetConfig().GetDefaultServerName(), GetConfig().GetPorts());
 
 pipe_reguest_to_fd("GET /loc_X HTTP/1.1\r\n");
     request.Init(fd_, NULL);
@@ -61,7 +61,7 @@ EXPECT_EQ(response.GetHeaders().find("Content-Type")->second, "text/html");
 TEST_F(SimpleIndexConfigResponseTest, LocXIndex) {
 Location        response_location;
 ClientRequest   request;
-ServerResponse  response(GetConfig().GetServerName(), GetConfig().GetPort());
+ServerResponse  response(GetConfig().GetDefaultServerName(), GetConfig().GetPorts());
 
 pipe_reguest_to_fd("GET /loc_X/ HTTP/1.1\r\n");
     request.Init(fd_, NULL);
@@ -76,7 +76,7 @@ EXPECT_EQ(response.GetHeaders().find("Content-Type")->second, "text/html");
 TEST_F(SimpleIndexConfigResponseTest, Loc4) {
     Location        response_location;
     ClientRequest   request;
-    ServerResponse  response(GetConfig().GetServerName(), GetConfig().GetPort());
+    ServerResponse  response(GetConfig().GetDefaultServerName(), GetConfig().GetPorts());
 
     pipe_reguest_to_fd("GET /loc_4 HTTP/1.1\r\n");
     request.Init(fd_, NULL);
@@ -87,13 +87,13 @@ TEST_F(SimpleIndexConfigResponseTest, Loc4) {
     EXPECT_EQ(response.GetHeaders().find("Server")->second, "WebServ");
     EXPECT_EQ(response.GetHeaders().find("Content-Type")->second, "text/html");
     EXPECT_EQ(response.GetHeaders().find("Location")->second,
-              "http://localhost:" + Utils::NbrToString(GetConfig().GetPort()) + "/loc_4/");
+              "http://localhost:" + Utils::NbrToString(GetConfig().GetPorts()) + "/loc_4/");
 }
 
 TEST_F(SimpleIndexConfigResponseTest, Loc4Index) {
     Location        response_location;
     ClientRequest   request;
-    ServerResponse  response(GetConfig().GetServerName(), GetConfig().GetPort());
+    ServerResponse  response(GetConfig().GetDefaultServerName(), GetConfig().GetPorts());
 
     pipe_reguest_to_fd("GET /loc_4/ HTTP/1.1\r\n");
     request.Init(fd_, NULL);
@@ -108,7 +108,7 @@ TEST_F(SimpleIndexConfigResponseTest, Loc4Index) {
 TEST_F(SimpleIndexConfigResponseTest, Loc4File) {
     Location        response_location;
     ClientRequest   request;
-    ServerResponse  response(GetConfig().GetServerName(), GetConfig().GetPort());
+    ServerResponse  response(GetConfig().GetDefaultServerName(), GetConfig().GetPorts());
 
     pipe_reguest_to_fd("GET /loc_4/index.html HTTP/1.1\r\n");
     request.Init(fd_, NULL);
@@ -123,7 +123,7 @@ TEST_F(SimpleIndexConfigResponseTest, Loc4File) {
 TEST_F(SimpleIndexConfigResponseTest, loc1) {
     Location        response_location;
     ClientRequest   request;
-    ServerResponse  response(GetConfig().GetServerName(), GetConfig().GetPort());
+    ServerResponse  response(GetConfig().GetDefaultServerName(), GetConfig().GetPorts());
 
     pipe_reguest_to_fd("GET /loc_1 HTTP/1.1\r\n");
     request.Init(fd_, NULL);
@@ -134,14 +134,14 @@ TEST_F(SimpleIndexConfigResponseTest, loc1) {
     EXPECT_EQ(response.GetHeaders().find("Server")->second, "WebServ");
     EXPECT_EQ(response.GetHeaders().find("Content-Type")->second, "text/html");
     EXPECT_EQ(response.GetHeaders().find("Location")->second,
-              "http://localhost:" + Utils::NbrToString(GetConfig().GetPort())
+              "http://localhost:" + Utils::NbrToString(GetConfig().GetPorts())
               + "/loc_1/");
 }
 
 TEST_F(SimpleIndexConfigResponseTest, loc1Index) {
     Location        response_location;
     ClientRequest   request;
-    ServerResponse  response(GetConfig().GetServerName(), GetConfig().GetPort());
+    ServerResponse  response(GetConfig().GetDefaultServerName(), GetConfig().GetPorts());
 
     pipe_reguest_to_fd("GET /loc_1/ HTTP/1.1\r\n");
     request.Init(fd_, NULL);

@@ -14,8 +14,8 @@
 #include <iostream>
 #include "ServerConfiguration.h"
 
-ServerConfiguration::ServerConfiguration()
-: server_name_("localhost") {
+ServerConfiguration::ServerConfiguration() {
+    server_names_.insert("localhost");
     Location root_loc("/");
     root_loc.root_ = kDefaultResources;
     root_loc.return_code_ = 0;
@@ -26,10 +26,10 @@ ServerConfiguration::ServerConfiguration()
 }
 
 ServerConfiguration::ServerConfiguration(const ServerConfiguration &other)
-: port_(other.port_),
-server_name_(other.server_name_),
-log_dir_address_(other.log_dir_address_),
-locations_(other.locations_) {}
+: ports_(other.ports_),
+  server_names_(other.server_names_),
+  log_dir_address_(other.log_dir_address_),
+  locations_(other.locations_) {}
 //-------------------satic utils------------------------------------------------
 bool        ServerConfiguration::MarkDefined(const std::string &key,
                                              bool &flag,
@@ -71,8 +71,8 @@ void        ServerConfiguration::ProcessDirectives(
     try {
         for (size_t i = 0; i < directives.size(); i++) {
             if (UMarkDefined("server_name", srv_name, directives[i])) {
-                server_name_ = directives[i][1];
-            } else if (UMarkDefined("listen", port, directives[i])) {
+                HandleServerNames(directives[i]);
+            } else if (MarkDefined("listen", port, directives[i])) {
                 HandlePort(directives[i]);
             } else if (UMarkDefined("log", log, directives[i])) {
                 HandleLog(directives[i]);
@@ -96,11 +96,25 @@ void        ServerConfiguration::ProcessDirectives(
         ThrowServerConfigError("Port needs to be specified explicitly!");
 }
 
+void ServerConfiguration::HandleServerNames(const v_str &directive) {
+    if (directive.size() > 1) {
+        for (v_str_c_it it = directive.begin() + 1; it != directive.end(); ++it) {
+            if (server_names_.empty()) // first is default
+                first_name_defined_ = *it;
+            server_names_.insert(*it);
+        }
+        return;
+    }
+    ThrowServerConfigError("server_name directive is wrong");
+}
+
 void ServerConfiguration::HandlePort(const v_str &directive) {
     if (directive.size() == 2) {
         int port = atoi(directive[1].c_str());
         if (port >= 0) {
-            port_ = port;
+            if (ports_.empty())
+                first_port_defined_ = port;
+            ports_.insert(port);
             return;
         }
     }
@@ -137,12 +151,16 @@ l_loc_c_it ServerConfiguration::GetConstRootIt() const {
     return locations_.begin();
 }
 
-int ServerConfiguration::GetPort() const {
-    return port_;
+const std::set<int> & ServerConfiguration::GetPorts() const {
+    return ports_;
 }
 
-const std::string &ServerConfiguration::GetServerName() const {
-    return server_name_;
+const std::set<std::string> &ServerConfiguration::GetServerNames() const {
+    return server_names_;
+}
+
+const std::string &ServerConfiguration::GetDefaultServerName() const {
+    return first_name_defined_;
 }
 
 const l_loc &ServerConfiguration::GetLocations() const {
@@ -153,11 +171,15 @@ const std::string &ServerConfiguration::GetLogDirAddress() const {
     return log_dir_address_;
 }
 
+int ServerConfiguration::DefaultPort() const {
+    return first_port_defined_;
+}
+
 bool        ServerConfiguration::operator==(
                                         const ServerConfiguration &rhs) const {
-    if (port_ != rhs.port_)
+    if (ports_ != rhs.ports_)
         return false;
-    if (server_name_ != rhs.server_name_)
+    if (server_names_ != rhs.server_names_)
         return false;
     if (!(locations_ == rhs.locations_))
         return false;
@@ -169,15 +191,18 @@ ServerConfiguration &ServerConfiguration::operator=(
     if (this == &rhs) {
         return *this;
     }
-    port_ = rhs.port_;
-    server_name_ = rhs.server_name_;
+    ports_ = rhs.ports_;
+    server_names_ = rhs.server_names_;
     locations_ = rhs.locations_;
     return *this;
 }
 
 std::ostream &operator<<(std::ostream &os, const ServerConfiguration &config) {
-    os << "hostname: " << config.GetServerName() << "\n";
-    os << "port: " << config.GetPort() << "\n";
+    os << "hostname: " << config.GetDefaultServerName() << "\n";
+    for (s_int_c_it it = config.GetPorts().begin();
+                                        it != config.GetPorts().end(); ++it) {
+        os << "port: " << *it << "\n";
+    }
     os << "log directory: " << config.GetLogDirAddress() << "\n";
     os << config.GetConstRoot() << "\n";
     os << std::endl;

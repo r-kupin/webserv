@@ -26,6 +26,9 @@ const static std::string kDefaultConfig = kDefaultResources + "/nginx.conf";
 
 typedef std::list<ServerConfiguration>                  l_sc;
 typedef std::list<ServerConfiguration>::const_iterator  l_sc_c_it;
+typedef std::set<int>::const_iterator                   s_int_c_it;
+typedef std::set<std::string>                           s_str;
+typedef std::set<std::string>::const_iterator           s_str_c_it;
 
 class ServerConfiguration {
 public:
@@ -66,10 +69,12 @@ public:
 //-------------------Getters & operators----------------------------------------
     const Location          &GetConstRoot() const;
     Location                &GetRoot();
-    const std::string       &GetServerName() const;
+    const std::string       &GetDefaultServerName() const;
+    const s_str             &GetServerNames() const;
     l_loc_it                GetRootIt();
     l_loc_c_it              GetConstRootIt() const;
-    int                     GetPort() const;
+    const std::set<int>     &GetPorts() const;
+    int                     DefaultPort() const;
     const l_loc             &GetLocations() const;
     const std::string       &GetLogDirAddress() const;
 
@@ -92,9 +97,12 @@ private:
                                      const v_str &directive);
     void                    HandlePort(const v_str &directive);
     void                    HandleLog(const v_str &directive);
+    void                    HandleServerNames(const v_str &directive);
 
-    int                     port_;
-    std::string             server_name_;
+    int                     first_port_defined_;
+    std::string             first_name_defined_;
+    std::set<int>           ports_;
+    std::set<std::string>   server_names_;
     std::string             log_dir_address_;
     std::list<Location>     locations_;
 };

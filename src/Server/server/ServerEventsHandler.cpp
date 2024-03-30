@@ -98,8 +98,7 @@ bool Server::ProcessBody(int client_sock, Connection &connection) {
 }
 
 void Server::Respond(int client_sock, const Connection &connection) {
-    ServerResponse response(config_.GetServerName(), config_.GetPort(),
-                            &log_file_);
+    ServerResponse response(socket_to_address_[client_sock], &log_file_);
 
     response.ComposeResponse(connection.location_);
     Log("Prepared response:", log_file_);

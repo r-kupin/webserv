@@ -42,11 +42,24 @@ bool    Server::SetDescriptorNonBlocking(int sockfd) {
     return (fcntl(sockfd, F_SETFL, flags) != -1);
 }
 
+void Server::Cleanup() {
+    epoll_ctl(epoll_fd_, EPOLL_CTL_DEL, epoll_fd_, NULL);
+    close(epoll_fd_);
+    for (std::map<int, std::string>::iterator it = socket_to_address_.begin();
+        it != socket_to_address_.end(); ++it) {
+        close(it->first);
+    }
+}
+
+bool Server::IsSocketFd(int fd) const {
+    return socket_to_address_.find(fd) == socket_to_address_.end();
+}
+
 void Server::PrintEventInfo(int events, int fd, int i) {
     epoll_events_count_++;
     if (events == 5)
         epoll_in_out_count_++;
-    if (events == EPOLLIN && fd == socket_ )
+    if (events == EPOLLIN && IsSocketFd(fd))
         epoll_connection_count_++;
 
     log_file_ << /*"\n== returns " << epoll_returns_count_ <<*/

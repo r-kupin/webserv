@@ -71,7 +71,7 @@ protected:
 //-------------------creating the list of server configurations-----------------
     void                CreateSrvConfigs(Node& root);
     void                CheckServer(Node &node, ServerConfiguration &current);
-    bool                HasServerWithSameNameOrPort(const ServerConfiguration &config);
+    bool                HasServerWithSameNameAndPort(const ServerConfiguration &config);
     void                CheckServerSubnodes(const v_node &subcontexts,
                                             ServerConfiguration &current);
     void                CheckLocationContextInServer(ServerConfiguration &current,

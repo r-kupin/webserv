@@ -16,14 +16,8 @@
 
 ServerResponse::ServerResponse() {}
 
-ServerResponse::ServerResponse(const std::string &serverName, int port, std::ofstream *log_file)
-        : log_file_(log_file),server_name_(serverName), port_(port) {}
-
-ServerResponse::ServerResponse(const Location &synth,
-                               const std::string &server_name, int port)
-    : server_name_(server_name), port_(port) {
-    ComposeResponse(synth);
-}
+ServerResponse::ServerResponse(const std::string &addr, std::ofstream *log_file)
+        :  addr_(addr), log_file_(log_file) {}
 
 std::string ServerResponse::ComposeTop(int return_code) {
     std::ostringstream oss;
@@ -75,8 +69,7 @@ void ServerResponse::HandleRedirect(const Location &synth) {
         AddHeader("Location", synth.return_external_address_);
     } else if (!synth.return_internal_address_.empty()) {
         AddHeader("Location",
-                  "http://" + server_name_ + ":" + Utils::NbrToString(port_) +
-                  synth.return_internal_address_);
+                  "http://" + addr_ + synth.return_internal_address_);
     }
 }
 

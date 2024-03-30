@@ -29,8 +29,7 @@ I am not using `Makefile` in development process, so the **lists of source files
 - Use only 1 poll() (or equivalent) for all the I/O operations between the client and the server (listen included).
 - poll() (or equivalent) must check read and write at the same time.
 - Never do a read or a write operation without going through poll() (or equivalent).
-- %% errno %%
-- You must never do a read or a write operation without going through poll() (or equivalent).
+- No **errno** checking
 - Non-blocking IO
 - A request to your server should never hang forever.
 - Your server must be compatible with the web browser of your choice
@@ -40,7 +39,7 @@ I am not using `Makefile` in development process, so the **lists of source files
 - Clients must be able to upload files. ([upload_store](#upload_store))
 - Make it work with %% DELETE, %%POST and GET methods.
 - Stress test resilience
-- %% Multiple ports %%
+- Multiple ports
 - Choose the [port](#listen) and [host](#server_name) of each server.
 - %% server_names %%
 - %% default server for host:port %%
@@ -82,7 +81,7 @@ test the result:
 - [x] Search for the HTTP response status codes list on the internet. During this evaluation, if any status codes is wrong, don't give any related points.
 - [x] Setup multiple servers with different ports.
 - [ ] Setup multiple servers with different hostnames (use something like: curl --resolve example.com:80:127.0.0.1 [http://example.com/](http://example.com/)).
-- [ ] Setup default error page (try to change the error 404).
+- [x] Setup default error page (try to change the error 404).
 - [ ] Limit the client body (use: curl -X POST -H "Content-Type: plain/text" --data "BODY IS HERE write something shorter or longer than body limit").
 - [ ] Setup routes in a server to different directories.
 - [ ] Setup a default file to search for if you ask for a directory.
@@ -137,7 +136,7 @@ The main context of the instance of the HTTP server. At least one should be defi
 Server context can't be empty - it should contain mandatory server-level directives: 
 - *[log](#log)* (unique)
 - *[server_name](#server_name)* (unique)
-- *[listen](#listen)* (unique)
+- *[listen](#listen)*
 
 Server also can predefine root location with optional directives:
 - *[root](#root)* (unique)
@@ -275,9 +274,9 @@ directive [ ARG1 ] [ ARG... ];
 ```
 #### Server-level directives
 ##### listen
-Has only one *arg* which sets the port, used by the server for requests listening.
+Has only one *arg* which sets the port, used by the server for requests listening. Multiple ports are possible for the single server via specification of the multiple `listen` directives.
 ##### server_name
-Should define server's host name, but only works for *localhost* right now
+Accepts one or more hostnames, that this server will monitor.
 ##### log
 Path to directory where log file named `servername_port.log` is going to be located. Actual nginx creates 2 log files : `access.log` and `error.log`. Nginx only outputs basic information to that logs, such as what was requested and what was returned.
 #### Location-level directives
@@ -626,7 +625,7 @@ When adding a socket to the epoll watch list, the `EPOLL_CTL_ADD` command is use
 The `epoll_wait` system call is used to wait for events on the file descriptors registered with the epoll instance. When invoked, it blocks current thread until one or more file descriptors in the epoll instance's watch list become ready for the specified events, or until a timeout occurs. Upon completion, `epoll_wait` returns information about the ready file descriptors and the events that occurred by placing `epoll_event` structures in events array. Internally, the kernel efficiently scans the epoll instance's data structures to determine which file descriptors are ready for I/O operations, without the need for iterative polling. 
 ## Accepting connections
 After setting up the epoll instance, the server proceeds with accepting incoming connections from clients using the `accept` system call to accept the connection request and create a new socket descriptor specifically for this connection. Internally, the Linux kernel performs several steps when accept is called:
-- It extracts the first connection request on the queue of pending connections for the listening `socket_` - main socket of the server
+- It extracts the first connection request on the queue of pending connections for the listening `socket_to_address_` - main socket of the server
 - Once a connection request is received, the kernel creates a new socket descriptor `client_sock` and sets up a new file structure for it, representing the connection.
 - If successful, `accept` returns the new socket descriptor for the accepted connection.
 #### Set client's fd to non-blocking state

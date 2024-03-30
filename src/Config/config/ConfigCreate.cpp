@@ -15,7 +15,6 @@
 #include <algorithm>
 #include "Config.h"
 
-
 /**
  * Checks directives and blocks of a main context, creating server
  * configurations at the same time
@@ -31,10 +30,8 @@ void Config::CreateSrvConfigs(Node& root) {
         if (root.child_nodes_[i].main_[0] == "server") {
             servers_.push_front(ServerConfiguration());
             CheckServer(root.child_nodes_[i], servers_.front());
-//            todo: there can be multiple servers with different names on the same port and server(s) with same name(s) on different ports
-            if (HasServerWithSameNameOrPort(servers_.front()))
-                ThrowSyntaxError("Server name and port needs to be unique "
-                                 "amongst all servers");
+            if (HasServerWithSameNameAndPort(servers_.front()))
+                ThrowSyntaxError("Servers can't have same name(s) and port(s)");
         } else {
             std::cout << "Found block " + root.child_nodes_[i].main_[0] + " " +
                          "inside main context" << std::endl;
@@ -70,12 +67,39 @@ void Config::CheckServer(Node &node, ServerConfiguration &current) {
     }
 }
 
-bool Config::HasServerWithSameNameOrPort(const ServerConfiguration &config) {
+bool has_same_name_and_port(const std::set<int>& ports1,
+                            const std::set<int>& ports2,
+                            const std::set<std::string>& names1,
+                            const std::set<std::string>& names2) {
+    for (s_int_c_it p_it = ports1.begin(); p_it != ports1.end(); ++p_it) {
+        if (ports2.find(*p_it) != ports2.end()) {
+            // if current.port (*p_it) appears in present.ports set
+            for (s_str_c_it hn_it = names1.begin(); hn_it != names1.end(); ++hn_it) {
+                if (names2.find(*hn_it) != names2.end()) {
+                    // if current.hostname (*hn_it) appears in present .hostnames set
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+/**
+ * Compares current config with all already present. If one of potentially
+ * multiple ports matches any of the ports among all configs defined - we
+ * compare hostnames. If at least one port AND one hostname are same - it
+ * creates ambiguity: which server should handle request for this address?
+ * In this case Error gets thrown.
+ */
+bool Config::HasServerWithSameNameAndPort(const ServerConfiguration &config) {
     for (l_sc_c_it it = servers_.begin(); it != servers_.end(); ++it) {
         if (it != servers_.begin()) {
-            if (it->GetServerName() == config.GetServerName() &&
-            it->GetPort() == config.GetPort())
+            if (has_same_name_and_port(it->GetPorts(), config.GetPorts(),
+                                       it->GetServerNames(),
+                                       config.GetServerNames())) {
                 return true;
+            }
         }
     }
     return false;

@@ -23,7 +23,7 @@ protected:
 TEST_F(ConfigSetupFromFileSimpleTest, TestAllComponents) {
     const ServerConfiguration & current = getConstServers().front();
 
-    EXPECT_EQ(current.GetPort(), 4280);
+    EXPECT_EQ(current.GetPorts(), 4280);
     EXPECT_EQ(current.GetLocations().size(), 1);
 
     const Location & root = current.GetConstRoot();
@@ -86,7 +86,7 @@ protected:
 TEST_F(ConfigSetupFromFileNestedTest, TestAllComponents) {
     const ServerConfiguration & current = getConstServers().front();
 
-    EXPECT_EQ(current.GetPort(), 4280);
+    EXPECT_EQ(current.GetPorts(), 4280);
     EXPECT_EQ(current.GetLocations().size(), 1);
 //-------------------root-------------------------------------------------------
     const Location & root = current.GetConstRoot();

@@ -22,11 +22,7 @@ public:
     class ResponseException : public std::exception {};
 
     ServerResponse();
-    ServerResponse(const Location &synth,
-                   const std::string &server_name, int port);
-
-    ServerResponse(const std::string &serverName, int port,
-                   std::ofstream *log_file);
+    ServerResponse(const std::string &addr, std::ofstream *log_file);
 
     ~ServerResponse();
 
@@ -51,12 +47,11 @@ protected:
     void                        AddHeader(const std::string &key,
                                           const std::string &value);
 private:
+    std::string     addr_;
     std::ofstream   *log_file_;
 
     std::string     top_header_;
     std::string     body_str_;
-    std::string     server_name_;
-    int             port_;
     m_str_str       headers_;
 };
 

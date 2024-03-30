@@ -46,7 +46,7 @@ protected:
 TEST_F(SimpleResponseTest, GetRoot) {
     Location        response_location;
     ClientRequest   request;
-    ServerResponse  response(GetConfig().GetServerName(), GetConfig().GetPort());
+    ServerResponse  response(GetConfig().GetDefaultServerName(), GetConfig().GetPorts());
 
     pipe_reguest_to_fd("GET / HTTP/1.1\r\n");
     request.Init(fd_, NULL);
@@ -71,7 +71,7 @@ TEST_F(SimpleResponseTest, GetRoot) {
 TEST_F(SimpleResponseTest, LocationNOTDefinedDirectoryNOTExists) {
     Location        response_location;
     ClientRequest   request;
-    ServerResponse  response(GetConfig().GetServerName(), GetConfig().GetPort());
+    ServerResponse  response(GetConfig().GetDefaultServerName(), GetConfig().GetPorts());
 
     pipe_reguest_to_fd("GET /loc_X HTTP/1.1\r\n");
     request.Init(fd_, NULL);
@@ -86,7 +86,7 @@ TEST_F(SimpleResponseTest, LocationNOTDefinedDirectoryNOTExists) {
 TEST_F(SimpleResponseTest, GetProvokeRedirect) {
     Location        response_location;
     ClientRequest   request;
-    ServerResponse  response(GetConfig().GetServerName(), GetConfig().GetPort());
+    ServerResponse  response(GetConfig().GetDefaultServerName(), GetConfig().GetPorts());
 
     pipe_reguest_to_fd("GET /loc_0 HTTP/1.1\r\n");
     request.Init(fd_, NULL);
@@ -102,7 +102,7 @@ TEST_F(SimpleResponseTest, GetProvokeRedirect) {
 TEST_F(SimpleResponseTest, LocationNOTDefinedDirectoryExists) {
     Location        response_location;
     ClientRequest   request;
-    ServerResponse  response(GetConfig().GetServerName(), GetConfig().GetPort());
+    ServerResponse  response(GetConfig().GetDefaultServerName(), GetConfig().GetPorts());
 
     pipe_reguest_to_fd("GET /loc_0/ HTTP/1.1\r\n");
     request.Init(fd_, NULL);
@@ -117,7 +117,7 @@ TEST_F(SimpleResponseTest, LocationNOTDefinedDirectoryExists) {
 TEST_F(SimpleResponseTest, LocationDefinedDirectoryNOTExists) {
     Location        response_location;
     ClientRequest   request;
-    ServerResponse  response(GetConfig().GetServerName(), GetConfig().GetPort());
+    ServerResponse  response(GetConfig().GetDefaultServerName(), GetConfig().GetPorts());
 
     pipe_reguest_to_fd("GET /loc_1X HTTP/1.1\r\n");
     request.Init(fd_, NULL);
@@ -132,7 +132,7 @@ TEST_F(SimpleResponseTest, LocationDefinedDirectoryNOTExists) {
 TEST_F(SimpleResponseTest, AccessForbiddenByRule) {
     Location        response_location;
     ClientRequest   request;
-    ServerResponse  response(GetConfig().GetServerName(), GetConfig().GetPort());
+    ServerResponse  response(GetConfig().GetDefaultServerName(), GetConfig().GetPorts());
 
     pipe_reguest_to_fd("GET /loc_1/ HTTP/1.1\r\n");
     request.Init(fd_, NULL);
@@ -147,7 +147,7 @@ TEST_F(SimpleResponseTest, AccessForbiddenByRule) {
 TEST_F(SimpleResponseTest, FileRequestFileExists) {
     Location        response_location;
     ClientRequest   request;
-    ServerResponse  response(GetConfig().GetServerName(), GetConfig().GetPort());
+    ServerResponse  response(GetConfig().GetDefaultServerName(), GetConfig().GetPorts());
 
     pipe_reguest_to_fd("GET /loc_4/index.html HTTP/1.1\r\n");
     request.Init(fd_, NULL);
@@ -174,7 +174,7 @@ TEST_F(SimpleResponseTest, FileRequestFileExists) {
 TEST_F(SimpleResponseTest, RedirectWithCustomMessage) {
     Location        response_location;
     ClientRequest   request;
-    ServerResponse  response(GetConfig().GetServerName(), GetConfig().GetPort());
+    ServerResponse  response(GetConfig().GetDefaultServerName(), GetConfig().GetPorts());
 
     pipe_reguest_to_fd("GET /loc_3X HTTP/1.1\r\n");
     request.Init(fd_, NULL);
@@ -192,7 +192,7 @@ TEST_F(SimpleResponseTest, RedirectWithCustomMessage) {
 TEST_F(SimpleResponseTest, PostRootBodyWithinLimits) {
     Location        response_location;
     ClientRequest   request;
-    ServerResponse  response(GetConfig().GetServerName(), GetConfig().GetPort());
+    ServerResponse  response(GetConfig().GetDefaultServerName(), GetConfig().GetPorts());
 
     pipe_reguest_to_fd("POST / HTTP/1.1\r\n\r\nthis is body\n\r");
     request.Init(fd_, NULL);

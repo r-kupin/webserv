@@ -16,24 +16,17 @@
 #include "Server.h"
 
 void    Server::Start() {
-    Init();
+    if (!Init()) {
+        Log("Server startup failed", log_file_);
+        return;
+    }
     Log("Server initialized successfully!", log_file_);
     log_file_ << *this << std::endl;
-    if (epoll_fd_ > 0) {
-        Log("Started server at " +
-            Utils::NbrToString(config_.GetPort()) + " port.", log_file_);
-        while (is_running_)
-            EventLoop();
-        epoll_ctl(epoll_fd_, EPOLL_CTL_DEL, epoll_fd_, NULL);
-        close(epoll_fd_);
-        Log("Server stopped.", log_file_);
-        close(socket_);
-    } else {
-        close(socket_);
-        ThrowException("It seems like " +
-                        Utils::NbrToString(config_.GetPort()) +
-                        " port is already in use. Aborting.", log_file_);
-    }
+    Log("Server started", log_file_);
+    while (is_running_)
+        EventLoop();
+    Cleanup();
+    Log("Server stopped.", log_file_);
 }
 
 /**
@@ -63,11 +56,12 @@ void    Server::EventLoop() {
             for (int i = 0; i < nfds; ++i) {
                 int fd = events[i].data.fd;
                 PrintEventInfo(events[i].events, fd, i);
-                if (fd == socket_) {
+                if (IsSocketFd(fd)) {
                     // New connection
                     struct sockaddr_in client_addr;
                     socklen_t client_len = sizeof(client_addr);
-                    int client_sock = accept(socket_,
+                    // todo : match fd with client socket in connection
+                    int client_sock = accept(fd,
                                              (struct sockaddr *) &client_addr,
                                              &client_len);
                     CheckRequest(client_sock);
