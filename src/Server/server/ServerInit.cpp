@@ -14,7 +14,6 @@
 #include <unistd.h>
 #include <cstring>
 #include <arpa/inet.h>
-#include <sstream>
 
 #include "Server.h"
 
@@ -22,10 +21,8 @@
  * Create listening sockets for all ports on all hosts
  * @return 
  */
-bool Server::Init() {
+bool Server::Init(int epoll_fd) {
     try {
-        CreateLogFile();
-        CreateEpollInstance();
         for (s_str_c_it hn_it = config_.GetServerNames().begin();
              hn_it != config_.GetServerNames().end(); ++hn_it) {
             for (s_int_c_it p_it = config_.GetPorts().begin();
@@ -39,42 +36,13 @@ bool Server::Init() {
                 BindSocket(addr, socket);
                 freeaddrinfo(addr);
                 ListenSocket(socket);
-                AddSocketToEpollInstance(socket);
+                AddSocketToEpollInstance(socket, epoll_fd);
             }
         }
     } catch (const ServerException &) {
         return false;
     }
     return true;
-}
-
-void Server::CreateLogFile() {
-    std::stringstream ss;
-    for (s_str_c_it it = config_.GetServerNames().begin();
-        it != config_.GetServerNames().end(); ++it)
-        ss << *it << "_";
-    for (s_int_c_it it = config_.GetPorts().begin();
-         it != config_.GetPorts().end(); ++it)
-        ss << *it << "_";
-    std::string log_file_name = ss.str() + ".log";
-    if (!config_.GetLogDirAddress().empty())
-        log_file_name = config_.GetLogDirAddress() + "/" + log_file_name;
-    log_file_.open(log_file_name.c_str(), std::ios::out);
-    if (!log_file_.is_open()) {
-        std::string err_msg(strerror(errno));
-        ThrowException("Failed to open log file " + config_.GetLogDirAddress() +
-                       "/" + log_file_name + " : " + err_msg);
-    }
-}
-
-void Server::CreateEpollInstance() {
-    epoll_fd_= epoll_create(1);
-    if (epoll_fd_ < 0) {
-        std::string err_msg(strerror(errno));
-        ThrowException("Failed to Create Epoll Instance : " + err_msg,
-                       log_file_);
-    }
-    Log("Epoll instance created", log_file_);
 }
 
 /**
@@ -183,12 +151,12 @@ void Server::ListenSocket(int socket) {
         " for " + srv_sock_to_address_[socket] + " : " , log_file_);
 }
 
-void Server::AddSocketToEpollInstance(int socket) {
+void Server::AddSocketToEpollInstance(int socket, int epoll_fd) {
     epoll_event event;
     std::memset(&event, 0, sizeof(event));
     event.data.fd = socket;
     event.events = EPOLLIN | EPOLLOUT;
-    if (epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, socket, &event) < 0) {
+    if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, socket, &event) < 0) {
         std::string err_msg(strerror(errno));
         Cleanup();
         ThrowException("Failed to add socket on fd:" +

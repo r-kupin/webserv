@@ -15,45 +15,20 @@
 Server::Server(const Server &other)
         : is_running_(other.is_running_),
           config_(other.config_),
-          files_uploaded_(other.files_uploaded_),
           srv_sock_to_address_(other.srv_sock_to_address_),
-          epoll_fd_(other.epoll_fd_),
-          epoll_returns_count_(0),
-          epoll_events_count_(0),
-          epoll_connection_count_(0),
-          epoll_in_out_count_(0),
-          connections_(CreateConnections(MAX_CLIENTS, is_running_)),
+          log_file_(other.log_file_),
           startup_time_(other.startup_time_) {}
 
-Server::Server(const ServerConfiguration &config,
-               const volatile bool &is_running_ref)
+Server::Server(const ServerConfiguration &config, v_c_b &is_running_ref, int epoll_fd)
         : is_running_(is_running_ref),
-          config_(config),
-          files_uploaded_(0),
-          epoll_fd_(0),
-          epoll_returns_count_(0),
-          epoll_events_count_(0),
-          epoll_connection_count_(0),
-          epoll_in_out_count_(0),
-          connections_(CreateConnections(MAX_CLIENTS, is_running_ref)),
-          startup_time_(Utils::TimeNow()) {}
-
-v_conn Server::CreateConnections(int n, const volatile bool &running) {
-    std::vector<Connection> connections;
-
-    for (int i = 0; i < n; ++i) {
-        connections.push_back(Connection(running));
-    }
-    return connections;
-}
+          config_(config) { Init(epoll_fd); }
 
 std::ostream &operator<<(std::ostream &os, const Server &server) {
     os << "config:\n" << server.config_;
     os << "\naddresses:\n";
 
     for (m_int_str::const_iterator it = server.srv_sock_to_address_.begin();
-         it != server.srv_sock_to_address_.end();
-         ++it) {
+         it != server.srv_sock_to_address_.end(); ++it) {
         os << "\t" << it->second << "\n";
     }
     return os;

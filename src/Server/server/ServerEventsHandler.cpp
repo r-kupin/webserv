@@ -98,7 +98,9 @@ bool Server::ProcessBody(int client_sock, Connection &connection) {
 }
 
 void Server::Respond(int client_sock, const Connection &connection) {
-    ServerResponse response(srv_sock_to_address_[connection.server_listening_socket_], &log_file_);
+    ServerResponse response(srv_sock_to_address_[connection.
+                                                    server_listening_socket_],
+                            &log_file_);
 
     response.ComposeResponse(connection.location_);
     Log("Prepared response:", log_file_);

@@ -15,8 +15,8 @@
 
 #include "server/Server.h"
 
-typedef std::vector<Server>       v_servers;
-typedef std::vector<pthread_t>    v_threads;
+typedef std::vector<Server>     v_servers;
+typedef std::vector<Connection> v_conn;
 
 static volatile bool        is_running_ = true;
 
@@ -25,14 +25,34 @@ public:
     ServerManager();
 
     ~ServerManager();
-
+// init
     void            Init(const Config &config);
+    static v_conn   CreateConnections(int n, v_c_b &running);
+    void            CreateEpollInstance();
+// run
     void            Start();
+    void            EventLoop();
     static void     Stop(int signal);
-    static void     *StartServer(void *srv);
+// handle
+
+// util
+    void            PrintEventInfo(int events, int fd, int i) ;
+    void            ThrowException(const std::string &msg) const;
+    void            Log(const std::string &msg) const;
+    bool            IsSocketFd(int fd) const;
 private:
     v_servers       servers_;
-    v_threads       threads_;
+    v_conn          connections_;
+    m_int_str       srv_sock_to_address_;
+
+    int             files_uploaded_;
+    long            startup_time_;
+
+    int             epoll_fd_;
+    int             epoll_returns_count_;
+    int             epoll_events_count_;
+    int             epoll_connection_count_;
+    int             epoll_in_out_count_;
 };
 
 

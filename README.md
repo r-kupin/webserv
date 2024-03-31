@@ -41,7 +41,7 @@ I am not using `Makefile` in development process, so the **lists of source files
 - Stress test resilience
 - Multiple ports
 - Choose the [port](#listen) and [host](#server_name) of each server.
-- %% server_names %%
+- Setup the server_names or not
 - %% default server for host:port %%
 - Setup default [error_pages](#error_page).
 - Limit [client_max_body_size](#client_max_body_size).
@@ -57,7 +57,6 @@ I am not using `Makefile` in development process, so the **lists of source files
 - DELETE method handling
 - One server listening to multiple ports & multiple domains
 - The first server for a host:port will be the default for this host:port (that means it will answer to all the requests that don’t belong to an other server).
-- Setup the server_names or not.
 - Execute CGI based on certain file extension (for example .php)
 - Turn on or off directory listing. (?)
 # Checklist
@@ -83,9 +82,9 @@ test the result:
 - [ ] Setup multiple servers with different hostnames (use something like: curl --resolve example.com:80:127.0.0.1 [http://example.com/](http://example.com/)).
 - [x] Setup default error page (try to change the error 404).
 - [ ] Limit the client body (use: curl -X POST -H "Content-Type: plain/text" --data "BODY IS HERE write something shorter or longer than body limit").
-- [ ] Setup routes in a server to different directories.
-- [ ] Setup a default file to search for if you ask for a directory.
-- [ ] Setup a list of methods accepted for a certain route (e.g., try to delete something with and without permission).
+- [x] Setup routes in a server to different directories.
+- [x] Setup a default file to search for if you ask for a directory.
+- [x] Setup a list of methods accepted for a certain route (e.g., try to delete something with and without permission).
 ## Basic checks
 Using telnet, curl, prepared files, demonstrate that the following
 features work properly:
@@ -117,9 +116,8 @@ Pay attention to the following:
 - [ ] Verify there is no memory leak (Monitor the process memory usage. It should not go up indefinitely).
 - [ ] Check if there is no hanging connection.
 - [ ] You should be able to use siege indefinitely without having to restart the server (take a look at siege -b).
-
 # Config
-Like `nginx.conf` but with less functional supported. This project follows philosophy of forward compatibility - meaning that all valid configs for WebServ will be also valid for NGINX, and will work in exact same way *EXCEPT* for the [log](#log) and [upload_store](#upload_store) directive. More on that in dedicated sections.
+Like `nginx.conf` but with less functional supported. This project follows philosophy of forward compatibility - meaning that all valid configs for WebServ will be also valid for NGINX, and will work in exact same way *EXCEPT* for the [upload_store](#upload_store) directive. More on that in dedicated section.
 Feel free to consult the test configs provided in `test/test_resources`. 
 ## Config structure
 Config consists of **contexts** and **directives**.
@@ -134,7 +132,6 @@ For now, webserv supports the following contexts:
 #### Server
 The main context of the instance of the HTTP server. At least one should be defined in the config. 
 Server context can't be empty - it should contain mandatory server-level directives: 
-- *[log](#log)* (unique)
 - *[server_name](#server_name)* (unique)
 - *[listen](#listen)*
 
@@ -277,8 +274,6 @@ directive [ ARG1 ] [ ARG... ];
 Has only one *arg* which sets the port, used by the server for requests listening. Multiple ports are possible for the single server via specification of the multiple `listen` directives.
 ##### server_name
 Accepts one or more hostnames, that this server will monitor.
-##### log
-Path to directory where log file named `servername_port.log` is going to be located. Actual nginx creates 2 log files : `access.log` and `error.log`. Nginx only outputs basic information to that logs, such as what was requested and what was returned.
 #### Location-level directives
 ##### root
 Can have only one arg, which is a path for a location, or server's root directory. For example:

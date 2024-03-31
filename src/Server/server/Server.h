@@ -62,40 +62,34 @@
 #define MAX_CLIENTS 2048
 #define MAX_EVENTS 1000
 
- typedef std::vector<Connection> v_conn;
 
  class Server {
 public:
     class ServerException : public std::exception {};
 
     Server(const Server &);
-    explicit Server(const ServerConfiguration &config,
-                    const volatile bool &is_running_ref);
+    explicit Server(const ServerConfiguration &config, v_c_b &is_running_ref, int epoll_fd);
 
     void                        Start();
 
     friend std::ostream         &operator<<(std::ostream &os, const Server &server);
 protected:
 //-------------------initialisation: open sockets, create epoll...--------------
-    bool                        Init();
+     bool                       Init(int epoll_fd);
 
-    static v_conn               CreateConnections(int n,
-                                                  const volatile bool &running);
-     void                        CreateLogFile();
-     void                        CreateEpollInstance();
-     void                        PresetAddress(addrinfo **addr,
+    void                        PresetAddress(addrinfo **addr,
                                               const std::string &host,
                                               const std::string &port_str);
-     int                         CreateSocket(addrinfo *res,
+    int                         CreateSocket(addrinfo *res,
                                              const std::string &host,
                                              const std::string &port_str);
-     void                        SetSocketOptions(addrinfo *res, int socket);
-     void                        BindSocket(addrinfo *res, int socket);
-     void                        ListenSocket(int socket);
-     void                        AddSocketToEpollInstance(int socket);
+    void                        SetSocketOptions(addrinfo *res, int socket);
+    void                        BindSocket(addrinfo *res, int socket);
+    void                        ListenSocket(int socket);
+    void                        AddSocketToEpollInstance(int socket, int epoll_fd);
 //-------------------event handling---------------------------------------------
     void                        EventLoop();
-    int CheckRequest(int client_sock, int fd);
+    int                         CheckRequest(int client_sock, int fd);
     bool                        AddClientToEpoll(int client_sock);
     void                        HandleEvents(int client_sock);
 //-------------------request server-side processing-----------------------------
@@ -147,25 +141,18 @@ protected:
 //-------------------misc utils-------------------------------------------------
     bool                        SetDescriptorNonBlocking(int sockfd);
     void                        PrintEventInfo(int events, int fd, int i);
-    void                        Log(const std::string & msg,
+    void                        Log(const std::string &msg,
                                     std::ostream &os = std::cout) const;
     void                        CloseConnectionWithLogMessage(int client_sock,
                                                               const std::string &msg);
-    void                        ThrowException(const std::string & msg,
+    void                        ThrowException(const std::string &msg,
                                                std::ostream &os = std::cout) const;
     bool                        IsSocketFd(int fd) const;
     void                        Cleanup();
 private:
     const volatile bool         &is_running_;
     const ServerConfiguration   &config_;
-    int                         files_uploaded_;
     m_int_str                   srv_sock_to_address_;
-    int                         epoll_fd_;
-    int                         epoll_returns_count_;
-    int                         epoll_events_count_;
-    int                         epoll_connection_count_;
-    int                         epoll_in_out_count_;
-    v_conn                      connections_;
     std::ofstream               log_file_;
     long                        startup_time_;
  };
