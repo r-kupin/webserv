@@ -58,24 +58,30 @@ void    ServerManager::EventLoop() {
     }
 }
 
-void ServerManager::PrintEventInfo(int events, int fd, int i) {
-    epoll_events_count_++;
-    if (events == 5)
-        epoll_in_out_count_++;
-    if (events == EPOLLIN && IsSocketFd(fd))
-        epoll_connection_count_++;
+int ServerManager::CheckRequest(int client_sock, int fd) {
+    if (client_sock < 0) {
+        Log("Error accepting connection!");
+    } else if (AddClientToEpoll(client_sock)) {
+        // associate client's socket with server's listener
+        connections_[client_sock] = Connection(is_running_, client_sock, fd);
+        Log("Accepted client connection from socket " + Utils::NbrToString(client_sock));
+    } else {
+        Log("Error adding client socket to epoll");
+        close(client_sock);
+    }
+    return client_sock;
+}
 
-    log_file_ << /*"\n== returns " << epoll_returns_count_ <<*/
-              "\n== events " << epoll_events_count_ <<
-              " == connections " << epoll_connection_count_ <<
-              " == IO " << epoll_in_out_count_ << "\n";
-
-    log_file_ << "nfd: " << i << "\n" << "fd: " << fd << "\n";
-    if (events & EPOLLIN)
-        log_file_ << "EPOLLIN " << EPOLLIN << "\n";
-    if (events & EPOLLOUT)
-        log_file_ << "EPOLLOUT " << EPOLLOUT << "\n";
-    if (events & EPOLLERR)
-        log_file_ << "EPOLLERR " << EPOLLERR << "\n";
-    log_file_ << events << std::endl;
+/**
+ * Add new socket created by accept to epoll instance
+ */
+bool ServerManager::AddClientToEpoll(int client_sock) {
+    epoll_event event;
+    event.events = EPOLLIN | EPOLLOUT | EPOLLET;
+    event.data.fd = client_sock;
+    if (SetDescriptorNonBlocking(client_sock))
+        return epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, client_sock, &event) != -1;
+    Log("Can't set descriptor " + Utils::NbrToString(client_sock) +
+        " to nonblocking mode.");
+    return false;
 }

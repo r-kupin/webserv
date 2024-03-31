@@ -68,14 +68,15 @@ public:
     class ServerException : public std::exception {};
 
     Server(const Server &);
-    explicit Server(const ServerConfiguration &config, v_c_b &is_running_ref, int epoll_fd);
+    explicit Server(const ServerConfiguration &config,
+                    v_c_b &is_running_ref, int epoll_fd);
 
-    void                        Start();
+    bool                       ListensTo(int socket) const;
 
     friend std::ostream         &operator<<(std::ostream &os, const Server &server);
 protected:
 //-------------------initialisation: open sockets, create epoll...--------------
-     bool                       Init(int epoll_fd);
+    bool                        Init(int epoll_fd);
 
     void                        PresetAddress(addrinfo **addr,
                                               const std::string &host,

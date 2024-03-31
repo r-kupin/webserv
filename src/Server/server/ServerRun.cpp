@@ -53,32 +53,3 @@ void Server::HandleEvents(int client_sock) {
         }
     }
 }
-
-int Server::CheckRequest(int client_sock, int fd) {
-    if (client_sock < 0) {
-        Log("Error accepting connection!", log_file_);
-    } else if (AddClientToEpoll(client_sock)) {
-        // associate client's socket with server's listener
-        connections_[client_sock] = Connection(is_running_, client_sock, fd);
-        Log("Accepted client connection from socket " +
-            Utils::NbrToString(client_sock), log_file_);
-    } else {
-        Log("Error adding client socket to epoll", log_file_);
-        close(client_sock);
-    }
-    return client_sock;
-}
-
-/**
- * Add new socket created by accept to epoll instance
- */
-bool Server::AddClientToEpoll(int client_sock) {
-    epoll_event event;
-    event.events = EPOLLIN | EPOLLOUT | EPOLLET;
-    event.data.fd = client_sock;
-    if (SetDescriptorNonBlocking(client_sock))
-        return epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, client_sock, &event) != -1;
-    Log("Can't set descriptor " + Utils::NbrToString(client_sock) +
-        " to nonblocking mode.", log_file_);
-    return false;
-}

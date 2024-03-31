@@ -31,16 +31,6 @@ void    Server::Log(const std::string &msg, std::ostream &os) const {
     os << msg << std::endl;
 }
 
-bool    Server::SetDescriptorNonBlocking(int sockfd) {
-    int flags = fcntl(sockfd, F_GETFL, 0);
-    if (flags == -1) {
-        Log("fcntl get flags operation failed", log_file_);
-        return false;
-    }
-    flags |= O_NONBLOCK;
-    return (fcntl(sockfd, F_SETFL, flags) != -1);
-}
-
 void Server::Cleanup() {
     epoll_ctl(epoll_fd_, EPOLL_CTL_DEL, epoll_fd_, NULL);
     close(epoll_fd_);
@@ -50,4 +40,6 @@ void Server::Cleanup() {
     }
 }
 
-
+bool Server::ListensTo(int socket) const {
+    return srv_sock_to_address_.find(socket) != srv_sock_to_address_.end();
+}

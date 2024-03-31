@@ -10,11 +10,19 @@
 /*                                                                            */
 /******************************************************************************/
 
+#include <fcntl.h>
 #include "ServerManager.h"
 
-
-bool            ServerManager::IsSocketFd(int fd) const {
-    return srv_sock_to_address_.find(fd) != srv_sock_to_address_.end();
+/**
+ * Ask each server does it listens to this particular socket or not
+ */
+bool            ServerManager::IsSocketFd(int socket_fd) const {
+    for (v_servers ::const_iterator it = servers_.begin();
+            it != servers_.end(); ++it) {
+        if (it->ListensTo(socket_fd))
+            return true;
+    }
+    return false;
 }
 
 void            ServerManager::ThrowException(const std::string &msg) const {
@@ -34,17 +42,27 @@ void ServerManager::PrintEventInfo(int events, int fd, int i) {
     if (events == EPOLLIN && IsSocketFd(fd))
         epoll_connection_count_++;
 
-    log_file_ << /*"\n== returns " << epoll_returns_count_ <<*/
+    std::cout << /*"\n== returns " << epoll_returns_count_ <<*/
               "\n== events " << epoll_events_count_ <<
               " == connections " << epoll_connection_count_ <<
               " == IO " << epoll_in_out_count_ << "\n";
 
-    log_file_ << "nfd: " << i << "\n" << "fd: " << fd << "\n";
+    std::cout << "nfd: " << i << "\n" << "fd: " << fd << "\n";
     if (events & EPOLLIN)
-        log_file_ << "EPOLLIN " << EPOLLIN << "\n";
+        std::cout << "EPOLLIN " << EPOLLIN << "\n";
     if (events & EPOLLOUT)
-        log_file_ << "EPOLLOUT " << EPOLLOUT << "\n";
+        std::cout << "EPOLLOUT " << EPOLLOUT << "\n";
     if (events & EPOLLERR)
-        log_file_ << "EPOLLERR " << EPOLLERR << "\n";
-    log_file_ << events << std::endl;
+        std::cout << "EPOLLERR " << EPOLLERR << "\n";
+    std::cout << events << std::endl;
+}
+
+bool    ServerManager::SetDescriptorNonBlocking(int sockfd) const {
+    int flags = fcntl(sockfd, F_GETFL, 0);
+    if (flags == -1) {
+        Log("fcntl get flags operation failed");
+        return false;
+    }
+    flags |= O_NONBLOCK;
+    return (fcntl(sockfd, F_SETFL, flags) != -1);
 }

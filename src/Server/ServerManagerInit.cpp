@@ -24,7 +24,6 @@ void ServerManager::Init(const Config &config) {
     signal(SIGSTOP, Stop);
 
     CreateEpollInstance();
-
     // Iterate over the server configurations provided in 'config' to create server instances.
     // These instances are stored in the 'servers_' vector for management.
     for (l_sc_c_it it = config.getConstServers().begin();
@@ -32,7 +31,9 @@ void ServerManager::Init(const Config &config) {
         servers_.push_back(Server(*it, is_running_, epoll_fd_));
         std::cout << *it << std::endl;
     }
-
+    for (int i = 0; i < MAX_CLIENTS; ++i) {
+        connections_.push_back(Connection(is_running_));
+    }
     std::cout << "Servers created successfully!" << std::endl;
 }
 
@@ -45,6 +46,3 @@ void ServerManager::CreateEpollInstance() {
     Log("Epoll instance created");
 }
 
-v_conn ServerManager::CreateConnections(int n, v_c_b &running) {
-    return v_conn();
-}

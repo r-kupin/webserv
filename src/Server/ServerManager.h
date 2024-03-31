@@ -32,6 +32,8 @@ public:
 // run
     void            Start();
     void            EventLoop();
+    int             CheckRequest(int client_sock, int fd);
+    bool            AddClientToEpoll(int client_sock);
     static void     Stop(int signal);
 // handle
 
@@ -39,11 +41,11 @@ public:
     void            PrintEventInfo(int events, int fd, int i) ;
     void            ThrowException(const std::string &msg) const;
     void            Log(const std::string &msg) const;
-    bool            IsSocketFd(int fd) const;
+    bool            IsSocketFd(int socket_fd) const;
+    bool            SetDescriptorNonBlocking(int sockfd) const;
 private:
     v_servers       servers_;
     v_conn          connections_;
-    m_int_str       srv_sock_to_address_;
 
     int             files_uploaded_;
     long            startup_time_;
