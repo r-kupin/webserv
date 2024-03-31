@@ -127,7 +127,7 @@ int Server::CreateSocket(addrinfo *res, const std::string &host,
         ThrowException("Failed to create new socket for " + host + ":" +
                        port_str + " : " + err_msg, log_file_);
     }
-    socket_to_address_.insert(std::make_pair(sock, host + ":" + port_str));
+    srv_sock_to_address_.insert(std::make_pair(sock, host + ":" + port_str));
     Log("Socket created", log_file_);
     return sock;
 }
@@ -147,7 +147,7 @@ void Server::SetSocketOptions(addrinfo *res, int socket) {
         freeaddrinfo(res);
         Cleanup();
         ThrowException("Failed to set socket options for " +
-                        socket_to_address_[socket] + " : " + err_msg, log_file_);
+                       srv_sock_to_address_[socket] + " : " + err_msg, log_file_);
     }
     Log("Socket options set", log_file_);
 }
@@ -167,7 +167,7 @@ void Server::BindSocket(addrinfo *res, int socket) {
         freeaddrinfo(res);
         Cleanup();
         ThrowException("Failed to Bind Socket for " +
-                    socket_to_address_[socket] + " : " + err_msg, log_file_);
+                       srv_sock_to_address_[socket] + " : " + err_msg, log_file_);
     }
     Log("Socket bind()-ed", log_file_);
 }
@@ -177,10 +177,10 @@ void Server::ListenSocket(int socket) {
         std::string err_msg(strerror(errno));
         Cleanup();
         ThrowException("Failed to Listen Socket for " +
-                    socket_to_address_[socket] + " : " + err_msg, log_file_);
+                       srv_sock_to_address_[socket] + " : " + err_msg, log_file_);
     }
     Log("Listening to socket fd:" + Utils::NbrToString(socket) +
-        " for " + socket_to_address_[socket] + " : " , log_file_);
+        " for " + srv_sock_to_address_[socket] + " : " , log_file_);
 }
 
 void Server::AddSocketToEpollInstance(int socket) {
@@ -193,7 +193,7 @@ void Server::AddSocketToEpollInstance(int socket) {
         Cleanup();
         ThrowException("Failed to add socket on fd:" +
                        Utils::NbrToString(socket) + " for " +
-                       socket_to_address_[socket] + " to Epoll Instance : " +
+                       srv_sock_to_address_[socket] + " to Epoll Instance : " +
                        err_msg, log_file_);
     }
     Log("Listening socket added to epoll instance", log_file_);

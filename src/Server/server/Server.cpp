@@ -16,7 +16,7 @@ Server::Server(const Server &other)
         : is_running_(other.is_running_),
           config_(other.config_),
           files_uploaded_(other.files_uploaded_),
-          socket_to_address_(other.socket_to_address_),
+          srv_sock_to_address_(other.srv_sock_to_address_),
           epoll_fd_(other.epoll_fd_),
           epoll_returns_count_(0),
           epoll_events_count_(0),
@@ -51,8 +51,8 @@ std::ostream &operator<<(std::ostream &os, const Server &server) {
     os << "config:\n" << server.config_;
     os << "\naddresses:\n";
 
-    for (std::map<int, std::string>::const_iterator it = server.socket_to_address_.begin();
-         it != server.socket_to_address_.end();
+    for (m_int_str::const_iterator it = server.srv_sock_to_address_.begin();
+         it != server.srv_sock_to_address_.end();
          ++it) {
         os << "\t" << it->second << "\n";
     }

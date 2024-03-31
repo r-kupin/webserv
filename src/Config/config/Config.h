@@ -75,7 +75,7 @@ protected:
     void                CheckServerSubnodes(const v_node &subcontexts,
                                             ServerConfiguration &current);
     void                CheckLocationContextInServer(ServerConfiguration &current,
-                                                     std::set<std::string> &address_set,
+                                                     s_str &address_set,
                                                      v_node_c_it &it) const;
 //-------------------getters, exceptions, etc-----------------------------------
     l_sc                &GetServers();

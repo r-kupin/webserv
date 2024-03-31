@@ -95,7 +95,7 @@ protected:
      void                        AddSocketToEpollInstance(int socket);
 //-------------------event handling---------------------------------------------
     void                        EventLoop();
-    int                         CheckRequest(int client_sock);
+    int CheckRequest(int client_sock, int fd);
     bool                        AddClientToEpoll(int client_sock);
     void                        HandleEvents(int client_sock);
 //-------------------request server-side processing-----------------------------
@@ -159,7 +159,7 @@ private:
     const volatile bool         &is_running_;
     const ServerConfiguration   &config_;
     int                         files_uploaded_;
-    std::map<int, std::string>  socket_to_address_;
+    m_int_str                   srv_sock_to_address_;
     int                         epoll_fd_;
     int                         epoll_returns_count_;
     int                         epoll_events_count_;

@@ -14,12 +14,12 @@
 #include <sys/time.h>
 #include "Utils.h"
 
-m_codes Utils::err_codes;
-m_codes Utils::ok_codes;
-m_codes Utils::redirect_codes;
+m_int_str Utils::err_codes;
+m_int_str Utils::ok_codes;
+m_int_str Utils::redirect_codes;
 
-m_codes Utils::initializeHttpErrCodes() {
-    m_codes map;
+m_int_str Utils::initializeHttpErrCodes() {
+    m_int_str map;
 
     map.insert(std::make_pair(400, "Bad Request"));
     map.insert(std::make_pair(401, "Unauthorized"));
@@ -64,8 +64,8 @@ m_codes Utils::initializeHttpErrCodes() {
     return map;
 }
 
-m_codes Utils::initializeHttpRedirectCodes() {
-    m_codes map;
+m_int_str Utils::initializeHttpRedirectCodes() {
+    m_int_str map;
 
     map.insert(std::make_pair(301, "Moved Permanently"));
     map.insert(std::make_pair(302, "Found"));
@@ -75,8 +75,8 @@ m_codes Utils::initializeHttpRedirectCodes() {
     return map;
 }
 
-m_codes Utils::initializeHttpOKCodes() {
-    m_codes map;
+m_int_str Utils::initializeHttpOKCodes() {
+    m_int_str map;
 
     map.insert(std::make_pair(100, "Continue"));
     map.insert(std::make_pair(101, "Switching Protocols"));

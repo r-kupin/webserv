@@ -45,14 +45,14 @@ bool    Server::SetDescriptorNonBlocking(int sockfd) {
 void Server::Cleanup() {
     epoll_ctl(epoll_fd_, EPOLL_CTL_DEL, epoll_fd_, NULL);
     close(epoll_fd_);
-    for (std::map<int, std::string>::iterator it = socket_to_address_.begin();
-        it != socket_to_address_.end(); ++it) {
+    for (m_int_str::iterator it = srv_sock_to_address_.begin();
+         it != srv_sock_to_address_.end(); ++it) {
         close(it->first);
     }
 }
 
 bool Server::IsSocketFd(int fd) const {
-    return socket_to_address_.find(fd) == socket_to_address_.end();
+    return srv_sock_to_address_.find(fd) != srv_sock_to_address_.end();
 }
 
 void Server::PrintEventInfo(int events, int fd, int i) {

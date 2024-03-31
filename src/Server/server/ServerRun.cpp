@@ -57,15 +57,17 @@ void    Server::EventLoop() {
                 int fd = events[i].data.fd;
                 PrintEventInfo(events[i].events, fd, i);
                 if (IsSocketFd(fd)) {
-                    // New connection
+                    // New connection: fd == server's listening socket
                     struct sockaddr_in client_addr;
                     socklen_t client_len = sizeof(client_addr);
-                    // todo : match fd with client socket in connection
                     int client_sock = accept(fd,
                                              (struct sockaddr *) &client_addr,
                                              &client_len);
-                    CheckRequest(client_sock);
-                } else if (events[i].events & EPOLLIN && events[i].events & EPOLLOUT) {
+                    CheckRequest(client_sock, fd);
+                } else if (events[i].events & EPOLLIN &&
+                            events[i].events & EPOLLOUT) {
+                    // New data on existing connection:
+                    // fd == server's "end" of the pipe to communicate with client
                     HandleEvents(fd);
                 }
             }
@@ -98,10 +100,12 @@ void Server::HandleEvents(int client_sock) {
     }
 }
 
-int Server::CheckRequest(int client_sock) {
+int Server::CheckRequest(int client_sock, int fd) {
     if (client_sock < 0) {
         Log("Error accepting connection!", log_file_);
     } else if (AddClientToEpoll(client_sock)) {
+        // associate client's socket with server's listener
+        connections_[client_sock] = Connection(is_running_, client_sock, fd);
         Log("Accepted client connection from socket " +
             Utils::NbrToString(client_sock), log_file_);
     } else {

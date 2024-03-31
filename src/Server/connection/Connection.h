@@ -17,16 +17,17 @@
 #include "../../Config/location/Location.h"
 
 struct Connection {
-    Connection(const volatile bool &is_running);
+    Connection(v_c_b &is_running);
+    Connection(v_c_b &is_running, int connection_socket, int server_socket);
     Connection(const Connection &other);
 
     Connection &operator=(const Connection &);
 
-    const volatile bool &is_running_;
     bool                url_headers_done_;
     bool                body_done_;
 
-    int                 fd_;
+    int                 connection_socket_;
+    int                 server_listening_socket_;
     ClientRequest       request_;
     Location            location_;
 };

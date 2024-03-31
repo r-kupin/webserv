@@ -155,7 +155,7 @@ const std::set<int> & ServerConfiguration::GetPorts() const {
     return ports_;
 }
 
-const std::set<std::string> &ServerConfiguration::GetServerNames() const {
+const s_str &ServerConfiguration::GetServerNames() const {
     return server_names_;
 }
 

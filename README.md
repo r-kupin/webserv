@@ -625,7 +625,7 @@ When adding a socket to the epoll watch list, the `EPOLL_CTL_ADD` command is use
 The `epoll_wait` system call is used to wait for events on the file descriptors registered with the epoll instance. When invoked, it blocks current thread until one or more file descriptors in the epoll instance's watch list become ready for the specified events, or until a timeout occurs. Upon completion, `epoll_wait` returns information about the ready file descriptors and the events that occurred by placing `epoll_event` structures in events array. Internally, the kernel efficiently scans the epoll instance's data structures to determine which file descriptors are ready for I/O operations, without the need for iterative polling. 
 ## Accepting connections
 After setting up the epoll instance, the server proceeds with accepting incoming connections from clients using the `accept` system call to accept the connection request and create a new socket descriptor specifically for this connection. Internally, the Linux kernel performs several steps when accept is called:
-- It extracts the first connection request on the queue of pending connections for the listening `socket_to_address_` - main socket of the server
+- It extracts the first connection request on the queue of pending connections for the listening `srv_sock_to_address_` - main socket of the server
 - Once a connection request is received, the kernel creates a new socket descriptor `client_sock` and sets up a new file structure for it, representing the connection.
 - If successful, `accept` returns the new socket descriptor for the accepted connection.
 #### Set client's fd to non-blocking state

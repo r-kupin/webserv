@@ -69,8 +69,8 @@ void Config::CheckServer(Node &node, ServerConfiguration &current) {
 
 bool has_same_name_and_port(const std::set<int>& ports1,
                             const std::set<int>& ports2,
-                            const std::set<std::string>& names1,
-                            const std::set<std::string>& names2) {
+                            const s_str& names1,
+                            const s_str& names2) {
     for (s_int_c_it p_it = ports1.begin(); p_it != ports1.end(); ++p_it) {
         if (ports2.find(*p_it) != ports2.end()) {
             // if current.port (*p_it) appears in present.ports set
@@ -107,7 +107,7 @@ bool Config::HasServerWithSameNameAndPort(const ServerConfiguration &config) {
 
 void    Config::CheckServerSubnodes(const v_node &subcontexts,
                                     ServerConfiguration &current) {
-    std::set<std::string> address_set;
+    s_str address_set;
     for (v_node_c_it it = subcontexts.begin(); it != subcontexts.end(); ++it) {
         if (it->IsLocation()) {
             CheckLocationContextInServer(current, address_set, it);
@@ -121,7 +121,7 @@ void    Config::CheckServerSubnodes(const v_node &subcontexts,
 }
 
 void Config::CheckLocationContextInServer(ServerConfiguration &current,
-                                          std::set<std::string> &address_set,
+                                          s_str &address_set,
                                           v_node_c_it &it) const {
     if (address_set.find(it->LocationContextGetAddress()) !=
         address_set.end()) {

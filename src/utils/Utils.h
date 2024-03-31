@@ -26,6 +26,9 @@
 #define ELSE 3
 
 typedef volatile const bool                                 v_c_b;
+
+typedef std::set<int>::const_iterator                       s_int_c_it;
+typedef std::set<std::string>                               s_str;
 typedef std::set<std::string>::const_iterator               s_str_c_it;
 
 typedef std::vector<char>                                   v_char;
@@ -34,8 +37,9 @@ typedef std::vector<std::string>                            v_str;
 typedef std::vector<std::string>::const_iterator            v_str_c_it;
 typedef std::vector<v_str>::const_iterator                  vstr_vstr_c_it;
 
-typedef std::map<int, std::string>                          m_codes;
+typedef std::map<int, std::string>                          m_int_str;
 typedef std::map<std::string, std::string>                  m_str_str;
+typedef std::map<int, std::set<int> >                       m_int_ints;
 typedef std::map<std::string, std::string>::const_iterator  m_str_str_c_it;
 
 typedef std::list<std::string>                              l_str;
@@ -75,13 +79,13 @@ public:
 //-------------------Misc-------------------------------------------------------
     static long         TimeNow();
 private:
-    static m_codes err_codes;
-    static m_codes ok_codes;
-    static m_codes redirect_codes;
+    static m_int_str err_codes;
+    static m_int_str ok_codes;
+    static m_int_str redirect_codes;
 
-    static m_codes initializeHttpErrCodes();
-    static m_codes initializeHttpRedirectCodes();
-    static m_codes initializeHttpOKCodes();
+    static m_int_str initializeHttpErrCodes();
+    static m_int_str initializeHttpRedirectCodes();
+    static m_int_str initializeHttpOKCodes();
 
     Utils();
 };
