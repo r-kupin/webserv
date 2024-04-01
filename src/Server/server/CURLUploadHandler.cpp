@@ -14,9 +14,9 @@
 #include <algorithm>
 #include <csignal>
 #include <fcntl.h>
-#include "../request/RequestExceptions.h"
-#include "../../server/Server.h"
-#include "../../server/ServerExceptions.h"
+#include "Server.h"
+#include "../connection/request/RequestExceptions.h"
+#include "ServerExceptions.h"
 
 int Server::UploadFromCURL(ClientRequest &request, const std::string &filename,
                             int socket) const {

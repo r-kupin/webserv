@@ -291,12 +291,10 @@ void Location::ProcessDirectives(const std::vector<v_str> &directives) {
     }
 }
 
-// todo tests
 void Location::HandleClientMaxBodySize(const v_str &directive) {
     if (directive.size() == 2) {
         try {
-            size_t size = Utils::StringToULong(
-                    directive[1]);
+            size_t size = Utils::StringToULong(directive[1]);
             client_max_body_size_ = size;
             return;
         } catch (const Utils::ConversionException &) {

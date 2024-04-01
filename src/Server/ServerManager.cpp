@@ -15,8 +15,7 @@
 #include "ServerManager.h"
 
 // Default constructor for the ServerManager class.
-ServerManager::ServerManager()
-: startup_time_(Utils::TimeNow()) {}
+ServerManager::ServerManager() {}
 
 // Destructor for the ServerManager class.
 ServerManager::~ServerManager() {}

@@ -22,7 +22,6 @@ void ServerConfiguration::CheckLocationContextIsCorrect(const Node &context) {
                                "same address");
 }
 
-// todo: check overriding location with adding new subs
 void        ServerConfiguration::OverrideLocation(const Node &context,
                                                   l_loc_it current) {
 //    save old indexes, in if case they will not be overridden

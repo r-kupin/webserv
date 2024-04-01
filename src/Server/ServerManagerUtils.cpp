@@ -32,12 +32,12 @@ const Server &ServerManager::FindServerByListeningSocket(int socket) const {
         if (it->ListensTo(socket))
             return *it;
     }
-    throw std::exception(); // this will never happen
+    throw ServerManagerException();// this will never happen
 }
 
 void            ServerManager::ThrowException(const std::string &msg) const {
     Log(msg);
-    throw std::exception();
+    throw ServerManagerException();
 }
 
 void ServerManager::CloseConnectionWithLogMessage(int socket, const std::string &msg) {
@@ -48,7 +48,7 @@ void ServerManager::CloseConnectionWithLogMessage(int socket, const std::string 
 }
 
 void ServerManager::Log(const std::string &msg) const {
-    std::cout << "[ " << Utils::TimeNow() - startup_time_ << " ] ";
+    std::cout << "[ " << Utils::Get().TimeElapsed() << " ] ";
     std::cout << msg << std::endl;
 }
 

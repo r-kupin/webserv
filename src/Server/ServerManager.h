@@ -22,22 +22,30 @@ static volatile bool        is_running_ = true;
 
 class ServerManager {
 public:
+class ServerManagerException : public std::exception {};
+
     ServerManager();
 
     ~ServerManager();
-// init
+//-------------------init-------------------------------------------------------
     void            Init(const Config &config);
-    static v_conn   CreateConnections(int n, v_c_b &running);
     void            CreateEpollInstance();
-// run
+//-------------------run--------------------------------------------------------
     void            Start();
     void            EventLoop();
-    int             CheckRequest(int client_sock, int listening_sock);
     bool            AddClientToEpoll(int client_sock);
     static void     Stop(int signal);
-// handle
-
-// util
+//-------------------handle-----------------------------------------------------
+    const Server    &FindServerByListeningSocket(int socket) const;
+    void            AcceptNewConnection(int server_socket);
+    void            HandleEventsOnExistingConnection(int client_socket);
+    bool            ProcessHeaders(Connection &connection);
+    void            CloseConnectionWithLogMessage(int socket,
+                                                  const std::string &msg);
+    bool            ProcessBody(Connection &connection, const Server &server);
+    void            Respond(Connection &connection);
+//-------------------util-------------------------------------------------------
+    void            Cleanup();
     void            PrintEventInfo(int events, int fd, int i) ;
     void            ThrowException(const std::string &msg) const;
     void            Log(const std::string &msg) const;
@@ -47,32 +55,11 @@ private:
     v_servers       servers_;
     v_conn          connections_;
 
-    int             files_uploaded_;
-    long            startup_time_;
-
     int             epoll_fd_;
     int             epoll_returns_count_;
     int             epoll_events_count_;
     int             epoll_connection_count_;
     int             epoll_in_out_count_;
-
-    const Server &FindServerByListeningSocket(int socket) const;
-
-    void AcceptNewConnection(int server_socket);
-
-    void HandleEventsOnExistingConnection(int client_socket);
-
-    bool ProcessHeaders(Connection &connection);
-
-    void CloseConnectionWithLogMessage(int socket, const std::string &msg);
-
-    bool ProcessBody(Connection &connection, const Server &server);
-
-    void Respond(Connection &connection);
-
-    void Respond(Connection &connection) const;
-
-    void Cleanup();
 };
 
 

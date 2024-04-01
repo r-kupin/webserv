@@ -39,8 +39,9 @@ public:
     Config(const Config &);
     Config(const std::string &);
     explicit    Config(const Node &confRoot);
-    Config &operator=(const Config &);
 
+    Config &operator=(const Config &);
+    friend std::ostream    &operator<<(std::ostream &os, const Config &config);
     ~Config();
 
     const std::string   &getConfPath() const;
@@ -87,7 +88,5 @@ private:
     Node                conf_root_;
     l_sc                servers_;
 };
-
-std::ostream    &operator<<(std::ostream &os, const Config &config);
 
 #endif //WEBSERV_CONFIGPARSER_H

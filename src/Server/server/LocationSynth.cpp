@@ -13,7 +13,7 @@
 #include <iostream>
 #include <algorithm>
 #include <csignal>
-#include "../../server/Server.h"
+#include "Server.h"
 
 /**
  * Depending on compliance between what was requested and what is being

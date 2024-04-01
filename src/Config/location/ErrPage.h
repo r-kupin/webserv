@@ -24,7 +24,7 @@ struct ErrPage {
 
     bool operator<(const ErrPage &rhs) const;
     bool operator==(const ErrPage &rhs) const;
+    friend std::ostream &operator<<(std::ostream &os, const ErrPage &page);
 };
-std::ostream &operator<<(std::ostream &os, const ErrPage &page);
 
 #endif //WEBSERV_ERRPAGE_H

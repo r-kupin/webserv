@@ -51,8 +51,10 @@ public:
     class ConversionException : public UtilsException {};
 
     static Utils        &Get();
+
     int                 GetFilesUploaded() const;
     void                IncrementUploadedFiles();
+    long                TimeNow() const;
 //-------------------filesystem utils-------------------------------------------
     static int          CheckFilesystem(const std::string &address);
     static bool         FileExists(const std::string &address);
@@ -62,6 +64,7 @@ public:
     static std::string  DirName(const std::string &address,
                                 const std::string &root);
 //-------------------string/container utils-------------------------------------
+    long                TimeElapsed() const;
     static std::string  NiceTimestamp();
 
     static std::string  NbrToString(size_t n);
@@ -79,10 +82,10 @@ public:
     bool                IsRedirectCode(int code);
     bool                IsValidHTTPCode(int code);
     std::string         GetCodeDescription(int code);
-//-------------------Misc-------------------------------------------------------
-    static long         TimeNow();
 private:
+    long        started_at_;
     int         files_uploaded_;
+
     m_int_str   err_codes_;
     m_int_str   ok_codes_;
     m_int_str   redirect_codes_;

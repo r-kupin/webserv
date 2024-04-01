@@ -34,6 +34,7 @@ public:
     const m_str_str             &GetHeaders() const;
 
     ServerResponse              &operator=(const ServerResponse &);
+    friend                      std::ostream &operator<<(std::ostream &os, const ServerResponse &response);
 protected:
 //-------------------satic utils------------------------------------------------
     static std::string          GeneratePage(int code);
@@ -54,7 +55,5 @@ private:
     std::string     body_str_;
     m_str_str       headers_;
 };
-
-std::ostream &operator<<(std::ostream &os, const ServerResponse &response);
 
 #endif //WEBSERV_SEVRERRESPONSE_H

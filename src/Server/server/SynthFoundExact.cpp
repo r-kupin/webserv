@@ -12,7 +12,7 @@
 
 #include <iostream>
 #include <algorithm>
-#include "../../server/Server.h"
+#include "Server.h"
 
 void Server::SynthIndex(Location &synth, const Srch_c_Res &res,
                         int fs_status) const {

@@ -95,7 +95,8 @@ m_int_str Utils::initializeHttpOKCodes() {
 }
 
 Utils::Utils()
-    : err_codes_(initializeHttpErrCodes()),
+    : started_at_(TimeNow()),
+    err_codes_(initializeHttpErrCodes()),
     ok_codes_(initializeHttpOKCodes()),
     redirect_codes_(initializeHttpRedirectCodes()) {}
 
@@ -148,10 +149,14 @@ std::string Utils::GetCodeDescription(int code) {
     }
 }
 
-long Utils::TimeNow() {
+long Utils::TimeNow() const {
     struct timeval tv;
     gettimeofday(&tv, NULL);
     return (tv.tv_sec) * 1000LL + tv.tv_usec / 1000;
+}
+
+long Utils::TimeElapsed() const {
+    return TimeNow() - started_at_;
 }
 
 Utils &Utils::Get() {

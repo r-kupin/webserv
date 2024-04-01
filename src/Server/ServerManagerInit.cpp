@@ -30,8 +30,9 @@ void ServerManager::Init(const Config &config) {
          it != config.getConstServers().end(); ++it) {
         try {
             servers_.push_back(Server(*it, is_running_, epoll_fd_));
-        } catch (...) {
-            // todo: handle server failed to start errors
+        } catch (const Server::ServerException &) {
+            Cleanup();
+            ThrowException("Server initialisation failed");
         }
         std::cout << *it << std::endl;
     }

@@ -40,6 +40,7 @@
 #include <sys/socket.h>
 #include <sys/epoll.h>
 #include <netdb.h>
+#include <ostream>
 
 #include "../../Config/config/Config.h"
 #include "response/ServerResponse.h"
@@ -73,13 +74,13 @@ public:
     bool                        ListensTo(int socket) const;
     const std::string           &GetAddress(int socket) const;
     Location                    ProcessRequest(Connection &connection) const;
-    void Cleanup(int epoll_fd);
+    void                        Cleanup(int epoll_fd);
 
-
-    friend std::ostream         &operator<<(std::ostream &os, const Server &server);
-protected:
+     friend std::ostream        &operator<<(std::ostream &os,
+                                            const Server &server);
+ protected:
 //-------------------initialisation: open sockets, create epoll...--------------
-     void Init(int epoll_fd);
+     void                       Init(int epoll_fd);
 
     void                        PresetAddress(addrinfo **addr,
                                               const std::string &host,
@@ -132,15 +133,12 @@ protected:
 //-------------------misc utils-------------------------------------------------
     void                        Log(const std::string &msg,
                                     std::ostream &os = std::cout) const;
-    void                        CloseConnectionWithLogMessage(int client_sock,
-                                                              const std::string &msg);
     void                        ThrowException(const std::string &msg,
                                                std::ostream &os = std::cout) const;
 private:
     const volatile bool         &is_running_;
     const ServerConfiguration   &config_;
     m_int_str                   srv_sock_to_address_;
-    long                        startup_time_;
  };
 
 #endif //WEBSERV_SERVER_H
