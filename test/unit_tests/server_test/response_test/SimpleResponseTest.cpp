@@ -49,7 +49,7 @@ TEST_F(SimpleResponseTest, GetRoot) {
     ServerResponse  response(GetConfig().GetDefaultServerName(), GetConfig().GetPorts());
 
     pipe_reguest_to_fd("GET / HTTP/1.1\r\n");
-    request.Init(fd_, NULL);
+    request.Init(0);
     response_location = ProcessRequest(request);
     response.ComposeResponse(response_location);
 
@@ -74,7 +74,7 @@ TEST_F(SimpleResponseTest, LocationNOTDefinedDirectoryNOTExists) {
     ServerResponse  response(GetConfig().GetDefaultServerName(), GetConfig().GetPorts());
 
     pipe_reguest_to_fd("GET /loc_X HTTP/1.1\r\n");
-    request.Init(fd_, NULL);
+    request.Init(0);
     response_location = ProcessRequest(request);
     response.ComposeResponse(response_location);
 
@@ -89,7 +89,7 @@ TEST_F(SimpleResponseTest, GetProvokeRedirect) {
     ServerResponse  response(GetConfig().GetDefaultServerName(), GetConfig().GetPorts());
 
     pipe_reguest_to_fd("GET /loc_0 HTTP/1.1\r\n");
-    request.Init(fd_, NULL);
+    request.Init(0);
     response_location = ProcessRequest(request);
     response.ComposeResponse(response_location);
 
@@ -105,7 +105,7 @@ TEST_F(SimpleResponseTest, LocationNOTDefinedDirectoryExists) {
     ServerResponse  response(GetConfig().GetDefaultServerName(), GetConfig().GetPorts());
 
     pipe_reguest_to_fd("GET /loc_0/ HTTP/1.1\r\n");
-    request.Init(fd_, NULL);
+    request.Init(0);
     response_location = ProcessRequest(request);
     response.ComposeResponse(response_location);
 
@@ -120,7 +120,7 @@ TEST_F(SimpleResponseTest, LocationDefinedDirectoryNOTExists) {
     ServerResponse  response(GetConfig().GetDefaultServerName(), GetConfig().GetPorts());
 
     pipe_reguest_to_fd("GET /loc_1X HTTP/1.1\r\n");
-    request.Init(fd_, NULL);
+    request.Init(0);
     response_location = ProcessRequest(request);
     response.ComposeResponse(response_location);
 
@@ -135,7 +135,7 @@ TEST_F(SimpleResponseTest, AccessForbiddenByRule) {
     ServerResponse  response(GetConfig().GetDefaultServerName(), GetConfig().GetPorts());
 
     pipe_reguest_to_fd("GET /loc_1/ HTTP/1.1\r\n");
-    request.Init(fd_, NULL);
+    request.Init(0);
     response_location = ProcessRequest(request);
     response.ComposeResponse(response_location);
 
@@ -150,7 +150,7 @@ TEST_F(SimpleResponseTest, FileRequestFileExists) {
     ServerResponse  response(GetConfig().GetDefaultServerName(), GetConfig().GetPorts());
 
     pipe_reguest_to_fd("GET /loc_4/index.html HTTP/1.1\r\n");
-    request.Init(fd_, NULL);
+    request.Init(0);
     response_location = ProcessRequest(request);
     response.ComposeResponse(response_location);
 
@@ -177,7 +177,7 @@ TEST_F(SimpleResponseTest, RedirectWithCustomMessage) {
     ServerResponse  response(GetConfig().GetDefaultServerName(), GetConfig().GetPorts());
 
     pipe_reguest_to_fd("GET /loc_3X HTTP/1.1\r\n");
-    request.Init(fd_, NULL);
+    request.Init(0);
     response_location = ProcessRequest(request);
     response.ComposeResponse(response_location);
 
@@ -195,7 +195,7 @@ TEST_F(SimpleResponseTest, PostRootBodyWithinLimits) {
     ServerResponse  response(GetConfig().GetDefaultServerName(), GetConfig().GetPorts());
 
     pipe_reguest_to_fd("POST / HTTP/1.1\r\n\r\nthis is body\n\r");
-    request.Init(fd_, NULL);
+    request.Init(0);
     EXPECT_THROW(ProcessRequest(request), BadRequestException);
 //    response.ComposeResponse(response_location);
 //

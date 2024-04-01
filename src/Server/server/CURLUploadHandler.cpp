@@ -14,19 +14,19 @@
 #include <algorithm>
 #include <csignal>
 #include <fcntl.h>
-#include "../request/RequestExceptions.h"
-#include "../../server/Server.h"
-#include "../../server/ServerExceptions.h"
+#include "Server.h"
+#include "../connection/request/RequestExceptions.h"
+#include "ServerExceptions.h"
 
 int Server::UploadFromCURL(ClientRequest &request, const std::string &filename,
-                            int socket) {
+                            int socket) const {
     int                 file_fd = open(filename.c_str(), O_WRONLY | O_APPEND | O_NONBLOCK);
     const std::string   &content_type = request.GetHeaderValue("Content-Type");
     // Start of "boundary=" value of "Content-Type" header
     size_t              bound_pos = content_type.find(kBoundary);
 
     if (file_fd < 0) {
-        Log("Unable to open file to write uploaded data", log_file_);
+        Log("Unable to open file to write uploaded data");
         return FAILED_TO_CREATE_OUTPUT_FILE;
     } else if (bound_pos != std::string::npos) {
         // get delimiter from "Content-Type" header
@@ -46,7 +46,7 @@ int Server::UploadFromCURL(ClientRequest &request, const std::string &filename,
             return BAD_REQUEST;
         }
     }
-    Log("file bound delimitation is missing", log_file_);
+    Log("file bound delimitation is missing");
     return BAD_REQUEST;
 }
 
@@ -63,7 +63,7 @@ void    prepare_buffer(v_char &body, char *buffer, const ClientRequest &request,
 };
 
 int Server::PerformUpload(const ClientRequest &request, int socket, int file_fd,
-                           const std::string &delimiter) {
+                          const std::string &delimiter) const {
     char    buffer[FILE_BUFFER_SIZE];
     v_char  body = request.GetBody();
 
@@ -78,12 +78,12 @@ int Server::PerformUpload(const ClientRequest &request, int socket, int file_fd,
 
             if (end != std::string::npos) {
                 if (write(file_fd, buffer, end) == -1)
-                    Log("Write to file failed", log_file_);
+                    Log("Write to file failed");
                 else
                     return OK;
             } else {
                 if (write(file_fd, buffer, bytes_read + body.size()) == -1)
-                    Log("Write to file failed", log_file_);
+                    Log("Write to file failed");
                 body.clear();
             }
         }
@@ -91,15 +91,15 @@ int Server::PerformUpload(const ClientRequest &request, int socket, int file_fd,
     return OK;
 }
 
-void Server::NoUpoladDataAvailable(int file_fd, ssize_t bytes_read) {
+void Server::NoUpoladDataAvailable(int file_fd, ssize_t bytes_read) const {
     if (bytes_read == 0) {
-        Log("recv returned 0 while reading file contents.", log_file_);
+        Log("recv returned 0 while reading file contents.");
         close(file_fd);
         throw ZeroReadUpload();
     } else {
         // errno == EWOULDBLOCK || errno == EAGAIN
         Log("recv returned -1 with EWOULDBLOCK || EAGAIN set while reading "
-            "file contents. We'll try later.", log_file_);
+            "file contents. We'll try later.");
         close(file_fd); // why ?
         throw EwouldblockEagainUpload();
     }

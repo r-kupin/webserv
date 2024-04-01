@@ -24,7 +24,8 @@ std::string ServerResponse::GeneratePage(int code) {
             "<head>\r\n"
             "    <meta charset=\"UTF-8\">\r\n"
             "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n";
-    page << "    <title> " << code << " " << Utils::GetCodeDescription(code) << " </title>\r\n"
+    page << "    <title> " << code << " " << Utils::Get().GetCodeDescription(code)
+    << " </title>\r\n"
             "    <style>\r\n"
             "        body {\r\n"
             "            background-color: #2e3440;\r\n"
@@ -57,7 +58,7 @@ std::string ServerResponse::GeneratePage(int code) {
             "<div class=\"block\">\r\n";
     page << "<h1>" << code << "</h1>\r\n"
             "<hr style=\"border-top: 1px solid #88C0D0; width: 95%;\">\r\n";
-    page << "<p>" << Utils::GetCodeDescription(code) << "</p>\r\n"
+    page << "<p>" << Utils::Get().GetCodeDescription(code) << "</p>\r\n"
             "</body>\r\n"
             "</html>\r\n";
     return page.str();

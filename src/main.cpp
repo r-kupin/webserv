@@ -92,9 +92,11 @@ int main(int ac, char** av) {
         ServerManager server_manager;
         server_manager.Init(conf);
         server_manager.Start();
-	} catch (const Config::ConfigException& e) {
+	} catch (const Config::ConfigException &) {
 		std::cout << "No config is loaded, startup failed!" << std::endl;
 		return (1);
-	}
+	} catch (const ServerManager::ServerManagerException &) {
+        return (1);
+    }
 	return 0;
 }

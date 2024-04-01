@@ -102,12 +102,13 @@ struct Location {
 //-------------------operator overloads & exceptions----------------------------
     static void         ThrowLocationException(const std::string &msg);
     void                SetReturnCode(int i);
+
     bool                operator<(const Location &rhs) const;
     bool                operator==(const Location &rhs) const;
     Location&           operator=(const Location& rhs);
+    friend std::ostream &operator<<(std::ostream &os, const Location &location);
 };
 
-std::ostream &operator<<(std::ostream &os, const Location &location);
 //-------------------sublocation search predicate class-------------------------
 struct LocationByAddress {
     std::string         targetAddress_;

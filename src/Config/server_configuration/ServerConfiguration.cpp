@@ -28,7 +28,6 @@ ServerConfiguration::ServerConfiguration() {
 ServerConfiguration::ServerConfiguration(const ServerConfiguration &other)
 : ports_(other.ports_),
   server_names_(other.server_names_),
-  log_dir_address_(other.log_dir_address_),
   locations_(other.locations_) {}
 //-------------------satic utils------------------------------------------------
 bool        ServerConfiguration::MarkDefined(const std::string &key,
@@ -58,7 +57,6 @@ void        ServerConfiguration::ProcessDirectives(
 //-------------------server level
     bool srv_name = false;
     bool port = false;
-    bool log = false;
 //-------------------root location level
     bool cl_max_bd_size = false;
     bool err = false;
@@ -74,8 +72,6 @@ void        ServerConfiguration::ProcessDirectives(
                 HandleServerNames(directives[i]);
             } else if (MarkDefined("listen", port, directives[i])) {
                 HandlePort(directives[i]);
-            } else if (UMarkDefined("log", log, directives[i])) {
-                HandleLog(directives[i]);
             } else if (UMarkDefined("client_max_body_size", cl_max_bd_size,
                                     directives[i])) {
                 GetRoot().HandleClientMaxBodySize(directives[i]);
@@ -121,14 +117,6 @@ void ServerConfiguration::HandlePort(const v_str &directive) {
     ThrowServerConfigError("port directive is wrong");
 }
 
-void ServerConfiguration::HandleLog(const v_str &directive) {
-    if (directive.size() == 2 && !directive[1].empty()) {
-        log_dir_address_ = directive[1];
-        return;
-    }
-    ThrowServerConfigError("log address directive is wrong");
-}
-
 //-------------------operator overloads & exceptions----------------------------
 void        ServerConfiguration::ThrowServerConfigError(const std::string &msg) {
     std::cout << "Server config syntax error: " + msg << std::endl;
@@ -167,10 +155,6 @@ const l_loc &ServerConfiguration::GetLocations() const {
     return locations_;
 }
 
-const std::string &ServerConfiguration::GetLogDirAddress() const {
-    return log_dir_address_;
-}
-
 int ServerConfiguration::DefaultPort() const {
     return first_port_defined_;
 }
@@ -198,13 +182,11 @@ ServerConfiguration &ServerConfiguration::operator=(
 }
 
 std::ostream &operator<<(std::ostream &os, const ServerConfiguration &config) {
-    os << "hostname: " << config.GetDefaultServerName() << "\n";
-    for (s_int_c_it it = config.GetPorts().begin();
+    for (s_int_c_it it = config.ports_.begin();
                                         it != config.GetPorts().end(); ++it) {
         os << "port: " << *it << "\n";
     }
-    os << "log directory: " << config.GetLogDirAddress() << "\n";
-    os << config.GetConstRoot() << "\n";
+    os << config.locations_.front() << "\n";
     os << std::endl;
     return os;
 }

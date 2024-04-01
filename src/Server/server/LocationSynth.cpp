@@ -13,7 +13,7 @@
 #include <iostream>
 #include <algorithm>
 #include <csignal>
-#include "../../server/Server.h"
+#include "Server.h"
 
 /**
  * Depending on compliance between what was requested and what is being
@@ -23,13 +23,15 @@
  * @param request
  * @return not-exact copy of a location found
  */
-Location Server::ProcessRequest(ClientRequest &request, int socket) {
+Location Server::ProcessRequest(Connection &connection) const {
+    ClientRequest &request = connection.request_;
+
     Srch_c_Res res = config_.FindConstLocation(request.GetAddress());
     l_loc_c_it found = res.location_;
     Location synth(*found);
 
     if (RequestBodyExceedsLimit(found, request)) {
-        Log("client intended to send too large body", log_file_);
+        Log("client intended to send too large body");
         synth.SetReturnCode(BODY_TOO_LARGE);
     } else if (AccessForbidden(found, request.GetMethod())) {
         // limit_access rule prohibits request
@@ -38,7 +40,7 @@ Location Server::ProcessRequest(ClientRequest &request, int socket) {
     } else if (found->return_code_ == 0) {
         // return redirection rule isn't set
         if (!found->uploads_path_.empty()) {
-            HandleUpload(request, socket, found, synth);
+            HandleUpload(request, connection.connection_socket_, found, synth);
 //      } else if (???) {
 //          Handle CGI
         } else {
@@ -51,7 +53,7 @@ Location Server::ProcessRequest(ClientRequest &request, int socket) {
 void Server::HandleStatic(const ClientRequest &request,
                           const Srch_c_Res &res,
                           const l_loc_c_it &found,
-                          Location &synth) {
+                          Location &synth) const {
     // It seems like there is no reason to even read the body because it's
     // not clear how should static file handle it ?
     std::string address = found->root_ + res.leftower_address_;
@@ -59,7 +61,7 @@ void Server::HandleStatic(const ClientRequest &request,
     if (fs_status == ELSE) {
         // something exist on specified address, but it is neither a file nor a directory
         Log(address + " is neither a file nor a directory.. "
-                      "I don't know what to do with it..", log_file_);
+                      "I don't know what to do with it..");
         synth.SetReturnCode(REQUESTED_FILE_IS_NOT_A_FILE);
     } else {
         if (request.IsIndexRequest()) {
@@ -72,26 +74,30 @@ void Server::HandleStatic(const ClientRequest &request,
     }
 }
 
-void Server::HandleUpload(ClientRequest &request, int socket, l_loc_c_it &found, Location &synth) {
+void Server::HandleUpload(ClientRequest &request, int socket,
+                          l_loc_c_it &found, Location &synth) const {
     if (request.GetMethod() == POST) {
         // Try to perform upload
         int upload_status = UploadFile(request, found, socket);
         synth.SetReturnCode(upload_status);
-        if (synth.return_code_ == OK)
+        if (synth.return_code_ == OK) {
             synth.return_custom_message_ = "Upload successful";
+            Utils::Get().IncrementUploadedFiles();
+        }
     } else {
-        Log("only POST method should be used for upload locations", log_file_);
+        Log("only POST method should be used for upload locations");
         synth.SetReturnCode(UNAPROPRIATE_METHOD);
     }
 }
 
-void Server::SynthFile(Location &synth, const Srch_c_Res &res, int fs_status, const std::string &request_address) {
+void Server::SynthFile(Location &synth, const Srch_c_Res &res, int fs_status,
+                       const std::string &request_address) const {
     const l_loc_c_it &found = res.location_;
     std::string address = found->root_ + res.leftower_address_;
     // request's address part of URI has an address after last "/" check with
     // leftower-address
     if (fs_status == NOTHING) {
-        Log("open() \"" + address + "\" failed", log_file_);
+        Log("open() \"" + address + "\" failed");
         synth.SetReturnCode(NOT_FOUND);
     } else if (fs_status == DIRECTORY) {
         // redirect to index request
@@ -103,7 +109,8 @@ void Server::SynthFile(Location &synth, const Srch_c_Res &res, int fs_status, co
     }
 }
 
-bool Server::RequestBodyExceedsLimit(l_loc_c_it found, ClientRequest &request) {
+bool Server::RequestBodyExceedsLimit(l_loc_c_it found,
+                                     const ClientRequest &request) const {
     if (request.GetMethod() == POST || request.GetMethod() == DELETE) {
         if (found->client_max_body_size_ < request.GetDeclaredBodySize()) {
             return true;

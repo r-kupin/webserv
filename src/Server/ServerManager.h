@@ -15,24 +15,51 @@
 
 #include "server/Server.h"
 
-typedef std::vector<Server>       v_servers;
-typedef std::vector<pthread_t>    v_threads;
+typedef std::vector<Server>     v_servers;
+typedef std::vector<Connection> v_conn;
 
 static volatile bool        is_running_ = true;
 
 class ServerManager {
 public:
+class ServerManagerException : public std::exception {};
+
     ServerManager();
 
     ~ServerManager();
-
+//-------------------init-------------------------------------------------------
     void            Init(const Config &config);
+    void            CreateEpollInstance();
+//-------------------run--------------------------------------------------------
     void            Start();
+    void            EventLoop();
+    bool            AddClientToEpoll(int client_sock);
     static void     Stop(int signal);
-    static void     *StartServer(void *srv);
+//-------------------handle-----------------------------------------------------
+    const Server    &FindServerByListeningSocket(int socket) const;
+    void            AcceptNewConnection(int server_socket);
+    void            HandleEventsOnExistingConnection(int client_socket);
+    bool            ProcessHeaders(Connection &connection);
+    void            CloseConnectionWithLogMessage(int socket,
+                                                  const std::string &msg);
+    bool            ProcessBody(Connection &connection, const Server &server);
+    void            Respond(Connection &connection);
+//-------------------util-------------------------------------------------------
+    void            Cleanup();
+    void            PrintEventInfo(int events, int fd, int i) ;
+    void            ThrowException(const std::string &msg) const;
+    void            Log(const std::string &msg) const;
+    bool            IsListeningSocketFd(int socket) const;
+    bool            SetDescriptorNonBlocking(int sockfd) const;
 private:
     v_servers       servers_;
-    v_threads       threads_;
+    v_conn          connections_;
+
+    int             epoll_fd_;
+    int             epoll_returns_count_;
+    int             epoll_events_count_;
+    int             epoll_connection_count_;
+    int             epoll_in_out_count_;
 };
 
 

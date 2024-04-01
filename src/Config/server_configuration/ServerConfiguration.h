@@ -73,10 +73,11 @@ public:
     const std::set<int>     &GetPorts() const;
     int                     DefaultPort() const;
     const l_loc             &GetLocations() const;
-    const std::string       &GetLogDirAddress() const;
 
     bool                    operator==(const ServerConfiguration &rhs) const;
     ServerConfiguration&    operator=(const ServerConfiguration& rhs);
+    friend                  std::ostream &operator<<(std::ostream &os,
+                                                    const ServerConfiguration &config);
 protected:
 //-------------------unsafe search----------------------------------------------
     LocSearchResult         FindLocation(const std::string &address);
@@ -99,14 +100,11 @@ private:
     int                     first_port_defined_;
     std::string             first_name_defined_;
     std::set<int>           ports_;
-    s_str   server_names_;
-    std::string             log_dir_address_;
+    s_str                   server_names_;
     std::list<Location>     locations_;
 };
 
 typedef ServerConfiguration::LocSearchResult            Srch_Res;
 typedef ServerConfiguration::LocConstSearchResult       Srch_c_Res;
-
-std::ostream &operator<<(std::ostream &os, const ServerConfiguration &config);
 
 #endif //WEBSERV_SERVERCONFIGURATION_H

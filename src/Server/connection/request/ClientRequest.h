@@ -58,7 +58,7 @@ public:
 
     ClientRequest       &operator=(const ClientRequest& other);
 
-    void                Init(int client_sock, std::ofstream *log_file);
+    void Init(int client_sock);
 
     Methods             GetMethod() const;
     const std::string   &GetAddress() const;
@@ -112,7 +112,6 @@ protected:
 private:
 //-------------------processing-time data---------------------------------------
     v_c_b               &is_running_;
-    std::ofstream       *log_file_;
     v_str               raw_request_;
     std::string         associated_filename_;
 //-------------------actual request data----------------------------------------

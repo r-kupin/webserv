@@ -26,7 +26,7 @@ bool ErrPage::operator==(const ErrPage &rhs) const {
            code_ == rhs.code_;
 }
 
-std::ostream& operator<<(std::ostream &os, const ErrPage &page) {
+std::ostream    &operator<<(std::ostream &os, const ErrPage &page) {
     os << page.code_ << " " << page.address_;
     return  os;
 }

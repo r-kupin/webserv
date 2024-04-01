@@ -36,12 +36,11 @@ struct Limit {
     void    LimExAllowAddress(const std::string &address);
     void    LimExHandleMethods(const v_str &main);
     void    LimExHandleDirectives(const std::vector<v_str> &directives);
+    void    ThrowLimitExceptError(const std::string &msg) const;
 
     bool operator==(const Limit &rhs) const;
     bool operator!=(const Limit &rhs) const;
-
-    void ThrowLimitExceptError(const std::string &msg) const;
+    friend  std::ostream &operator<<(std::ostream &os, const Limit &limit);
 };
-std::ostream &operator<<(std::ostream &os, const Limit &limit);
 
 #endif //WEBSERV_LIMITEXCEPT_H
