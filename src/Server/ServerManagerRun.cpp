@@ -31,12 +31,12 @@
 void    ServerManager::EventLoop() {
     epoll_event events[MAX_EVENTS];
     // todo: change timeout from -1 to be able to shut down server with ^C
-    int nfds = epoll_wait(epoll_fd_, events, MAX_EVENTS, -1);
+    int nfds = epoll_wait(epoll_fd_, events, MAX_EVENTS, 500);
     if (is_running_) {
         epoll_returns_count_++;
         if (nfds == -1) {
             ThrowException("Epoll wait failed. Shutting down.");
-        } else {
+        } else if (nfds > 0) {
             for (int i = 0; i < nfds; ++i) {
                 int         socket_fd = events[i].data.fd;
                 uint32_t    event = events[i].events;
@@ -47,6 +47,9 @@ void    ServerManager::EventLoop() {
                     HandleEventsOnExistingConnection(socket_fd);
                 }
             }
+        } else {
+            // todo: iterate throug existing connections and check their
+            //  timeouts
         }
     }
 }
