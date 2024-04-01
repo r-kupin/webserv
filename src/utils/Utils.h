@@ -39,7 +39,6 @@ typedef std::vector<v_str>::const_iterator                  vstr_vstr_c_it;
 
 typedef std::map<int, std::string>                          m_int_str;
 typedef std::map<std::string, std::string>                  m_str_str;
-typedef std::map<int, std::set<int> >                       m_int_ints;
 typedef std::map<std::string, std::string>::const_iterator  m_str_str_c_it;
 
 typedef std::list<std::string>                              l_str;
@@ -50,6 +49,10 @@ public:
     class UtilsException : public std::exception {};
     class StatvfsException : public UtilsException {};
     class ConversionException : public UtilsException {};
+
+    static Utils        &Get();
+    int                 GetFilesUploaded() const;
+    void                IncrementUploadedFiles();
 //-------------------filesystem utils-------------------------------------------
     static int          CheckFilesystem(const std::string &address);
     static bool         FileExists(const std::string &address);
@@ -71,21 +74,22 @@ public:
                                        const std::string &pattern);
     static void         OutputMap(const m_str_str &map, std::ostream &os);
 //-------------------HTTP utils-------------------------------------------------
-    static bool         IsErrorCode(int code);
-    static bool         IsOKCode(int code);
-    static bool         IsRedirectCode(int code);
-    static bool         IsValidHTTPCode(int code);
-    static std::string  GetCodeDescription(int code);
+    bool                IsErrorCode(int code);
+    bool                IsOKCode(int code);
+    bool                IsRedirectCode(int code);
+    bool                IsValidHTTPCode(int code);
+    std::string         GetCodeDescription(int code);
 //-------------------Misc-------------------------------------------------------
     static long         TimeNow();
 private:
-    static m_int_str err_codes;
-    static m_int_str ok_codes;
-    static m_int_str redirect_codes;
+    int         files_uploaded_;
+    m_int_str   err_codes_;
+    m_int_str   ok_codes_;
+    m_int_str   redirect_codes_;
 
-    static m_int_str initializeHttpErrCodes();
-    static m_int_str initializeHttpRedirectCodes();
-    static m_int_str initializeHttpOKCodes();
+    m_int_str initializeHttpErrCodes();
+    m_int_str initializeHttpRedirectCodes();
+    m_int_str initializeHttpOKCodes();
 
     Utils();
 };

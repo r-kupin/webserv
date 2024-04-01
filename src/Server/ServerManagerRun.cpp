@@ -10,12 +10,13 @@
 /*                                                                            */
 /******************************************************************************/
 
+#include <csignal>
 #include "ServerManager.h"
 
 /**
  *  Server's main loop
- *  Based around blocking call epoll_wait() which blocks on server's listening
- * socket socket_ while client wouldn't connect to the server.
+ *  Based around blocking call epoll_wait() which blocks on fd of the
+ * server's epoll instance's fd while client wouldn't connect to the server.
  *  If that would happen - epoll_wait will return an event with
  * event.data.fd == socket_ and event.events == EPOLLIN. In this case server
  * accepts connection and adds new socket to the epoll instance, accessible
@@ -29,7 +30,7 @@
  */
 void    ServerManager::EventLoop() {
     epoll_event events[MAX_EVENTS];
-    // change timeout from -1 to be able to shut down server with ^C
+    // todo: change timeout from -1 to be able to shut down server with ^C
     int nfds = epoll_wait(epoll_fd_, events, MAX_EVENTS, -1);
     if (is_running_) {
         epoll_returns_count_++;
@@ -37,39 +38,35 @@ void    ServerManager::EventLoop() {
             ThrowException("Epoll wait failed. Shutting down.");
         } else {
             for (int i = 0; i < nfds; ++i) {
-                int fd = events[i].data.fd;
-                PrintEventInfo(events[i].events, fd, i);
-                if (IsSocketFd(fd)) {
-                    // New connection: fd == server's listening socket
-                    struct sockaddr_in client_addr;
-                    socklen_t client_len = sizeof(client_addr);
-                    int client_sock = accept(fd,
-                                             (struct sockaddr *) &client_addr,
-                                             &client_len);
-                    CheckRequest(client_sock, fd);
-                } else if (events[i].events & EPOLLIN &&
-                           events[i].events & EPOLLOUT) {
-                    // New data on existing connection:
-                    // fd == server's "end" of the pipe to communicate with client
-                    HandleEvents(fd);
+                int         socket_fd = events[i].data.fd;
+                uint32_t    event = events[i].events;
+                PrintEventInfo(event, socket_fd, i);
+                if (IsListeningSocketFd(socket_fd)) {
+                    AcceptNewConnection(socket_fd);
+                } else if (event & EPOLLIN && event & EPOLLOUT) {
+                    HandleEventsOnExistingConnection(socket_fd);
                 }
             }
         }
     }
 }
 
-int ServerManager::CheckRequest(int client_sock, int fd) {
-    if (client_sock < 0) {
+void ServerManager::AcceptNewConnection(int server_socket) {
+    struct sockaddr_in  client_addr;
+    socklen_t           client_len = sizeof(client_addr);
+    int client_socket = accept(server_socket, (struct sockaddr *) &client_addr,
+                               &client_len);
+    if (client_socket < 0) {
         Log("Error accepting connection!");
-    } else if (AddClientToEpoll(client_sock)) {
+    } else if (AddClientToEpoll(client_socket)) {
         // associate client's socket with server's listener
-        connections_[client_sock] = Connection(is_running_, client_sock, fd);
-        Log("Accepted client connection from socket " + Utils::NbrToString(client_sock));
+        connections_[client_socket] = Connection(is_running_, client_socket,
+                                                 server_socket);
+        Log("Accepted client connection from socket " + Utils::NbrToString(client_socket));
     } else {
         Log("Error adding client socket to epoll");
-        close(client_sock);
+        close(client_socket);
     }
-    return client_sock;
 }
 
 /**
@@ -85,3 +82,4 @@ bool ServerManager::AddClientToEpoll(int client_sock) {
         " to nonblocking mode.");
     return false;
 }
+

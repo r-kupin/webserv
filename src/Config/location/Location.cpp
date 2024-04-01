@@ -318,7 +318,7 @@ void Location::AddErrorPages(const v_str &directive) {
             } catch (const Utils::ConversionException &) {
                 ThrowLocationException("Error code is wrong");
             }
-            if (!Utils::IsErrorCode(code)) {
+            if (!Utils::Get().IsErrorCode(code)) {
                 ThrowLocationException("Error code is wrong");
             }
             ErrPage err_page(address, code);

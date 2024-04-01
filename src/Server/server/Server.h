@@ -40,7 +40,6 @@
 #include <sys/socket.h>
 #include <sys/epoll.h>
 #include <netdb.h>
-#include <ostream>
 
 #include "../../Config/config/Config.h"
 #include "response/ServerResponse.h"
@@ -71,12 +70,16 @@ public:
     explicit Server(const ServerConfiguration &config,
                     v_c_b &is_running_ref, int epoll_fd);
 
-    bool                       ListensTo(int socket) const;
+    bool                        ListensTo(int socket) const;
+    const std::string           &GetAddress(int socket) const;
+    Location                    ProcessRequest(Connection &connection) const;
+    void Cleanup(int epoll_fd);
+
 
     friend std::ostream         &operator<<(std::ostream &os, const Server &server);
 protected:
 //-------------------initialisation: open sockets, create epoll...--------------
-    bool                        Init(int epoll_fd);
+     void Init(int epoll_fd);
 
     void                        PresetAddress(addrinfo **addr,
                                               const std::string &host,
@@ -88,73 +91,55 @@ protected:
     void                        BindSocket(addrinfo *res, int socket);
     void                        ListenSocket(int socket);
     void                        AddSocketToEpollInstance(int socket, int epoll_fd);
-//-------------------event handling---------------------------------------------
-    void                        EventLoop();
-    int                         CheckRequest(int client_sock, int fd);
-    bool                        AddClientToEpoll(int client_sock);
-    void                        HandleEvents(int client_sock);
 //-------------------request server-side processing-----------------------------
-    bool                        ProcessHeaders(int client_sock,
-                                               Connection &connection);
-    bool                        ProcessBody(int client_sock,
-                                            Connection &connection);
-    void                        Respond(int client_sock,
-                                        const Connection &connection);
-    Location                    ProcessRequest(ClientRequest &request,
-                                               int socket);
     bool                        AccessForbidden(l_loc_c_it found,
                                                 Methods method) const;
-    bool                        RequestBodyExceedsLimit(l_loc_c_it found,
-                                                        ClientRequest &request);
+     bool                       RequestBodyExceedsLimit(l_loc_c_it found,
+                                                        const ClientRequest &request) const;
 //-------------------static request processing----------------------------------
     void                        HandleStatic(const ClientRequest &request,
                                              const Srch_c_Res &res,
                                              const l_loc_c_it &found,
-                                             Location &synth);
+                                             Location &synth) const;
     void                        SynthIndex(Location &synth,
                                            const Srch_c_Res &res,
-                                           int fs_status);
+                                           int fs_status) const;
     std::string                 FindIndexToSend(const l_loc_c_it &found,
                                                 const std::string &compliment) const;
     void                        SynthFile(Location &synth,
                                           const Srch_c_Res &res,
                                           int fs_status,
-                                          const std::string &request_address);
+                                          const std::string &request_address)const;
 //-------------------upload request processing----------------------------------
     int                         UploadFile(ClientRequest &request,
                                            l_loc_c_it found,
-                                           int socket);
+                                           int socket) const;
     int                         UploadFromCURL(ClientRequest &request,
                                                const std::string &filename,
-                                               int socket);
+                                               int socket) const;
     int                         PerformUpload(const ClientRequest &request,
                                               int socket, int file_fd,
-                                              const std::string &delimiter);
+                                              const std::string &delimiter) const;
     bool                        TryCreateOutputFile(const std::string &dir,
                                                     const std::string &filename,
-                                                    size_t size);
+                                                    size_t size) const ;
     void                        HandleUpload(ClientRequest &request,
                                              int socket,
                                              l_loc_c_it &found,
-                                             Location &synth);
+                                             Location &synth) const;
     void                        NoUpoladDataAvailable(int file_fd,
-                                                      ssize_t bytes_read);
+                                                      ssize_t bytes_read) const;
 //-------------------misc utils-------------------------------------------------
-    bool                        SetDescriptorNonBlocking(int sockfd);
-    void                        PrintEventInfo(int events, int fd, int i);
     void                        Log(const std::string &msg,
                                     std::ostream &os = std::cout) const;
     void                        CloseConnectionWithLogMessage(int client_sock,
                                                               const std::string &msg);
     void                        ThrowException(const std::string &msg,
                                                std::ostream &os = std::cout) const;
-    bool                        IsSocketFd(int fd) const;
-    void                        Cleanup();
 private:
     const volatile bool         &is_running_;
     const ServerConfiguration   &config_;
     m_int_str                   srv_sock_to_address_;
-    std::ofstream               log_file_;
     long                        startup_time_;
  };
 

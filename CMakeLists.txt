@@ -13,7 +13,6 @@ add_executable(webserv src/main.cpp
                 src/Server/server/response/ServerResponse.cpp
                 src/Server/server/ServerExceptions.cpp
         src/Server/server/Server.cpp
-        src/Server/server/ServerRun.cpp
         src/Server/server/ServerInit.cpp
                 src/Server/connection/request_processing/UploadHandler.cpp
                 src/Server/connection/request_processing/SynthFoundExact.cpp
@@ -44,6 +43,7 @@ add_executable(webserv src/main.cpp
         src/Server/ServerManagerInit.cpp
         src/Server/ServerManagerRun.cpp
         src/Server/ServerManagerUtils.cpp
+        src/Server/ServerManagerHandleEvents.cpp
 )
 add_library(webserv_lib
         src/utils/Utils.cpp
@@ -53,7 +53,6 @@ add_library(webserv_lib
         src/Server/server/response/ServerResponse.cpp
         src/Server/server/ServerExceptions.cpp
         src/Server/server/Server.cpp
-        src/Server/server/ServerRun.cpp
         src/Server/server/ServerInit.cpp
         src/Server/connection/request_processing/UploadHandler.cpp
         src/Server/connection/request_processing/SynthFoundExact.cpp
@@ -84,6 +83,7 @@ add_library(webserv_lib
         src/Server/ServerManagerInit.cpp
         src/Server/ServerManagerRun.cpp
         src/Server/ServerManagerUtils.cpp
+        src/Server/ServerManagerHandleEvents.cpp
 )
 
 add_subdirectory(test)

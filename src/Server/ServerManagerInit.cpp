@@ -28,9 +28,15 @@ void ServerManager::Init(const Config &config) {
     // These instances are stored in the 'servers_' vector for management.
     for (l_sc_c_it it = config.getConstServers().begin();
          it != config.getConstServers().end(); ++it) {
-        servers_.push_back(Server(*it, is_running_, epoll_fd_));
+        try {
+            servers_.push_back(Server(*it, is_running_, epoll_fd_));
+        } catch (...) {
+            // todo: handle server failed to start errors
+        }
         std::cout << *it << std::endl;
     }
+    // Create Connection instances for each fd dedicated to keep the state of
+    // communication between the client and server
     for (int i = 0; i < MAX_CLIENTS; ++i) {
         connections_.push_back(Connection(is_running_));
     }

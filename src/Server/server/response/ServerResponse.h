@@ -22,7 +22,7 @@ public:
     class ResponseException : public std::exception {};
 
     ServerResponse();
-    ServerResponse(const std::string &addr, std::ofstream *log_file);
+    ServerResponse(const std::string &addr);
 
     ~ServerResponse();
 

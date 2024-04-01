@@ -16,7 +16,6 @@ Server::Server(const Server &other)
         : is_running_(other.is_running_),
           config_(other.config_),
           srv_sock_to_address_(other.srv_sock_to_address_),
-          log_file_(other.log_file_),
           startup_time_(other.startup_time_) {}
 
 Server::Server(const ServerConfiguration &config, v_c_b &is_running_ref, int epoll_fd)

@@ -16,14 +16,14 @@
 
 ServerResponse::ServerResponse() {}
 
-ServerResponse::ServerResponse(const std::string &addr, std::ofstream *log_file)
-        :  addr_(addr), log_file_(log_file) {}
+ServerResponse::ServerResponse(const std::string &addr)
+        :  addr_(addr) {}
 
 std::string ServerResponse::ComposeTop(int return_code) {
     std::ostringstream oss;
 
     oss << kHttpVersion << " " << return_code << " ";
-    oss << Utils::GetCodeDescription(return_code);
+    oss << Utils::Get().GetCodeDescription(return_code);
     return oss.str();
 }
 
@@ -34,9 +34,9 @@ void ServerResponse::ComposeResponse(const Location &synth) {
     AddHeader("Server", "WebServ");
     AddHeader("Date", Utils::NiceTimestamp());
     if (synth.return_custom_message_.empty()) {
-        if (Utils::IsErrorCode(synth.return_code_)) {
+        if (Utils::Get().IsErrorCode(synth.return_code_)) {
             HandleError(synth);
-        } else if (Utils::IsRedirectCode(synth.return_code_)) {
+        } else if (Utils::Get().IsRedirectCode(synth.return_code_)) {
             HandleRedirect(synth);
         } else {
             if (!synth.body_file_.empty()) {

@@ -14,10 +14,6 @@
 #include <sys/time.h>
 #include "Utils.h"
 
-m_int_str Utils::err_codes;
-m_int_str Utils::ok_codes;
-m_int_str Utils::redirect_codes;
-
 m_int_str Utils::initializeHttpErrCodes() {
     m_int_str map;
 
@@ -98,54 +94,57 @@ m_int_str Utils::initializeHttpOKCodes() {
     return map;
 }
 
-Utils::Utils() {}
+Utils::Utils()
+    : err_codes_(initializeHttpErrCodes()),
+    ok_codes_(initializeHttpOKCodes()),
+    redirect_codes_(initializeHttpRedirectCodes()) {}
 
 bool Utils::IsErrorCode(int code) {
-    if (ok_codes.empty()) {
-        err_codes = initializeHttpErrCodes();
-        redirect_codes = initializeHttpRedirectCodes();
-        ok_codes = initializeHttpOKCodes();
+    if (ok_codes_.empty()) {
+        err_codes_ = initializeHttpErrCodes();
+        redirect_codes_ = initializeHttpRedirectCodes();
+        ok_codes_ = initializeHttpOKCodes();
     }
-    return err_codes.find(code) != err_codes.end();
+    return err_codes_.find(code) != err_codes_.end();
 }
 
 bool Utils::IsOKCode(int code) {
-    if (ok_codes.empty()) {
-        err_codes = initializeHttpErrCodes();
-        redirect_codes = initializeHttpRedirectCodes();
-        ok_codes = initializeHttpOKCodes();
+    if (ok_codes_.empty()) {
+        err_codes_ = initializeHttpErrCodes();
+        redirect_codes_ = initializeHttpRedirectCodes();
+        ok_codes_ = initializeHttpOKCodes();
     }
-    return ok_codes.find(code) != ok_codes.end();
+    return ok_codes_.find(code) != ok_codes_.end();
 }
 
 bool Utils::IsRedirectCode(int code) {
-    if (ok_codes.empty()) {
-        err_codes = initializeHttpErrCodes();
-        redirect_codes = initializeHttpRedirectCodes();
-        ok_codes = initializeHttpOKCodes();
+    if (ok_codes_.empty()) {
+        err_codes_ = initializeHttpErrCodes();
+        redirect_codes_ = initializeHttpRedirectCodes();
+        ok_codes_ = initializeHttpOKCodes();
     }
-    return redirect_codes.find(code) != redirect_codes.end();
+    return redirect_codes_.find(code) != redirect_codes_.end();
 }
 
 bool Utils::IsValidHTTPCode(int code) {
-    if (ok_codes.empty()) {
-        err_codes = initializeHttpErrCodes();
-        redirect_codes = initializeHttpRedirectCodes();
-        ok_codes = initializeHttpOKCodes();
+    if (ok_codes_.empty()) {
+        err_codes_ = initializeHttpErrCodes();
+        redirect_codes_ = initializeHttpRedirectCodes();
+        ok_codes_ = initializeHttpOKCodes();
     }
     return IsErrorCode(code) || IsOKCode(code);
 }
 
 std::string Utils::GetCodeDescription(int code) {
-    if (ok_codes.empty()) {
-        err_codes = initializeHttpErrCodes();
-        redirect_codes = initializeHttpRedirectCodes();
-        ok_codes = initializeHttpOKCodes();
+    if (ok_codes_.empty()) {
+        err_codes_ = initializeHttpErrCodes();
+        redirect_codes_ = initializeHttpRedirectCodes();
+        ok_codes_ = initializeHttpOKCodes();
     }
     if (IsErrorCode(code)) {
-        return err_codes.find(code)->second;
+        return err_codes_.find(code)->second;
     } else {
-        return ok_codes.find(code)->second;
+        return ok_codes_.find(code)->second;
     }
 }
 
@@ -153,4 +152,17 @@ long Utils::TimeNow() {
     struct timeval tv;
     gettimeofday(&tv, NULL);
     return (tv.tv_sec) * 1000LL + tv.tv_usec / 1000;
+}
+
+Utils &Utils::Get() {
+    static Utils instance;
+    return instance;
+}
+
+int Utils::GetFilesUploaded() const {
+    return files_uploaded_;
+}
+
+void Utils::IncrementUploadedFiles() {
+    files_uploaded_++;
 }

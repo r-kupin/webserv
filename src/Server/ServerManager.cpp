@@ -11,8 +11,8 @@
 /* ************************************************************************** */
 
 // Include necessary headers for signal handling and the server manager's declaration.
-#include "ServerManager.h"
 #include <csignal>
+#include "ServerManager.h"
 
 // Default constructor for the ServerManager class.
 ServerManager::ServerManager()
@@ -21,14 +21,13 @@ ServerManager::ServerManager()
 // Destructor for the ServerManager class.
 ServerManager::~ServerManager() {}
 
-// Starts all the servers managed by this ServerManager.
-// This is achieved by creating a thread for each server instance,
-// ensuring they can run concurrently without blocking each other.
+// Starts to handle incoming connections by monitoring of the epoll_fd with
+// epoll_wait() block. Runs indefinitely while it receives interruption signal
 void ServerManager::Start() {
     Log("Starting servers... ");
     while (is_running_)
         EventLoop();
-//    Cleanup();
+    Cleanup();
     Log("Server stopped.");
 }
 

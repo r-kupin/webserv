@@ -10,15 +10,11 @@
 /*                                                                            */
 /******************************************************************************/
 
-#include <sys/fcntl.h>
 #include <csignal>
 #include "Server.h"
 
-void Server::CloseConnectionWithLogMessage(int client_sock, const std::string &msg) {
-    Log(msg, log_file_);
-    connections_[client_sock] = Connection(is_running_);
-    epoll_ctl(epoll_fd_, EPOLL_CTL_DEL, client_sock, NULL);
-    close(client_sock);
+const std::string &Server::GetAddress(int socket) const {
+    return srv_sock_to_address_.find(socket)->second;
 }
 
 void Server::ThrowException(const std::string &msg, std::ostream &os) const {
@@ -31,11 +27,12 @@ void    Server::Log(const std::string &msg, std::ostream &os) const {
     os << msg << std::endl;
 }
 
-void Server::Cleanup() {
-    epoll_ctl(epoll_fd_, EPOLL_CTL_DEL, epoll_fd_, NULL);
-    close(epoll_fd_);
+void Server::Cleanup(int epoll_fd) {
     for (m_int_str::iterator it = srv_sock_to_address_.begin();
          it != srv_sock_to_address_.end(); ++it) {
+        // Remove each listening socket from epoll_fd instance
+        epoll_ctl(it->first, EPOLL_CTL_DEL, epoll_fd, NULL);
+        // close socket
         close(it->first);
     }
 }

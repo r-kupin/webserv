@@ -32,7 +32,7 @@ public:
 // run
     void            Start();
     void            EventLoop();
-    int             CheckRequest(int client_sock, int fd);
+    int             CheckRequest(int client_sock, int listening_sock);
     bool            AddClientToEpoll(int client_sock);
     static void     Stop(int signal);
 // handle
@@ -41,7 +41,7 @@ public:
     void            PrintEventInfo(int events, int fd, int i) ;
     void            ThrowException(const std::string &msg) const;
     void            Log(const std::string &msg) const;
-    bool            IsSocketFd(int socket_fd) const;
+    bool            IsListeningSocketFd(int socket) const;
     bool            SetDescriptorNonBlocking(int sockfd) const;
 private:
     v_servers       servers_;
@@ -55,6 +55,24 @@ private:
     int             epoll_events_count_;
     int             epoll_connection_count_;
     int             epoll_in_out_count_;
+
+    const Server &FindServerByListeningSocket(int socket) const;
+
+    void AcceptNewConnection(int server_socket);
+
+    void HandleEventsOnExistingConnection(int client_socket);
+
+    bool ProcessHeaders(Connection &connection);
+
+    void CloseConnectionWithLogMessage(int socket, const std::string &msg);
+
+    bool ProcessBody(Connection &connection, const Server &server);
+
+    void Respond(Connection &connection);
+
+    void Respond(Connection &connection) const;
+
+    void Cleanup();
 };
 
 

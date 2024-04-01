@@ -25,7 +25,7 @@ void ClientRequest::TellClientToContinueIfNeed(int socket) const {
         const int kContinueCode = 100;
 
         oss << kHttpVersion << " " << kContinueCode << " ";
-        oss << Utils::GetCodeDescription(kContinueCode) << kHTTPEndBlock;
+        oss << Utils::Get().GetCodeDescription(kContinueCode) << kHTTPEndBlock;
 
         std::string response = oss.str();
         const char *response_buffer = response.c_str();

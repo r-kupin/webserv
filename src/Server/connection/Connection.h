@@ -21,13 +21,14 @@ struct Connection {
     Connection(v_c_b &is_running, int connection_socket, int server_socket);
     Connection(const Connection &other);
 
-    Connection &operator=(const Connection &);
+    Connection          &operator=(const Connection &);
 
     bool                url_headers_done_;
     bool                body_done_;
 
     int                 connection_socket_;
     int                 server_listening_socket_;
+    std::string         address_;
     ClientRequest       request_;
     Location            location_;
 };

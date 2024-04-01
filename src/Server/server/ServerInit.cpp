@@ -21,28 +21,23 @@
  * Create listening sockets for all ports on all hosts
  * @return 
  */
-bool Server::Init(int epoll_fd) {
-    try {
-        for (s_str_c_it hn_it = config_.GetServerNames().begin();
-             hn_it != config_.GetServerNames().end(); ++hn_it) {
-            for (s_int_c_it p_it = config_.GetPorts().begin();
-                p_it != config_.GetPorts().end(); ++p_it) {
-                struct addrinfo *addr = NULL;
-                const std::string &port_str = Utils::NbrToString(*p_it);
+void Server::Init(int epoll_fd) {
+    for (s_str_c_it hn_it = config_.GetServerNames().begin();
+         hn_it != config_.GetServerNames().end(); ++hn_it) {
+        for (s_int_c_it p_it = config_.GetPorts().begin();
+            p_it != config_.GetPorts().end(); ++p_it) {
+            struct addrinfo *addr = NULL;
+            const std::string &port_str = Utils::NbrToString(*p_it);
 
-                PresetAddress(&addr, *hn_it, port_str);
-                int socket = CreateSocket(addr, *hn_it, port_str);
-                SetSocketOptions(addr, socket);
-                BindSocket(addr, socket);
-                freeaddrinfo(addr);
-                ListenSocket(socket);
-                AddSocketToEpollInstance(socket, epoll_fd);
-            }
+            PresetAddress(&addr, *hn_it, port_str);
+            int socket = CreateSocket(addr, *hn_it, port_str);
+            SetSocketOptions(addr, socket);
+            BindSocket(addr, socket);
+            freeaddrinfo(addr);
+            ListenSocket(socket);
+            AddSocketToEpollInstance(socket, epoll_fd);
         }
-    } catch (const ServerException &) {
-        return false;
     }
-    return true;
 }
 
 /**
@@ -69,9 +64,9 @@ void Server::PresetAddress(addrinfo **addr, const std::string &host,
 
     if (getaddrinfo(host.c_str(), port_str.c_str(), &hints, addr)) {
         std::string err_msg(strerror(errno));
-        Cleanup();
+        Cleanup(0);
         ThrowException("Failed getting address info for " + host + ":" +
-                        port_str + " : " + err_msg, log_file_);
+                        port_str + " : " + err_msg);
     }
 }
 
@@ -90,13 +85,13 @@ int Server::CreateSocket(addrinfo *res, const std::string &host,
     int sock = socket(res->ai_family, res->ai_socktype, 0);
     if (sock < 0) {
         std::string err_msg(strerror(errno));
-        Cleanup();
+        Cleanup(0);
         freeaddrinfo(res);
         ThrowException("Failed to create new socket for " + host + ":" +
-                       port_str + " : " + err_msg, log_file_);
+                       port_str + " : " + err_msg);
     }
     srv_sock_to_address_.insert(std::make_pair(sock, host + ":" + port_str));
-    Log("Socket created", log_file_);
+    Log("Socket created");
     return sock;
 }
 
@@ -113,11 +108,11 @@ void Server::SetSocketOptions(addrinfo *res, int socket) {
     if (setsockopt(socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
         std::string err_msg(strerror(errno));
         freeaddrinfo(res);
-        Cleanup();
+        Cleanup(0);
         ThrowException("Failed to set socket options for " +
-                       srv_sock_to_address_[socket] + " : " + err_msg, log_file_);
+                       srv_sock_to_address_[socket] + " : " + err_msg);
     }
-    Log("Socket options set", log_file_);
+    Log("Socket options set");
 }
 
 /**
@@ -133,22 +128,22 @@ void Server::BindSocket(addrinfo *res, int socket) {
     if (bind(socket, res->ai_addr, res->ai_addrlen)) {
         std::string err_msg(strerror(errno));
         freeaddrinfo(res);
-        Cleanup();
+        Cleanup(0);
         ThrowException("Failed to Bind Socket for " +
-                       srv_sock_to_address_[socket] + " : " + err_msg, log_file_);
+                       srv_sock_to_address_[socket] + " : " + err_msg);
     }
-    Log("Socket bind()-ed", log_file_);
+    Log("Socket bind()-ed");
 }
 
 void Server::ListenSocket(int socket) {
     if (listen(socket, SOMAXCONN) < 0) {
         std::string err_msg(strerror(errno));
-        Cleanup();
+        Cleanup(0);
         ThrowException("Failed to Listen Socket for " +
-                       srv_sock_to_address_[socket] + " : " + err_msg, log_file_);
+                       srv_sock_to_address_[socket] + " : " + err_msg);
     }
     Log("Listening to socket fd:" + Utils::NbrToString(socket) +
-        " for " + srv_sock_to_address_[socket] + " : " , log_file_);
+        " for " + srv_sock_to_address_[socket] + " : ");
 }
 
 void Server::AddSocketToEpollInstance(int socket, int epoll_fd) {
@@ -158,11 +153,11 @@ void Server::AddSocketToEpollInstance(int socket, int epoll_fd) {
     event.events = EPOLLIN | EPOLLOUT;
     if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, socket, &event) < 0) {
         std::string err_msg(strerror(errno));
-        Cleanup();
+        Cleanup(0);
         ThrowException("Failed to add socket on fd:" +
                        Utils::NbrToString(socket) + " for " +
                        srv_sock_to_address_[socket] + " to Epoll Instance : " +
-                       err_msg, log_file_);
+                       err_msg);
     }
-    Log("Listening socket added to epoll instance", log_file_);
+    Log("Listening socket added to epoll instance");
 }
