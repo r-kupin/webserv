@@ -81,18 +81,25 @@ public:
                                             const Server &server);
 protected:
 //-------------------initialisation: open sockets, create epoll...--------------
-    void                       Init(int epoll_fd);
+    void                        Init(int epoll_fd);
 
     void                        PresetAddress(addrinfo **addr,
                                               const std::string &host,
-                                              const std::string &port_str);
+                                              const std::string &port_str,
+                                              int epoll_fd);
     int                         CreateSocket(addrinfo *res,
                                              const std::string &host,
-                                             const std::string &port_str);
-    void                        SetSocketOptions(addrinfo *res, int socket);
-    void                        BindSocket(addrinfo *res, int socket);
-    void                        ListenSocket(int socket);
-    void                        AddSocketToEpollInstance(int socket, int epoll_fd);
+                                             const std::string &port_str,
+                                             int epoll_fd);
+    void                        SetSocketOptions(addrinfo *res,
+                                                 int socket,
+                                                 int epoll_fd);
+    void                        BindSocket(addrinfo *res,
+                                           int socket,
+                                           int epoll_fd);
+    void                        ListenSocket(int socket, int epoll_fd);
+    void                        AddSocketToEpollInstance(int socket,
+                                                         int epoll_fd);
 //-------------------request server-side processing-----------------------------
     bool                        AccessForbidden(l_loc_c_it found,
                                                 Methods method) const;
@@ -132,10 +139,10 @@ protected:
     void                        NoUpoladDataAvailable(int file_fd,
                                                       ssize_t bytes_read) const;
 //-------------------misc utils-------------------------------------------------
-    void                        Log(const std::string &msg,
-                                    std::ostream &os = std::cout) const;
-    void                        ThrowException(const std::string &msg,
-                                               std::ostream &os = std::cout) const;
+    void                        Log(const std::string &msg) const;
+    void                        Log(const std::string &msg, int listen_sock) const;
+    void                        ThrowException(const std::string &msg) const;
+    void                        ThrowException(const std::string &msg, int listen_sock) const;
 private:
     const volatile bool         &is_running_;
     const ServerConfiguration   &config_;

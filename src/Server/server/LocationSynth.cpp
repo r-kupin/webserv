@@ -31,11 +31,11 @@ Location Server::ProcessRequest(Connection &connection) const {
     Location synth(*found);
 
     if (RequestBodyExceedsLimit(found, request)) {
-        Log("client intended to send too large body");
+        Log("client intended to send too large body", connection.server_listening_socket_);
         synth.SetReturnCode(BODY_TOO_LARGE);
     } else if (AccessForbidden(found, request.GetMethod())) {
         // limit_access rule prohibits request
-        Log("access forbidden by rule");
+        Log("access forbidden by rule", connection.server_listening_socket_);
         synth.SetReturnCode(ACCESS_FORBIDDEN);
     } else if (found->return_code_ == 0) {
         // return redirection rule isn't set

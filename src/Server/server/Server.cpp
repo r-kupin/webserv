@@ -41,14 +41,25 @@ const std::string &Server::GetAddress(int socket) const {
     return srv_sock_to_address_.find(socket)->second;
 }
 
-void Server::ThrowException(const std::string &msg, std::ostream &os) const {
-    Log(msg, os);
+void Server::ThrowException(const std::string &msg) const {
+    Log(msg);
     throw ServerException();
 }
 
-void    Server::Log(const std::string &msg, std::ostream &os) const {
-    os << "[ " << Utils::Get().TimeElapsed() << " ] ";
-    os << msg << std::endl;
+void Server::ThrowException(const std::string &msg, int listen_sock) const {
+    Log(msg, listen_sock);
+    throw ServerException();
+}
+
+void Server::Log(const std::string &msg) const {
+    std::cout << "[ " << Utils::Get().TimeElapsed() << " ] Server : ";
+    std::cout << msg << std::endl;
+}
+
+void Server::Log(const std::string &msg, int listen_sock) const {
+    std::cout << "[ " << Utils::Get().TimeElapsed() << " ] ";
+    std::cout << srv_sock_to_address_.find(listen_sock)->second << " : ";
+    std::cout << msg << std::endl;
 }
 
 void Server::Cleanup(int epoll_fd) {
@@ -56,7 +67,7 @@ void Server::Cleanup(int epoll_fd) {
          it != srv_sock_to_address_.end(); ++it) {
         // Remove each listening socket from epoll_fd instance
         epoll_ctl(it->first, EPOLL_CTL_DEL, epoll_fd, NULL);
-        // close socket
+        // close socket, no need to shutdown() here
         close(it->first);
     }
 }

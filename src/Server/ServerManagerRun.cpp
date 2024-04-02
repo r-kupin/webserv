@@ -40,6 +40,7 @@ void    ServerManager::EventLoop() {
             for (int i = 0; i < nfds; ++i) {
                 int         socket_fd = events[i].data.fd;
                 uint32_t    event = events[i].events;
+
                 PrintEventInfo(event, socket_fd, i);
                 if (IsListeningSocketFd(socket_fd)) {
                     AcceptNewConnection(socket_fd);

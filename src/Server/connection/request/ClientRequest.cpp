@@ -60,6 +60,20 @@ void ClientRequest::Init(int client_sock) {
 }
 
 /**
+ * Request's lines might be terminated with "\r\n" or just "\n"
+ * @return value points to the 1st character of the line breaking sequence
+ */
+size_t  find_request_endline(const v_char &buff) {
+    size_t line_break = Utils::FindInCharVect(buff, "\n");
+
+    if (line_break != std::string::npos && line_break > 0) {
+        if (buff[line_break - 1] == '\r')
+            line_break--;
+    }
+    return line_break;
+}
+
+/**
  * The recv() function offers some additional features specific to socket
  * operations, such as the ability to specify flags for advanced socket
  * options and to handle different types of sockets (e.g., TCP or UDP). It
@@ -81,8 +95,7 @@ v_str &ClientRequest::ReadFromSocket(int socket, int buffer_size) {
         } else {
             storage.insert(storage.end(), buffer, buffer + bytes_read);
 
-            size_t line_break = Utils::FindInCharVect(storage, kHTTPNewline);
-
+            size_t line_break = find_request_endline(storage);
             while (!storage.empty() && line_break != std::string::npos) {
                 v_char header_line(storage.begin(), storage.begin() + line_break);
                 if (header_line.empty()) {
@@ -92,8 +105,10 @@ v_str &ClientRequest::ReadFromSocket(int socket, int buffer_size) {
                 }
                 raw_request_.push_back(std::string(header_line.begin(),
                                                    header_line.end()));
-                storage.erase(storage.begin(), storage.begin() + line_break + 2);
-                line_break = Utils::FindInCharVect(storage, "\r\n");
+                // "\n" is present 100%
+                storage.erase(storage.begin(),
+                              storage.begin() + Utils::FindInCharVect(storage, "\n"));
+                line_break = find_request_endline(storage);
             }
         }
     }

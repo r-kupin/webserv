@@ -63,10 +63,9 @@ void ServerManager::PrintEventInfo(int events, int fd, int i) {
     if (events == EPOLLIN && IsListeningSocketFd(fd))
         epoll_connection_count_++;
 
-    std::cout << /*"\n== returns " << epoll_returns_count_ <<*/
-              "\n== events " << epoll_events_count_ <<
-              " == connections " << epoll_connection_count_ <<
-              " == IO " << epoll_in_out_count_ << "\n";
+    std::cout << "\n== events " << epoll_events_count_ <<
+    " == connections " << epoll_connection_count_ <<
+    " == IO " << epoll_in_out_count_ << "\n";
 
     std::cout << "nfd: " << i << "\n" << "fd: " << fd << "\n";
     if (events & EPOLLIN)
