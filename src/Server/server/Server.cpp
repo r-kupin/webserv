@@ -33,6 +33,10 @@ std::ostream &operator<<(std::ostream &os, const Server &server) {
     return os;
 }
 
+long Server::GetConnectionTimeout() const {
+    return config_.GetKeepaliveTimeout();
+}
+
 const std::string &Server::GetAddress(int socket) const {
     return srv_sock_to_address_.find(socket)->second;
 }

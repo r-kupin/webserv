@@ -55,6 +55,7 @@ public:
     int                 GetFilesUploaded() const;
     void                IncrementUploadedFiles();
     long                TimeNow() const;
+    long                TimeElapsed() const;
 //-------------------filesystem utils-------------------------------------------
     static int          CheckFilesystem(const std::string &address);
     static bool         FileExists(const std::string &address);
@@ -64,7 +65,6 @@ public:
     static std::string  DirName(const std::string &address,
                                 const std::string &root);
 //-------------------string/container utils-------------------------------------
-    long                TimeElapsed() const;
     static std::string  NiceTimestamp();
 
     static std::string  NbrToString(size_t n);

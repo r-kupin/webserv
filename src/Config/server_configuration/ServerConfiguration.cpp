@@ -16,6 +16,7 @@
 
 ServerConfiguration::ServerConfiguration() {
     server_names_.insert("localhost");
+    keepalive_timeout_ = 60000;
     Location root_loc("/");
     root_loc.root_ = kDefaultResources;
     root_loc.return_code_ = 0;
@@ -28,7 +29,8 @@ ServerConfiguration::ServerConfiguration() {
 ServerConfiguration::ServerConfiguration(const ServerConfiguration &other)
 : ports_(other.ports_),
   server_names_(other.server_names_),
-  locations_(other.locations_) {}
+  locations_(other.locations_),
+  keepalive_timeout_(other.keepalive_timeout_) {}
 //-------------------satic utils------------------------------------------------
 bool        ServerConfiguration::MarkDefined(const std::string &key,
                                              bool &flag,
@@ -70,6 +72,9 @@ void        ServerConfiguration::ProcessDirectives(
         for (size_t i = 0; i < directives.size(); i++) {
             if (UMarkDefined("server_name", srv_name, directives[i])) {
                 HandleServerNames(directives[i]);
+            } else if (UMarkDefined("keepalive_timeout", srv_name,
+                                    directives[i])) {
+                HandleKeepaliveTimeout(directives[i]);
             } else if (MarkDefined("listen", port, directives[i])) {
                 HandlePort(directives[i]);
             } else if (UMarkDefined("client_max_body_size", cl_max_bd_size,
@@ -92,11 +97,18 @@ void        ServerConfiguration::ProcessDirectives(
         ThrowServerConfigError("Port needs to be specified explicitly!");
 }
 
+void ServerConfiguration::HandleKeepaliveTimeout(const v_str &directive) {
+    if (directive.size() == 2) {
+        keepalive_timeout_ = atoi(directive[1].c_str());
+        if (keepalive_timeout_ > 0)
+            return;
+    }
+    ThrowServerConfigError("keepalive_timeout directive is wrong");
+}
+
 void ServerConfiguration::HandleServerNames(const v_str &directive) {
     if (directive.size() > 1) {
         for (v_str_c_it it = directive.begin() + 1; it != directive.end(); ++it) {
-            if (server_names_.empty()) // first is default
-                first_name_defined_ = *it;
             server_names_.insert(*it);
         }
         return;
@@ -108,8 +120,6 @@ void ServerConfiguration::HandlePort(const v_str &directive) {
     if (directive.size() == 2) {
         int port = atoi(directive[1].c_str());
         if (port >= 0) {
-            if (ports_.empty())
-                first_port_defined_ = port;
             ports_.insert(port);
             return;
         }
@@ -147,16 +157,12 @@ const s_str &ServerConfiguration::GetServerNames() const {
     return server_names_;
 }
 
-const std::string &ServerConfiguration::GetDefaultServerName() const {
-    return first_name_defined_;
-}
-
 const l_loc &ServerConfiguration::GetLocations() const {
     return locations_;
 }
 
-int ServerConfiguration::DefaultPort() const {
-    return first_port_defined_;
+long ServerConfiguration::GetKeepaliveTimeout() const {
+    return keepalive_timeout_;
 }
 
 bool        ServerConfiguration::operator==(
@@ -178,13 +184,18 @@ ServerConfiguration &ServerConfiguration::operator=(
     ports_ = rhs.ports_;
     server_names_ = rhs.server_names_;
     locations_ = rhs.locations_;
+    keepalive_timeout_ = rhs.keepalive_timeout_;
     return *this;
 }
 
 std::ostream &operator<<(std::ostream &os, const ServerConfiguration &config) {
-    for (s_int_c_it it = config.ports_.begin();
-                                        it != config.GetPorts().end(); ++it) {
-        os << "port: " << *it << "\n";
+    os << "addresses: " << "\n";
+    for (s_str_c_it it_hn = config.server_names_.begin();
+         it_hn != config.server_names_.end(); ++it_hn) {
+        for (s_int_c_it it_p = config.ports_.begin();
+             it_p != config.GetPorts().end(); ++it_p) {
+            os << "\t" << *it_hn << ":" << *it_p << "\n";
+        }
     }
     os << config.locations_.front() << "\n";
     os << std::endl;

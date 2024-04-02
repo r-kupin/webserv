@@ -66,13 +66,12 @@ public:
 //-------------------Getters & operators----------------------------------------
     const Location          &GetConstRoot() const;
     Location                &GetRoot();
-    const std::string       &GetDefaultServerName() const;
     const s_str             &GetServerNames() const;
     l_loc_it                GetRootIt();
     l_loc_c_it              GetConstRootIt() const;
     const std::set<int>     &GetPorts() const;
-    int                     DefaultPort() const;
     const l_loc             &GetLocations() const;
+    long                    GetKeepaliveTimeout() const;
 
     bool                    operator==(const ServerConfiguration &rhs) const;
     ServerConfiguration&    operator=(const ServerConfiguration& rhs);
@@ -94,14 +93,13 @@ private:
     static bool             UMarkDefined(const std::string &key, bool &flag,
                                      const v_str &directive);
     void                    HandlePort(const v_str &directive);
-    void                    HandleLog(const v_str &directive);
     void                    HandleServerNames(const v_str &directive);
+    void                    HandleKeepaliveTimeout(const v_str &directive);
 
-    int                     first_port_defined_;
-    std::string             first_name_defined_;
     std::set<int>           ports_;
     s_str                   server_names_;
     std::list<Location>     locations_;
+    long                    keepalive_timeout_;
 };
 
 typedef ServerConfiguration::LocSearchResult            Srch_Res;

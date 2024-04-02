@@ -30,13 +30,13 @@
  */
 void    ServerManager::EventLoop() {
     epoll_event events[MAX_EVENTS];
-    // todo: change timeout from -1 to be able to shut down server with ^C
-    int nfds = epoll_wait(epoll_fd_, events, MAX_EVENTS, 500);
+    int         nfds = epoll_wait(epoll_fd_, events, MAX_EVENTS, 1000);
     if (is_running_) {
         epoll_returns_count_++;
         if (nfds == -1) {
             ThrowException("Epoll wait failed. Shutting down.");
         } else if (nfds > 0) {
+            // handle reported events
             for (int i = 0; i < nfds; ++i) {
                 int         socket_fd = events[i].data.fd;
                 uint32_t    event = events[i].events;
@@ -48,8 +48,28 @@ void    ServerManager::EventLoop() {
                 }
             }
         } else {
-            // todo: iterate throug existing connections and check their
-            //  timeouts
+            // no events were reported, we have some free time
+            CloseTimedOutConnections();
+        }
+    }
+}
+
+/**
+ *  Fulfilling subject's requirement: "A request to your server should never
+ * hang forever". Upon accepting() new connection server creates a timestamp.
+ * And when server has basically nothing to do - it checks all active
+ * connections and closes all expired ones.
+ */
+void ServerManager::CloseTimedOutConnections() {
+    long time_right_now = Utils::Get().TimeNow();
+
+    for (size_t i = 0; i < connections_.size(); i++) {
+        if (connections_[i].IsOpen()) {
+            long timeout = FindServerByListeningSocket(
+                    connections_[i].server_listening_socket_).GetConnectionTimeout();
+            if (connections_[i].HowLongBeingActive(time_right_now) > timeout) {
+                CloseConnectionWithLogMessage(i, "Connection timed out");
+            }
         }
     }
 }

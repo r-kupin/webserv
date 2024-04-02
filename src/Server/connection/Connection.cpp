@@ -15,6 +15,7 @@
 Connection::Connection(v_c_b &is_running)
     : url_headers_done_(false),
     body_done_(false),
+    open_time_(Utils::Get().TimeNow()),
     connection_socket_(0),
     server_listening_socket_(0),
     request_(is_running) {}
@@ -22,6 +23,7 @@ Connection::Connection(v_c_b &is_running)
 Connection::Connection(const Connection &other)
     : url_headers_done_(other.url_headers_done_),
     body_done_(other.body_done_),
+    open_time_(other.open_time_),
     connection_socket_(other.connection_socket_),
     server_listening_socket_(other.server_listening_socket_),
     address_(other.address_),
@@ -30,6 +32,7 @@ Connection::Connection(const Connection &other)
 Connection::Connection(v_c_b &is_running, int connection_socket, int server_socket)
    : url_headers_done_(false),
    body_done_(false),
+   open_time_(Utils::Get().TimeNow()),
    connection_socket_(connection_socket),
    server_listening_socket_(server_socket),
    request_(is_running) {}
@@ -43,5 +46,14 @@ Connection &Connection::operator=(const Connection &other) {
     url_headers_done_ = other.url_headers_done_;
     body_done_ = other.body_done_;
     address_ = other.address_;
+    open_time_ = other.open_time_;
     return *this;
+}
+
+bool Connection::IsOpen() const {
+    return connection_socket_ != 0 && server_listening_socket_ != 0;
+}
+
+long Connection::HowLongBeingActive(long now) const {
+    return now - open_time_;
 }

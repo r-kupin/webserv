@@ -44,6 +44,7 @@ class ServerManagerException : public std::exception {};
                                                   const std::string &msg);
     bool            ProcessBody(Connection &connection, const Server &server);
     void            Respond(Connection &connection);
+    void            CloseTimedOutConnections();
 //-------------------util-------------------------------------------------------
     void            Cleanup();
     void            PrintEventInfo(int events, int fd, int i) ;

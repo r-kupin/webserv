@@ -23,9 +23,13 @@ struct Connection {
 
     Connection          &operator=(const Connection &);
 
+    bool                IsOpen() const;
+    long                HowLongBeingActive(long now) const;
+
     bool                url_headers_done_;
     bool                body_done_;
 
+    long                open_time_;
     int                 connection_socket_;
     int                 server_listening_socket_;
     std::string         address_;

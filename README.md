@@ -49,13 +49,12 @@ I am not using `Makefile` in development process, so the **lists of source files
 	- Define a list of accepted HTTP methods for the route. ([limit_except](#Limit_except))
 	- Define a HTTP redirection. ([return](#return))
 	- Define a directory or a file from where the file should be searched. ([root](#root))
-- Set a default file to answer if the request is a directory ([index](#index)).
-- %% CGI %%
-- Make the route able to accept uploaded files and configure where they should be saved. ([upload_store](#upload_store))
+	- %% Turn on or off directory listing. (?) %%
+	- Set a default file to answer if the request is a directory ([index](#index)).
+	- %% CGI %%
+	- Make the route able to accept uploaded files and configure where they should be saved. ([upload_store](#upload_store))
 ## ToDo
-- A request to your server should never hang forever.
 - DELETE method handling
-- One server listening to multiple ports & multiple domains
 - The first server for a host:port will be the default for this host:port (that means it will answer to all the requests that don’t belong to an other server).
 - Execute CGI based on certain file extension (for example .php)
 - Turn on or off directory listing. (?)
@@ -79,9 +78,9 @@ In the configuration file, check whether you can do the following and
 test the result:
 - [x] Search for the HTTP response status codes list on the internet. During this evaluation, if any status codes is wrong, don't give any related points.
 - [x] Setup multiple servers with different ports.
-- [ ] Setup multiple servers with different hostnames (use something like: curl --resolve example.com:80:127.0.0.1 [http://example.com/](http://example.com/)).
+- [x] Setup multiple servers with different hostnames (use something like: curl --resolve example.com:80:127.0.0.1 [http://example.com/](http://example.com/)).
 - [x] Setup default error page (try to change the error 404).
-- [ ] Limit the client body (use: curl -X POST -H "Content-Type: plain/text" --data "BODY IS HERE write something shorter or longer than body limit").
+- [x] Limit the client body (use: curl -X POST -H "Content-Type: plain/text" --data "BODY IS HERE write something shorter or longer than body limit").
 - [x] Setup routes in a server to different directories.
 - [x] Setup a default file to search for if you ask for a directory.
 - [x] Setup a list of methods accepted for a certain route (e.g., try to delete something with and without permission).
@@ -134,6 +133,7 @@ The main context of the instance of the HTTP server. At least one should be defi
 Server context can't be empty - it should contain mandatory server-level directives: 
 - *[server_name](#server_name)* (unique)
 - *[listen](#listen)*
+- *[keepalive_timeout](#keepalive_timeout)*
 
 Server also can predefine root location with optional directives:
 - *[root](#root)* (unique)
@@ -249,7 +249,7 @@ Locations can be empty, or contain following directives:
 
 Locations can also contain sub-contexts:
 - *[limit_except](#limit_except)* (unique)
-- nested *location*
+- nested location
 #### Limit_except
 Limits access to location. Defined only inside a location with one or more *HTTP* methods:
 ```nginx
@@ -274,6 +274,8 @@ directive [ ARG1 ] [ ARG... ];
 Has only one *arg* which sets the port, used by the server for requests listening. Multiple ports are possible for the single server via specification of the multiple `listen` directives.
 ##### server_name
 Accepts one or more hostnames, that this server will monitor.
+##### keepalive_timeout
+Accepts one number, which is a timeout during which server keeps connection open waiting for data to arrive. Default is 60 sec. It gives no warranty that connection will be closed in 60 seconds, but connection will stay open for at least during this time.
 #### Location-level directives
 ##### root
 Can have only one arg, which is a path for a location, or server's root directory. For example:
