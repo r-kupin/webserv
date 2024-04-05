@@ -73,13 +73,14 @@ public:
 
     bool                        ListensTo(int socket) const;
     const std::string           &GetAddress(int socket) const;
+     const m_int_str            &GetSrvSockToAddress() const;
     long                        GetConnectionTimeout() const;
     Location                    ProcessRequest(Connection &connection) const;
     void                        Cleanup(int epoll_fd);
 
     friend std::ostream        &operator<<(std::ostream &os,
                                             const Server &server);
-protected:
+ protected:
 //-------------------initialisation: open sockets, create epoll...--------------
     void                        Init(int epoll_fd);
 

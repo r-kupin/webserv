@@ -23,7 +23,7 @@
  */
 void ServerManager::HandleEventsOnExistingConnection(int client_socket) {
     Connection      &connection = connections_[client_socket];
-    const Server    &server = FindServerByListeningSocket(connection.server_listening_socket_);
+    const Server &server = FindServerByListeningSocket(connection.server_listening_socket_)(<#initializer#>, 0, 0, v_servers());
 
     // address (hostname:port) that corresponds to the socket on which
     // connection was accepted.

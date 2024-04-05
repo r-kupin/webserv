@@ -22,21 +22,18 @@
  * @return 
  */
 void Server::Init(int epoll_fd) {
-    for (s_str_c_it hn_it = config_.GetServerNames().begin();
-         hn_it != config_.GetServerNames().end(); ++hn_it) {
-        for (s_int_c_it p_it = config_.GetPorts().begin();
-            p_it != config_.GetPorts().end(); ++p_it) {
-            struct addrinfo *addr = NULL;
-            const std::string &port_str = Utils::NbrToString(*p_it);
+    for (std::vector<Host>::const_iterator it = config_.GetHosts().begin();
+            it != config_.GetHosts().end(); ++it) {
+        struct addrinfo *addr = NULL;
+        const std::string &port_str = Utils::NbrToString(it->port_);
 
-            PresetAddress(&addr, *hn_it, port_str, epoll_fd);
-            int socket = CreateSocket(addr, *hn_it, port_str, epoll_fd);
-            SetSocketOptions(addr, socket, epoll_fd);
-            BindSocket(addr, socket, epoll_fd);
-            freeaddrinfo(addr);
-            ListenSocket(socket, epoll_fd);
-            AddSocketToEpollInstance(socket, epoll_fd);
-        }
+        PresetAddress(&addr, it->name_, port_str, epoll_fd);
+        int socket = CreateSocket(addr, it->name_, port_str, epoll_fd);
+        SetSocketOptions(addr, socket, epoll_fd);
+        BindSocket(addr, socket, epoll_fd);
+        freeaddrinfo(addr);
+        ListenSocket(socket, epoll_fd);
+        AddSocketToEpollInstance(socket, epoll_fd);
     }
 }
 
@@ -53,7 +50,8 @@ void Server::Init(int epoll_fd) {
  *     struct addrinfo *ai_next;      // linked list, next node
  * };
  */
-void Server::PresetAddress(addrinfo **addr, const std::string &host, const std::string &port_str, int epoll_fd) {
+void Server::PresetAddress(addrinfo **addr, const std::string &host,
+                           const std::string &port_str, int epoll_fd) {
     struct addrinfo hints;
 
     std::memset(&hints, 0, sizeof(hints));
@@ -78,8 +76,8 @@ void Server::PresetAddress(addrinfo **addr, const std::string &host, const std::
  *                                                        appropriate protocol).
  * The function returns a file descriptor that we can use to refer to the socket.
  */
-int Server::CreateSocket(addrinfo *res, const std::string &host, const std::string &port_str, int epoll_fd) {
-
+int Server::CreateSocket(addrinfo *res, const std::string &host,
+                         const std::string &port_str, int epoll_fd) {
     int sock = socket(res->ai_family, res->ai_socktype, 0);
     if (sock < 0) {
         std::string err_msg(strerror(errno));

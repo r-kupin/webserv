@@ -41,6 +41,10 @@ const std::string &Server::GetAddress(int socket) const {
     return srv_sock_to_address_.find(socket)->second;
 }
 
+const m_int_str &Server::GetSrvSockToAddress() const {
+    return srv_sock_to_address_;
+}
+
 void Server::ThrowException(const std::string &msg) const {
     Log(msg);
     throw ServerException();

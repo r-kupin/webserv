@@ -10,11 +10,9 @@
 /*                                                                            */
 /******************************************************************************/
 
-#include <cstdlib>
 #include <algorithm>
 #include <iostream>
-#include <cerrno>
-#include <climits>
+
 #include "Location.h"
 
 //-------------------static creation / initialization---------------------------

@@ -12,10 +12,12 @@
 
 #include <algorithm>
 #include <iostream>
+#include <sstream>
 #include "ServerConfiguration.h"
 
-ServerConfiguration::ServerConfiguration() {
-    server_names_.insert("localhost");
+ServerConfiguration::ServerConfiguration()
+: default_host_(true) {
+    hosts_.push_back(Host(DEFAULT_PORT, "localhost"));
     keepalive_timeout_ = 60000;
     Location root_loc("/");
     root_loc.root_ = kDefaultResources;
@@ -27,10 +29,12 @@ ServerConfiguration::ServerConfiguration() {
 }
 
 ServerConfiguration::ServerConfiguration(const ServerConfiguration &other)
-: ports_(other.ports_),
-  server_names_(other.server_names_),
-  locations_(other.locations_),
-  keepalive_timeout_(other.keepalive_timeout_) {}
+: default_host_(other.default_host_),
+    ports_(other.ports_),
+    hosts_(other.hosts_),
+    server_names_(other.server_names_),
+    locations_(other.locations_),
+    keepalive_timeout_(other.keepalive_timeout_) {}
 //-------------------satic utils------------------------------------------------
 bool        ServerConfiguration::MarkDefined(const std::string &key,
                                              bool &flag,
@@ -76,7 +80,7 @@ void        ServerConfiguration::ProcessDirectives(
                                     directives[i])) {
                 HandleKeepaliveTimeout(directives[i]);
             } else if (MarkDefined("listen", port, directives[i])) {
-                HandlePort(directives[i]);
+                HandleHost(directives[i]);
             } else if (UMarkDefined("client_max_body_size", cl_max_bd_size,
                                     directives[i])) {
                 GetRoot().HandleClientMaxBodySize(directives[i]);
@@ -116,15 +120,26 @@ void ServerConfiguration::HandleServerNames(const v_str &directive) {
     ThrowServerConfigError("server_name directive is wrong");
 }
 
-void ServerConfiguration::HandlePort(const v_str &directive) {
-    if (directive.size() == 2) {
-        int port = atoi(directive[1].c_str());
-        if (port >= 0) {
-            ports_.insert(port);
-            return;
-        }
+// todo tests
+void ServerConfiguration::HandleHost(const v_str &directive) {
+    if (default_host_)
+        hosts_.clear();
+    default_host_ = false;
+    if (directive.size() != 2)
+        ThrowServerConfigError("listen directive is wrong");
+    if (Utils::IsPositiveNumber(directive[1])) {
+        hosts_.push_back(Host(std::atoi(directive[1].c_str())));
+    } else if (Utils::IsValidAddressName(directive[1])) {
+        hosts_.push_back(Host(directive[1]));
+    } else if (Utils::IsValidAddrWithPort(directive[1])) {
+        std::string addr, port;
+        std::istringstream iss(directive[1]);
+        std::getline(iss, addr, ':');
+        std::getline(iss, port);
+        hosts_.push_back(Host(std::atoi(port.c_str()), addr));
+    } else {
+        ThrowServerConfigError("listen directive is wrong");
     }
-    ThrowServerConfigError("port directive is wrong");
 }
 
 //-------------------operator overloads & exceptions----------------------------
@@ -149,10 +164,6 @@ l_loc_c_it ServerConfiguration::GetConstRootIt() const {
     return locations_.begin();
 }
 
-const std::set<int> & ServerConfiguration::GetPorts() const {
-    return ports_;
-}
-
 const s_str &ServerConfiguration::GetServerNames() const {
     return server_names_;
 }
@@ -163,6 +174,10 @@ const l_loc &ServerConfiguration::GetLocations() const {
 
 long ServerConfiguration::GetKeepaliveTimeout() const {
     return keepalive_timeout_;
+}
+
+const std::vector<Host> &ServerConfiguration::GetHosts() const {
+    return hosts_;
 }
 
 bool        ServerConfiguration::operator==(
@@ -185,6 +200,7 @@ ServerConfiguration &ServerConfiguration::operator=(
     server_names_ = rhs.server_names_;
     locations_ = rhs.locations_;
     keepalive_timeout_ = rhs.keepalive_timeout_;
+    hosts_ = rhs.hosts_;
     return *this;
 }
 
@@ -193,7 +209,7 @@ std::ostream &operator<<(std::ostream &os, const ServerConfiguration &config) {
     for (s_str_c_it it_hn = config.server_names_.begin();
          it_hn != config.server_names_.end(); ++it_hn) {
         for (s_int_c_it it_p = config.ports_.begin();
-             it_p != config.GetPorts().end(); ++it_p) {
+             it_p != config.ports_.end(); ++it_p) {
             os << "\t" << *it_hn << ":" << *it_p << "\n";
         }
     }
@@ -220,3 +236,16 @@ Srch_c_Res::LocConstSearchResult(const l_loc_c_it &location,
         full_address_(fullAddress),
         leftower_address_(leftowerAddress) {}
 
+Host::Host(int port, const std::string &name) : port_(port), name_(name) {}
+
+Host::Host(int port) : port_(port), name_("localhost") {}
+
+Host::Host(const std::string &name) : port_(DEFAULT_PORT), name_(name) {}
+
+Host &Host::operator=(const Host &rhs) {
+    if( this != &rhs ) {
+        port_ = rhs.port_;
+        name_ = rhs.name_;
+    }
+    return *this;
+}

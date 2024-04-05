@@ -271,7 +271,7 @@ directive [ ARG1 ] [ ARG... ];
 ```
 #### Server-level directives
 ##### listen
-Has only one *arg* which sets the port, used by the server for requests listening. Multiple ports are possible for the single server via specification of the multiple `listen` directives.
+Has only one arg which sets **IP**:**port** used to open the socket, on which requests will be monitored. If **IP** is not specified - *localhost* used by default.
 ##### server_name
 Accepts one or more hostnames, that this server will monitor.
 ##### keepalive_timeout

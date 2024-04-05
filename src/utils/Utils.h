@@ -76,6 +76,10 @@ public:
     static size_t       FindInCharVect(const std::vector<char> &buffer,
                                        const std::string &pattern);
     static void         OutputMap(const m_str_str &map, std::ostream &os);
+    static bool         IsPositiveNumber(const std::string &str);
+    static bool         IsValidIPv4(const std::string &str);
+    static bool         IsValidAddressName(const std::string &str);
+    static bool         IsValidAddrWithPort(const std::string &str);
 //-------------------HTTP utils-------------------------------------------------
     bool                IsErrorCode(int code);
     bool                IsOKCode(int code);

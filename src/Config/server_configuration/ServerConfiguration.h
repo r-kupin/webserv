@@ -17,7 +17,10 @@
 #include <vector>
 #include <set>
 #include <ostream>
+
 #include "../location/Location.h"
+
+#define DEFAULT_PORT 4280
 
 class ServerConfiguration;
 
@@ -26,6 +29,17 @@ const static std::string kDefaultConfig = kDefaultResources + "/nginx.conf";
 
 typedef std::list<ServerConfiguration>                  l_sc;
 typedef std::list<ServerConfiguration>::const_iterator  l_sc_c_it;
+
+struct Host {
+    Host(int port, const std::string &name);
+    explicit Host(const std::string &name);
+    explicit Host(int port);
+
+    Host &operator=(const Host &rhs);
+
+    int         port_;
+    std::string name_;
+};
 
 class ServerConfiguration {
 public:
@@ -69,12 +83,12 @@ public:
     const s_str             &GetServerNames() const;
     l_loc_it                GetRootIt();
     l_loc_c_it              GetConstRootIt() const;
-    const std::set<int>     &GetPorts() const;
     const l_loc             &GetLocations() const;
     long                    GetKeepaliveTimeout() const;
+    const std::vector<Host> &GetHosts() const;
 
     bool                    operator==(const ServerConfiguration &rhs) const;
-    ServerConfiguration&    operator=(const ServerConfiguration& rhs);
+    ServerConfiguration     &operator=(const ServerConfiguration& rhs);
     friend                  std::ostream &operator<<(std::ostream &os,
                                                     const ServerConfiguration &config);
 protected:
@@ -92,11 +106,14 @@ private:
                                     const v_str &directive);
     static bool             UMarkDefined(const std::string &key, bool &flag,
                                      const v_str &directive);
-    void                    HandlePort(const v_str &directive);
+    void                    HandleHost(const v_str &directive);
     void                    HandleServerNames(const v_str &directive);
     void                    HandleKeepaliveTimeout(const v_str &directive);
 
+    bool                    default_host_;
+
     std::set<int>           ports_;
+    std::vector<Host>       hosts_;
     s_str                   server_names_;
     std::list<Location>     locations_;
     long                    keepalive_timeout_;
