@@ -121,6 +121,16 @@ void ServerConfiguration::HandleServerNames(const v_str &directive) {
 }
 
 // todo tests
+/**
+ *  The listen directive specifies the IP address and port on which Nginx will
+ * listen for incoming connections.
+ * It defines the socket on which the server will accept client requests.
+ *  Valid values are:
+ *  - port (default "localhost" address will be applied)
+ *  - host (default port 4280 will be applied)
+ *  - host:port
+ *  Host may be IPv4 address (127.0.0.1) or DNS name (localhost)
+ */
 void ServerConfiguration::HandleHost(const v_str &directive) {
     if (default_host_)
         hosts_.clear();
@@ -176,8 +186,20 @@ long ServerConfiguration::GetKeepaliveTimeout() const {
     return keepalive_timeout_;
 }
 
-const std::vector<Host> &ServerConfiguration::GetHosts() const {
+const v_hosts &ServerConfiguration::GetHosts() const {
     return hosts_;
+}
+
+bool ServerConfiguration::HasHost(const std::string &ipv4, int port) const {
+    for (v_hosts::const_iterator it = hosts_.begin(); it != hosts_.end();++it) {
+        if(it->port_ == port) {
+            std::string ipv4_in_map = Utils::IsValidAddressName(it->host_) ?
+                                        Utils::LookupDNS(it->host_) : it->host_;
+            if (ipv4_in_map == ipv4)
+                return true;
+        }
+    }
+    return false;
 }
 
 bool        ServerConfiguration::operator==(
@@ -236,16 +258,21 @@ Srch_c_Res::LocConstSearchResult(const l_loc_c_it &location,
         full_address_(fullAddress),
         leftower_address_(leftowerAddress) {}
 
-Host::Host(int port, const std::string &name) : port_(port), name_(name) {}
+Host::Host(int port, const std::string &name) : port_(port), host_(name) {}
 
-Host::Host(int port) : port_(port), name_("localhost") {}
+Host::Host(int port) : port_(port), host_("localhost") {}
 
-Host::Host(const std::string &name) : port_(DEFAULT_PORT), name_(name) {}
+Host::Host(const std::string &name) : port_(DEFAULT_PORT), host_(name) {}
 
 Host &Host::operator=(const Host &rhs) {
     if( this != &rhs ) {
         port_ = rhs.port_;
-        name_ = rhs.name_;
+        host_ = rhs.host_;
     }
     return *this;
+}
+
+bool operator==(const Host &lhs, const Host &rhs) {
+    return lhs.port_ == rhs.port_ &&
+           lhs.host_ == rhs.host_;
 }

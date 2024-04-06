@@ -45,6 +45,7 @@
 #include "../../Config/config/Config.h"
 #include "response/ServerResponse.h"
 #include "../connection/Connection.h"
+#include "../ServerManager.h"
 
 #define OK 200
 #define REDIRECT 301
@@ -62,49 +63,30 @@
 #define MAX_CLIENTS 2048
 #define MAX_EVENTS 1000
 
-
- class Server {
+class Server {
 public:
     class ServerException : public std::exception {};
 
     Server(const Server &);
-    explicit Server(const ServerConfiguration &config,
-                    v_c_b &is_running_ref, int epoll_fd);
+    explicit Server(const ServerConfiguration &config, v_c_b &is_running_ref, const m_str_int &srv_ipv4_to_socket);
 
     bool                        ListensTo(int socket) const;
     const std::string           &GetAddress(int socket) const;
-     const m_int_str            &GetSrvSockToAddress() const;
+    const m_int_str             &GetSrvSockToAddress() const;
     long                        GetConnectionTimeout() const;
+    void                        AddHost(int port, const std::string &address);
+
     Location                    ProcessRequest(Connection &connection) const;
     void                        Cleanup(int epoll_fd);
 
     friend std::ostream        &operator<<(std::ostream &os,
                                             const Server &server);
- protected:
+protected:
 //-------------------initialisation: open sockets, create epoll...--------------
-    void                        Init(int epoll_fd);
-
-    void                        PresetAddress(addrinfo **addr,
-                                              const std::string &host,
-                                              const std::string &port_str,
-                                              int epoll_fd);
-    int                         CreateSocket(addrinfo *res,
-                                             const std::string &host,
-                                             const std::string &port_str,
-                                             int epoll_fd);
-    void                        SetSocketOptions(addrinfo *res,
-                                                 int socket,
-                                                 int epoll_fd);
-    void                        BindSocket(addrinfo *res,
-                                           int socket,
-                                           int epoll_fd);
-    void                        ListenSocket(int socket, int epoll_fd);
-    void                        AddSocketToEpollInstance(int socket,
-                                                         int epoll_fd);
 //-------------------request server-side processing-----------------------------
     bool                        AccessForbidden(l_loc_c_it found,
                                                 Methods method) const;
-     bool                       RequestBodyExceedsLimit(l_loc_c_it found,
+    bool                        RequestBodyExceedsLimit(l_loc_c_it found,
                                                         const ClientRequest &request) const;
 //-------------------static request processing----------------------------------
     void                        HandleStatic(const ClientRequest &request,
@@ -147,7 +129,7 @@ public:
 private:
     const volatile bool         &is_running_;
     const ServerConfiguration   &config_;
-    m_int_str                   srv_sock_to_address_;
+    m_int_str                   srv_sock_to_ipv4_;
  };
 
 #endif //WEBSERV_SERVER_H

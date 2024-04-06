@@ -80,6 +80,8 @@ public:
     static bool         IsValidIPv4(const std::string &str);
     static bool         IsValidAddressName(const std::string &str);
     static bool         IsValidAddrWithPort(const std::string &str);
+
+    static std::string  LookupDNS(const std::string &host);
 //-------------------HTTP utils-------------------------------------------------
     bool                IsErrorCode(int code);
     bool                IsOKCode(int code);

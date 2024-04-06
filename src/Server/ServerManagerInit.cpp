@@ -29,7 +29,12 @@ void ServerManager::Init(const Config &config) {
     for (l_sc_c_it it = config.getConstServers().begin();
          it != config.getConstServers().end(); ++it) {
         try {
-            servers_.push_back(Server(*it, is_running_, epoll_fd_));
+            CreateListeningSockets(epoll_fd_, *it);
+            servers_.push_back(Server(*it, is_running_, srv_ipv4_to_socket_));
+            for (v_hosts::const_iterator it_h = it->GetHosts().begin();
+                    it_h != it->GetHosts().end(); ++it_h) {
+                servers_.back().AddHost(it_h->port_, it_h->host_);
+            }
         } catch (const Server::ServerException &) {
             Cleanup();
             ThrowException("Server initialisation failed");

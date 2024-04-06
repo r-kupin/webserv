@@ -19,6 +19,9 @@
 #include <climits>
 #include <algorithm>
 #include <string>
+#include <netdb.h>
+#include <cstring>
+#include <arpa/inet.h>
 #include "Utils.h"
 
 std::string Utils::NiceTimestamp() {
@@ -33,6 +36,29 @@ std::string Utils::NiceTimestamp() {
     strftime(buffer, sizeof(buffer), "%a, %d %b %Y %H:%M:%S GMT", timeinfo);
 
     return buffer;
+}
+
+std::string Utils::LookupDNS(const std::string &host) {
+    struct addrinfo hints, *res;
+    std::string ipv4;
+
+    // Set hints for getaddrinfo
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_INET; // IPv4
+    hints.ai_socktype = SOCK_STREAM; // TCP
+
+    // Perform DNS lookup
+    int status = getaddrinfo(host.c_str(), NULL, &hints, &res);
+    if (status == 0) {
+        // Convert the first address to string
+        struct sockaddr_in* addr = (struct sockaddr_in*)res->ai_addr;
+        char ip[INET_ADDRSTRLEN];
+        inet_ntop(AF_INET, &(addr->sin_addr), ip, INET_ADDRSTRLEN);
+        ipv4 = ip;
+        // Free the result of getaddrinfo
+        freeaddrinfo(res);
+    }
+    return ipv4;
 }
 
 std::string Utils::NbrToString(size_t n) {

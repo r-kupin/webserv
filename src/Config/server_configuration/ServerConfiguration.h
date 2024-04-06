@@ -36,10 +36,13 @@ struct Host {
     explicit Host(int port);
 
     Host &operator=(const Host &rhs);
+    friend bool operator==(const Host &lhs, const Host &rhs);
 
     int         port_;
-    std::string name_;
+    std::string host_;
 };
+
+typedef std::vector<Host>                               v_hosts;
 
 class ServerConfiguration {
 public:
@@ -85,7 +88,8 @@ public:
     l_loc_c_it              GetConstRootIt() const;
     const l_loc             &GetLocations() const;
     long                    GetKeepaliveTimeout() const;
-    const std::vector<Host> &GetHosts() const;
+    const v_hosts           &GetHosts() const;
+    bool HasHost(const std::string &ipv4, int port) const;
 
     bool                    operator==(const ServerConfiguration &rhs) const;
     ServerConfiguration     &operator=(const ServerConfiguration& rhs);
@@ -113,9 +117,9 @@ private:
     bool                    default_host_;
 
     std::set<int>           ports_;
-    std::vector<Host>       hosts_;
+    v_hosts                 hosts_;
     s_str                   server_names_;
-    std::list<Location>     locations_;
+    l_loc                   locations_;
     long                    keepalive_timeout_;
 };
 

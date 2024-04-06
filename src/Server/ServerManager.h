@@ -15,8 +15,9 @@
 
 #include "server/Server.h"
 
-typedef std::vector<Server>     v_servers;
-typedef std::vector<Connection> v_conn;
+typedef std::vector<Server>         v_servers;
+typedef std::vector<Connection>     v_conn;
+typedef std::map<std::string, int>  m_str_int;
 
 static volatile bool        is_running_ = true;
 
@@ -30,6 +31,16 @@ class ServerManagerException : public std::exception {};
 //-------------------init-------------------------------------------------------
     void            Init(const Config &config);
     void            CreateEpollInstance();
+    void            CreateListeningSockets(int epoll_fd,
+                                           const ServerConfiguration &conf);
+    void            PresetAddress(addrinfo **addr, const std::string &host,
+                                  const std::string &port_str, int epoll_fd);
+    int             CreateSocket(addrinfo *res, const std::string &host,
+                                 const std::string &port_str, int epoll_fd);
+    void            SetSocketOptions(addrinfo *res, int socket, int epoll_fd);
+    void            BindSocket(addrinfo *res, int socket, int epoll_fd);
+    void            ListenSocket(int socket, int epoll_fd);
+    void            AddSocketToEpollInstance(int socket, int epoll_fd);
 //-------------------run--------------------------------------------------------
     void            Start();
     void            EventLoop();
@@ -55,6 +66,7 @@ class ServerManagerException : public std::exception {};
 private:
     v_servers       servers_;
     v_conn          connections_;
+    m_str_int       srv_ipv4_to_socket_;
 
     int             epoll_fd_;
     int             epoll_returns_count_;
