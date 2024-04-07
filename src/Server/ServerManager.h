@@ -15,9 +15,11 @@
 
 #include "server/Server.h"
 
+class Server;
+
 typedef std::vector<Server>         v_servers;
 typedef std::vector<Connection>     v_conn;
-typedef std::map<std::string, int>  m_str_int;
+typedef std::map<Host, int>         m_host_int;
 
 static volatile bool        is_running_ = true;
 
@@ -66,7 +68,7 @@ class ServerManagerException : public std::exception {};
 private:
     v_servers       servers_;
     v_conn          connections_;
-    m_str_int       srv_ipv4_to_socket_;
+    m_host_int      host_to_socket_; /* quick find-by-host required by CreateListeningSockets */
 
     int             epoll_fd_;
     int             epoll_returns_count_;

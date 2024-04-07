@@ -19,7 +19,7 @@
  * Ask each server does it listens to this particular socket or not
  */
 bool            ServerManager::IsListeningSocketFd(int socket) const {
-    for (v_servers ::const_iterator it = servers_.begin();
+    for (v_servers::const_iterator it = servers_.begin();
             it != servers_.end(); ++it) {
         if (it->ListensTo(socket))
             return true;
@@ -28,6 +28,7 @@ bool            ServerManager::IsListeningSocketFd(int socket) const {
 }
 
 const Server &ServerManager::FindServerByListeningSocket(int socket) const {
+//    int server_socket =
     for (v_servers ::const_iterator it = servers_.begin();
          it != servers_.end(); ++it) {
         if (it->ListensTo(socket))

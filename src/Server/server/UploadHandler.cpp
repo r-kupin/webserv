@@ -12,7 +12,7 @@
 
 #include <iostream>
 #include <algorithm>
-#include <csignal>
+
 #include "Server.h"
 
 bool        request_has_all_required_headers(const ClientRequest &request) {

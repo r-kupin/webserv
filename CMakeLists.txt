@@ -42,6 +42,8 @@ add_executable(webserv src/main.cpp
         src/Config/location/Location.cpp
         src/Config/location/LocationHandleReturn.cpp
         src/Config/location/LimitExcept.cpp
+        src/Config/server_configuration/Host.cpp
+        src/Config/server_configuration/Host.h
 )
 add_library(webserv_lib
         src/utils/Utils.cpp
@@ -80,6 +82,8 @@ add_library(webserv_lib
         src/Config/location/Location.cpp
         src/Config/location/LocationHandleReturn.cpp
         src/Config/location/LimitExcept.cpp
+        src/Config/server_configuration/Host.cpp
+        src/Config/server_configuration/Host.h
 )
 
 add_subdirectory(test)

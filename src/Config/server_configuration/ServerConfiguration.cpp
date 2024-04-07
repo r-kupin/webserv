@@ -13,11 +13,12 @@
 #include <algorithm>
 #include <iostream>
 #include <sstream>
+
 #include "ServerConfiguration.h"
 
 ServerConfiguration::ServerConfiguration()
 : default_host_(true) {
-    hosts_.push_back(Host(DEFAULT_PORT, "localhost"));
+    hosts_.insert(Host(DEFAULT_PORT, "localhost"));
     keepalive_timeout_ = 60000;
     Location root_loc("/");
     root_loc.root_ = kDefaultResources;
@@ -30,7 +31,6 @@ ServerConfiguration::ServerConfiguration()
 
 ServerConfiguration::ServerConfiguration(const ServerConfiguration &other)
 : default_host_(other.default_host_),
-    ports_(other.ports_),
     hosts_(other.hosts_),
     server_names_(other.server_names_),
     locations_(other.locations_),
@@ -121,6 +121,7 @@ void ServerConfiguration::HandleServerNames(const v_str &directive) {
 }
 
 // todo tests
+// todo probably need to insert as server_name as well
 /**
  *  The listen directive specifies the IP address and port on which Nginx will
  * listen for incoming connections.
@@ -137,18 +138,31 @@ void ServerConfiguration::HandleHost(const v_str &directive) {
     default_host_ = false;
     if (directive.size() != 2)
         ThrowServerConfigError("listen directive is wrong");
+
     if (Utils::IsPositiveNumber(directive[1])) {
-        hosts_.push_back(Host(std::atoi(directive[1].c_str())));
-    } else if (Utils::IsValidAddressName(directive[1])) {
-        hosts_.push_back(Host(directive[1]));
-    } else if (Utils::IsValidAddrWithPort(directive[1])) {
-        std::string addr, port;
-        std::istringstream iss(directive[1]);
-        std::getline(iss, addr, ':');
-        std::getline(iss, port);
-        hosts_.push_back(Host(std::atoi(port.c_str()), addr));
+        // port only
+        hosts_.insert(Host(std::atoi(directive[1].c_str())));
     } else {
-        ThrowServerConfigError("listen directive is wrong");
+        std::string address = directive[1];
+        std::string port = Utils::NbrToString(DEFAULT_PORT);
+
+        if (directive[1].find_first_of(':') != std::string::npos) {
+            // address with port
+            std::istringstream  iss(directive[1]);
+            // separate address and port
+            if (!std::getline(iss, address, ':') ||
+                !std::getline(iss, port) || !Utils::IsPositiveNumber(port)) {
+                // line has semicolon, but something is missing or port is negative
+                ThrowServerConfigError("listen directive is wrong");
+            }
+        }
+
+        address = Utils::LookupDNS(address);
+        if (!address.empty()) {
+            hosts_.insert(Host(std::atoi(port.c_str()), address));
+        } else {
+            ThrowServerConfigError("address DNS lookup failed");
+        }
     }
 }
 
@@ -186,26 +200,12 @@ long ServerConfiguration::GetKeepaliveTimeout() const {
     return keepalive_timeout_;
 }
 
-const v_hosts &ServerConfiguration::GetHosts() const {
+const s_hosts &ServerConfiguration::GetHosts() const {
     return hosts_;
-}
-
-bool ServerConfiguration::HasHost(const std::string &ipv4, int port) const {
-    for (v_hosts::const_iterator it = hosts_.begin(); it != hosts_.end();++it) {
-        if(it->port_ == port) {
-            std::string ipv4_in_map = Utils::IsValidAddressName(it->host_) ?
-                                        Utils::LookupDNS(it->host_) : it->host_;
-            if (ipv4_in_map == ipv4)
-                return true;
-        }
-    }
-    return false;
 }
 
 bool        ServerConfiguration::operator==(
                                         const ServerConfiguration &rhs) const {
-    if (ports_ != rhs.ports_)
-        return false;
     if (server_names_ != rhs.server_names_)
         return false;
     if (!(locations_ == rhs.locations_))
@@ -218,7 +218,6 @@ ServerConfiguration &ServerConfiguration::operator=(
     if (this == &rhs) {
         return *this;
     }
-    ports_ = rhs.ports_;
     server_names_ = rhs.server_names_;
     locations_ = rhs.locations_;
     keepalive_timeout_ = rhs.keepalive_timeout_;
@@ -227,13 +226,15 @@ ServerConfiguration &ServerConfiguration::operator=(
 }
 
 std::ostream &operator<<(std::ostream &os, const ServerConfiguration &config) {
-    os << "addresses: " << "\n";
-    for (s_str_c_it it_hn = config.server_names_.begin();
-         it_hn != config.server_names_.end(); ++it_hn) {
-        for (s_int_c_it it_p = config.ports_.begin();
-             it_p != config.ports_.end(); ++it_p) {
-            os << "\t" << *it_hn << ":" << *it_p << "\n";
-        }
+    os << "listens on: " << "\n";
+    for (s_hosts::const_iterator it = config.hosts_.begin();
+         it != config.hosts_.end(); ++it) {
+        os << "\t" << it->host_ << ":" << it->port_ << std::endl;
+    }
+    os << "server names: " << "\n";
+    for (s_str ::const_iterator it = config.server_names_.begin();
+         it != config.server_names_.end(); ++it) {
+        os << "\t" << *it << std::endl;
     }
     os << config.locations_.front() << "\n";
     os << std::endl;
@@ -257,22 +258,3 @@ Srch_c_Res::LocConstSearchResult(const l_loc_c_it &location,
         status_(status),
         full_address_(fullAddress),
         leftower_address_(leftowerAddress) {}
-
-Host::Host(int port, const std::string &name) : port_(port), host_(name) {}
-
-Host::Host(int port) : port_(port), host_("localhost") {}
-
-Host::Host(const std::string &name) : port_(DEFAULT_PORT), host_(name) {}
-
-Host &Host::operator=(const Host &rhs) {
-    if( this != &rhs ) {
-        port_ = rhs.port_;
-        host_ = rhs.host_;
-    }
-    return *this;
-}
-
-bool operator==(const Host &lhs, const Host &rhs) {
-    return lhs.port_ == rhs.port_ &&
-           lhs.host_ == rhs.host_;
-}

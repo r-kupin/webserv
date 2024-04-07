@@ -14,27 +14,24 @@
 #include <unistd.h>
 #include <cstring>
 #include <arpa/inet.h>
+#include <cstdlib>
 
 #include "../ServerManager.h"
 
 /**
- * Create listening sockets for all ports on all hosts
+ * Create listening sockets for hosts present in current ServerConfiguration
  * @return 
  */
 void ServerManager::CreateListeningSockets(int epoll_fd,
                                            const ServerConfiguration &conf) {
-    for (v_hosts::const_iterator it = conf.GetHosts().begin();
+    for (s_hosts::const_iterator it = conf.GetHosts().begin();
             it != conf.GetHosts().end(); ++it) {
-        const std::string &port_str = Utils::NbrToString(it->port_);
-        std::string ipv4 = Utils::IsValidAddressName(it->host_) ?
-                                        Utils::LookupDNS(it->host_) : it->host_;
-        if (ipv4.empty()) {
-            ThrowException("DNS lookup for " + it->host_ + " failed");
-        } else if (srv_ipv4_to_socket_.find(ipv4) == srv_ipv4_to_socket_.end()) {
-            struct addrinfo *addr = NULL;
+         if (host_to_socket_.find(*it) == host_to_socket_.end() ) {
             // socket for this host:port isn't already open
-            PresetAddress(&addr, ipv4, port_str, epoll_fd);
-            int socket = CreateSocket(addr, ipv4, port_str, epoll_fd);
+            struct addrinfo *addr = NULL;
+            const std::string &port_str = Utils::NbrToString(it->port_);
+            PresetAddress(&addr, it->host_, port_str, epoll_fd);
+            int socket = CreateSocket(addr, it->host_, port_str, epoll_fd);
             SetSocketOptions(addr, socket, epoll_fd);
             BindSocket(addr, socket, epoll_fd);
             freeaddrinfo(addr);
@@ -95,7 +92,9 @@ int ServerManager::CreateSocket(addrinfo *res, const std::string &host,
         ThrowException("Failed to create new socket for " + host + ":" +
                        port_str + " : " + err_msg);
     }
-    srv_ipv4_to_socket_.insert(std::make_pair(host + ":" + port_str, sock));
+    host_to_socket_.insert(std::make_pair(
+            Host(std::atoi(port_str.c_str()),host),
+            sock));
     Log("Socket created");
     return sock;
 }

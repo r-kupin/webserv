@@ -77,8 +77,7 @@ public:
                                        const std::string &pattern);
     static void         OutputMap(const m_str_str &map, std::ostream &os);
     static bool         IsPositiveNumber(const std::string &str);
-    static bool         IsValidIPv4(const std::string &str);
-    static bool         IsValidAddressName(const std::string &str);
+    static bool         IsAddress(const std::string &str);
     static bool         IsValidAddrWithPort(const std::string &str);
 
     static std::string  LookupDNS(const std::string &host);
@@ -96,9 +95,9 @@ private:
     m_int_str   ok_codes_;
     m_int_str   redirect_codes_;
 
-    m_int_str initializeHttpErrCodes();
-    m_int_str initializeHttpRedirectCodes();
-    m_int_str initializeHttpOKCodes();
+    m_int_str   initializeHttpErrCodes();
+    m_int_str   initializeHttpRedirectCodes();
+    m_int_str   initializeHttpOKCodes();
 
     Utils();
 };

@@ -10,10 +10,11 @@
 /*                                                                            */
 /******************************************************************************/
 
-#include "ServerManager.h"
 #include <csignal>
 #include <iostream>
 #include <cstring>
+
+#include "ServerManager.h"
 
 // Initializes the ServerManager with the provided configuration.
 // This includes setting up signal handlers for SIGINT and SIGSTOP to gracefully stop the servers,
@@ -29,17 +30,15 @@ void ServerManager::Init(const Config &config) {
     for (l_sc_c_it it = config.getConstServers().begin();
          it != config.getConstServers().end(); ++it) {
         try {
+            // Open sockets for the current configuration and set map them to hosts
             CreateListeningSockets(epoll_fd_, *it);
-            servers_.push_back(Server(*it, is_running_, srv_ipv4_to_socket_));
-            for (v_hosts::const_iterator it_h = it->GetHosts().begin();
-                    it_h != it->GetHosts().end(); ++it_h) {
-                servers_.back().AddHost(it_h->port_, it_h->host_);
-            }
+            // Create Server with particular config and open hosts map
+            servers_.push_back(Server(*it, is_running_, host_to_socket_));
+            std::cout << servers_.back() << std::endl;
         } catch (const Server::ServerException &) {
             Cleanup();
             ThrowException("Server initialisation failed");
         }
-        std::cout << *it << std::endl;
     }
     // Create Connection instances for each fd dedicated to keep the state of
     // communication between the client and server

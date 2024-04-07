@@ -81,8 +81,8 @@ Config try_open_configs(int ac, char **av) {
 // If successful, initializes the server with the loaded configuration and starts it.
 // If any configuration related exception is caught, reports failure and exits.
 int main(int ac, char** av) {
-	assert(ac < 3 &&
-		"webserv accepts only one argument, and it should be a config file");
+	assert(ac < 3 && "webserv accepts only one argument, "
+                     "and it should be a config file");
 	std::cout << "Starting webserv..." << std::endl;
 	std::cout <<"Loading config..." << std::endl;
 	try {

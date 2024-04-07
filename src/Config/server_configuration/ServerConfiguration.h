@@ -19,6 +19,7 @@
 #include <ostream>
 
 #include "../location/Location.h"
+#include "Host.h"
 
 #define DEFAULT_PORT 4280
 
@@ -29,20 +30,7 @@ const static std::string kDefaultConfig = kDefaultResources + "/nginx.conf";
 
 typedef std::list<ServerConfiguration>                  l_sc;
 typedef std::list<ServerConfiguration>::const_iterator  l_sc_c_it;
-
-struct Host {
-    Host(int port, const std::string &name);
-    explicit Host(const std::string &name);
-    explicit Host(int port);
-
-    Host &operator=(const Host &rhs);
-    friend bool operator==(const Host &lhs, const Host &rhs);
-
-    int         port_;
-    std::string host_;
-};
-
-typedef std::vector<Host>                               v_hosts;
+typedef std::set<Host>                                  s_hosts;
 
 class ServerConfiguration {
 public:
@@ -88,8 +76,7 @@ public:
     l_loc_c_it              GetConstRootIt() const;
     const l_loc             &GetLocations() const;
     long                    GetKeepaliveTimeout() const;
-    const v_hosts           &GetHosts() const;
-    bool HasHost(const std::string &ipv4, int port) const;
+    const s_hosts           &GetHosts() const;
 
     bool                    operator==(const ServerConfiguration &rhs) const;
     ServerConfiguration     &operator=(const ServerConfiguration& rhs);
@@ -116,8 +103,7 @@ private:
 
     bool                    default_host_;
 
-    std::set<int>           ports_;
-    v_hosts                 hosts_;
+    s_hosts                 hosts_;
     s_str                   server_names_;
     l_loc                   locations_;
     long                    keepalive_timeout_;

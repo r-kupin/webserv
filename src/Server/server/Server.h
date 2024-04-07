@@ -68,13 +68,14 @@ public:
     class ServerException : public std::exception {};
 
     Server(const Server &);
-    explicit Server(const ServerConfiguration &config, v_c_b &is_running_ref, const m_str_int &srv_ipv4_to_socket);
+    explicit Server(const ServerConfiguration &config,
+                    v_c_b &is_running_ref,
+                    const std::map<Host, int> &all_open_sockets);
 
     bool                        ListensTo(int socket) const;
-    const std::string           &GetAddress(int socket) const;
-    const m_int_str             &GetSrvSockToAddress() const;
+    std::string           GetAddress(int socket) const;
+
     long                        GetConnectionTimeout() const;
-    void                        AddHost(int port, const std::string &address);
 
     Location                    ProcessRequest(Connection &connection) const;
     void                        Cleanup(int epoll_fd);
@@ -129,7 +130,11 @@ protected:
 private:
     const volatile bool         &is_running_;
     const ServerConfiguration   &config_;
-    m_int_str                   srv_sock_to_ipv4_;
+    std::map<int, Host>         sock_to_host_;
+    /* quick find-by-socket required to:
+     *  1. find out does this server listens to this socket
+     *  2. find address
+     * */
  };
 
 #endif //WEBSERV_SERVER_H

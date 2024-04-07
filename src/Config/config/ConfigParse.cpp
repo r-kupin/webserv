@@ -94,7 +94,7 @@ Config::ParseNode(std::ifstream &config, std::string &line_leftover,
     while (std::getline(config, line) || !line_leftover.empty()) {
         PreprocessLine(line, line_leftover);
         if (line.find('\'') != std::string::npos)
-            ThrowSyntaxError("Found a (\') symbol. Please, use \" instead");
+            ThrowSyntaxError("Found a \' symbol. Please, use \" instead");
         while (!line.empty()) {
             size_t op_br_pos = line.find_first_of('{');
             size_t cl_br_pos = line.find_first_of('}');

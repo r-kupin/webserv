@@ -17,48 +17,42 @@
 Server::Server(const Server &other)
         : is_running_(other.is_running_),
           config_(other.config_),
-          srv_sock_to_ipv4_(other.srv_sock_to_ipv4_) {}
+          sock_to_host_(other.sock_to_host_) {}
 
 Server::Server(const ServerConfiguration &config, v_c_b &is_running_ref,
-               const m_str_int &srv_ipv4_to_socket)
+               const std::map<Host, int> &all_open_sockets)
         : is_running_(is_running_ref),
           config_(config) {
-    // iterate all open sockets
-    for (m_str_int::const_iterator it = srv_ipv4_to_socket.begin();
-         it != srv_ipv4_to_socket.end(); ++it) {
-        // if config for this server has listen directive for it->address
-        if (config.HasHost(it->first, it->second)) {
+    // iterate all open sockets and match against ones defined in config
+    const s_hosts &hosts_current_server = config.GetHosts();
+    for (s_hosts::const_iterator it = hosts_current_server.begin();
+         it != hosts_current_server.end(); ++it) {
+        const m_host_int::const_iterator &found = all_open_sockets.find(*it);
+        if (found != all_open_sockets.end() ) {
             // add opened socket to server's socket-to-address map
-            srv_sock_to_ipv4_.insert(std::make_pair(it->second, it->first));
+            sock_to_host_.insert(std::make_pair(found->second, found->first));
         }
     }
 }
 
 std::ostream &operator<<(std::ostream &os, const Server &server) {
-    os << "config:\n" << server.config_;
-    os << "\naddresses:\n";
-
-    for (m_int_str::const_iterator it = server.srv_sock_to_ipv4_.begin();
-         it != server.srv_sock_to_ipv4_.end(); ++it) {
-        os << "\t" << it->second << "\n";
+    os << "server:" << "\n";
+    for (std::map<int, Host>::const_iterator it = server.sock_to_host_.begin();
+            it != server.sock_to_host_.end(); ++it) {
+        os << it->second.host_ << ":" << it->second.port_ << " listens on ";
+        os << it->first << " socket\n";
     }
+    os << "\t" << server.config_ << "\n";
     return os;
-}
-
-void Server::AddHost(int port, const std::string &address) {
-    srv_sock_to_ipv4_.insert(std::make_pair(port, address));
 }
 
 long Server::GetConnectionTimeout() const {
     return config_.GetKeepaliveTimeout();
 }
 
-const std::string &Server::GetAddress(int socket) const {
-    return srv_sock_to_ipv4_.find(socket)->second;
-}
-
-const m_int_str &Server::GetSrvSockToAddress() const {
-    return srv_sock_to_ipv4_;
+std::string Server::GetAddress(int socket) const {
+    const Host &host = sock_to_host_.find(socket)->second;
+    return host.host_ + ":" + Utils::NbrToString(host.port_);
 }
 
 void Server::ThrowException(const std::string &msg) const {
@@ -78,20 +72,21 @@ void Server::Log(const std::string &msg) const {
 
 void Server::Log(const std::string &msg, int listen_sock) const {
     std::cout << "[ " << Utils::Get().TimeElapsed() << " ] ";
-    std::cout << srv_sock_to_ipv4_.find(listen_sock)->second << " : ";
+    std::cout << GetAddress(listen_sock) << " : ";
     std::cout << msg << std::endl;
 }
 
 void Server::Cleanup(int epoll_fd) {
-    for (m_int_str::iterator it = srv_sock_to_ipv4_.begin();
-         it != srv_sock_to_ipv4_.end(); ++it) {
-        // Remove each listening socket from epoll_fd instance
-        epoll_ctl(it->first, EPOLL_CTL_DEL, epoll_fd, NULL);
-        // close socket, no need to shutdown() here
-        close(it->first);
-    }
+    (void) epoll_fd;
+//    for (m_int_str::iterator it = srv_sock_to_ipv4_.begin();
+//         it != srv_sock_to_ipv4_.end(); ++it) {
+//        // Remove each listening socket from epoll_fd instance
+//        epoll_ctl(it->first, EPOLL_CTL_DEL, epoll_fd, NULL);
+//        // close socket, no need to shutdown() here
+//        close(it->first);
+//    }
 }
 
 bool Server::ListensTo(int socket) const {
-    return srv_sock_to_ipv4_.find(socket) != srv_sock_to_ipv4_.end();
+    return sock_to_host_.find(socket) != sock_to_host_.end();
 }
