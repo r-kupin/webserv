@@ -1,14 +1,14 @@
-/******************************************************************************/
+/* ************************************************************************** */
 /*                                                                            */
-/*                                                         :::      ::::::::  */
-/*    Config.cpp                                         :+:      :+:    :+:  */
-/*                                                     +:+ +:+         +:+    */
-/*    By: rokupin <rokupin@student.42.fr>            +#+  +:+       +#+       */
-/*                                                 +#+#+#+#+#+   +#+          */
-/*    Created: 2023/03/28 03:25:01 by rokupin           #+#    #+#            */
-/*                                                     ###   ########.fr      */
+/*                                                        :::      ::::::::   */
+/*   Config.cpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2023/03/28 03:25:00 by  rokupin          #+#    #+#             */
+/*   Updated: 2024/04/08 15:49:46 by mede-mas         ###   ########.fr       */
 /*                                                                            */
-/******************************************************************************/
+/* ************************************************************************** */
 
 #include <fstream>
 #include <iostream>
@@ -35,68 +35,68 @@ Config::Config(const Config &other)
  */
 Config::Config(const std::string &config_path)
 : conf_path_(config_path) {
-    std::ifstream source;
-    source.exceptions(std::ifstream::failbit);
-    try {
-        source.open(conf_path_.c_str());
-        source.exceptions(std::ifstream::badbit);
-        std::cout << "Opening config on " + conf_path_ << std::endl;
-        ParseConfig(source);
-        std::cout << "Parsing finished" << std::endl;
-        source.close();
-        std::cout << "Checking components.. " << std::endl;
-        CreateSrvConfigs(conf_root_);
-        std::cout << "Checking finished. Preconfiguring servers.. " <<
-        std::endl;
-    } catch (const std::ifstream::failure &e) {
-        throw ConfigFileNotFound();
-    }
+	std::ifstream source;
+	source.exceptions(std::ifstream::failbit);
+	try {
+		source.open(conf_path_.c_str());
+		source.exceptions(std::ifstream::badbit);
+		std::cout << "Opening config on " + conf_path_ << std::endl;
+		ParseConfig(source);
+		std::cout << "Parsing finished" << std::endl;
+		source.close();
+		std::cout << "Checking components.. " << std::endl;
+		CreateSrvConfigs(conf_root_);
+		std::cout << "Checking finished. Preconfiguring servers.. " <<
+		std::endl;
+	} catch (const std::ifstream::failure &e) {
+		throw ConfigFileNotFound();
+	}
 }
 
 void    Config::ThrowSyntaxError(const std::string &msg,
-                                 std::ifstream &config) const {
-    config.close();
-    ThrowSyntaxError(msg);
+								 std::ifstream &config) const {
+	config.close();
+	ThrowSyntaxError(msg);
 }
 
 void    Config::ThrowSyntaxError(const std::string &msg) const {
-    std::cout << "Syntax error: " + msg << std::endl;
-    throw ConfigFileSyntaxError();
+	std::cout << "Syntax error: " + msg << std::endl;
+	throw ConfigFileSyntaxError();
 }
 
 
 Config &Config::operator=(const Config &other) {
-    if (this == &other)
-        return *this;
-    return *this;
+	if (this == &other)
+		return *this;
+	return *this;
 }
 
 std::ostream &operator<<(std::ostream &os, const Config &config) {
-    for (l_sc_c_it it = config.servers_.begin();
-        it != config.servers_.end(); ++it) {
-        os << *it << std::endl;
-    }
-    return os;
+	for (l_sc_c_it it = config.servers_.begin();
+		it != config.servers_.end(); ++it) {
+		os << *it << std::endl;
+	}
+	return os;
 }
 
 Config::~Config() {}
 
 const l_sc &Config::getConstServers() const {
-    return servers_;
+	return servers_;
 }
 
 l_sc &Config::GetServers() {
-    return servers_;
+	return servers_;
 }
 
 const char *ConfigFileNotFound::what() const throw() {
-    return "Config file not found";
+	return "Config file not found";
 }
 
 const char *ConfigFileSyntaxError::what() const throw() {
-    return "Config file contains syntax errors";
+	return "Config file contains syntax errors";
 }
 
 const std::string &Config::getConfPath() const {
-    return conf_path_;
+	return conf_path_;
 }
