@@ -89,9 +89,9 @@ uri ends:
 1. The server starts by reading the nginx configuration file, which specifies the port number, server root_ directory, and any other settings.
 2. The server creates a listener socket and binds it to the port number specified in the configuration file.
 3. The server enters an infinite loop, waiting for incoming connections using poll().
-4. When a client connects to the server, the server accepts the connection and creates a new thread or worker process to handle the request_.
-5. The server reads the incoming request_ from the client and parses it to determine the requested resource and any additional information, such as headers or query parameters.
-6. If the request_ includes a cookie, the server extracts the session ID from the cookie and checks if it corresponds to an existing session. If a session exists, the server retrieves the session data from a storage medium such as a file or database. Otherwise, the server generates a new session ID and creates a new session.
+4. When a client connects to the server, the server accepts the connection and creates a new thread or worker process to handle the raw_request_.
+5. The server reads the incoming raw_request_ from the client and parses it to determine the requested resource and any additional information, such as headers or query parameters.
+6. If the raw_request_ includes a cookie, the server extracts the session ID from the cookie and checks if it corresponds to an existing session. If a session exists, the server retrieves the session data from a storage medium such as a file or database. Otherwise, the server generates a new session ID and creates a new session.
 7. The server checks if the requested resource is a static file or a dynamic content generator, such as a CGI script or a PHP script.
 8. If the requested resource is a static file, the server reads the file from disk and sends it back to the client in the response. If a session ID cookie is present, the server adds the session ID to the cookie and sets an expiry date.
 9. If the requested resource is a dynamic content generator, the server invokes the appropriate handler module, such as mod_cgi or mod_php, to generate the content. If a session ID cookie is present, the server passes the session data to the handler as an environment variable or input parameter.
@@ -111,7 +111,7 @@ uri ends:
 	reduce server load.
 
 17. The server can implement advanced security features such as rate limiting,
-	IP blocking, and request_ filtering.
+	IP blocking, and raw_request_ filtering.
 
 18. The server can log requests and responses for debugging and analysis
 	purposes.

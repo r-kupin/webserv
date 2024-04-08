@@ -39,7 +39,6 @@ ClientRequest& ClientRequest::operator=(const ClientRequest& other) {
 void ClientRequest::Init(int client_sock) {
     socket_ = client_sock;
     ReadFromSocket(socket_, BUFFER_SIZE);
-    CheckRequest(raw_request_);
     std::string url = ExtractUrl(raw_request_[0]);
     CheckURL(url);
     addr_ = ExtractAddr(url);
@@ -57,6 +56,7 @@ void ClientRequest::Init(int client_sock) {
         FillUrlParams(url);
     if (HasHeaders(raw_request_))
         FillHeaders(raw_request_);
+    CheckRequest(raw_request_);
 }
 
 /**
@@ -107,7 +107,7 @@ v_str &ClientRequest::ReadFromSocket(int socket, int buffer_size) {
                                                    header_line.end()));
                 // "\n" is present 100%
                 storage.erase(storage.begin(),
-                              storage.begin() + Utils::FindInCharVect(storage, "\n"));
+                              storage.begin() + Utils::FindInCharVect(storage, "\n") + 1);
                 line_break = find_request_endline(storage);
             }
         }

@@ -28,11 +28,11 @@ bool            ServerManager::IsListeningSocketFd(int socket) const {
     return false;
 }
 
-const Server &ServerManager::FindServerByListeningSocket(int socket) const {
-//    int server_socket =
-    for (v_servers ::const_iterator it = servers_.begin();
+const Server &ServerManager::FindServerByListeningSocket(const Connection &connection) const {
+    for (v_servers::const_iterator it = servers_.begin();
          it != servers_.end(); ++it) {
-        if (it->ListensTo(socket))
+        if (it->ListensTo(connection.server_listening_socket_)
+            /*&& it->HasServerName(connection.request_.GetHeaderValue("Host"))*/)
             return *it;
     }
     throw ServerManagerException();// this will never happen

@@ -19,9 +19,12 @@ Methods     ClientRequest::ExtractMethod(const std::string &request) {
 
 void        ClientRequest::CheckRequest(const v_str &request) {
     method_ = ExtractMethod(request[0]);
-//    if (request[0].find("HTTP/1.1") == std::string::npos)
-//        ThrowException("HTTP/1.1 is the only supported protocol",
-//                       "HTTPVersionNotSupportedException");
+    if (request[0].find("HTTP/1.1") == std::string::npos)
+        ThrowException("HTTP/1.1 is the only supported protocol",
+                       "HTTPVersionNotSupportedException");
+    if (!HasHeader("Host"))
+        ThrowException("Mandatory header \"Host\" is missing",
+                       "BadRequestException");
 }
 
 std::string ClientRequest::ExtractUrl(const std::string& request) {

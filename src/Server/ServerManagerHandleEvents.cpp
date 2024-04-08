@@ -23,18 +23,14 @@
  */
 void ServerManager::HandleEventsOnExistingConnection(int client_socket) {
     Connection      &connection = connections_[client_socket];
-    const Server    &server = FindServerByListeningSocket(connection.server_listening_socket_);
 
-    // address (hostname:port) that corresponds to the socket on which
-    // connection was accepted.
-    connection.address_ = server.GetAddress(connection.server_listening_socket_);
     while (is_running_) {
         if (!connection.url_headers_done_) {
             if (!ProcessHeaders(connection))
                 return;
         }
         if (connection.url_headers_done_ && !connection.body_done_) {
-            if (!ProcessBody(connection, server))
+            if (!ProcessBody(connection))
                 return;
         }
         if (connection.body_done_) {
@@ -53,6 +49,7 @@ void ServerManager::HandleEventsOnExistingConnection(int client_socket) {
 bool ServerManager::ProcessHeaders(Connection &connection) {
     try {
         connection.request_.Init(connection.connection_socket_);
+        connection.address_ = connection.request_.GetHeaderValue("Host");
         Log("Got client request:");
         std::cout << connection.request_ << std::endl;
         connection.url_headers_done_ = true;
@@ -84,8 +81,9 @@ bool ServerManager::ProcessHeaders(Connection &connection) {
     return true;
 }
 
-bool ServerManager::ProcessBody(Connection &connection, const Server &server) {
+bool ServerManager::ProcessBody(Connection &connection) {
     try {
+        const Server    &server = FindServerByListeningSocket(connection);
         connection.location_ = server.ProcessRequest(connection);
         Log("Request processed");
         connection.body_done_ = true;

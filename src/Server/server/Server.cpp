@@ -90,3 +90,8 @@ void Server::Cleanup(int epoll_fd) {
 bool Server::ListensTo(int socket) const {
     return sock_to_host_.find(socket) != sock_to_host_.end();
 }
+
+bool Server::HasServerName(const std::string &server_name) const {
+    return config_.GetServerNames().find(server_name) !=
+            config_.GetServerNames().end();
+}

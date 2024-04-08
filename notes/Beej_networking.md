@@ -855,23 +855,23 @@ int main(int argc, char *argv[])
     printf("IP addresses for %s:\n\n", argv[1]);
 
     for(p = res;p != NULL; p = p->ai_next) {
-        void *addr;
+        void *addr_;
         char *ipver;
 
         // get the pointer to the address itself,
         // different fields in IPv4 and IPv6:
         if (p->ai_family == AF_INET) { // IPv4
             struct sockaddr_in *ipv4 = (struct sockaddr_in *)p->ai_addr;
-            addr = &(ipv4->sin_addr);
+            addr_ = &(ipv4->sin_addr);
             ipver = "IPv4";
         } else { // IPv6
             struct sockaddr_in6 *ipv6 = (struct sockaddr_in6 *)p->ai_addr;
-            addr = &(ipv6->sin6_addr);
+            addr_ = &(ipv6->sin6_addr);
             ipver = "IPv6";
         }
 
         // convert the IP to a string and print it:
-        inet_ntop(p->ai_family, addr, ipstr, sizeof ipstr);
+        inet_ntop(p->ai_family, addr_, ipstr, sizeof ipstr);
         printf("  %s: %s\n", ipver, ipstr);
     }
 
@@ -1105,10 +1105,10 @@ The call is as follows:
 #include <sys/types.h>
 #include <sys/socket.h>
 
-int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen); 
+int accept(int sockfd, struct sockaddr *addr_, socklen_t *addrlen); 
 ```
 
-`sockfd` is the `listen()`ing socket descriptor. Easy enough. `addr` will usually be a pointer to a local `struct sockaddr_storage`. This is where the information about the incoming connection will go (and with it you can determine which host is calling you from which port). `addrlen` is a local integer variable that should be set to `sizeof(struct sockaddr_storage)` before its address is passed to `accept()`. `accept()` will not put more than that many bytes into `addr`. If it puts fewer in, it’ll change the value of `addrlen` to reflect that.
+`sockfd` is the `listen()`ing socket descriptor. Easy enough. `addr_` will usually be a pointer to a local `struct sockaddr_storage`. This is where the information about the incoming connection will go (and with it you can determine which host is calling you from which port). `addrlen` is a local integer variable that should be set to `sizeof(struct sockaddr_storage)` before its address is passed to `accept()`. `accept()` will not put more than that many bytes into `addr_`. If it puts fewer in, it’ll change the value of `addrlen` to reflect that.
 
 Guess what? `accept()` returns `-1` and sets `errno` if an error occurs. Betcha didn’t figure that.
 
@@ -1282,10 +1282,10 @@ The function `getpeername()` will tell you who is at the other end of a connecte
 ```cpp
 #include <sys/socket.h>
 
-int getpeername(int sockfd, struct sockaddr *addr, int *addrlen); 
+int getpeername(int sockfd, struct sockaddr *addr_, int *addrlen); 
 ```
 
-`sockfd` is the descriptor of the connected stream socket, `addr` is a pointer to a `struct sockaddr` (or a `struct sockaddr_in`) that will hold the information about the other side of the connection, and `addrlen` is a pointer to an `int`, that should be initialized to `sizeof *addr` or `sizeof(struct sockaddr)`.
+`sockfd` is the descriptor of the connected stream socket, `addr_` is a pointer to a `struct sockaddr` (or a `struct sockaddr_in`) that will hold the information about the other side of the connection, and `addrlen` is a pointer to an `int`, that should be initialized to `sizeof *addr_` or `sizeof(struct sockaddr)`.
 
 The function returns `-1` on error and sets `errno` accordingly.
 
@@ -3604,7 +3604,7 @@ Accept an incoming connection on a listening socket
 #include <sys/types.h>
 #include <sys/socket.h>
 
-int accept(int s, struct sockaddr *addr, socklen_t *addrlen);
+int accept(int s, struct sockaddr *addr_, socklen_t *addrlen);
 ```
 
 ### Description
@@ -3617,8 +3617,8 @@ The old socket that you are using for listening is still there, and will be used
 |Parameter|Description|
 |---|---|
 |`s`|The `listen()`ing socket descriptor.|
-|`addr`|This is filled in with the address of the site that’s connecting to you.|
-|`addrlen`|This is filled in with the `sizeof()` the structure returned in the `addr` parameter. You can safely ignore it if you assume you’re getting a `struct sockaddr_in` back, which you know you are, because that’s the type you passed in for `addr`.|
+|`addr_`|This is filled in with the address of the site that’s connecting to you.|
+|`addrlen`|This is filled in with the `sizeof()` the structure returned in the `addr_` parameter. You can safely ignore it if you assume you’re getting a `struct sockaddr_in` back, which you know you are, because that’s the type you passed in for `addr_`.|
 
 `accept()` will normally block, and you can use `select()` to peek on the listening socket descriptor ahead of time to see if it’s “ready to read”. If so, then there’s a new connection waiting to be `accept()`ed! Yay! Alternatively, you could set the `O_NONBLOCK` flag on the listening socket using `fcntl()`, and then it will never block, choosing instead to return `-1` with `errno` set to `EWOULDBLOCK`.
 
@@ -4052,7 +4052,7 @@ Get an IP address for a hostname, or vice-versa
 #include <netdb.h>
 
 struct hostent *gethostbyname(const char *name); // DEPRECATED!
-struct hostent *gethostbyaddr(const char *addr, int len, int type);
+struct hostent *gethostbyaddr(const char *addr_, int len, int type);
 ```
 
 ### Description
@@ -4067,7 +4067,7 @@ Conversely, if you have a `struct in_addr` or a `struct in6_addr`, you can use `
 
 `gethostbyname()` takes a string like “www.yahoo.com”, and returns a `struct hostent` which contains tons of information, including the IP address. (Other information is the official host name, a list of aliases, the address type, the length of the addresses, and the list of addresses—it’s a general-purpose structure that’s pretty easy to use for our specific purposes once you see how.)
 
-`gethostbyaddr()` takes a `struct in_addr` or `struct in6_addr` and brings you up a corresponding host name (if there is one), so it’s sort of the reverse of `gethostbyname()`. As for parameters, even though `addr` is a `char*`, you actually want to pass in a pointer to a `struct in_addr`. `len` should be `sizeof(struct in_addr)`, and `type` should be `AF_INET`.
+`gethostbyaddr()` takes a `struct in_addr` or `struct in6_addr` and brings you up a corresponding host name (if there is one), so it’s sort of the reverse of `gethostbyname()`. As for parameters, even though `addr_` is a `char*`, you actually want to pass in a pointer to a `struct in_addr`. `len` should be `sizeof(struct in_addr)`, and `type` should be `AF_INET`.
 
 So what is this `struct hostent` that gets returned? It has a number of fields that contain information about the host in question.
 
@@ -4210,7 +4210,7 @@ Return address info about the remote side of the connection
 ```cpp
 #include <sys/socket.h>
 
-int getpeername(int s, struct sockaddr *addr, socklen_t *len);
+int getpeername(int s, struct sockaddr *addr_, socklen_t *len);
 ```
 
 ### Description
@@ -4221,7 +4221,7 @@ Once you have either `accept()`ed a remote connection, or `connect()`ed to a ser
 
 Why is it called a “name”? Well, there are a lot of different kinds of sockets, not just Internet Sockets like we’re using in this guide, and so “name” was a nice generic term that covered all cases. In our case, though, the peer’s “name” is it’s IP address and port.
 
-Although the function returns the size of the resultant address in `len`, you must preload `len` with the size of `addr`.
+Although the function returns the size of the resultant address in `len`, you must preload `len` with the size of `addr_`.
 
 ### Return Value
 
@@ -4233,20 +4233,20 @@ Returns zero on success, or `-1` on error (and `errno` will be set accordingly).
 // assume s is a connected socket
 
 socklen_t len;
-struct sockaddr_storage addr;
+struct sockaddr_storage addr_;
 char ipstr[INET6_ADDRSTRLEN];
 int port;
 
-len = sizeof addr;
-getpeername(s, (struct sockaddr*)&addr, &len);
+len = sizeof addr_;
+getpeername(s, (struct sockaddr*)&addr_, &len);
 
 // deal with both IPv4 and IPv6:
-if (addr.ss_family == AF_INET) {
-    struct sockaddr_in *s = (struct sockaddr_in *)&addr;
+if (addr_.ss_family == AF_INET) {
+    struct sockaddr_in *s = (struct sockaddr_in *)&addr_;
     port = ntohs(s->sin_port);
     inet_ntop(AF_INET, &s->sin_addr, ipstr, sizeof ipstr);
 } else { // AF_INET6
-    struct sockaddr_in6 *s = (struct sockaddr_in6 *)&addr;
+    struct sockaddr_in6 *s = (struct sockaddr_in6 *)&addr_;
     port = ntohs(s->sin6_port);
     inet_ntop(AF_INET6, &s->sin6_addr, ipstr, sizeof ipstr);
 }
@@ -4845,7 +4845,7 @@ struct addrinfo hints, *res;
 int sockfd;
 int byte_count;
 socklen_t fromlen;
-struct sockaddr_storage addr;
+struct sockaddr_storage addr_;
 char buf[512];
 char ipstr[INET6_ADDRSTRLEN];
 
@@ -4860,15 +4860,15 @@ bind(sockfd, res->ai_addr, res->ai_addrlen);
 
 // no need to accept(), just recvfrom():
 
-fromlen = sizeof addr;
-byte_count = recvfrom(sockfd, buf, sizeof buf, 0, &addr, &fromlen);
+fromlen = sizeof addr_;
+byte_count = recvfrom(sockfd, buf, sizeof buf, 0, &addr_, &fromlen);
 
 printf("recv()'d %d bytes of data in buf\n", byte_count);
 printf("from IP address %s\n",
-    inet_ntop(addr.ss_family,
-        addr.ss_family == AF_INET?
-            ((struct sockadd_in *)&addr)->sin_addr:
-            ((struct sockadd_in6 *)&addr)->sin6_addr,
+    inet_ntop(addr_.ss_family,
+        addr_.ss_family == AF_INET?
+            ((struct sockadd_in *)&addr_)->sin_addr:
+            ((struct sockadd_in6 *)&addr_)->sin6_addr,
         ipstr, sizeof ipstr);
 ```
 

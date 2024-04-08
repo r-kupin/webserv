@@ -73,8 +73,8 @@ public:
                     const std::map<Host, int> &all_open_sockets);
 
     bool                        ListensTo(int socket) const;
-    std::string           GetAddress(int socket) const;
-
+    bool                        HasServerName(const std::string &server_name) const;
+    std::string                 GetAddress(int socket) const;
     long                        GetConnectionTimeout() const;
 
     Location                    ProcessRequest(Connection &connection) const;
@@ -83,7 +83,6 @@ public:
     friend std::ostream        &operator<<(std::ostream &os,
                                             const Server &server);
 protected:
-//-------------------initialisation: open sockets, create epoll...--------------
 //-------------------request server-side processing-----------------------------
     bool                        AccessForbidden(l_loc_c_it found,
                                                 Methods method) const;
