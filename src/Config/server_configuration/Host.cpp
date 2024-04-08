@@ -15,7 +15,7 @@
 
 Host::Host(int port, const std::string &name) : port_(port), host_(name) {}
 
-Host::Host(int port) : port_(port), host_("localhost") {}
+Host::Host(int port) : port_(port), host_("127.0.0.1") {}
 
 Host::Host(const std::string &name) : port_(DEFAULT_PORT), host_(name) {}
 
@@ -33,7 +33,11 @@ bool operator==(const Host &lhs, const Host &rhs) {
 }
 
 bool Host::operator<(const Host &rhs) const {
-    return port_ < rhs.port_ && host_ < rhs.host_;
+    if (port_ != rhs.port_) {
+        return port_ < rhs.port_;
+    }
+    // If ports are equal, compare hosts
+    return host_ < rhs.host_;
 }
 
 bool Host::operator>(const Host &rhs) const {

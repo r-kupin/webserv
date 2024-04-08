@@ -13,6 +13,7 @@
 #include <fcntl.h>
 #include <csignal>
 #include <cstring>
+
 #include "ServerManager.h"
 
 /**
@@ -42,7 +43,8 @@ void            ServerManager::ThrowException(const std::string &msg) const {
     throw ServerManagerException();
 }
 
-void ServerManager::CloseConnectionWithLogMessage(int socket, const std::string &msg) {
+void ServerManager::CloseConnectionWithLogMessage(int socket,
+                                                  const std::string &msg) {
     Log(msg);
     connections_[socket] = Connection(is_running_);
     // Explicitly delete socket from epoll instance to stop monitoring for events

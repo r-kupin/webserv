@@ -226,18 +226,12 @@ ServerConfiguration &ServerConfiguration::operator=(
 }
 
 std::ostream &operator<<(std::ostream &os, const ServerConfiguration &config) {
-    os << "listens on: " << "\n";
-    for (s_hosts::const_iterator it = config.hosts_.begin();
-         it != config.hosts_.end(); ++it) {
-        os << "\t" << it->host_ << ":" << it->port_ << std::endl;
-    }
     os << "server names: " << "\n";
     for (s_str ::const_iterator it = config.server_names_.begin();
          it != config.server_names_.end(); ++it) {
         os << "\t" << *it << std::endl;
     }
     os << config.locations_.front() << "\n";
-    os << std::endl;
     return os;
 }
 

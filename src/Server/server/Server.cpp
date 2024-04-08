@@ -23,7 +23,7 @@ Server::Server(const ServerConfiguration &config, v_c_b &is_running_ref,
                const std::map<Host, int> &all_open_sockets)
         : is_running_(is_running_ref),
           config_(config) {
-    // iterate all open sockets and match against ones defined in config
+    // iterate open sockets ServManager and match against ones defined in config
     const s_hosts &hosts_current_server = config.GetHosts();
     for (s_hosts::const_iterator it = hosts_current_server.begin();
          it != hosts_current_server.end(); ++it) {
@@ -39,10 +39,10 @@ std::ostream &operator<<(std::ostream &os, const Server &server) {
     os << "server:" << "\n";
     for (std::map<int, Host>::const_iterator it = server.sock_to_host_.begin();
             it != server.sock_to_host_.end(); ++it) {
-        os << it->second.host_ << ":" << it->second.port_ << " listens on ";
-        os << it->first << " socket\n";
+        os << "\t" << it->second.host_ << ":" << it->second.port_;
+        os << " listens on " << it->first << " socket\n";
     }
-    os << "\t" << server.config_ << "\n";
+    os << "\n" << server.config_ << "\n";
     return os;
 }
 

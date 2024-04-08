@@ -55,7 +55,7 @@ void ServerManager::CreateListeningSockets(int epoll_fd,
  * };
  */
 void ServerManager::PresetAddress(addrinfo **addr, const std::string &host,
-                           const std::string &port_str, int epoll_fd) {
+                                  const std::string &port_str, int epoll_fd) {
     (void) epoll_fd;
     struct addrinfo hints;
 
