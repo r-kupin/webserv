@@ -83,7 +83,7 @@ bool ServerManager::ProcessHeaders(Connection &connection) {
 
 bool ServerManager::ProcessBody(Connection &connection) {
     try {
-        const Server    &server = FindServerByListeningSocket(connection);
+        const Server    &server = FindServer(connection);
         connection.location_ = server.ProcessRequest(connection);
         Log("Request processed");
         connection.body_done_ = true;

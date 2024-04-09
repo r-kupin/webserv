@@ -66,8 +66,7 @@ void ServerManager::CloseTimedOutConnections() {
 
     for (size_t i = 0; i < connections_.size(); i++) {
         if (connections_[i].IsOpen()) {
-            long timeout = FindServerByListeningSocket(connections_[i])
-                                .GetConnectionTimeout();
+            long timeout = FindServer(connections_[i]).GetConnectionTimeout();
             if (connections_[i].HowLongBeingActive(time_right_now) > timeout) {
                 CloseConnectionWithLogMessage(i, "Connection timed out");
             }

@@ -28,14 +28,30 @@ bool            ServerManager::IsListeningSocketFd(int socket) const {
     return false;
 }
 
-const Server &ServerManager::FindServerByListeningSocket(const Connection &connection) const {
+/**
+ * Method finds server that should handle request.
+ * Request should bu processed by a server that:
+ *  1. listens on the socket, on which request was reported
+ *  2. has defined "server_name" that corresponds to the request's value of the
+ *  "Host" header
+ * If no server's "server_name" corresponds to the request's value of the "Host"
+ * header - return the first server that listens on this socket defined in .conf
+ * file
+ */
+const Server &ServerManager::FindServer(const Connection &connection) const {
+    v_servers::const_iterator last_listening_server = servers_.end();
+
+    // in fact, we iterate from the last to the first server defined in config
     for (v_servers::const_iterator it = servers_.begin();
-         it != servers_.end(); ++it) {
-        if (it->ListensTo(connection.server_listening_socket_)
-            /*&& it->HasServerName(connection.request_.GetHeaderValue("Host"))*/)
-            return *it;
+        it != servers_.end(); ++it) {
+        if (it->ListensTo(connection.server_listening_socket_)) {
+            if (last_listening_server == servers_.end() ||
+                !last_listening_server->HasServerName(connection.address_)) {
+                last_listening_server = it;
+            }
+        }
     }
-    throw ServerManagerException();// this will never happen
+    return *last_listening_server;
 }
 
 void            ServerManager::ThrowException(const std::string &msg) const {

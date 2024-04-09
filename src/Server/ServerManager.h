@@ -49,13 +49,13 @@ class ServerManagerException : public std::exception {};
     bool            AddClientToEpoll(int client_sock);
     static void     Stop(int signal);
 //-------------------handle-----------------------------------------------------
-    const Server    &FindServerByListeningSocket(const Connection &connection) const;
+    const Server    &FindServer(const Connection &connection) const;
     void            AcceptNewConnection(int server_socket);
     void            HandleEventsOnExistingConnection(int client_socket);
     bool            ProcessHeaders(Connection &connection);
     void            CloseConnectionWithLogMessage(int socket,
                                                   const std::string &msg);
-    bool ProcessBody(Connection &connection);
+    bool            ProcessBody(Connection &connection);
     void            Respond(Connection &connection);
     void            CloseTimedOutConnections();
 //-------------------util-------------------------------------------------------
