@@ -37,12 +37,12 @@ I am not using `Makefile` in development process, so the **lists of source files
 - You server must have default error pages if none are provided.
 - You must be able to serve a fully static website.
 - Clients must be able to upload files. ([upload_store](#upload_store))
-- Make it work with %% DELETE, %%POST and GET methods.
+- Make it work with DELETE, POST and GET methods.
 - Stress test resilience
 - Multiple ports
 - Choose the [port](#listen) and [host](#server_name) of each server.
 - Setup the server_names or not
-- %% default server for host:port %%
+- default server for host:port 
 - Setup default [error_pages](#error_page).
 - Limit [client_max_body_size](#client_max_body_size).
 - Setup routes with one or multiple of the following rules/configuration:
@@ -54,8 +54,6 @@ I am not using `Makefile` in development process, so the **lists of source files
 	- %% CGI %%
 	- Make the route able to accept uploaded files and configure where they should be saved. ([upload_store](#upload_store))
 ## ToDo
-- DELETE method handling
-- The first server for a host:port will be the default for this host:port (that means it will answer to all the requests that don’t belong to an other server).
 - Execute CGI based on certain file extension (for example .php)
 - Turn on or off directory listing. (?)
 # Checklist
@@ -78,7 +76,7 @@ In the configuration file, check whether you can do the following and
 test the result:
 - [x] Search for the HTTP response status codes list on the internet. During this evaluation, if any status codes is wrong, don't give any related points.
 - [x] Setup multiple servers with different ports.
-- [x] Setup multiple servers with different hostnames (use something like: curl --resolve example.com:80:127.0.0.1 [http://example.com/](http://example.com/)).
+- [ ] Setup multiple servers with different hostnames (use something like: curl --resolve example.com:80:127.0.0.1 [http://example.com/](http://example.com/)).
 - [x] Setup default error page (try to change the error 404).
 - [x] Limit the client body (use: curl -X POST -H "Content-Type: plain/text" --data "BODY IS HERE write something shorter or longer than body limit").
 - [x] Setup routes in a server to different directories.
@@ -87,9 +85,9 @@ test the result:
 ## Basic checks
 Using telnet, curl, prepared files, demonstrate that the following
 features work properly:
-- [ ] GET, POST and DELETE requests should work.
-- [ ] UNKNOWN requests should not result in a crash.
-- [ ] For every test you should receive the appropriate status code.
+- [x] GET, POST and DELETE requests should work.
+- [x] UNKNOWN requests should not result in a crash.
+- [x] For every test you should receive the appropriate status code.
 - [ ] Upload some file to the server and get it back.
 ## Check CGI
 Pay attention to the following:
@@ -98,15 +96,15 @@ Pay attention to the following:
 - [ ] With the help of the students you should check that everything is working properly. You have to test the CGI with the "GET" and "POST" methods.
 - [ ] You need to test with files containing errors to see if the error handling works properly. You can use a script containing an infinite loop or an error; you are free to do whatever tests you want within the limits of acceptability that remain at your discretion. The group being evaluated should help you with this.
 ## Check with a browser
-- [ ] Use the reference browser of the team. Open the network part of it, and try to connect to the server using it.
-- [ ] Look at the request header and response header.
-- [ ] It should be compatible to serve a fully static website.
-- [ ] Try a wrong URL on the server.
+- [x] Use the reference browser of the team. Open the network part of it, and try to connect to the server using it.
+- [x] Look at the request header and response header.
+- [x] It should be compatible to serve a fully static website.
+- [x] Try a wrong URL on the server.
 - [ ] Try to list a directory.
-- [ ] Try a redirected URL.
+- [x] Try a redirected URL.
 - [ ] Try anything you want to.
 ## Port issues
-- [ ] In the configuration file setup multiple ports and use different websites. Use the browser to ensure that the configuration works as expected and shows the right website.
+- [x] In the configuration file setup multiple ports and use different websites. Use the browser to ensure that the configuration works as expected and shows the right website.
 - [ ] In the configuration, try to setup the same port multiple times. It should not work.
 - [ ] Launch multiple servers at the same time with different configurations but with common ports. Does it work? If it does, ask why the server should work if one of the configurations isn't functional. Keep going.
 ## Siege & stress test

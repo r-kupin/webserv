@@ -34,10 +34,10 @@ int         Server::UploadFile(ClientRequest &request, l_loc_c_it found,
                                     request.GetDeclaredBodySize())) {
                 Utils::Get().IncrementUploadedFiles();
                 // file created successfully
-                if (request.IsCurlRequest())
+                if (request.IsCurlRequest() || request.IsFirefoxRequest())
                     return UploadFromCURL(request, request.GetAssociatedFilename(), socket);
                 // wget doesn't work on nginx - sends file without tailing linebreak
-                Log("Only uploads via curl are supported for now");
+                Log("Only uploads via curl and Firefox are supported for now");
                 return ONLY_CURL_UPLOADS_SUPPORTED;
             }
             return FAILED_TO_CREATE_OUTPUT_FILE;

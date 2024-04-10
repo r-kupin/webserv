@@ -158,8 +158,15 @@ void ServerConfiguration::HandleHost(const v_str &directive) {
         }
 
         address = Utils::LookupDNS(address);
+
         if (!address.empty()) {
-            hosts_.insert(Host(std::atoi(port.c_str()), address));
+            const Host &new_host = Host(std::atoi(port.c_str()), address);
+            if (hosts_.find(new_host) == hosts_.end()) {
+                hosts_.insert(new_host);
+            } else {
+                ThrowServerConfigError("multiple definitions of the same "
+                                       "host:port in one server context");
+            }
         } else {
             ThrowServerConfigError("address DNS lookup failed");
         }

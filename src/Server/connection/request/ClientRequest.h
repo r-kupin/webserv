@@ -70,6 +70,7 @@ public:
     std::string         GetHeaderValue(const std::string &key) const;
     size_t              GetDeclaredBodySize() const;
     bool                IsCurlRequest() const;
+    bool                IsFirefoxRequest() const;
     bool                IsIndexRequest() const;
     const std::string   &GetFragment() const;
     size_t              GetCurlMetadataLength(const std::string &delimiter) const;

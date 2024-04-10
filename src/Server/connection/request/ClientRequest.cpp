@@ -264,3 +264,7 @@ size_t ClientRequest::GetDeclaredBodySize() const {
 bool ClientRequest::IsCurlRequest() const {
     return GetHeaderValue("User-Agent").find("curl") != std::string::npos;
 }
+
+bool ClientRequest::IsFirefoxRequest() const {
+    return GetHeaderValue("User-Agent").find("Mozilla") != std::string::npos;
+}
