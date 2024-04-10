@@ -17,7 +17,7 @@
 #include "ServerManager.h"
 
 /**
- * Ask each server does it listens to this particular socket or not
+ * Ask each server does it listens to this particular socket or not.
  */
 bool            ServerManager::IsListeningSocketFd(int socket) const {
     for (v_servers::const_iterator it = servers_.begin();
@@ -107,7 +107,12 @@ bool    ServerManager::SetDescriptorNonBlocking(int sockfd) const {
 }
 
 void ServerManager::Cleanup() {
-    for (v_servers::iterator it = servers_.begin(); it != servers_.end(); ++it)
-        it->Cleanup(epoll_fd_);
+    for (m_host_int::iterator it = host_to_socket_.begin();
+            it != host_to_socket_.end(); ++it) {
+        // Remove each listening socket from epoll_fd instance
+        epoll_ctl(it->second, EPOLL_CTL_DEL, epoll_fd_, NULL);
+        // close socket, no need to shutdown() here
+        close(it->second);
+    }
     close(epoll_fd_);
 }

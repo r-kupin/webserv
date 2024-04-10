@@ -82,7 +82,6 @@ void Server::HandleUpload(ClientRequest &request, int socket,
         synth.SetReturnCode(upload_status);
         if (synth.return_code_ == OK) {
             synth.return_custom_message_ = "Upload successful";
-            Utils::Get().IncrementUploadedFiles();
         }
     } else {
         Log("only POST method should be used for upload locations");

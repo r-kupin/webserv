@@ -32,6 +32,7 @@ int         Server::UploadFile(ClientRequest &request, l_loc_c_it found,
                         Utils::NbrToString(Utils::Get().GetFilesUploaded()));
             if (TryCreateOutputFile(dirname, request.GetAssociatedFilename(),
                                     request.GetDeclaredBodySize())) {
+                Utils::Get().IncrementUploadedFiles();
                 // file created successfully
                 if (request.IsCurlRequest())
                     return UploadFromCURL(request, request.GetAssociatedFilename(), socket);

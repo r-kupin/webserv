@@ -11,12 +11,14 @@
 /******************************************************************************/
 
 #include <csignal>
+
 #include "ServerManager.h"
 
 /**
  *  Server's main loop
  *  Based around blocking call epoll_wait() which blocks on fd of the
- * server's epoll instance's fd while client wouldn't connect to the server.
+ * server's epoll instance's fd while client wouldn't connect to the one of
+ * the defined servers.
  *  If that would happen - epoll_wait will return an event with
  * event.data.fd == socket_ and event.events == EPOLLIN. In this case server
  * accepts connection and adds new socket to the epoll instance, accessible
@@ -26,7 +28,7 @@
  * event.data.fd == already-accepted-socket-fd and
  * event.events & EPOLLIN && event.events & EPOLLOUT. In this case server
  * accepts needs to read incoming data, create the Request, process it and
- * append the response.
+ * send the response.
  */
 void    ServerManager::EventLoop() {
     epoll_event events[MAX_EVENTS];
@@ -49,7 +51,8 @@ void    ServerManager::EventLoop() {
                 }
             }
         } else {
-            // no events were reported, we have some free time
+            // no events were reported during epoll_wait timeout:
+            // check all existing connections and close expired ones
             CloseTimedOutConnections();
         }
     }

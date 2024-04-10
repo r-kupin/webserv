@@ -33,16 +33,15 @@ class ServerManagerException : public std::exception {};
 //-------------------init-------------------------------------------------------
     void            Init(const Config &config);
     void            CreateEpollInstance();
-    void            CreateListeningSockets(int epoll_fd,
-                                           const ServerConfiguration &conf);
+    void            CreateListeningSocket(const ServerConfiguration &conf);
     void            PresetAddress(addrinfo **addr, const std::string &host,
-                                  const std::string &port_str, int epoll_fd);
+                                  const std::string &port_str);
     int             CreateSocket(addrinfo *res, const std::string &host,
-                                 const std::string &port_str, int epoll_fd);
-    void            SetSocketOptions(addrinfo *res, int socket, int epoll_fd);
-    void            BindSocket(addrinfo *res, int socket, int epoll_fd);
-    void            ListenSocket(int socket, int epoll_fd);
-    void            AddSocketToEpollInstance(int socket, int epoll_fd);
+                                 const std::string &port_str);
+    void            SetSocketOptions(addrinfo *res, int socket);
+    void            BindSocket(addrinfo *res, int socket);
+    void            ListenSocket(int socket);
+    void            AddSocketToEpollInstance(int socket);
 //-------------------run--------------------------------------------------------
     void            Start();
     void            EventLoop();

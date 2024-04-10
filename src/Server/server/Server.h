@@ -78,7 +78,6 @@ public:
     long                        GetConnectionTimeout() const;
 
     Location                    ProcessRequest(Connection &connection) const;
-    void                        Cleanup(int epoll_fd);
 
     friend std::ostream        &operator<<(std::ostream &os,
                                             const Server &server);

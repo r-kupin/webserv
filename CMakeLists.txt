@@ -12,7 +12,6 @@ add_executable(webserv src/main.cpp
         src/Server/server/response/ResponseStaticUtils.cpp
         src/Server/server/response/ServerResponse.cpp
         src/Server/server/UploadHandler.cpp
-        src/Server/server/ServerInit.cpp
         src/Server/server/ServerExceptions.cpp
         src/Server/server/SynthFoundExact.cpp
         src/Server/server/Server.cpp
@@ -52,7 +51,6 @@ add_library(webserv_lib
         src/Server/server/response/ResponseStaticUtils.cpp
         src/Server/server/response/ServerResponse.cpp
         src/Server/server/UploadHandler.cpp
-        src/Server/server/ServerInit.cpp
         src/Server/server/ServerExceptions.cpp
         src/Server/server/SynthFoundExact.cpp
         src/Server/server/Server.cpp
