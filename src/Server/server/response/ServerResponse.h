@@ -16,13 +16,13 @@
 #include <ostream>
 #include "../../connection/request/ClientRequest.h"
 #include "../../../Config/location/Location.h"
+#include "../../connection/Connection.h"
 
 class ServerResponse {
 public:
     class ResponseException : public std::exception {};
 
-    ServerResponse();
-    ServerResponse(const std::string &addr);
+    ServerResponse(const Connection &connection);
 
     ~ServerResponse();
 
@@ -32,6 +32,7 @@ public:
     const std::string           &GetTopHeader() const;
     const std::string           &GetBodyStr() const;
     const m_str_str             &GetHeaders() const;
+    int                         GetCode() const;
 
     ServerResponse              &operator=(const ServerResponse &);
     friend                      std::ostream &operator<<(std::ostream &os, const ServerResponse &response);
@@ -49,7 +50,7 @@ protected:
                                           const std::string &value);
 private:
     std::string     addr_;
-    std::ofstream   *log_file_;
+    int             code_;
 
     std::string     top_header_;
     std::string     body_str_;

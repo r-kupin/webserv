@@ -34,7 +34,10 @@ void ServerManager::HandleEventsOnExistingConnection(int client_socket) {
                 return;
         }
         if (connection.body_done_) {
-            Respond(connection);
+            if (!Respond(connection)) {
+                CloseConnectionWithLogMessage(client_socket, "Client request "
+                                                             "triggered error");
+            }
         }
     }
 }
@@ -124,10 +127,9 @@ bool ServerManager::ProcessBody(Connection &connection) {
     return true;
 }
 
-void ServerManager::Respond(Connection &connection) {
-    ServerResponse response(connection.address_);
+bool ServerManager::Respond(Connection &connection) {
+    ServerResponse response(connection);
 
-    response.ComposeResponse(connection.location_);
     Log("Prepared response:");
     std::cout << response << std::endl;
     response.SendResponse(connection.connection_socket_);
@@ -137,4 +139,5 @@ void ServerManager::Respond(Connection &connection) {
     connections_[connection.connection_socket_] =
             Connection(is_running_, connection.connection_socket_,
                        connection.server_listening_socket_);
+    return !Utils::Get().IsErrorCode(response.GetCode());
 }

@@ -12,12 +12,15 @@
 
 #include <sstream>
 #include <iostream>
+
 #include "ServerResponse.h"
+#include "../../connection/Connection.h"
 
-ServerResponse::ServerResponse() {}
-
-ServerResponse::ServerResponse(const std::string &addr)
-        :  addr_(addr) {}
+ServerResponse::ServerResponse(const Connection &connection)
+        :  addr_(connection.address_),
+        code_(connection.location_.return_code_) {
+    ComposeResponse(connection.location_);
+}
 
 std::string ServerResponse::ComposeTop(int return_code) {
     std::ostringstream oss;
@@ -28,7 +31,7 @@ std::string ServerResponse::ComposeTop(int return_code) {
 }
 
 void ServerResponse::ComposeResponse(const Location &synth) {
-    top_header_ = ComposeTop(synth.return_code_);
+    top_header_ = ComposeTop(code_);
     if (synth.return_code_ == 100)
         return;
     AddHeader("Server", "WebServ");
@@ -46,6 +49,7 @@ void ServerResponse::ComposeResponse(const Location &synth) {
                         "code is 200 but body_file is empty and custom "
                         "message not defined. This shouldn't happen");
             }
+            AddHeader("Connection", "keep-alive");
         }
         AddHeader("Content-Type", "text/html");
     } else {
@@ -53,7 +57,6 @@ void ServerResponse::ComposeResponse(const Location &synth) {
         body_str_ = synth.return_custom_message_;
     }
     AddHeader("Content-Length", Utils::NbrToString(body_str_.size()));
-    AddHeader("Connection", "keep-alive");
 }
 
 void ServerResponse::HandleError(const Location &synth) {
@@ -62,6 +65,7 @@ void ServerResponse::HandleError(const Location &synth) {
     } else {
         body_str_ = GeneratePage(synth.return_code_);
     }
+    AddHeader("Connection", "close");
 }
 
 void ServerResponse::HandleRedirect(const Location &synth) {
@@ -106,7 +110,7 @@ void ServerResponse::AddHeader(const std::string &key,
 }
 
 void    ServerResponse::ThrowResponseException(const std::string& msg) {
-    *log_file_ << "Response creation failed: " << msg << std::endl;
+    std::cout << "Response creation failed: " << msg << std::endl;
     throw ResponseException();
 }
 
@@ -136,4 +140,8 @@ const m_str_str &ServerResponse::GetHeaders() const {
 
 const std::string &ServerResponse::GetBodyStr() const {
     return body_str_;
+}
+
+int ServerResponse::GetCode() const {
+    return code_;
 }

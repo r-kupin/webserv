@@ -5,6 +5,8 @@
 void ClientRequest::CheckURL(const std::string &url) {
     if (url.empty())
         ThrowException("url can't be empty", "BadURL");
+    if (url[0] != '/')
+        ThrowException("url should start with \"/\"", "BadURL");
     if((HasQuery(url) || HasFragment(url)) && method_ != GET)
         ThrowException("url parameters and #fragment are allowed only with "
                        "GET request", "BadRequestException");

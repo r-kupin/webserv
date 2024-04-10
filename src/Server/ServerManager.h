@@ -55,7 +55,7 @@ class ServerManagerException : public std::exception {};
     void            CloseConnectionWithLogMessage(int socket,
                                                   const std::string &msg);
     bool            ProcessBody(Connection &connection);
-    void            Respond(Connection &connection);
+    bool Respond(Connection &connection);
     void            CloseTimedOutConnections();
 //-------------------util-------------------------------------------------------
     void            Cleanup();
