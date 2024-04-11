@@ -53,7 +53,7 @@ void ServerManager::Init(const Config &config) {
 }
 
 void ServerManager::CreateEpollInstance() {
-    epoll_fd_= epoll_create(1);
+    epoll_fd_ = epoll_create(1);
     if (epoll_fd_ < 0) {
         std::string err_msg(strerror(errno));
         ThrowException("Failed to Create Epoll Instance : " + err_msg);

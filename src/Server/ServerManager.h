@@ -55,7 +55,7 @@ class ServerManagerException : public std::exception {};
     void            CloseConnectionWithLogMessage(int socket,
                                                   const std::string &msg);
     bool            ProcessBody(Connection &connection);
-    bool Respond(Connection &connection);
+    bool            Respond(Connection &connection);
     void            CloseTimedOutConnections();
 //-------------------util-------------------------------------------------------
     void            Cleanup();
@@ -65,11 +65,11 @@ class ServerManagerException : public std::exception {};
     bool            IsListeningSocketFd(int socket) const;
     bool            SetDescriptorNonBlocking(int sockfd) const;
 private:
+    int             epoll_fd_;
     v_servers       servers_;
-    v_conn          connections_;
     m_host_int      host_to_socket_; /* quick find-by-host required by CreateListeningSockets */
 
-    int             epoll_fd_;
+    v_conn          connections_;
     int             epoll_returns_count_;
     int             epoll_events_count_;
     int             epoll_connection_count_;

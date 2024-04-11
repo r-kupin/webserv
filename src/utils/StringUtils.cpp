@@ -67,6 +67,16 @@ std::string Utils::NbrToString(size_t n) {
     return ss.str();
 }
 
+int Utils::FindFirstDifference(const std::string &s1, const std::string &s2) {
+    size_t minLength = std::min(s1.length(), s2.length());
+    for (size_t i = 0; i < minLength; ++i) {
+        if (s1[i] != s2[i]) {
+            return i;
+        }
+    }
+    return minLength;
+}
+
 size_t Utils::StringToULong(const std::string &str) {
     char* end_ptr;
     const char* val_ptr = str.c_str();

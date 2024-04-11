@@ -38,7 +38,8 @@ public:
     friend                      std::ostream &operator<<(std::ostream &os, const ServerResponse &response);
 protected:
 //-------------------satic utils------------------------------------------------
-    static std::string          GeneratePage(int code);
+    static std::string          GenerateErrorPage(int code);
+    std::string                 GenerateAutoIndex(const Location &loc);
 //-------------------init-------------------------------------------------------
     static std::string          ComposeTop(int return_code);
     void                        HandleError(const Location &synth);

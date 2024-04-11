@@ -12,6 +12,7 @@
 
 #include <iostream>
 #include <algorithm>
+
 #include "Server.h"
 
 void Server::SynthIndex(Location &synth, const Srch_c_Res &res,
@@ -25,8 +26,11 @@ void Server::SynthIndex(Location &synth, const Srch_c_Res &res,
             // directory, where this index supposed to be doesn't exist
             Log("\"" + index_address + "\" is not found");
             synth.SetReturnCode(NOT_FOUND);
+        } else if (synth.autoindex_) {
+            // directory exists  but there are no index to return - generate listing
+            synth.listing_ = found->root_ + res.leftower_address_;
         } else {
-            // directory exists  but there are no index to return
+            // directory exists  but there are no index to return - 403
             Log("directory index of " + found->root_ + "/ is forbidden");
             synth.SetReturnCode(ACCESS_FORBIDDEN);
         }

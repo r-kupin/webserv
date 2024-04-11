@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
-#include "../../../../src/Server/request/ClientRequest.h"
-#include "../../../../src/Server/request/RequestExceptions.h"
+#include "../../../../src/Server/connection/request/ClientRequest.h"
 
 class URLLevelTest : public ::testing::Test, public ClientRequest {
 public:

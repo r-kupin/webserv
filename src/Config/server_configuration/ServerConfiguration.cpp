@@ -63,10 +63,12 @@ void        ServerConfiguration::ProcessDirectives(
 //-------------------server level
     bool srv_name = false;
     bool port = false;
+    bool keepalive = false;
 //-------------------root location level
     bool cl_max_bd_size = false;
     bool err = false;
     bool index = false;
+    bool autoindex = false;
     bool root = false;
     bool uploads = false;
 
@@ -76,7 +78,7 @@ void        ServerConfiguration::ProcessDirectives(
         for (size_t i = 0; i < directives.size(); i++) {
             if (UMarkDefined("server_name", srv_name, directives[i])) {
                 HandleServerNames(directives[i]);
-            } else if (UMarkDefined("keepalive_timeout", srv_name,
+            } else if (UMarkDefined("keepalive_timeout", keepalive,
                                     directives[i])) {
                 HandleKeepaliveTimeout(directives[i]);
             } else if (MarkDefined("listen", port, directives[i])) {
@@ -84,6 +86,8 @@ void        ServerConfiguration::ProcessDirectives(
             } else if (UMarkDefined("client_max_body_size", cl_max_bd_size,
                                     directives[i])) {
                 GetRoot().HandleClientMaxBodySize(directives[i]);
+            } else if (UMarkDefined("autoindex", autoindex, directives[i])) {
+                GetRoot().HandleAutoindex(directives[i]);
             } else if (UMarkDefined("root", root, directives[i])) {
                 GetRoot().HandleRoot(directives[i]);
             } else if (MarkDefined("index", index, directives[i])) {

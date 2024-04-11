@@ -44,6 +44,8 @@ void ServerResponse::ComposeResponse(const Location &synth) {
         } else {
             if (!synth.body_file_.empty()) {
                 body_str_ = Utils::FileToString(synth.body_file_);
+            } else if (!synth.listing_.empty()) {
+                body_str_ = GenerateAutoIndex(synth);
             } else {
                 ThrowResponseException(
                         "code is 200 but body_file is empty and custom "
@@ -63,7 +65,7 @@ void ServerResponse::HandleError(const Location &synth) {
     if (synth.HasErrPageForCode(synth.return_code_)) {
         GetDefinedErrorPage(synth);
     } else {
-        body_str_ = GeneratePage(synth.return_code_);
+        body_str_ = GenerateErrorPage(synth.return_code_);
     }
     AddHeader("Connection", "close");
 }
@@ -83,7 +85,7 @@ void ServerResponse::GetDefinedErrorPage(const Location &synth) {
     if (Utils::CheckFilesystem(address)) {
         body_str_ = Utils::FileToString(address);
     } else {
-        body_str_ = GeneratePage(synth.return_code_);
+        body_str_ = GenerateErrorPage(synth.return_code_);
     }
 }
 

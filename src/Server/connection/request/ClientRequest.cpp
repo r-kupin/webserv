@@ -174,7 +174,7 @@ void    print_method(std::ostream &os, Methods method) {
 std::ostream &operator<<(std::ostream &os, const ClientRequest &request) {
     print_method(os, request.GetMethod());
     os  << request.GetAddress();
-    if (request.IsIndexRequest())
+    if (request.IsDirectoryRequest())
         os  << "/";
     if (!request.GetFragment().empty())
         os << " #" << request.GetFragment();
@@ -222,7 +222,7 @@ const m_str_str &ClientRequest::GetHeaders() const {
     return headers_;
 }
 
-bool ClientRequest::IsIndexRequest() const {
+bool ClientRequest::IsDirectoryRequest() const {
     return index_request_;
 }
 

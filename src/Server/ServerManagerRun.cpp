@@ -33,6 +33,7 @@
 void    ServerManager::EventLoop() {
     epoll_event events[MAX_EVENTS];
     int         nfds = epoll_wait(epoll_fd_, events, MAX_EVENTS, 1000);
+
     if (is_running_) {
         epoll_returns_count_++;
         if (nfds == -1) {

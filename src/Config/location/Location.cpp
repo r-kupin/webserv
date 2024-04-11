@@ -19,9 +19,10 @@
 
 Location::Location()
     : has_own_index_defined_(false),
-      return_code_(0),
-      client_max_body_size_(1000000),
-      ghost_(false) {}
+    autoindex_(false),
+    return_code_(0),
+    client_max_body_size_(1000000),
+    ghost_(false) {}
 
 // link to parent? indexes?
 Location::Location(bool ghost, const std::string &address)
@@ -31,38 +32,41 @@ Location::Location(bool ghost, const std::string &address)
 
 Location::Location(const Location& other)
     : error_pages_(other.error_pages_),
-      sublocations_(other.sublocations_),
-      has_own_index_defined_(other.has_own_index_defined_),
-      index_defined_in_parent_(other.index_defined_in_parent_),
-      own_index_(other.own_index_),
-      limit_except_(other.limit_except_),
-      return_code_(other.return_code_),
-      return_internal_address_(other.return_internal_address_),
-      return_external_address_(other.return_external_address_),
-      return_custom_message_(other.return_custom_message_),
-      client_max_body_size_(other.client_max_body_size_),
-      uploads_path_(other.uploads_path_),
-      root_(other.root_),
-      full_address_(other.full_address_),
-      address_(other.address_),
-      body_file_(other.body_file_),
-      parent_(other.parent_),
-      ghost_(other.ghost_),
-      fastcgi_params_(other.fastcgi_params_),
-      fastcgi_pass_(other.fastcgi_pass_) {}
+    sublocations_(other.sublocations_),
+    has_own_index_defined_(other.has_own_index_defined_),
+    index_defined_in_parent_(other.index_defined_in_parent_),
+    own_index_(other.own_index_),
+    limit_except_(other.limit_except_),
+    autoindex_(other.autoindex_),
+    return_code_(other.return_code_),
+    return_internal_address_(other.return_internal_address_),
+    return_external_address_(other.return_external_address_),
+    return_custom_message_(other.return_custom_message_),
+    client_max_body_size_(other.client_max_body_size_),
+    uploads_path_(other.uploads_path_),
+    root_(other.root_),
+    full_address_(other.full_address_),
+    address_(other.address_),
+    body_file_(other.body_file_),
+    parent_(other.parent_),
+    ghost_(other.ghost_),
+    fastcgi_params_(other.fastcgi_params_),
+    fastcgi_pass_(other.fastcgi_pass_) {}
 
 Location::Location(const std::string &address)
     : has_own_index_defined_(false),
-      index_defined_in_parent_(false),
-      return_code_(0),
-      client_max_body_size_(1000000),
-      full_address_(HandleAddressInConstructor(address)),
-      address_(GetParticularAddress(address)),
-      ghost_(false) {}
+    index_defined_in_parent_(false),
+    autoindex_(false),
+    return_code_(0),
+    client_max_body_size_(1000000),
+    full_address_(HandleAddressInConstructor(address)),
+    address_(GetParticularAddress(address)),
+    ghost_(false) {}
 
 Location::Location(const std::string &address, l_loc_it parent)
     : has_own_index_defined_(false),
     index_defined_in_parent_(false),
+    autoindex_(false),
     return_code_(0),
     client_max_body_size_(1000000),
     full_address_(HandleAddressInConstructor(address)),
@@ -267,6 +271,7 @@ bool LocationByAddress::operator()(const Location &location) const {
 void Location::ProcessDirectives(const std::vector<v_str> &directives) {
     bool root = false;
     bool index = false;
+    bool autoindex = false;
     bool ret = false;
     bool err = false;
     bool cl_max_bd_size = false;
@@ -275,6 +280,8 @@ void Location::ProcessDirectives(const std::vector<v_str> &directives) {
     for (size_t i = 0; i < directives.size(); ++i) {
         if (UMarkDefined("root", root, directives[i]))
             HandleRoot(directives[i]);
+        if (UMarkDefined("autoindex", autoindex, directives[i]))
+            HandleAutoindex(directives[i]);
         if (MarkDefined("index", index, directives[i]))
             HandleIndex(directives[i]);
         if (UMarkDefined("return", ret, directives[i]))
@@ -287,6 +294,19 @@ void Location::ProcessDirectives(const std::vector<v_str> &directives) {
         if (UMarkDefined("upload_store", uploads, directives[i]))
             SetUploadsDirectory(directives[i]);
     }
+}
+
+void Location::HandleAutoindex(const v_str &directive) {
+    if (directive.size() == 2) {
+        if (directive[1] == "on") {
+            autoindex_ = true;
+            return;
+        } else if (directive[1] == "off") {
+            autoindex_ = false;
+            return;
+        }
+    }
+    ThrowLocationException("autoindex directive is wrong");
 }
 
 void Location::HandleClientMaxBodySize(const v_str &directive) {
@@ -466,6 +486,8 @@ Location &Location::operator=(const Location &rhs) {
     index_defined_in_parent_ = rhs.index_defined_in_parent_;
     own_index_ = rhs.own_index_;
     limit_except_ = rhs.limit_except_;
+    autoindex_ = rhs.autoindex_;
+    listing_ = rhs.listing_;
     return_code_ = rhs.return_code_;
     return_internal_address_ = rhs.return_internal_address_;
     return_external_address_ = rhs.return_external_address_;
@@ -565,6 +587,15 @@ void print_index(std::ostream &os, const Location &location) {
     os << std::endl;
 }
 
+void print_autoindex(std::ostream &os, const Location &location) {
+    os << location.full_address_ << ":\tautoindex: ";
+    if (location.autoindex_)
+        os << "on";
+    else
+        os << "off";
+    os << std::endl;
+}
+
 void print_root(std::ostream &os, const Location &location) {
     os << location.full_address_ << ":\tRoot: " <<
         location.root_ << std::endl;
@@ -590,6 +621,7 @@ void print_sublocations(std::ostream &os, const Location &location) {
 std::ostream &operator<<(std::ostream &os, const Location &location) {
     os << "\nLocalion " << location.address_ << ":\n";
     print_max_size(os, location);
+    print_autoindex(os, location);
     if (!location.error_pages_.empty())
         ptint_err_pages(os, location);
     if (location.return_code_ > 0)

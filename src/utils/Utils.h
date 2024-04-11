@@ -68,6 +68,8 @@ public:
     static std::string  NiceTimestamp();
 
     static std::string  NbrToString(size_t n);
+    static int          FindFirstDifference(const std::string &s1,
+                                            const std::string &s2);
     static size_t       StringToULong(const std::string & str);
     static long         StringToNbr(const std::string & str);
     static v_char       StringToVchar(const std::string & str);

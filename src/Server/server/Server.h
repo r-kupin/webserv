@@ -133,6 +133,6 @@ private:
      *  1. find out does this server listens to this socket
      *  2. find address
      * */
- };
+};
 
 #endif //WEBSERV_SERVER_H

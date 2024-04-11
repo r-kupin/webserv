@@ -27,13 +27,13 @@ struct Node {
     Node(const v_str &main, const std::vector<v_str> &directives,
          const v_node &childNodes);
 
-    bool IsLocation() const;
-    bool IsLimitExcept() const;
-    bool LocationContextHasPropperAddress() const;
-    bool LocationContextIsNotEmpty() const;
-    bool ContextDoesntHaveSubLocationsWithSameAddress() const;
+    bool                IsLocation() const;
+    bool                IsLimitExcept() const;
+    bool                LocationContextHasPropperAddress() const;
+    bool                LocationContextIsNotEmpty() const;
+    bool                ContextDoesntHaveSubLocationsWithSameAddress() const;
 
-    const std::string & LocationContextGetAddress() const;
+    const std::string   &LocationContextGetAddress() const;
 };
 
 #endif //WEBSERV_NODE_H

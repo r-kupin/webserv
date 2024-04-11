@@ -50,10 +50,8 @@ Location Server::ProcessRequest(Connection &connection) const {
     return synth;
 }
 
-void Server::HandleStatic(const ClientRequest &request,
-                          const Srch_c_Res &res,
-                          const l_loc_c_it &found,
-                          Location &synth) const {
+void Server::HandleStatic(const ClientRequest &request, const Srch_c_Res &res,
+                          const l_loc_c_it &found, Location &synth) const {
     // It seems like there is no reason to even read the body because it's
     // not clear how should static file handle it ?
     std::string address = found->root_ + res.leftower_address_;
@@ -64,7 +62,7 @@ void Server::HandleStatic(const ClientRequest &request,
                       "I don't know what to do with it..");
         synth.SetReturnCode(REQUESTED_FILE_IS_NOT_A_FILE);
     } else {
-        if (request.IsIndexRequest()) {
+        if (request.IsDirectoryRequest()) {
             // request's address part of URI ends with "/"
             SynthIndex(synth, res, fs_status);
         } else {

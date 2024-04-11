@@ -271,7 +271,7 @@ directive [ ARG1 ] [ ARG... ];
 ##### listen
 Has only one arg which sets **IP**:**port** used to open the socket, on which requests will be monitored. If **IP** is not specified - *localhost* used by default.
 ##### server_name
-Accepts one or more hostnames, that this server will monitor.
+The `server_name` directive defines the domain name(s) that the server block should respond to. When server receives an HTTP request, it checks the `Host` header of the request against the `server_name` values configured in each server block to determine which block should handle the request. If there's a match, Nginx forwards the request to that server block, or it uses default server otherwise. Default server is the first server defiled in config file and listens **host**:**port** on which request was reported.
 ##### keepalive_timeout
 Accepts one number, which is a timeout during which server keeps connection open waiting for data to arrive. Default is 60 sec. It gives no warranty that connection will be closed in 60 seconds, but connection will stay open for at least during this time.
 #### Location-level directives
@@ -427,31 +427,41 @@ Stores data about all [locations](#location) mentioned in config:
     l_loc_it                parent_; // root location's "parent" points on itself
     bool                    ghost_;
 ```
-## Setting up servers
-Each server gets initialized in a following way:
-### Opening of a socket
-The external interface of a server is a socket. It is a data structure that represents an endpoint for communication. It's basically a like a file descriptor used by the kernel to manage network communication between processes. In order to open socket for communication several setup steps are required.
-#### Create socket
+## ServerManager
+ServerManager class is main and the only active element in the single-threaded non-blocking event-driven web server application. It is built around 
+- `epoll_fd_` : file descriptor referring to the epoll instance in kernel
+- `servers_` : container of the `Server` class
+- `host_to_socket_` : map for all open sockets to `Host`s  - IPv4 and port
+### Setting up 
+#### Setting up epoll
+**Epoll** is a monitoring system for the file descriptors. It helps to see if I/O is possible on any of them. It's API consists of :
+- The *epoll instance* in the kernel is essentially a data structure maintained by the Linux kernel to facilitate event notification for multiple file descriptors. It acts as a central registry where the kernel keeps track of which file descriptors program is interested in monitoring for events, such as data arrival or readiness for reading/writing.
+- *epoll fd* is almost regular fd that is used to perford various actions on that instance
+- *epoll system calls*
+	- `epoll_create()` creates new instance and returns it's fd
+	- `epoll_ctl()` performs some actions on given epoll_instance such as adding or removing of file descriptors being monitored
+	- `epoll_wait()` blocks execution of the program waiting for events on monitored file descriptors to happen
+#### Opening of the sockets for each server
+Each of the defined server listens for one or multiple addresses, and the external interface of each address is a **socket**.
+It is a data structure that represents an endpoint for communication. It's basically a like a file descriptor used by the kernel to manage network communication between processes. In order to open socket for communication several setup steps are required.
+##### Create socket
 When the `socket` system call is invoked, the Linux kernel allocates a new file descriptor and initializes data structures for the socket. Internally, this involves allocating memory for the socket control block and setting up pointers to various kernel functions related to socket operations. Additionally, the kernel initializes the socket's state and other attributes, such as its protocol family, type, and communication semantics (e.g., TCP, UDP, stream-oriented, datagram-oriented).
-#### Set socket options
+##### Set socket options
 After the socket is created, certain options may need to be configured to customize its behavior. For instance, the `SO_REUSEADDR` option, set using the `setsockopt` system call, modifies the socket's behavior regarding address reuse. When this option is set, the kernel updates the socket's internal data structures to indicate that the address and port associated with the socket can be reused even if it's still in a `TIME_WAIT` state from a previous connection. This enables faster server restarts and prevents "address already in use" errors.
-#### Bind socket
+##### Bind socket
 Binding a socket to a specific address and port is achieved through the `bind` system call. When this call is made, the kernel updates its internal routing tables to include an entry mapping the specified address and port to the socket's file descriptor. This essentially tells the networking subsystem of the kernel to direct incoming packets destined for the specified address and port to the socket for processing. The kernel also checks for permissions and ensures that the requested address and port are available for binding.
-#### Start listening
+##### Start listening
 Once the socket is bound to an address and port, it needs to start listening for incoming connections. Invoking the `listen` system call sets the socket's state to listening and configures it to accept incoming connections. Internally, the kernel sets up a queue for pending connections associated with the socket and begins accepting incoming connection requests. The backlog(last) parameter passed to `listen` determines the maximum length of this queue. In my case it is `SOMAXCONN` - a maximum amount of connections, which is **4096** on 42's computers.  As new connection requests arrive, the kernel adds them to the queue, up to the specified backlog limit. If  the queue is full, subsequent connection requests may be rejected.
 
 When socket is set up to listen for the connections it is fully usable. 
-### Setting up epoll
-The **epoll** API performs monitoring of multiple file descriptors to see if I/O is possible on any of them. The **epoll** API can be used either as an edge-triggered or a level-triggered interface and scales well to large numbers of watched file descriptors.
-The following system calls are provided to create and manage an **epoll** instance:
-#### Create epoll instance
-`epoll_create` asks kernel to create epoll instance - red-black tree set of file descriptors being monitored. The integer returned by this call represents a file descriptor referring to the newly created epoll instance.
-#### Add socket to the epoll watchlist
+##### Add socket to the epoll watchlist
+In order to be able to receive notifications on the events happening on multiple listening sockets we need to add it to the epoll instance.
 The `epoll_ctl` system call is used to control the behavior of the epoll instance, such as adding or removing file descriptors from its watch list, or changing the events of a file descriptor already in the list.
 There are options on how do we want to get notified about events, and what particular events to monitor. This is done, by setting flags to `epoll_event.events`.
-##### Kinds of events
+The **epoll** API can be used either as an edge-triggered or a level-triggered interface and scales well to large numbers of watched file descriptors.
+
 For example setting the flag `EPOLLIN` would mean that we'll get notified when on the client's end of the communication line `write` or similar operation will be performed. `EPOLLOUT` - same but for `read` or similar.
-##### Notification strategy
+
 Alongside with `EPOLLIN` and/or `EPOLLOUT` the `EPOLLET` flag might be specified - if so, notifications on this file descriptor would be **Edge Triggered**. Otherwise the default **Level Triggered** strategy will be applied.
 ###### Edge Triggered notifications
 Events are triggered only if they change the state of the `fd` - meaning that only the first event is triggered and no new events will get triggered until that event is fully handled. 
@@ -616,10 +626,13 @@ int main(int argc, char** argv)
 More on that [here](https://linux.die.net/man/7/epoll) and [here](https://stackoverflow.com/questions/41582560/how-does-epolls-epollexclusive-mode-interact-with-level-triggering). If you are super curious about the topic - check out [this](http://www.kegel.com/c10k.html) as well.
 
 When adding a socket to the epoll watch list, the `EPOLL_CTL_ADD` command is used. This command instructs the kernel to add the specified socket to the epoll instance's watch list, associating it with a set of events to monitor (e.g., read, write, error).
-#### Wait for the event to happen
+#### Creating individual servers
+When all sockets for particular **ServerConfiguration** are opened and added to the *epoll instance* and **ServerManager**'s map - **Server** itself can be created.
+It's function is to process each individual request according to the rules specified in it's configuration. After setting up the last server **ServerManager** is ready to accept connections.
+### Wait for the event to happen
 The `epoll_wait` system call is used to wait for events on the file descriptors registered with the epoll instance. When invoked, it blocks current thread until one or more file descriptors in the epoll instance's watch list become ready for the specified events, or until a timeout occurs. Upon completion, `epoll_wait` returns information about the ready file descriptors and the events that occurred by placing `epoll_event` structures in events array. Internally, the kernel efficiently scans the epoll instance's data structures to determine which file descriptors are ready for I/O operations, without the need for iterative polling. 
-## Accepting connections
-After setting up the epoll instance, the server proceeds with accepting incoming connections from clients using the `accept` system call to accept the connection request and create a new socket descriptor specifically for this connection. Internally, the Linux kernel performs several steps when accept is called:
+### Accepting connections
+**ServerManager** proceeds with accepting incoming connections from clients using the `accept` system call to accept the connection request and create a new socket descriptor specifically for this connection. Internally, the Linux kernel performs several steps when accept is called:
 - It extracts the first connection request on the queue of pending connections for the listening `host_to_socket_` - main socket of the server
 - Once a connection request is received, the kernel creates a new socket descriptor `client_sock` and sets up a new file structure for it, representing the connection.
 - If successful, `accept` returns the new socket descriptor for the accepted connection.

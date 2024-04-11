@@ -71,7 +71,7 @@ public:
     size_t              GetDeclaredBodySize() const;
     bool                IsCurlRequest() const;
     bool                IsFirefoxRequest() const;
-    bool                IsIndexRequest() const;
+    bool                IsDirectoryRequest() const;
     const std::string   &GetFragment() const;
     size_t              GetCurlMetadataLength(const std::string &delimiter) const;
     const std::string   &GetAssociatedFilename() const;

@@ -15,6 +15,7 @@
 
 #include <list>
 #include <ostream>
+
 #include "ErrPage.h"
 #include "LimitExcept.h"
 
@@ -36,6 +37,8 @@ struct Location {
     l_str                   own_index_;
 
     Limit                   limit_except_;
+    bool                    autoindex_;
+    std::string             listing_;
 //-------------------redirect related
     int                     return_code_;
     std::string             return_internal_address_;
@@ -107,6 +110,8 @@ struct Location {
     bool                operator==(const Location &rhs) const;
     Location&           operator=(const Location& rhs);
     friend std::ostream &operator<<(std::ostream &os, const Location &location);
+
+    void HandleAutoindex(const v_str &directive);
 };
 
 //-------------------sublocation search predicate class-------------------------
