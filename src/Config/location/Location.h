@@ -38,7 +38,7 @@ struct Location {
 
     Limit                   limit_except_;
     bool                    autoindex_;
-    std::string             listing_;
+    std::string             dir_to_list_;
 //-------------------redirect related
     int                     return_code_;
     std::string             return_internal_address_;

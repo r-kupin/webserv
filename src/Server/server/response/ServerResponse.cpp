@@ -44,7 +44,7 @@ void ServerResponse::ComposeResponse(const Location &synth) {
         } else {
             if (!synth.body_file_.empty()) {
                 body_str_ = Utils::FileToString(synth.body_file_);
-            } else if (!synth.listing_.empty()) {
+            } else if (!synth.dir_to_list_.empty()) {
                 body_str_ = GenerateAutoIndex(synth);
             } else {
                 ThrowResponseException(

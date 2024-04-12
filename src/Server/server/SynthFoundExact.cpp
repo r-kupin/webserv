@@ -29,7 +29,8 @@ void Server::SynthIndex(Location &synth, const Srch_c_Res &res,
             synth.SetReturnCode(NOT_FOUND);
         } else if (synth.autoindex_) {
             // directory exists  but there are no index to return - generate listing
-            synth.listing_ = found->root_ + res.leftower_address_;
+            synth.dir_to_list_ = found->root_ + res.leftower_address_;
+            synth.SetReturnCode(OK);
         } else {
             // directory exists  but there are no index to return - 403
             Log("directory index of " + found->root_ + "/ is forbidden");

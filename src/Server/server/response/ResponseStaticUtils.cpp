@@ -47,7 +47,7 @@ std::string ServerResponse::GenerateErrorPage(int code) {
             "        h1 {\r\n"
             "            color: #5E81AC;\r\n"
             "            font-size: 10em;\r\n"
-            "            margin-bottom: 0.2em;\r\n"
+            "            margin-bottom: 1;\r\n"
             "        }\r\n"
             "\r\n"
             "        p {\r\n"
@@ -68,9 +68,9 @@ std::string ServerResponse::GenerateErrorPage(int code) {
 std::string ServerResponse::GenerateAutoIndex(const Location &loc) {
     std::ostringstream  page;
     // http://host:port/{dir_addr}
-    std::string         dir_addr = loc.listing_.substr(
-                            Utils::FindFirstDifference(loc.listing_, loc.root_),
-                            loc.listing_.size());
+    std::string         dir_addr = loc.dir_to_list_.substr(
+                            Utils::FindFirstDifference(loc.dir_to_list_, loc.root_),
+                            loc.dir_to_list_.size());
     dir_addr += "/";
     page << "<!DOCTYPE html>\r\n"
             "<html lang=\"en\">\r\n"
@@ -144,7 +144,7 @@ std::string ServerResponse::GenerateAutoIndex(const Location &loc) {
     page << "<ul>\r\n";
 
     // loc.listing_ = location.root + dir_addr
-    DIR* dir = opendir(loc.listing_.c_str());
+    DIR* dir = opendir(loc.dir_to_list_.c_str());
     if (dir != NULL) {
         struct dirent* entry;
         while ((entry = readdir(dir)) != NULL) {
@@ -152,7 +152,7 @@ std::string ServerResponse::GenerateAutoIndex(const Location &loc) {
             if (name != ".") {
                 std::string fullPath = "http://" + addr_;
                 fullPath += dir_addr + name;
-                if (Utils::CheckFilesystem(loc.listing_ + "/" + name) == DIRECTORY) {
+                if (Utils::CheckFilesystem(loc.dir_to_list_ + "/" + name) == DIRECTORY) {
                     fullPath += "/";
                     name += "/";
                 }
