@@ -67,12 +67,11 @@ std::string ServerResponse::GenerateErrorPage(int code) {
 
 std::string ServerResponse::GenerateAutoIndex(const Location &loc) {
     std::ostringstream  page;
+    // http://host:port/{dir_addr}
     std::string         dir_addr = loc.listing_.substr(
                             Utils::FindFirstDifference(loc.listing_, loc.root_),
                             loc.listing_.size());
-    if (dir_addr.empty())
-        dir_addr = "/";
-
+    dir_addr += "/";
     page << "<!DOCTYPE html>\r\n"
             "<html lang=\"en\">\r\n"
             "<head>\r\n"
@@ -98,28 +97,65 @@ std::string ServerResponse::GenerateAutoIndex(const Location &loc) {
             "\r\n"
             "        h1 {\r\n"
             "            color: #5E81AC;\r\n"
+            "            padding: 1;\r\n"
             "            font-size: 2em;\r\n"
+            "            margin-bottom: 0;\r\n"
+            "            text-align: left;\r\n"
+            "        }\r\n"
+            "\r\n"
+            "        h2 {\r\n"
+            "            color: #a3be8c;\r\n"
+            "            padding: 1;\r\n"
+            "            font-size: 1.5em;\r\n"
             "            margin-bottom: 0.2em;\r\n"
+            "            text-align: left;\r\n"
             "        }\r\n"
             "\r\n"
             "        p {\r\n"
             "            color: #ECEFF4;\r\n"
             "        }\r\n"
+            "\r\n"
+            "        ul {\r\n"
+            "            padding: 1em;\r\n"
+            "            margin: 1;\r\n"
+            "            text-align: left;\r\n"
+            "        }\r\n"
+            "\r\n"
+            "        li {\r\n"
+            "            margin-bottom: 10px;\r\n"
+            "        }\r\n"
+            "\r\n"
+            "        a:link {\r\n"
+            "            color: #ebcb8b;\r\n"
+            "            text-decoration: none;\r\n"
+            "        }\r\n"
+            "\r\n"
+            "        a:visited {\r\n"
+            "            color: #d08770;\r\n"
+            "            text-decoration: none;\r\n"
+            "        }\r\n"
             "    </style>\r\n"
             "</head>\r\n"
             "<body>\r\n"
             "<div class=\"block\">\r\n";
-    page << "<h1>Directory Listing: " << dir_addr << "</h1>\r\n";
+    page << "<h1>Directory Listing" << "</h1>\r\n";
+    page << "<h2>" << dir_addr << "</h2>\r\n";
     page << "<hr style=\"border-top: 1px solid #88C0D0; width: 95%;\">\r\n";
     page << "<ul>\r\n";
 
+    // loc.listing_ = location.root + dir_addr
     DIR* dir = opendir(loc.listing_.c_str());
     if (dir != NULL) {
         struct dirent* entry;
         while ((entry = readdir(dir)) != NULL) {
             std::string name = entry->d_name;
             if (name != ".") {
-                std::string fullPath = "http://" + addr_ + "/" + name;
+                std::string fullPath = "http://" + addr_;
+                fullPath += dir_addr + name;
+                if (Utils::CheckFilesystem(loc.listing_ + "/" + name) == DIRECTORY) {
+                    fullPath += "/";
+                    name += "/";
+                }
                 page << "<li><a href=\"" << fullPath << "\">" ;
                 page << name << "</a></li>\r\n";
             }
