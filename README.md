@@ -49,13 +49,12 @@ I am not using `Makefile` in development process, so the **lists of source files
 	- Define a list of accepted HTTP methods for the route. ([limit_except](#Limit_except))
 	- Define a HTTP redirection. ([return](#return))
 	- Define a directory or a file from where the file should be searched. ([root](#root))
-	- %% Turn on or off directory listing. (?) %%
 	- Set a default file to answer if the request is a directory ([index](#index)).
 	- %% CGI %%
 	- Make the route able to accept uploaded files and configure where they should be saved. ([upload_store](#upload_store))
+	- Turn on or off directory listing. ([autoindex](#autoindex))
 ## ToDo
 - Execute CGI based on certain file extension (for example .php)
-- Turn on or off directory listing. (?)
 # Checklist
 ## Check the code and ask questions
 - [x] Launch the installation of siege with homebrew.
@@ -100,9 +99,9 @@ Pay attention to the following:
 - [x] Look at the request header and response header.
 - [x] It should be compatible to serve a fully static website.
 - [x] Try a wrong URL on the server.
-- [ ] Try to list a directory.
+- [x] Try to list a directory.
 - [x] Try a redirected URL.
-- [ ] Try anything you want to.
+- [x] Try anything you want to.
 ## Port issues
 - [x] In the configuration file setup multiple ports and use different websites. Use the browser to ensure that the configuration works as expected and shows the right website.
 - [ ] In the configuration, try to setup the same port multiple times. It should not work.
@@ -131,7 +130,7 @@ The main context of the instance of the HTTP server. At least one should be defi
 Server context can't be empty - it should contain mandatory server-level directives: 
 - *[server_name](#server_name)* (unique)
 - *[listen](#listen)*
-- *[keepalive_timeout](#keepalive_timeout)*
+- *[keepalive_timeout](#keepalive_timeout)* (unique)
 
 Server also can predefine root location with optional directives:
 - *[root](#root)* (unique)
@@ -139,6 +138,7 @@ Server also can predefine root location with optional directives:
 - *[error_page](#error_page)*
 - *[client_max_body_size](#client_max_body_size)* (unique)
 - *[upload_store](#upload_store)* (unique)
+- [autoindex](#autoindex) (unique)
 
 Inside server context multiple **location** sub-contexts can be defined, to handle specific requests.
 ```nginx
@@ -244,6 +244,7 @@ Locations can be empty, or contain following directives:
 - *[index](#index)*
 - *[return](#return)* (unique)
 - *[error_page](#error_page)*
+- [autoindex](#autoindex) (unique)
 
 Locations can also contain sub-contexts:
 - *[limit_except](#limit_except)* (unique)
@@ -388,6 +389,11 @@ Example:
 ```nginx
 error_page 403 404 /error.html;
 ```
+##### autoindex
+Takes a single argument - `on` or `off`.
+Is `off` by default, in this case server behaves as usual.
+If `on` - server will ignore all implicit or explicit indexes that are present in it's root and would generate *directory listing html* instead. This is basically a page that mimics direct access to the file system - content's of the location's root specifically. All files are accessible via links.
+If any subdirectory of the autoindexed location's root is defined as location explicitly - it's own rules would be applied.
 # How it actually works?
 ## Init
 ### Arg check
@@ -413,7 +419,9 @@ Stores data about all [locations](#location) mentioned in config:
     bool                    index_defined_in_parent_;  
     l_str                   own_index_;  
   
-    Limit                   limit_except_;  
+    Limit                   limit_except_;
+    bool                    autoindex_;  
+	std::string             dir_to_list_;
 //-------------------redirect related  
     int                     return_code_;  
     std::string             return_internal_address_;  
@@ -432,11 +440,12 @@ ServerManager class is main and the only active element in the single-threaded n
 - `epoll_fd_` : file descriptor referring to the epoll instance in kernel
 - `servers_` : container of the `Server` class
 - `host_to_socket_` : map for all open sockets to `Host`s  - IPv4 and port
+- `connections_` : connection-to-fd mapping in order to keep data sent by parts
 ### Setting up 
 #### Setting up epoll
 **Epoll** is a monitoring system for the file descriptors. It helps to see if I/O is possible on any of them. It's API consists of :
 - The *epoll instance* in the kernel is essentially a data structure maintained by the Linux kernel to facilitate event notification for multiple file descriptors. It acts as a central registry where the kernel keeps track of which file descriptors program is interested in monitoring for events, such as data arrival or readiness for reading/writing.
-- *epoll fd* is almost regular fd that is used to perford various actions on that instance
+- *epoll fd* is almost regular fd that is used to perform various actions on that instance
 - *epoll system calls*
 	- `epoll_create()` creates new instance and returns it's fd
 	- `epoll_ctl()` performs some actions on given epoll_instance such as adding or removing of file descriptors being monitored
@@ -630,20 +639,42 @@ When adding a socket to the epoll watch list, the `EPOLL_CTL_ADD` command is use
 When all sockets for particular **ServerConfiguration** are opened and added to the *epoll instance* and **ServerManager**'s map - **Server** itself can be created.
 It's function is to process each individual request according to the rules specified in it's configuration. After setting up the last server **ServerManager** is ready to accept connections.
 ### Wait for the event to happen
-The `epoll_wait` system call is used to wait for events on the file descriptors registered with the epoll instance. When invoked, it blocks current thread until one or more file descriptors in the epoll instance's watch list become ready for the specified events, or until a timeout occurs. Upon completion, `epoll_wait` returns information about the ready file descriptors and the events that occurred by placing `epoll_event` structures in events array. Internally, the kernel efficiently scans the epoll instance's data structures to determine which file descriptors are ready for I/O operations, without the need for iterative polling. 
-### Accepting connections
-**ServerManager** proceeds with accepting incoming connections from clients using the `accept` system call to accept the connection request and create a new socket descriptor specifically for this connection. Internally, the Linux kernel performs several steps when accept is called:
-- It extracts the first connection request on the queue of pending connections for the listening `host_to_socket_` - main socket of the server
-- Once a connection request is received, the kernel creates a new socket descriptor `client_sock` and sets up a new file structure for it, representing the connection.
-- If successful, `accept` returns the new socket descriptor for the accepted connection.
-#### Set client's fd to non-blocking state
-After accepting the connection and obtaining the new socket descriptor `client_sock`, the server sets this socket to non-blocking mode using the `fcntl` system call. This step ensures that subsequent I/O operations on this socket will not block the calling thread. It's done by adding `O_NONBLOCK` flag to those already set.
+The `epoll_wait` system call is used to wait on the `epoll_fd_` - representing *epoll-instance* for the current server for the events on the registered file descriptors. When invoked, it blocks current thread until one or more file descriptors in the epoll instance's watch list become ready for the specified events, or until a timeout occurs. Upon completion, `epoll_wait` returns information about the ready file descriptors and the events that occurred by placing `epoll_event` structures in events array.
+The main information about event is *server_fd* or *client_fd* that was watched by this epoll instance, and particular kind of event - *EPOLLIN* and/or *EPOLLOUT*.
+Internally, the kernel efficiently scans the epoll instance's data structures to determine which file descriptors are ready for I/O operations, without the need for iterative polling.
+It makes sense to process only 2 types of events: 
+- *accepting new connection* - when reported fd is a *server_fd* and  event is *EPOLLIN*
+- *handling new data on existing connection* - when reported fd is a *client_fd* and  events are *EPOLLIN* and *EPOLLOUT*. Yes, both at the same time.
+### Establish connection
+First event ever being reported on the server will be a *new-connection-event*.
+#### Accept
+**ServerManager** proceeds with accepting incoming connections from clients using the `accept` system call to accept the connection request on reported *server_fd* and create a new socket descriptor *client_fd* specifically for this connection.
 #### Add client's fd to epoll
 Just like with server's sockets - this way we'll be monitoring the events happening on it.
-#### Read client's message from socket
-As simple as it is - just use nonblocking `read` or socket-specific `recv` to read from fd.
+#### Set client's fd to non-blocking state
+After accepting the connection and obtaining the new socket descriptor `client_sock`, the server sets this socket to non-blocking mode using the `fcntl` system call. This step ensures that subsequent I/O operations on this socket will not block the calling thread. It's done by adding `O_NONBLOCK` flag to those already set.
+#### Initialize connection
+In order to be able to keep the state of the connection, considering that request might be split across multiple events - **ServerManager** initializes **Connection** structure in the`connections_` array, where index of the array is *client_fd* - in order to ensure the quick access.
+##### Connection
+Container to store all details concerning to communication between server and particular client. Main fields are:
+```c++
+// to keep track of what is already done
+bool                url_headers_done_;  
+bool                body_done_;  
+
+// to be able to close ones, that are idle for too long
+long                open_time_;
+int                 connection_socket_; /* client_fd */
+int                 server_listening_socket_; /* server_fd */
+std::string         address_; /* host:port */
+ClientRequest       request_;
+// location that difines rules for the requested address
+Location            location_;
+```
+
 ## [Request](https://developer.mozilla.org/en-US/docs/Web/HTTP/Messages#http_requests) handling
-HTTP request is a message sent by a client to a server:
+When connection is accepted server is ready to receive HTTP requests.
+Essentially, it is just a message sent by a client to a server:
 
 ![request](https://github.com/r-kupin/webserv/blob/main/notes/request.jpg)
 
