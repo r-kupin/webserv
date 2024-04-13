@@ -673,8 +673,8 @@ Location            location_;
 ```
 
 ## [Request](https://developer.mozilla.org/en-US/docs/Web/HTTP/Messages#http_requests) handling
-When connection is accepted server is ready to receive HTTP requests.
-Essentially, it is just a message sent by a client to a server:
+When connection is accepted, server is ready to receive HTTP requests.
+Essentially, HTTP request it is just a message sent by a client to a server:
 
 ![request](https://github.com/r-kupin/webserv/blob/main/notes/request.jpg)
 
@@ -701,7 +701,106 @@ std::string                         body_;
 - Fragment (`fragment_`): the fragment identifier, often used in conjunction with anchors in HTML documents. It points to a specific section within the requested resource.
 - Parameters (`params_`): additional parameters sent with the request. In the URL, these are typically query parameters (e.g., `?key1=value1&key2=value2`).
 ### Headers (`headers_`)
-HTTP headers provide additional information about the request, such as the type of client making the request, the preferred response format, authentication information, etc.
+HTTP headers provide additional information about the request, such as the type of client making the request, the preferred response format, authentication information, etc. In request processing *Webserv* uses following headers:
+#### [Host](#https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Host) 
+The **`Host`** request header specifies the host and port number of the server to which the request is being sent, or the virtual host ([`server_name`](#server_name)).
+If header is missing -  error code *400* will be returned.
+#### [Content-Length](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Length) 
+The **`Content-Length`** header indicates the size of the message body, in bytes, sent to the recipient. 
+This is important if server is up to process request's body - size of the accessed location is always limited implicitly to 1Mb or explicitly with [`client_max_body_size`](#client_max_body_size) directive.
+#### [User-Agent](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent)
+The **User-Agent** [request header](https://developer.mozilla.org/en-US/docs/Glossary/Request_header) is a characteristic string that lets servers and network peers identify the application, operating system, vendor, and/or version of the requesting [user agent](https://developer.mozilla.org/en-US/docs/Glossary/User_agent). 
+This header is being checked when server handles the upload request. Because any client uses different convention of wrapping the file being uploaded - uploads from different clients are handled differently.
+For example, here is a request to upload a file `test.txt`:
+```sh
+> cat -e test.txt
+test$
+```
+That's what **curl** sends to the server:
+```
+POST /uploads HTTP/1.1\r\n
+Host: localhost:4281\r\n
+User-Agent: curl/7.81.0\r\n
+Accept: */*\r\n
+Content-Length: 191\r\n
+Content-Type: multipart/form-data; boundary=------------------------ceae335717f1b7a7\r\n
+\r\n
+--------------------------ceae335717f1b7a7\r\n
+Content-Disposition: form-data; name="file"; filename="test.txt"\r\n
+Content-Type: text/plain\r\n
+\r\n
+test\n
+\r\n
+--------------------------ceae335717f1b7a7--\r\n
+```
+**Firefox**:
+```
+POST /uploads HTTP/1.1\r\n
+Host: localhost:4281\r\n
+User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/115.0\r\n
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8\r\n
+Accept-Language: en-US,en;q=0.5\r\n
+Accept-Encoding: gzip, deflate, br\r\n
+Content-Type: multipart/form-data; boundary=---------------------------14556203736442811903568275294\r\n
+Content-Length: 353\r\n
+Origin: http://localhost:4281\r\n
+DNT: 1\r\n
+Connection: keep-alive\r\n
+Referer: http://localhost:4281/\r\n
+Upgrade-Insecure-Requests: 1\r\n
+Sec-Fetch-Dest: document\r\n
+Sec-Fetch-Mode: navigate\r\n
+Sec-Fetch-Site: same-origin\r\n
+Sec-Fetch-User: ?1\r\n
+\r\n
+-----------------------------14556203736442811903568275294\r\n
+Content-Disposition: form-data; name="fileToUpload"; filename="test.txt"\r\n
+Content-Type: text/plain\r\n
+\r\n
+test\n
+\r\n
+-----------------------------14556203736442811903568275294\r\n
+Content-Disposition: form-data; name="submit"\r\n
+\r\n
+Upload File\r\n
+-----------------------------14556203736442811903568275294--\r\n
+```
+*Chrome* :
+```
+POST /uploads HTTP/1.1\r\n
+Host: localhost:4281\r\n
+Connection: keep-alive\r\n
+Content-Length: 299\r\n
+Cache-Control: max-age=0\r\n
+sec-ch-ua: "Google Chrome";v="123", "Not:A-Brand";v="8", "Chromium";v="123"\r\n
+sec-ch-ua-mobile: ?0\r\n
+sec-ch-ua-platform: "Linux"\r\n
+Upgrade-Insecure-Requests: 1\r\n
+Origin: http://localhost:4281\r\n
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundaryQwNkA1TP3mE9cVAE\r\n
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36\r\n
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7\r\n
+Sec-Fetch-Site: same-origin\r\n
+Sec-Fetch-Mode: navigate\r\n
+Sec-Fetch-User: ?1\r\n
+Sec-Fetch-Dest: document\r\n
+Referer: http://localhost:4281/\r\n
+Accept-Encoding: gzip, deflate, br, zstd\r\n
+Accept-Language: en-US,en;q=0.9\r\n
+\r\n
+------WebKitFormBoundaryQwNkA1TP3mE9cVAE\r\n
+Content-Disposition: form-data; name="fileToUpload"; filename="test.txt"\r\n
+Content-Type: text/plain\r\n
+\r\n
+test\n
+\r\n
+------WebKitFormBoundaryQwNkA1TP3mE9cVAE\r\n
+Content-Disposition: form-data; name="submit"\r\n
+\r\n
+Upload File\r\n
+------WebKitFormBoundaryQwNkA1TP3mE9cVAE--\r\n
+```
+All these clients are supported, but anything else will trigger error *501* response.
 ### Body (`body_`)
 The body of the HTTP request, which contains additional data sent to the server. This is particularly relevant for POST requests or other methods where data is sent in the request body. In case of file upload the body will contain file contents.
 ## [Response](https://developer.mozilla.org/en-US/docs/Web/HTTP/Messages#http_responses) creating
