@@ -94,17 +94,39 @@ m_int_str Utils::initializeHttpOKCodes() {
     return map;
 }
 
+m_str_str Utils::initializeMimeTypes() {
+    m_str_str map;
+
+    map.insert(std::make_pair(".html", "text/html"));
+    map.insert(std::make_pair(".htm", "text/html"));
+    map.insert(std::make_pair(".css", "text/css"));
+    map.insert(std::make_pair(".js", "application/javascript"));
+    map.insert(std::make_pair(".json", "application/json"));
+    map.insert(std::make_pair(".xml", "application/xml"));
+    map.insert(std::make_pair(".txt", "text/plain"));
+    map.insert(std::make_pair(".jpg", "image/jpeg"));
+    map.insert(std::make_pair(".jpeg", "image/jpeg"));
+    map.insert(std::make_pair(".png", "image/png"));
+    map.insert(std::make_pair(".gif", "image/gif"));
+    map.insert(std::make_pair(".bmp", "image/bmp"));
+    map.insert(std::make_pair(".ico", "image/x-icon"));
+    map.insert(std::make_pair(".pdf", "application/pdf"));
+    return map;
+}
+
 Utils::Utils()
     : started_at_(TimeNow()),
     err_codes_(initializeHttpErrCodes()),
     ok_codes_(initializeHttpOKCodes()),
-    redirect_codes_(initializeHttpRedirectCodes()) {}
+    redirect_codes_(initializeHttpRedirectCodes()),
+    mime_types_(initializeMimeTypes()) {}
 
 bool Utils::IsErrorCode(int code) {
     if (ok_codes_.empty()) {
         err_codes_ = initializeHttpErrCodes();
         redirect_codes_ = initializeHttpRedirectCodes();
         ok_codes_ = initializeHttpOKCodes();
+        mime_types_ = initializeMimeTypes();
     }
     return err_codes_.find(code) != err_codes_.end();
 }
@@ -114,6 +136,7 @@ bool Utils::IsOKCode(int code) {
         err_codes_ = initializeHttpErrCodes();
         redirect_codes_ = initializeHttpRedirectCodes();
         ok_codes_ = initializeHttpOKCodes();
+        mime_types_ = initializeMimeTypes();
     }
     return ok_codes_.find(code) != ok_codes_.end();
 }
@@ -123,6 +146,7 @@ bool Utils::IsRedirectCode(int code) {
         err_codes_ = initializeHttpErrCodes();
         redirect_codes_ = initializeHttpRedirectCodes();
         ok_codes_ = initializeHttpOKCodes();
+        mime_types_ = initializeMimeTypes();
     }
     return redirect_codes_.find(code) != redirect_codes_.end();
 }
@@ -132,6 +156,7 @@ bool Utils::IsValidHTTPCode(int code) {
         err_codes_ = initializeHttpErrCodes();
         redirect_codes_ = initializeHttpRedirectCodes();
         ok_codes_ = initializeHttpOKCodes();
+        mime_types_ = initializeMimeTypes();
     }
     return IsErrorCode(code) || IsOKCode(code);
 }
@@ -141,12 +166,25 @@ std::string Utils::GetCodeDescription(int code) {
         err_codes_ = initializeHttpErrCodes();
         redirect_codes_ = initializeHttpRedirectCodes();
         ok_codes_ = initializeHttpOKCodes();
+        mime_types_ = initializeMimeTypes();
     }
     if (IsErrorCode(code)) {
         return err_codes_.find(code)->second;
     } else {
         return ok_codes_.find(code)->second;
     }
+}
+
+std::string Utils::GetMimeType(const std::string &filename) {
+    size_t pos = filename.find_last_of('.');
+    if (pos != std::string::npos) {
+        std::string extension = filename.substr(pos);
+        m_str_str::const_iterator it = mime_types_.find(extension);
+        if (it != mime_types_.end()) {
+            return it->second;
+        }
+    }
+    return "application/octet-stream"; // Default MIME type for unknown file types
 }
 
 long Utils::TimeNow() const {

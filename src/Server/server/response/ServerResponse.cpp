@@ -44,6 +44,7 @@ void ServerResponse::ComposeResponse(const Location &synth) {
         } else {
             if (!synth.body_file_.empty()) {
                 body_str_ = Utils::FileToString(synth.body_file_);
+                AddHeader("Content-Type", Utils::Get().GetMimeType(synth.body_file_));
             } else if (!synth.dir_to_list_.empty()) {
                 body_str_ = GenerateAutoIndex(synth);
             } else {
@@ -53,7 +54,8 @@ void ServerResponse::ComposeResponse(const Location &synth) {
             }
             AddHeader("Connection", "keep-alive");
         }
-        AddHeader("Content-Type", "text/html");
+        if (headers_.find("Content-Type") == headers_.end())
+            AddHeader("Content-Type", "text/html");
     } else {
         AddHeader("Content-Type", "application/octet-stream");
         body_str_ = synth.return_custom_message_;

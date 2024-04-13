@@ -89,6 +89,7 @@ public:
     bool                IsRedirectCode(int code);
     bool                IsValidHTTPCode(int code);
     std::string         GetCodeDescription(int code);
+    std::string         GetMimeType(const std::string &filename);
 private:
     long        started_at_;
     int         files_uploaded_;
@@ -96,10 +97,12 @@ private:
     m_int_str   err_codes_;
     m_int_str   ok_codes_;
     m_int_str   redirect_codes_;
+    m_str_str   mime_types_;
 
     m_int_str   initializeHttpErrCodes();
     m_int_str   initializeHttpRedirectCodes();
     m_int_str   initializeHttpOKCodes();
+    m_str_str   initializeMimeTypes();
 
     Utils();
 };
