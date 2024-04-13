@@ -18,8 +18,8 @@
 #include "../connection/request/RequestExceptions.h"
 #include "ServerExceptions.h"
 
-int Server::UploadFromCURL(ClientRequest &request, const std::string &filename,
-                            int socket) const {
+int Server::Upload(ClientRequest &request, const std::string &filename,
+                   int socket) const {
     int                 file_fd = open(filename.c_str(), O_WRONLY | O_APPEND | O_NONBLOCK);
     const std::string   &content_type = request.GetHeaderValue("Content-Type");
     // Start of "boundary=" value of "Content-Type" header
@@ -34,7 +34,7 @@ int Server::UploadFromCURL(ClientRequest &request, const std::string &filename,
         // and this is how it will appear in actual file:
         delimiter = kHTTPNewline + "--" + delimiter;
         try {
-            request.ProcessCURLFileMetadata(socket, delimiter);
+            request.ProcessFileMetadata(socket, delimiter);
             return PerformUpload(request, socket, file_fd, delimiter);
         } catch (const SendContinueFailedException & ) {
             return FAILED_IO;

@@ -21,17 +21,15 @@ SRCS =	src/main.cpp \
         src/utils/FSUtils.cpp \
         src/Server/server/response/ResponseStaticUtils.cpp \
         src/Server/server/response/ServerResponse.cpp \
-        src/Server/server/ServerRun.cpp \
-        src/Server/server/ServerInit.cpp \
-        src/Server/server/ServerEventsHandler.cpp \
+        src/Server/server/CheckUpload.cpp \
         src/Server/server/ServerExceptions.cpp \
+        src/Server/server/SynthFoundExact.cpp \
         src/Server/server/Server.cpp \
-        src/Server/server/ServerUtils.cpp \
-        src/Server/connection/request_processing/UploadHandler.cpp \
-        src/Server/connection/request_processing/SynthFoundExact.cpp \
-        src/Server/connection/request_processing/LocationSynth.cpp \
-        src/Server/connection/request_processing/SynthNotFound.cpp \
-        src/Server/connection/request_processing/CURLUploadHandler.cpp \
+        src/Server/server/LocationSynth.cpp \
+        src/Server/server/SynthNotFound.cpp \
+        src/Server/server/PerformUpload.cpp \
+        src/Server/ServerManagerHandleEvents.cpp \
+        src/Server/ServerManagerInit.cpp \
         src/Server/connection/Connection.cpp \
         src/Server/connection/request/ClientRequest.cpp \
         src/Server/connection/request/ClientRequestURLHandlers.cpp \
@@ -39,6 +37,8 @@ SRCS =	src/main.cpp \
         src/Server/connection/request/ClientRequestRequestHandlers.cpp \
         src/Server/connection/request/ClientRequestURLParamsHandlers.cpp \
         src/Server/connection/request/RequestExceptions.cpp \
+        src/Server/ServerManagerRun.cpp \
+        src/Server/ServerManagerUtils.cpp \
         src/Server/ServerManager.cpp \
         src/Config/config/ConfigCreate.cpp \
         src/Config/config/Config.cpp \
@@ -50,43 +50,45 @@ SRCS =	src/main.cpp \
         src/Config/location/ErrPage.cpp \
         src/Config/location/Location.cpp \
         src/Config/location/LocationHandleReturn.cpp \
-        src/Config/location/LimitExcept.cpp
+        src/Config/location/LimitExcept.cpp \
+        src/Config/server_configuration/Host.cpp
 
 LIB_SRCS = 	src/utils/Utils.cpp \
-            src/utils/StringUtils.cpp \
-            src/utils/FSUtils.cpp \
-            src/Server/server/response/ResponseStaticUtils.cpp \
-            src/Server/server/response/ServerResponse.cpp \
-            src/Server/server/ServerRun.cpp \
-            src/Server/server/ServerInit.cpp \
-            src/Server/server/ServerEventsHandler.cpp \
-            src/Server/server/ServerExceptions.cpp \
-            src/Server/server/Server.cpp \
-            src/Server/server/ServerUtils.cpp \
-            src/Server/connection/request_processing/UploadHandler.cpp \
-            src/Server/connection/request_processing/SynthFoundExact.cpp \
-            src/Server/connection/request_processing/LocationSynth.cpp \
-            src/Server/connection/request_processing/SynthNotFound.cpp \
-            src/Server/connection/request_processing/CURLUploadHandler.cpp \
-            src/Server/connection/Connection.cpp \
-            src/Server/connection/request/ClientRequest.cpp \
-            src/Server/connection/request/ClientRequestURLHandlers.cpp \
-            src/Server/connection/request/ClientRequestBodyProcessing.cpp \
-            src/Server/connection/request/ClientRequestRequestHandlers.cpp \
-            src/Server/connection/request/ClientRequestURLParamsHandlers.cpp \
-            src/Server/connection/request/RequestExceptions.cpp \
-            src/Server/ServerManager.cpp \
-            src/Config/config/ConfigCreate.cpp \
-            src/Config/config/Config.cpp \
-            src/Config/config/ConfigParse.cpp \
-            src/Config/Node.cpp \
-            src/Config/server_configuration/ServerConfiguration.cpp \
-            src/Config/server_configuration/ServerConfigurationLocationSearch.cpp \
-            src/Config/server_configuration/ServerConfigurationLocationHandler.cpp \
-            src/Config/location/ErrPage.cpp \
-            src/Config/location/Location.cpp \
-            src/Config/location/LocationHandleReturn.cpp \
-            src/Config/location/LimitExcept.cpp
+           	src/utils/StringUtils.cpp \
+           	src/utils/FSUtils.cpp \
+           	src/Server/server/response/ResponseStaticUtils.cpp \
+           	src/Server/server/response/ServerResponse.cpp \
+           	src/Server/server/CheckUpload.cpp \
+           	src/Server/server/ServerExceptions.cpp \
+           	src/Server/server/SynthFoundExact.cpp \
+           	src/Server/server/Server.cpp \
+           	src/Server/server/LocationSynth.cpp \
+           	src/Server/server/SynthNotFound.cpp \
+           	src/Server/server/PerformUpload.cpp \
+           	src/Server/ServerManagerHandleEvents.cpp \
+           	src/Server/ServerManagerInit.cpp \
+           	src/Server/connection/Connection.cpp \
+           	src/Server/connection/request/ClientRequest.cpp \
+           	src/Server/connection/request/ClientRequestURLHandlers.cpp \
+           	src/Server/connection/request/ClientRequestBodyProcessing.cpp \
+           	src/Server/connection/request/ClientRequestRequestHandlers.cpp \
+           	src/Server/connection/request/ClientRequestURLParamsHandlers.cpp \
+           	src/Server/connection/request/RequestExceptions.cpp \
+           	src/Server/ServerManagerRun.cpp \
+           	src/Server/ServerManagerUtils.cpp \
+           	src/Server/ServerManager.cpp \
+           	src/Config/config/ConfigCreate.cpp \
+           	src/Config/config/Config.cpp \
+           	src/Config/config/ConfigParse.cpp \
+           	src/Config/Node.cpp \
+           	src/Config/server_configuration/ServerConfiguration.cpp \
+           	src/Config/server_configuration/ServerConfigurationLocationSearch.cpp \
+           	src/Config/server_configuration/ServerConfigurationLocationHandler.cpp \
+           	src/Config/location/ErrPage.cpp \
+           	src/Config/location/Location.cpp \
+           	src/Config/location/LocationHandleReturn.cpp \
+           	src/Config/location/LimitExcept.cpp \
+           	src/Config/server_configuration/Host.cpp
 
 TEST_SRCS = test/unit_tests/utils_test/UtilsTest.cpp \
             test/unit_tests/server_test/request_test/RequestLineLevelTest.cpp \

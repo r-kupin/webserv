@@ -11,13 +11,13 @@ add_executable(webserv src/main.cpp
         src/utils/FSUtils.cpp
         src/Server/server/response/ResponseStaticUtils.cpp
         src/Server/server/response/ServerResponse.cpp
-        src/Server/server/UploadHandler.cpp
+        src/Server/server/CheckUpload.cpp
         src/Server/server/ServerExceptions.cpp
         src/Server/server/SynthFoundExact.cpp
         src/Server/server/Server.cpp
         src/Server/server/LocationSynth.cpp
         src/Server/server/SynthNotFound.cpp
-        src/Server/server/CURLUploadHandler.cpp
+        src/Server/server/PerformUpload.cpp
         src/Server/ServerManagerHandleEvents.cpp
         src/Server/ServerManagerInit.cpp
         src/Server/connection/Connection.cpp
@@ -42,7 +42,6 @@ add_executable(webserv src/main.cpp
         src/Config/location/LocationHandleReturn.cpp
         src/Config/location/LimitExcept.cpp
         src/Config/server_configuration/Host.cpp
-        src/Config/server_configuration/Host.h
 )
 add_library(webserv_lib
         src/utils/Utils.cpp
@@ -50,13 +49,13 @@ add_library(webserv_lib
         src/utils/FSUtils.cpp
         src/Server/server/response/ResponseStaticUtils.cpp
         src/Server/server/response/ServerResponse.cpp
-        src/Server/server/UploadHandler.cpp
+        src/Server/server/CheckUpload.cpp
         src/Server/server/ServerExceptions.cpp
         src/Server/server/SynthFoundExact.cpp
         src/Server/server/Server.cpp
         src/Server/server/LocationSynth.cpp
         src/Server/server/SynthNotFound.cpp
-        src/Server/server/CURLUploadHandler.cpp
+        src/Server/server/PerformUpload.cpp
         src/Server/ServerManagerHandleEvents.cpp
         src/Server/ServerManagerInit.cpp
         src/Server/connection/Connection.cpp
@@ -81,7 +80,6 @@ add_library(webserv_lib
         src/Config/location/LocationHandleReturn.cpp
         src/Config/location/LimitExcept.cpp
         src/Config/server_configuration/Host.cpp
-        src/Config/server_configuration/Host.h
 )
 
 add_subdirectory(test)

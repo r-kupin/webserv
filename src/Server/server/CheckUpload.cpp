@@ -21,8 +21,8 @@ bool        request_has_all_required_headers(const ClientRequest &request) {
            request.HasHeader("Content-Length");
 }
 
-int         Server::UploadFile(ClientRequest &request, l_loc_c_it found,
-                               int socket) const {
+int         Server::CheckUploadRequest(ClientRequest &request, l_loc_c_it found,
+                                       int socket) const {
     std::string dirname = Utils::DirName(found->uploads_path_,
                                          config_.GetConstRoot().root_);
     if (request_has_all_required_headers(request)) {
@@ -35,7 +35,7 @@ int         Server::UploadFile(ClientRequest &request, l_loc_c_it found,
                 Utils::Get().IncrementUploadedFiles();
                 // file created successfully
                 if (request.IsCurlRequest() || request.IsFirefoxRequest())
-                    return UploadFromCURL(request, request.GetAssociatedFilename(), socket);
+                    return Upload(request, request.GetAssociatedFilename(), socket);
                 // wget doesn't work on nginx - sends file without tailing linebreak
                 Log("Only uploads via curl and Firefox are supported for now");
                 return ONLY_CURL_UPLOADS_SUPPORTED;
@@ -43,7 +43,7 @@ int         Server::UploadFile(ClientRequest &request, l_loc_c_it found,
             return FAILED_TO_CREATE_OUTPUT_FILE;
         } else {
             // continue upload to already existing file
-            return UploadFromCURL(request, request.GetAssociatedFilename(), socket);
+            return Upload(request, request.GetAssociatedFilename(), socket);
         }
     }
     Log("Mandatory headers User-Agent, Content-Type and/or Content-Length are "

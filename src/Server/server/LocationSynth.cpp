@@ -76,7 +76,7 @@ void Server::HandleUpload(ClientRequest &request, int socket,
                           l_loc_c_it &found, Location &synth) const {
     if (request.GetMethod() == POST) {
         // Try to perform upload
-        int upload_status = UploadFile(request, found, socket);
+        int upload_status = CheckUploadRequest(request, found, socket);
         synth.SetReturnCode(upload_status);
         if (synth.return_code_ == OK) {
             synth.return_custom_message_ = "Upload successful";

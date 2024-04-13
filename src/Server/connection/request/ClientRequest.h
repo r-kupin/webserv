@@ -79,8 +79,8 @@ public:
     void                SetAssociatedFilename(const std::string &associatedFilename);
 //-------------------manual body processing-------------------------------------
     void                TellClientToContinueIfNeed(int socket) const;
-    size_t              ProcessCURLFileMetadata(int socket,
-                                                const std::string &delimiter);
+    size_t              ProcessFileMetadata(int socket,
+                                            const std::string &delimiter);
     int                 ReadBodyToRequest(int socket);
     bool                BodyHasAllCURLMetadata(const std::string &delimiter) const;
 protected:

@@ -102,12 +102,12 @@ protected:
                                           int fs_status,
                                           const std::string &request_address)const;
 //-------------------upload request processing----------------------------------
-    int                         UploadFile(ClientRequest &request,
-                                           l_loc_c_it found,
-                                           int socket) const;
-    int                         UploadFromCURL(ClientRequest &request,
-                                               const std::string &filename,
-                                               int socket) const;
+    int                         CheckUploadRequest(ClientRequest &request,
+                                                   l_loc_c_it found,
+                                                   int socket) const;
+    int                         Upload(ClientRequest &request,
+                                       const std::string &filename,
+                                       int socket) const;
     int                         PerformUpload(const ClientRequest &request,
                                               int socket, int file_fd,
                                               const std::string &delimiter) const;

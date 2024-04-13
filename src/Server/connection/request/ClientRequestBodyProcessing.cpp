@@ -125,8 +125,8 @@ size_t ClientRequest::GetCurlMetadataLength(const std::string &delimiter) const 
  *      point is already written into the file.
  *      We should remove it, so it won't be written again
  */
-size_t ClientRequest::ProcessCURLFileMetadata(int socket,
-                                              const std::string &delimiter) {
+size_t ClientRequest::ProcessFileMetadata(int socket,
+                                          const std::string &delimiter) {
     if (!BodyHasAllCURLMetadata(delimiter)) {
         char buffer[FILE_BUFFER_SIZE];
         // If request has "Expect: 100-continue" header - it will wait here
