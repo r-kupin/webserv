@@ -175,6 +175,14 @@ std::string Utils::GetCodeDescription(int code) {
     }
 }
 
+/**
+ * MIME (Multipurpose Internet Mail Extensions) types are a way to identify
+ * the type of content being transferred over the internet. They indicate the
+ * format and encoding of files, such as HTML documents, images, videos, and
+ * more. MIME types are important because they allow web browsers and other
+ * applications to interpret and handle different types of content correctly,
+ * ensuring that files are displayed or processed appropriately.
+ */
 std::string Utils::GetMimeType(const std::string &filename) {
     size_t pos = filename.find_last_of('.');
     if (pos != std::string::npos) {
@@ -184,7 +192,8 @@ std::string Utils::GetMimeType(const std::string &filename) {
             return it->second;
         }
     }
-    return "application/octet-stream"; // Default MIME type for unknown file types
+    // Default MIME type for unknown file types
+    return "application/octet-stream";
 }
 
 long Utils::TimeNow() const {
