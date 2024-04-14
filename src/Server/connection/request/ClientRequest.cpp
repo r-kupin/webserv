@@ -125,7 +125,7 @@ void ClientRequest::NothingToRead(int bytes_read) const {
         // request processing at this moment. We'll come back later
         // if client would send more data.
         // errno == EAGAIN || errno == EWOULDBLOCK
-        ThrowException("recv returned -1 and set errno - No \\r\\n\\r\\n"
+        ThrowException("recv returned -1 and set errno - No (\\r)\\n(\\r)\\n"
                        " after the request's headers section",
                        "EwouldblockEagain");
     }

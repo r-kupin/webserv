@@ -696,7 +696,7 @@ std::string                         body_;
 -  Method(`method_`): the HTTP method or verb specifies the type of request being made. WebServ is supposed to handle GET, POST and DELETE methods
 ### [URL](https://developer.mozilla.org/en-US/docs/Learn/Common_questions/Web_mechanics/What_is_a_URL)
 - Path (`addr_`): An absolute path, optionally followed by a `'?'` and query string.
--  Last Step in Address (`addr_last_step_`): The contents of the address after the last `/` in URI
+- Last Step in Address (`addr_last_step_`): The contents of the address after the last `/` in URI
 - Index Request (`index_request_`): flag indicating whether the request is for the default index resource. WebServ, automatically serves a default file (e.g., index.html) when the path points to a directory meaning if address ends with `/`.
 - Fragment (`fragment_`): the fragment identifier, often used in conjunction with anchors in HTML documents. It points to a specific section within the requested resource.
 - Parameters (`params_`): additional parameters sent with the request. In the URL, these are typically query parameters (e.g., `?key1=value1&key2=value2`).
@@ -733,7 +733,7 @@ test\n
 \r\n
 --------------------------ceae335717f1b7a7--\r\n
 ```
-**Firefox**:
+*Firefox*:
 ```
 POST /uploads HTTP/1.1\r\n
 Host: localhost:4281\r\n
@@ -804,9 +804,18 @@ All these clients are supported, but anything else will trigger error *501* resp
 ### Body (`body_`)
 The body of the HTTP request, which contains additional data sent to the server. This is particularly relevant for POST requests or other methods where data is sent in the request body. In case of file upload the body will contain file contents.
 ## [Response](https://developer.mozilla.org/en-US/docs/Web/HTTP/Messages#http_responses) creating
-Right after the creation of the `ClientRequest` server starts generating response, which involves 2 steps: creating a synthetic location and creating a `ServerResponse` class
+Right after the creation of the `ClientRequest` server starts generating response, which involves 3 steps:
+- Finding of the server to which request was sent
+- Creating a synthetic location 
+- Creating a `ServerResponse` class
+### Finding requested server
+Request should be processed by a server that:  
+* Listens on the socket, on which request was reported  
+* Has defined `server_name` that corresponds to the request's value of the `Host` header  
+If no server's `server_name` corresponds to the request's value of the `Host` header - return the first server that listens on this socket defined in .conf file
+If multiple servers `server_name` corresponds to the request's value of the `Host` header - return the last of them defined in .conf file (sort of overrides previous one)
 ### Creating a synthetic location
-Depending on compliance between what was requested and what is being found creates a synthetic location - a copy of the location that was found in [ServerConfig](#ServerConfiguration), but with altered return code, and  redirect-related fields, or with a body file set.
+Depending on compliance between what was requested and what is being found - server creates a synthetic location - a copy of the location that was found in [ServerConfig](#ServerConfiguration), but with altered return code, and redirect-related fields, or with a body file set.
 In order to determine what should be returned, server performs some checks:
 #### Request's body check
 If request contains body, it's size will be counted while reading from socket. If size would exceed limit - error code *413* will be returned.
@@ -819,7 +828,7 @@ If access is allowed, server then checks defined [redirection](#return), and bou
 If found location contains [upload_store](#upload_store)  - all requests to it will be treated as uploads. They have to:
 - Be POST
 - Have headers set:
-	- `User-Agent`: only **curl** supported
+	- `User-Agent`: only **curl** and **Firefox** are tested and supported
 	- `Content-Type`: should have a `boundary` delimiter - a unique string that separates the individual parts of the message. `boundary` parameter is used to delineate the boundaries between different parts of the message body. 
 	- `Content-Length`: corresponds to the size of the request body, which is bigger then the file itself, because it contains some metadata such as filename.
 - Have a body of the certain structure:
@@ -875,6 +884,7 @@ if (Utils::CheckFilesystem(index_address) == NOTHING) {
     synth.body_file_ = index_address;  
 }
 ```
+###### Synthetic location for autoindex request (directory listing)
 ### Creating `ServerResponse` class
 Just as in case with `ClientRequest` class, `ServerResponse` is intended to contain data, corresponding to different parts of server's response message
 
@@ -903,23 +913,32 @@ In case if request's body is large, client might ask server for a confirmation b
 In this case, server will send short message to let client start body upload.
 #### 200  OK
 This status code is returned when the server successfully processes the request and provides the requested resource. It signifies that the client's request has been fulfilled without any issues.
-
 ### Implicit redirect
 #### 301 Moved Permanently
 This status code is returned when client requests for a static file, but specified address actually points to a directory. In this case, response is also followed by a header `Location`, which value corresponds to request url, followed by '/'
+#### 302 Found
+If there is a `return http://somewhere.out` directive - response will have 302 code and `Location` header set
 ### Client side errors
 #### 400  Bad Request
-If the server cannot process the client's request due to malformed syntax or other errors on the client side, it returns this status code. It indicates that there was an error in the client's request.
-#### 403  
-#### 404  
-#### 405  
-#### 413  
-
+If the server cannot process the client's request due to malformed syntax or other errors on the client side, it returns this status code. It indicates that there was an error in the client's request, or method is not *GET*, *POST* or *DELETE*.
+#### 403 Forbidden
+- If client has no access to requested location
+- If request method is limited in `limit_except` block
+- If client tries to access directory's index, but the file doesn't exist and `autoindex` is off
+#### 404  Not Found
+Should I explain it?
+#### 405  Method Not Allowed
+If client requests location that has `upload_store` set with any method, except of **POST**
+#### 413 Payload Too Large
+If client intends to send body that exceeds `client_max_body_size` limit
 ### Server side errors
-#### 500  
-#### 501  
-#### 503  
-#### 505
+#### 500 Internal Server Error
+- if server requests a file, but what was found is neither file, nor a directory
+- When server's fails to perform IO on the socket (It never happens)
+#### 501  Not Implemented
+If client would try to upload file from unsupported client.
+#### 503  Service Unavailable
+If server is unable to create a file intended to store an upload
 ## Uploads
 
 ![one_does_not_simply](https://github.com/r-kupin/webserv/blob/main/notes/one_does_not_simply.jpg)
@@ -973,10 +992,3 @@ Important notes:
 		 1. `0000000001`, `0000000021`, etc.. - in `./1`
 		 2. `0000000010`, `0000000210`, etc.. -  in `./0`
     3. So the first request's body would be saved to  `./1/0000000001`, second - `./2/0000000002`, etc..
-## Blocking
-Regarding subject's requirements:
-- Your server must *never block* and the client can be bounced properly if necessary.
-- It must* be non-blocking* and use only 1 poll() (or equivalent) for all the I/O operations between the client and the server (listen included).
-
-1. **Blocking**: In a blocking server, when a request comes in, the server handles it synchronously, meaning it waits for the entire request to be processed before moving on to the next request. During this time, the server thread handling the request is "blocked" from doing anything else. If there are many concurrent requests or if a request takes a long time to process, this can lead to inefficient resource utilization and poor responsiveness. 
-2. **Non-blocking**: In a non-blocking server, when a request comes in, the server initiates the request processing and then continues to handle other requests without waiting for the first request to complete. This allows the server to handle multiple requests concurrently without being blocked. Non-blocking servers typically use asynchronous I/O operations or event-driven models to achieve this.
