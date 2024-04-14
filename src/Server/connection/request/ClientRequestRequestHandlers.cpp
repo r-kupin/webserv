@@ -1,6 +1,18 @@
+/******************************************************************************/
+/*                                                                            */
+/*                                                         :::      ::::::::  */
+/*    ClientRequestRequestHandlers.cpp                   :+:      :+:    :+:  */
+/*                                                     +:+ +:+         +:+    */
+/*    By: rokupin <rokupin@student.42.fr>            +#+  +:+       +#+       */
+/*                                                 +#+#+#+#+#+   +#+          */
+/*    Created: 2023/04/22 16:59:53 by rokupin           #+#    #+#            */
+/*                                                     ###   ########.fr      */
+/*                                                                            */
+/******************************************************************************/
 
 #include <iostream>
 #include <algorithm>
+#include <sstream>
 #include "ClientRequest.h"
 
 Methods     ClientRequest::ExtractMethod(const std::string &request) {
@@ -11,8 +23,8 @@ Methods     ClientRequest::ExtractMethod(const std::string &request) {
     } else if (request.find("DELETE") != std::string::npos) {
         return DELETE;
     } else {
-//        ThrowException("The only supported methods are GET, POST, DELETE",
-//                       "UnsupportedClientMethodException");
+        ThrowException("The only supported methods are GET, POST, DELETE",
+                       "UnsupportedClientMethodException");
         return UNSUPPORTED;
     }
 }
@@ -34,14 +46,17 @@ std::string ClientRequest::ExtractUrl(const std::string& request) {
 
 void        ClientRequest::FillHeaders(const v_str &request) {
     for (size_t i = 1; i < request.size(); ++i) {
-        if (!request[i].empty() && request[i].find(':') != std::string::npos) {
-            std::string name = request[i].
-                    substr(0,
-                           request[i].find_first_of(':'));
-            std::string value = request[i].
-                    substr(request[i].find_first_of(": ") + 2);
-            if (!name.empty() && !value.empty())
-                headers_.insert(std::make_pair(name, value));
+        std::string header, value;
+        std::istringstream  iss(request[i]);
+
+        if (!std::getline(iss, header, ':') ||
+            !(iss >> std::ws && std::getline(iss, value))) {
+            ThrowException("Header without value", "BadRequestException");
+        }
+        if (headers_.find(header) == headers_.end()) {
+            headers_[header] = value;
+        } else {
+            ThrowException("Header redefinition", "BadRequestException");
         }
     }
 }
