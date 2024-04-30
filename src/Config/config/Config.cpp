@@ -6,7 +6,7 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/28 03:25:00 by  rokupin          #+#    #+#             */
-/*   Updated: 2024/04/30 16:52:42 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/04/30 17:09:01 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -132,7 +132,7 @@ void	Config::ParseCGIConfig(std::ifstream& source) {
 		std::string key, value, path;
 		if (iss >> key >> value >> path) {
 			if (key == "CGIHandler") {
-				cgi_handlers[value] = path;		// value = extension, path = handler
+				this->cgi_handlers[value] = path;		// value = extension, path = handler
 			}
 		}
 	}

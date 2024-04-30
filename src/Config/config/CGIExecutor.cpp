@@ -6,7 +6,7 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/30 16:19:13 by mede-mas          #+#    #+#             */
-/*   Updated: 2024/04/30 16:50:04 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/04/30 17:29:13 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,8 +17,9 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <map>
 
-std::string CGIExecutor::ExecuteCGI(const std::string& scriptPath, const std::unordered_map<std::string, std::string>& envVars) {
+std::string CGIExecutor::ExecuteCGI(const std::string& scriptPath, const std::map<std::string, std::string>& envVars) {
 	int fd[2];
 	pipe(fd);
 	pid_t pid = fork();
@@ -64,10 +65,10 @@ std::string CGIExecutor::ExecuteCGI(const std::string& scriptPath, const std::un
 	return "";
 }
 
-std::vector<std::string> CGIExecutor::BuildEnvString(const std::unordered_map<std::string, std::string>& envVars) {
+std::vector<std::string> CGIExecutor::BuildEnvString(const std::map<std::string, std::string>& envVars) {
 	std::vector<std::string> result;
-	for (const auto& [key, value] : envVars) {
-		result.push_back(key + "=" + value);
+	for (const auto& iter : envVars) {
+		result.push_back(iter.first + "=" + iter.second);
 	}
 	return result;
 }
