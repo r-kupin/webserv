@@ -1,14 +1,14 @@
-/******************************************************************************/
+/* ************************************************************************** */
 /*                                                                            */
-/*                                                         :::      ::::::::  */
-/*    Config.h                                           :+:      :+:    :+:  */
-/*                                                     +:+ +:+         +:+    */
-/*    By: rokupin <rokupin@student.42.fr>            +#+  +:+       +#+       */
-/*                                                 +#+#+#+#+#+   +#+          */
-/*    Created: 2023/03/28 03:25:01 by rokupin           #+#    #+#            */
-/*                                                     ###   ########.fr      */
+/*                                                        :::      ::::::::   */
+/*   Config.h                                           :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2023/03/28 03:25:00 by  rokupin          #+#    #+#             */
+/*   Updated: 2024/04/30 12:09:32 by mede-mas         ###   ########.fr       */
 /*                                                                            */
-/******************************************************************************/
+/* ************************************************************************** */
 
 #ifndef WEBSERV_CONFIGPARSER_H
 #define WEBSERV_CONFIGPARSER_H
@@ -47,6 +47,10 @@ public:
 
     const std::string   &getConfPath() const;
     const l_sc          &getConstServers() const;
+
+	// Adding map to store CGI extensions and their corresponding handler executables
+	std::unsorted_map<std::string, std::string> cgi_handlers;
+
 protected:
 //-------------------parsing config filestream to the tree of nodes-------------
     void                ParseConfig(std::ifstream &config);
@@ -84,10 +88,26 @@ protected:
     void                ThrowSyntaxError(const std::string &msg,
                                          std::ifstream &config) const;
     void                ThrowSyntaxError(const std::string &msg) const;
+
 private:
     std::string         conf_path_;
     Node                conf_root_;
     l_sc                servers_;
+
+	void	ParseCGIConfig(std::ifstream& source);
 };
+
+void	Config::ParseCGIConfig(std::ifstream& source) {
+	std::string line;
+	while (std::getline(source, line)) {
+		std::istringstream iss(line);
+		std::string key, value, path;
+		if (iss >> key >> value >> path) {
+			if (key == "CGIHandler") {
+				cgi_handlers[value] = path;		// value = extension, path = handler
+			}
+		}
+	}
+}
 
 #endif //WEBSERV_CONFIGPARSER_H
