@@ -6,13 +6,16 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/30 16:19:13 by mede-mas          #+#    #+#             */
-/*   Updated: 2024/04/30 16:21:40 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/04/30 16:30:31 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include "ConfigCGI.h"
 #include <sys/wait.h>
 #include <unistd.h>
 #include <cstdlib>
+#include <string>
+#include <vector>
 
 std::string CGIExecutor::ExecuteCGI(const std::string& scriptPath, const std::unordered_map<std::string, std::string>& envVars) {
 	int fd[2];
@@ -56,10 +59,11 @@ std::string CGIExecutor::ExecuteCGI(const std::string& scriptPath, const std::un
 		waitpid(pid, NULL, 0);
 		return output;
 	}
+	// Return empty string if fork fails
 	return "";
 }
 
-std::string CGIExecutor::BuildEnvString(const std::unordered_map<std::string, std::string>& envVars) {
+std::vector<std::string> CGIExecutor::BuildEnvString(const std::unordered_map<std::string, std::string>& envVars) {
 	std::vector<std::string> result;
 	for (const auto& [key, value] : envVars) {
 		result.push_back(key + "=" + value);
