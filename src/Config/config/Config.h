@@ -6,7 +6,7 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/28 03:25:00 by  rokupin          #+#    #+#             */
-/*   Updated: 2024/04/30 12:09:32 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/04/30 12:16:39 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,7 @@
 #include <iostream>
 #include <list>
 #include <fstream>
+#include <unordered_map>
 
 #include "../server_configuration/ServerConfiguration.h"
 
@@ -49,7 +50,7 @@ public:
     const l_sc          &getConstServers() const;
 
 	// Adding map to store CGI extensions and their corresponding handler executables
-	std::unsorted_map<std::string, std::string> cgi_handlers;
+	std::unordered_map<std::string, std::string> cgi_handlers;
 
 protected:
 //-------------------parsing config filestream to the tree of nodes-------------
