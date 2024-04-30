@@ -6,7 +6,7 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/28 03:25:00 by  rokupin          #+#    #+#             */
-/*   Updated: 2024/04/30 16:16:36 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/04/30 16:43:46 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,9 +49,10 @@ public:
 
     const std::string   &getConfPath() const;
     const l_sc          &getConstServers() const;
+	l_sc				&GetServers();
 
-	// Adding map to store CGI extensions and their corresponding handler executables
-	std::unordered_map<std::string, std::string> cgi_handlers;
+	// Additional methods for CGI configuration parsing
+	void	ParseCGIConfig(std::ifstream& source);
 
 protected:
 //-------------------parsing config filestream to the tree of nodes-------------
@@ -96,7 +97,8 @@ private:
     Node                conf_root_;
     l_sc                servers_;
 
-	void	ParseCGIConfig(std::ifstream& source);
+	// Adding map to store CGI extensions and their corresponding handler executables
+	std::unordered_map<std::string, std::string> cgi_handlers;
 };
 
 #endif //WEBSERV_CONFIGPARSER_H

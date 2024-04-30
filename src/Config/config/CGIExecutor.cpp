@@ -6,7 +6,7 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/30 16:19:13 by mede-mas          #+#    #+#             */
-/*   Updated: 2024/04/30 16:30:31 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/04/30 16:50:04 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 #include <cstdlib>
 #include <string>
 #include <vector>
+#include <sstream>
 
 std::string CGIExecutor::ExecuteCGI(const std::string& scriptPath, const std::unordered_map<std::string, std::string>& envVars) {
 	int fd[2];
@@ -32,7 +33,7 @@ std::string CGIExecutor::ExecuteCGI(const std::string& scriptPath, const std::un
 		// Convert envVars to char** for execve
 		std::vector<std::string> envStrings = BuildEnvString(envVars);
 		std::vector<char*> envp;
-		for (auto& s : envStrings) envp.push_back(&s[0]);
+		for (auto& s : envStrings) envp.push_back(const_cast<char*>(s.c_str()));
 		envp.push_back(nullptr);
 
 		// Assuming no arguments to the script

@@ -6,16 +6,18 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/28 03:25:00 by  rokupin          #+#    #+#             */
-/*   Updated: 2024/04/08 15:54:11 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/04/30 16:52:42 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 /// Include necessary headers for file I/O, standard I/O operations, and algorithms.
 // Also include the header for custom configuration exceptions.
+#include "ConfigExceptions.h"
+#include "Config.h"
 #include <fstream>
 #include <iostream>
 #include <algorithm>
-#include "ConfigExceptions.h"
+#include <sstream>
 
 // Default constructor initializing the config path to an empty string.
 Config::Config() : conf_path_() {}
@@ -121,4 +123,17 @@ const char *ConfigFileSyntaxError::what() const throw() {
 // Getter method for the configuration file path.
 const std::string &Config::getConfPath() const {
 	return conf_path_;
+}
+
+void	Config::ParseCGIConfig(std::ifstream& source) {
+	std::string line;
+	while (std::getline(source, line)) {
+		std::istringstream iss(line);
+		std::string key, value, path;
+		if (iss >> key >> value >> path) {
+			if (key == "CGIHandler") {
+				cgi_handlers[value] = path;		// value = extension, path = handler
+			}
+		}
+	}
 }
