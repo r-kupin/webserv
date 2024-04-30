@@ -6,7 +6,7 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/30 16:19:13 by mede-mas          #+#    #+#             */
-/*   Updated: 2024/04/30 17:29:13 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/04/30 17:34:25 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,8 +67,10 @@ std::string CGIExecutor::ExecuteCGI(const std::string& scriptPath, const std::ma
 
 std::vector<std::string> CGIExecutor::BuildEnvString(const std::map<std::string, std::string>& envVars) {
 	std::vector<std::string> result;
-	for (const auto& iter : envVars) {
-		result.push_back(iter.first + "=" + iter.second);
+	// Use explicit iterator type instead of 'auto'
+	for (std::map<std::string, std::string>::const_iterator iter = envVars.begin(); iter != envVars.end(); ++iter) {
+		// Access elements using iterator
+		result.push_back(iter->first + "=" + iter->second);
 	}
 	return result;
 }
