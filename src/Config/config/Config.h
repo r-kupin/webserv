@@ -6,7 +6,7 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/28 03:25:00 by  rokupin          #+#    #+#             */
-/*   Updated: 2024/04/30 17:25:04 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/05/02 14:23:32 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,6 +34,8 @@ struct RawNode {
 	std::string leftover_;
 };
 
+typedef	std::map<std::string, std::string> CGIMap;
+
 class Config {
 public:
 	class ConfigException : public std::exception {};
@@ -52,10 +54,10 @@ public:
 	l_sc				&GetServers();
 
 	// Adding map to store CGI extensions and their corresponding handler executables
-	std::map<std::string, std::string> cgi_handlers;
+	CGIMap	cgi_handlers;
 
 	// Additional methods for CGI configuration parsing
-	void	ParseCGIConfig(std::ifstream& source);
+	void	ParseCGIConfig(std::stringstream& source);
 
 protected:
 //-------------------parsing config filestream to the tree of nodes-------------

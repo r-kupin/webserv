@@ -6,7 +6,7 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/28 03:25:00 by  rokupin          #+#    #+#             */
-/*   Updated: 2024/04/30 17:09:01 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/05/02 13:53:16 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -123,17 +123,4 @@ const char *ConfigFileSyntaxError::what() const throw() {
 // Getter method for the configuration file path.
 const std::string &Config::getConfPath() const {
 	return conf_path_;
-}
-
-void	Config::ParseCGIConfig(std::ifstream& source) {
-	std::string line;
-	while (std::getline(source, line)) {
-		std::istringstream iss(line);
-		std::string key, value, path;
-		if (iss >> key >> value >> path) {
-			if (key == "CGIHandler") {
-				this->cgi_handlers[value] = path;		// value = extension, path = handler
-			}
-		}
-	}
 }

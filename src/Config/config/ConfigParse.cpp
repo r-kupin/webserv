@@ -6,38 +6,38 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/04 00:50:02 by  rokupin          #+#    #+#             */
-/*   Updated: 2024/04/30 16:46:42 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/05/02 14:17:38 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Config.h"
 
 void    exclude_comments(std::string &line) {
-    if (!line.empty()) {
-        size_t comment_position = line.find('#');
-        if (comment_position != std::string::npos) {
-            line = line.substr(0, comment_position);
-        }
-    }
+	if (!line.empty()) {
+		size_t comment_position = line.find('#');
+		if (comment_position != std::string::npos) {
+			line = line.substr(0, comment_position);
+		}
+	}
 }
 
 void    trim_whitespaces(std::string &line) {
-    if (!line.empty()) {
-        size_t whitespaces_before = line.find_first_not_of(" \t\n");
-        size_t whitespaces_after = line.find_last_not_of(" \t\n");
-        if (whitespaces_before != std::string::npos &&
-            whitespaces_after != std::string::npos )
-            line = line.substr(whitespaces_before,
-                               whitespaces_after - whitespaces_before + 1);
-        else
-            line = "";
-    }
+	if (!line.empty()) {
+		size_t whitespaces_before = line.find_first_not_of(" \t\n");
+		size_t whitespaces_after = line.find_last_not_of(" \t\n");
+		if (whitespaces_before != std::string::npos &&
+			whitespaces_after != std::string::npos )
+			line = line.substr(whitespaces_before,
+							   whitespaces_after - whitespaces_before + 1);
+		else
+			line = "";
+	}
 }
 
 bool is_min(size_t n, size_t a, size_t b) {
-    if (n < a && n < b)
-        return true;
-    return false;
+	if (n < a && n < b)
+		return true;
+	return false;
 }
 
 /**
@@ -47,15 +47,41 @@ bool is_min(size_t n, size_t a, size_t b) {
  * @param config input stream
  */
 void Config::ParseConfig(std::ifstream &config) {
-    v_str main;
-    main.push_back("main");
+	v_str main;
+	main.push_back("main");
 
-    std::string empty = std::string("");
-    RawNode root = ParseNode(config, empty, main);
-    if (!root.leftover_.empty()) {
-        ThrowSyntaxError("main block isn't closed!", config);
-    }
-    conf_root_ = root.node_;
+	std::string empty = std::string("");
+	RawNode root = ParseNode(config, empty, main);
+
+	// Check for leftover data after parsing main block
+	if (!root.leftover_.empty()) {
+		ThrowSyntaxError("main block isn't closed!", config);
+	}
+
+	// Assign the parsed root node to the configuration root
+	conf_root_ = root.node_;
+
+	// Reset the input stream to parse the CGI block
+	config.clear();
+	config.seekg(0);
+
+	std::string line;
+
+	// Read the configuration file line by line
+	while (std::getline(config, line)) {
+		// Check for the presence of a CGI block
+		if (line.find("cgi {") != std::string::npos) {
+			std::stringstream cgi_block;
+
+			// Read lines until the end of the CGI block (marked by '}')
+			while (std::getline(config, line) && line.find('}') == std::string::npos) {
+				cgi_block << line << "\n";
+			}
+
+			// Pass the CGI block to ParseCGIConfig to extract mappings
+			ParseCGIConfig(cgi_block);
+		}
+	}
 }
 
 /**
@@ -86,35 +112,35 @@ void Config::ParseConfig(std::ifstream &config) {
  */
 RawNode
 Config::ParseNode(std::ifstream &config, std::string &line_leftover,
-                  const v_str &main_directive) const {
-    std::string line;
-    RawNode current;
+				  const v_str &main_directive) const {
+	std::string line;
+	RawNode current;
 
-    current.node_.main_ = main_directive;
-    while (std::getline(config, line) || !line_leftover.empty()) {
-        PreprocessLine(line, line_leftover);
-        if (line.find('\'') != std::string::npos)
-            ThrowSyntaxError("Found a \' symbol. Please, use \" instead");
-        while (!line.empty()) {
-            size_t op_br_pos = line.find_first_of('{');
-            size_t cl_br_pos = line.find_first_of('}');
-            size_t sc_pos = line.find_first_of(';');
-            if (op_br_pos != std::string::npos &&
-                    is_min(op_br_pos, cl_br_pos, sc_pos))
-                GetChildNode(current, config, line);
-            if (sc_pos != std::string::npos &&
-                    is_min(sc_pos, op_br_pos, cl_br_pos))
-                GetDirective(line, current, config);
-            if (cl_br_pos != std::string::npos &&
-                    is_min( cl_br_pos, sc_pos, op_br_pos)) {
-                FinishSubNode(line, current, config);
-                return current;
-            }
-            HandleLineLeftower(line_leftover, line);
-        }
-    }
-    FinishMainNode(current, config);
-    return current;
+	current.node_.main_ = main_directive;
+	while (std::getline(config, line) || !line_leftover.empty()) {
+		PreprocessLine(line, line_leftover);
+		if (line.find('\'') != std::string::npos)
+			ThrowSyntaxError("Found a \' symbol. Please, use \" instead");
+		while (!line.empty()) {
+			size_t op_br_pos = line.find_first_of('{');
+			size_t cl_br_pos = line.find_first_of('}');
+			size_t sc_pos = line.find_first_of(';');
+			if (op_br_pos != std::string::npos &&
+					is_min(op_br_pos, cl_br_pos, sc_pos))
+				GetChildNode(current, config, line);
+			if (sc_pos != std::string::npos &&
+					is_min(sc_pos, op_br_pos, cl_br_pos))
+				GetDirective(line, current, config);
+			if (cl_br_pos != std::string::npos &&
+					is_min( cl_br_pos, sc_pos, op_br_pos)) {
+				FinishSubNode(line, current, config);
+				return current;
+			}
+			HandleLineLeftower(line_leftover, line);
+		}
+	}
+	FinishMainNode(current, config);
+	return current;
 }
 
 /**
@@ -126,10 +152,10 @@ Config::ParseNode(std::ifstream &config, std::string &line_leftover,
  * @param line_leftover unparsed leftovers from previous getline() call
  */
 void Config::PreprocessLine(std::string &line,
-                       const std::string &line_leftover) const {
-    line = line_leftover + " " + line;
-    exclude_comments(line);
-    trim_whitespaces(line);
+					   const std::string &line_leftover) const {
+	line = line_leftover + " " + line;
+	exclude_comments(line);
+	trim_whitespaces(line);
 }
 
 /**
@@ -141,24 +167,24 @@ void Config::PreprocessLine(std::string &line,
  * @param line needed to save leftovers
  */
 void Config::GetChildNode(RawNode &current,
-                          std::ifstream &config,
-                          std::string &line) const {
-    const RawNode &child = ParseNode(
-            config,
-            line,
-            ParseDirective(line, '{'));
-    current.node_.child_nodes_.push_back(child.node_);
-    line = child.leftover_;
+						  std::ifstream &config,
+						  std::string &line) const {
+	const RawNode &child = ParseNode(
+			config,
+			line,
+			ParseDirective(line, '{'));
+	current.node_.child_nodes_.push_back(child.node_);
+	line = child.leftover_;
 }
 
 /**
  * @brief Assigns directive to current node_
  */
 void Config::GetDirective(std::string &line, RawNode &current,
-                          std::ifstream &config) const {
-    if (line[0] == ';')
-        ThrowSyntaxError("found consecutive semicolons!", config);
-    current.node_.directives_.push_back(ParseDirective(line, ';'));
+						  std::ifstream &config) const {
+	if (line[0] == ';')
+		ThrowSyntaxError("found consecutive semicolons!", config);
+	current.node_.directives_.push_back(ParseDirective(line, ';'));
 }
 
 Config::Config(const Node &confRoot)
@@ -171,21 +197,21 @@ Config::Config(const Node &confRoot)
  * @throw exception if block is empty, `cause it makes no sense
  */
 void Config::FinishSubNode(std::string &line,
-                           RawNode &current,
-                           std::ifstream &config) const {
-    if (current.node_.main_[0] == "main")
-        ThrowSyntaxError("found unexpected '}' !", config);
-    size_t before_brace = line.find_first_not_of(" \t}");
-    size_t brace = line.find_first_of('}');
-    if (before_brace < brace)
-        ThrowSyntaxError("missing ';' after last directive in the block!",
-                         config);
-    if (line.size() > 1) {
-        line = line.substr(brace + 1);
-        current.leftover_ = line;
-    } else {
-        current.leftover_ = "";
-    }
+						   RawNode &current,
+						   std::ifstream &config) const {
+	if (current.node_.main_[0] == "main")
+		ThrowSyntaxError("found unexpected '}' !", config);
+	size_t before_brace = line.find_first_not_of(" \t}");
+	size_t brace = line.find_first_of('}');
+	if (before_brace < brace)
+		ThrowSyntaxError("missing ';' after last directive in the block!",
+						 config);
+	if (line.size() > 1) {
+		line = line.substr(brace + 1);
+		current.leftover_ = line;
+	} else {
+		current.leftover_ = "";
+	}
 }
 
 /**
@@ -202,40 +228,40 @@ void Config::FinishSubNode(std::string &line,
  * @return vector of strings - parsed directive
  */
 v_str Config::ParseDirective(std::string &line, char c) const {
-    v_str params;
-    std::string all_separators = " \t";
-    all_separators.push_back(c);
-    while (!line.empty() && line[0] != c) {
-        size_t separator = line.find_first_of(all_separators);
-        std::string word = line.substr(0, separator);
-        size_t first_quote = word.find_first_of('"');
-        if (first_quote != std::string::npos)
-            word = HandleQuotedExpression(line, separator, word, first_quote);
-        params.push_back(word);
-        line = line.substr(separator);
-        if (line.empty())
-            ThrowSyntaxError("missing \";\" after the end of quoted expression ");
-        line = line.substr(line.find_first_not_of(" \t"));
-    }
-    line = line.substr(1);
-    return params;
+	v_str params;
+	std::string all_separators = " \t";
+	all_separators.push_back(c);
+	while (!line.empty() && line[0] != c) {
+		size_t separator = line.find_first_of(all_separators);
+		std::string word = line.substr(0, separator);
+		size_t first_quote = word.find_first_of('"');
+		if (first_quote != std::string::npos)
+			word = HandleQuotedExpression(line, separator, word, first_quote);
+		params.push_back(word);
+		line = line.substr(separator);
+		if (line.empty())
+			ThrowSyntaxError("missing \";\" after the end of quoted expression ");
+		line = line.substr(line.find_first_not_of(" \t"));
+	}
+	line = line.substr(1);
+	return params;
 }
 
 std::string  Config::HandleQuotedExpression(const std::string &line,
-                                            size_t &separator,
-                                            const std::string &word,
-                                            size_t first_quote) const {
-    if (first_quote != 0) {
-        separator = first_quote;
-        return word.substr(0, first_quote);
-    }
-    size_t next_quote = 1;
-    while (next_quote < line.size() && line[next_quote] != '"')
-        ++next_quote;
-    if (next_quote == line.size())
-        ThrowSyntaxError("Unclosed quote expression");
-    separator = next_quote + 1;
-    return line.substr(1, next_quote - 1);
+											size_t &separator,
+											const std::string &word,
+											size_t first_quote) const {
+	if (first_quote != 0) {
+		separator = first_quote;
+		return word.substr(0, first_quote);
+	}
+	size_t next_quote = 1;
+	while (next_quote < line.size() && line[next_quote] != '"')
+		++next_quote;
+	if (next_quote == line.size())
+		ThrowSyntaxError("Unclosed quote expression");
+	separator = next_quote + 1;
+	return line.substr(1, next_quote - 1);
 }
 
 /**
@@ -244,17 +270,35 @@ std::string  Config::HandleQuotedExpression(const std::string &line,
  * @param line
  */
 void Config::HandleLineLeftower(std::string &line_leftover,
-                                std::string &line) const {
-    if (!line.empty()) {
-        line_leftover = line;
-        line = "";
-    } else {
-        line_leftover = "";
-    }
+								std::string &line) const {
+	if (!line.empty()) {
+		line_leftover = line;
+		line = "";
+	} else {
+		line_leftover = "";
+	}
 }
 
 void
 Config::FinishMainNode(RawNode &current, std::ifstream &config) const {
-    if (current.node_.main_[0] != "main")
-        ThrowSyntaxError("missing '}' !", config);
+	if (current.node_.main_[0] != "main")
+		ThrowSyntaxError("missing '}' !", config);
+}
+
+// Parse the CGI block from the configuration file
+void	Config::ParseCGIConfig(std::ifstream& source) {
+	std::string line;
+	while (std::getline(source, line)) {
+		std::istringstream iss(line);
+		std::string key, value, path;
+
+		// Extract the key, value (extension), and path (handler executable)
+		if (iss >> key >> value >> path) {
+			// If the kei is "CGIHandler, " add the extension-handler pair to the map
+			if (key == "CGIHandler") {
+				// store in the CGI map
+				this->cgi_handlers[value] = path;		// value = extension, path = handler
+			}
+		}
+	}
 }
