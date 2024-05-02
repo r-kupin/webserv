@@ -6,7 +6,7 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/28 03:25:00 by  rokupin          #+#    #+#             */
-/*   Updated: 2024/04/30 17:09:01 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/05/02 13:41:46 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -137,3 +137,4 @@ void	Config::ParseCGIConfig(std::ifstream& source) {
 		}
 	}
 }
+
