@@ -6,7 +6,7 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/04 00:50:02 by  rokupin          #+#    #+#             */
-/*   Updated: 2024/05/02 14:17:38 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/05/02 14:28:52 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -286,7 +286,7 @@ Config::FinishMainNode(RawNode &current, std::ifstream &config) const {
 }
 
 // Parse the CGI block from the configuration file
-void	Config::ParseCGIConfig(std::ifstream& source) {
+void	Config::ParseCGIConfig(std::stringstream& source) {
 	std::string line;
 	while (std::getline(source, line)) {
 		std::istringstream iss(line);
