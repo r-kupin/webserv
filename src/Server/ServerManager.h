@@ -6,7 +6,7 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/11 12:15:01 by  rokupin          #+#    #+#             */
-/*   Updated: 2024/05/02 15:55:15 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/05/02 18:06:25 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,7 +48,7 @@ class ServerManagerException : public std::exception {};
 	bool            AddClientToEpoll(int client_sock);
 	static void     Stop(int signal);
 	// Declaring function for executing CGI scripts
-	void			ExecuteCGIScript(Connection &connection, const std::string &cgi_path);
+	std::string		ExecuteCGIScript(Connection &connection, const std::string &cgi_path);
 //-------------------handle-----------------------------------------------------
 	const Server    &FindServer(const Connection &connection) const;
 	void            AcceptNewConnection(int server_socket);
