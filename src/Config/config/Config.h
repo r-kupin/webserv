@@ -6,7 +6,7 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/28 03:25:00 by  rokupin          #+#    #+#             */
-/*   Updated: 2024/05/02 13:40:30 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/05/02 14:23:32 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,7 +57,7 @@ public:
 	CGIMap	cgi_handlers;
 
 	// Additional methods for CGI configuration parsing
-	void	ParseCGIConfig(std::ifstream& source);
+	void	ParseCGIConfig(std::stringstream& source);
 
 protected:
 //-------------------parsing config filestream to the tree of nodes-------------
