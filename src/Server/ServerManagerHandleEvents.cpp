@@ -6,13 +6,14 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/22 14:52:05 by  rokupin          #+#    #+#             */
-/*   Updated: 2024/05/02 15:53:46 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/05/02 18:49:47 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ServerManager.h"
 #include "connection/request/RequestExceptions.h"
 #include "server/ServerExceptions.h"
+#include <unistd.h>
 
 /**
  *  Server retrieves the reference to the current connection.
@@ -35,11 +36,20 @@ void ServerManager::HandleEventsOnExistingConnection(int client_socket) {
 		}
 		if (connection.body_done_) {
 			// Check if the request is targeting a CGI script
-			std::string extension = GetExtensionFromURL(connection.getUrl);
-			auto it = config_cgi_handlers.find(extension);
+			std::string extension = GetExtensionFromURL(connection.getUrl());
+			std::map<std::string, std::string>::iterator it = config_.cgi_handlers.find(extension);
 			if (it != config_.cgi_handlers.end()) {
 				// The request is for a CGI script
-				ExecuteCGIScript(connection, it->second);
+				std::string cgi_output = ExecuteCGIScript(connection, it->second);
+			
+				// Construct and send the HTTP response with CGI output
+				std::string	response = "HTTP/1.1 200 OK\r\n";
+				response += "Content-length: " + Utils::NbrToString(cgi_output.size()) + "\r\n";
+				response += "Content-Type: text/html\r\n";
+				response += "\r\n";
+				response += cgi_output;
+
+				write(connection.connection_socket_, response.c_str(), response.size());
 			} else {
 				// Normal non-CGI request processing
 				if (!Respond(connection)) {
@@ -75,7 +85,7 @@ bool ServerManager::ProcessHeaders(Connection &connection) {
 		return false;
 	} catch (const EwouldblockEagain &e) {
 		// socket is still active, but no data is available.
-		Log("Red all available data, but request is incomplete. "
+		Log("Read all available data, but request is incomplete. "
 			"We'll come back later. Maybe.");
 		return false;
 	} catch (const ReadFromSocketFailedException &) {
@@ -137,6 +147,7 @@ bool ServerManager::ProcessBody(Connection &connection) {
 }
 
 bool ServerManager::Respond(Connection &connection) {
+	// Checking if resquest if for CGI
 	ServerResponse response(connection);
 
 	Log("Prepared response:");

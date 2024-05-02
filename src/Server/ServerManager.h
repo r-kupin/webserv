@@ -6,7 +6,7 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/11 12:15:01 by  rokupin          #+#    #+#             */
-/*   Updated: 2024/05/02 18:06:25 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/05/02 19:00:04 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 #define WEBSERV_SERVERMANAGER_H
 
 #include "server/Server.h"
+#include "../Config/config/Config.h"
 
 class Server;
 
@@ -68,6 +69,7 @@ class ServerManagerException : public std::exception {};
 	void            Log(const std::string &msg) const;
 	bool            IsListeningSocketFd(int socket) const;
 	bool            SetDescriptorNonBlocking(int sockfd) const;
+
 private:
 	int             epoll_fd_;
 	v_servers       servers_;
@@ -78,6 +80,8 @@ private:
 	int             epoll_events_count_;
 	int             epoll_connection_count_;
 	int             epoll_in_out_count_;
+
+	Config			config_;
 };
 
 #endif //WEBSERV_SERVERMANAGER_H
