@@ -6,7 +6,7 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/17 12:34:02 by  rokupin          #+#    #+#             */
-/*   Updated: 2024/05/02 16:06:38 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/05/02 17:41:03 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,6 +38,9 @@ struct Connection {
 
 	void				setContentType(const std::string &type);
 	std::string			getContentType() const;
+
+	void				setUrl(const std::string &url);
+	std::string			getUrl() const;
 
 	// Connection status flags
 	bool                url_headers_done_;
