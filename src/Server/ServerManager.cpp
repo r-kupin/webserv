@@ -6,7 +6,7 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/11 12:15:01 by  rokupin          #+#    #+#             */
-/*   Updated: 2024/05/02 18:07:10 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/05/03 11:38:54 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,7 +55,7 @@ std::string ServerManager::ExecuteCGIScript(Connection &connection, const std::s
 	int pipe_out[2];
 	if (pipe(pipe_out) == -1) {
 		Log("Failed to create pipe for CGI execution");
-		return;
+		return "";
 	}
 
 	// Fork to create a child process
