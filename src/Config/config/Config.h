@@ -6,7 +6,7 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/28 03:25:00 by  rokupin          #+#    #+#             */
-/*   Updated: 2024/05/02 14:23:32 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/05/03 10:36:33 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,7 +92,6 @@ protected:
 													 s_str &address_set,
 													 v_node_c_it &it) const;
 //-------------------getters, exceptions, etc-----------------------------------
-	l_sc                &GetServers();
 	void                ThrowSyntaxError(const std::string &msg,
 										 std::ifstream &config) const;
 	void                ThrowSyntaxError(const std::string &msg) const;
