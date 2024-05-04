@@ -6,12 +6,13 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/11 12:15:01 by  rokupin          #+#    #+#             */
-/*   Updated: 2024/05/03 11:38:54 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/05/04 17:40:42 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 // Include necessary headers for signal handling and the server manager's declaration.
 #include "ServerManager.h"
+#include "../connection/Connection.h"
 #include <csignal>
 #include <unistd.h>		// for fork and pipe
 #include <sys/wait.h>	// for waitpid
@@ -42,15 +43,22 @@ void ServerManager::Stop(int signal) {
 	}
 }
 
-// Helper function to extract the extension from a URL
-std::string ServerManager::GetExtensionFromURL(const std::string &url) {
-	size_t dot_pos = url.rfind('.');
-	if (dot_pos == std::string::npos)
-		return "";		// No extension found
-	return url.substr(dot_pos);
+// Helper function to map URL to CGI script path
+std::string ServerManager::GetCGIScriptPath(const std::string &url) {
+	std::string base_path = "../cgi-bin";
+	if (url.find("/cgi-bin/") == 0) {
+		// Appending rest of URL after "/cgi-bin/" (8 char - /)
+		return base_path + url.substr(8);
+	}
+	return "";
 }
 
 std::string ServerManager::ExecuteCGIScript(Connection &connection, const std::string &cgi_path) {
+	// Checking if "/cgi-bin/" present in URL
+	std::string cgi_path = GetCGIScriptPath(url_);
+	if (cgi_path.empty())
+		return "";
+	
 	// Create pipes for communication
 	int pipe_out[2];
 	if (pipe(pipe_out) == -1) {

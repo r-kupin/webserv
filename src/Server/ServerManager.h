@@ -6,7 +6,7 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/11 12:15:01 by  rokupin          #+#    #+#             */
-/*   Updated: 2024/05/02 19:00:04 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/05/04 17:30:03 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,7 +61,7 @@ class ServerManagerException : public std::exception {};
 	bool            Respond(Connection &connection);
 	void            CloseTimedOutConnections();
 	// Declaring the helper function to extract the extension from a URL
-	std::string		GetExtensionFromURL(const std::string &url);
+	std::string		GetCGIScriptPath(const std::string &url);
 //-------------------util-------------------------------------------------------
 	void            Cleanup();
 	void            PrintEventInfo(int events, int fd, int i) ;
