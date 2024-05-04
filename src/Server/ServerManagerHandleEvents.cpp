@@ -6,12 +6,13 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/22 14:52:05 by  rokupin          #+#    #+#             */
-/*   Updated: 2024/05/04 19:30:36 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/05/04 20:29:19 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ServerManager.h"
 #include "connection/request/RequestExceptions.h"
+#include "connection/request/ClientRequest.h"
 #include "server/ServerExceptions.h"
 #include <unistd.h>
 
@@ -35,6 +36,13 @@ void ServerManager::HandleEventsOnExistingConnection(int client_socket) {
 				return;
 		}
 		if (connection.body_done_) {
+
+			// Capture CGI-related data from the request
+			connection.setMethod(connection.request_.GetMethodAsString());
+			connection.setQueryString(connection.request_.GetQueryString());
+			connection.setContentType(connection.request_.GetHeaderValue("Content-Type"));
+			connection.setUrl(connection.request_.GetAddress());
+
 			// Check if the request is targeting a CGI script
 			std::string url = connection.getUrl();
 			std::string cgi_output;

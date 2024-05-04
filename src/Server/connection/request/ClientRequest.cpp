@@ -1,20 +1,21 @@
-/******************************************************************************/
+/* ************************************************************************** */
 /*                                                                            */
-/*                                                         :::      ::::::::  */
-/*    ClientMessage.cpp                                  :+:      :+:    :+:  */
-/*                                                     +:+ +:+         +:+    */
-/*    By: rokupin <rokupin@student.42.fr>            +#+  +:+       +#+       */
-/*                                                 +#+#+#+#+#+   +#+          */
-/*    Created: 2023/05/14 13:45:54 by rokupin           #+#    #+#            */
-/*                                                     ###   ########.fr      */
+/*                                                        :::      ::::::::   */
+/*   ClientRequest.cpp                                  :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2023/05/14 13:45:05 by  rokupin          #+#    #+#             */
+/*   Updated: 2024/05/04 20:22:17 by mede-mas         ###   ########.fr       */
 /*                                                                            */
-/******************************************************************************/
+/* ************************************************************************** */
 
 #include <csignal>
 #include <iostream>
 #include <algorithm>
 #include "ClientRequest.h"
 #include "RequestExceptions.h"
+#include "../Connection.h"
 
 ClientRequest::ClientRequest(v_c_b &is_running)
         : is_running_(is_running) {}
@@ -43,6 +44,7 @@ void ClientRequest::Init(int client_sock) {
     CheckURL(url);
     addr_ = ExtractAddr(url);
     addr_last_step_ = ExtractLastAddrStep(addr_);
+	method_ = ExtractMethod(raw_request_[0]);		// added for CGI
     if (addr_[addr_.size() - 1] == '/') {
         index_request_ = true;
         if (addr_ != "/")
@@ -57,6 +59,19 @@ void ClientRequest::Init(int client_sock) {
     if (HasHeaders(raw_request_))
         FillHeaders(raw_request_);
     CheckRequest(raw_request_);
+}
+
+std::string	ClientRequest::GetMethodAsString() const {
+	switch (method_) {
+		case GET:
+			return "GET";
+		case POST:
+			return "POST";
+		case DELETE:
+			return "DELETE";
+		default:
+			return "UNSUPPORTED";
+	}
 }
 
 /**

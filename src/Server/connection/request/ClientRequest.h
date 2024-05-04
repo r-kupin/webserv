@@ -1,14 +1,14 @@
-/******************************************************************************/
+/* ************************************************************************** */
 /*                                                                            */
-/*                                                         :::      ::::::::  */
-/*    ClientMessage.h                                    :+:      :+:    :+:  */
-/*                                                     +:+ +:+         +:+    */
-/*    By: rokupin <rokupin@student.42.fr>            +#+  +:+       +#+       */
-/*                                                 +#+#+#+#+#+   +#+          */
-/*    Created: 2023/05/14 13:45:54 by rokupin           #+#    #+#            */
-/*                                                     ###   ########.fr      */
+/*                                                        :::      ::::::::   */
+/*   ClientRequest.h                                    :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2023/05/14 13:45:05 by  rokupin          #+#    #+#             */
+/*   Updated: 2024/05/04 20:37:47 by mede-mas         ###   ########.fr       */
 /*                                                                            */
-/******************************************************************************/
+/* ************************************************************************** */
 
 #ifndef WEBSERV_CLIENTREQUEST_H
 #define WEBSERV_CLIENTREQUEST_H
@@ -75,7 +75,8 @@ public:
     const std::string   &GetFragment() const;
     size_t              GetCurlMetadataLength(const std::string &delimiter) const;
     const std::string   &GetAssociatedFilename() const;
-
+	std::string			GetMethodAsString() const;
+	std::string			GetQueryString() const;
     void                SetAssociatedFilename(const std::string &associatedFilename);
 //-------------------manual body processing-------------------------------------
     void                TellClientToContinueIfNeed(int socket) const;
