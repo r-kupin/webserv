@@ -6,13 +6,13 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/11 12:15:01 by  rokupin          #+#    #+#             */
-/*   Updated: 2024/05/04 17:40:42 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/05/04 19:41:26 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 // Include necessary headers for signal handling and the server manager's declaration.
 #include "ServerManager.h"
-#include "../connection/Connection.h"
+#include "connection/Connection.h"
 #include <csignal>
 #include <unistd.h>		// for fork and pipe
 #include <sys/wait.h>	// for waitpid
@@ -55,7 +55,7 @@ std::string ServerManager::GetCGIScriptPath(const std::string &url) {
 
 std::string ServerManager::ExecuteCGIScript(Connection &connection, const std::string &cgi_path) {
 	// Checking if "/cgi-bin/" present in URL
-	std::string cgi_path = GetCGIScriptPath(url_);
+	std::string cgi_path = GetCGIScriptPath(connection.getUrl());
 	if (cgi_path.empty())
 		return "";
 	
@@ -111,9 +111,7 @@ std::string ServerManager::ExecuteCGIScript(Connection &connection, const std::s
 		// Wait for the child process to finish
 		waitpid(pid, NULL, 0);
 
-		// Handle CGI output (e.g., send HTTP response back to the client)
-		// std::cout << "CGI Output: " << output << std::endl;
-		
+		// Return CGI output
 		return output;
 	} else {
 		// Fork failed, log and handle error

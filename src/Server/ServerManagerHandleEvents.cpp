@@ -6,7 +6,7 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/22 14:52:05 by  rokupin          #+#    #+#             */
-/*   Updated: 2024/05/02 18:49:47 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/05/04 19:30:36 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,11 +36,12 @@ void ServerManager::HandleEventsOnExistingConnection(int client_socket) {
 		}
 		if (connection.body_done_) {
 			// Check if the request is targeting a CGI script
-			std::string extension = GetExtensionFromURL(connection.getUrl());
-			std::map<std::string, std::string>::iterator it = config_.cgi_handlers.find(extension);
-			if (it != config_.cgi_handlers.end()) {
+			std::string url = connection.getUrl();
+			std::string cgi_output;
+			
+			if (url.find("/cgi-bin/") == 0) {
 				// The request is for a CGI script
-				std::string cgi_output = ExecuteCGIScript(connection, it->second);
+				cgi_output = ExecuteCGIScript(connection, url);
 			
 				// Construct and send the HTTP response with CGI output
 				std::string	response = "HTTP/1.1 200 OK\r\n";
