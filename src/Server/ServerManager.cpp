@@ -6,7 +6,7 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/11 12:15:01 by  rokupin          #+#    #+#             */
-/*   Updated: 2024/05/04 19:41:26 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/05/04 20:45:03 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,8 +54,6 @@ std::string ServerManager::GetCGIScriptPath(const std::string &url) {
 }
 
 std::string ServerManager::ExecuteCGIScript(Connection &connection, const std::string &cgi_path) {
-	// Checking if "/cgi-bin/" present in URL
-	std::string cgi_path = GetCGIScriptPath(connection.getUrl());
 	if (cgi_path.empty())
 		return "";
 	
