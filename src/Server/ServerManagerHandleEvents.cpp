@@ -26,51 +26,22 @@
 void ServerManager::HandleEventsOnExistingConnection(int client_socket) {
 	Connection		&connection = connections_[client_socket];
 
-	// while (is_running_) {
-	do {
+	 while (is_running_) {
 		if (!connection.url_headers_done_) {
 			if (!ProcessHeaders(connection))
-				// return;
-				break;
+				 return;
 		}
 		if (connection.url_headers_done_ && !connection.body_done_) {
 			if (!ProcessBody(connection))
-				// return;
-				break;
+				 return;
 		}
 		if (connection.body_done_) {
-
-			// Capture CGI-related data from the request
-			connection.setMethod(connection.request_.GetMethodAsString());
-			connection.setQueryString(connection.request_.GetQueryString());
-			connection.setContentType(connection.request_.GetHeaderValue("Content-Type"));
-			connection.setUrl(connection.request_.GetAddress());
-
-			// Check if the request is targeting a CGI script
-			std::string url = connection.getUrl();
-			std::string cgi_output;
-			
-			if (url.find("/cgi-bin/") == 0) {
-				// The request is for a CGI script
-				cgi_output = ExecuteCGIScript(connection, url);
-			
-				// Construct and send the HTTP response with CGI output
-				std::string	response = "HTTP/1.1 200 OK\r\n";
-				response += "Content-length: " + Utils::NbrToString(cgi_output.size()) + "\r\n";
-				response += "Content-Type: text/html\r\n";
-				response += "\r\n";
-				response += cgi_output;
-
-				write(connection.connection_socket_, response.c_str(), response.size());
-			} else {
-				// Normal non-CGI request processing
-				if (!Respond(connection)) {
-				CloseConnectionWithLogMessage(client_socket, "Client request triggered error");
-				}
-			}
-			
+            if (!Respond(connection)) {
+                CloseConnectionWithLogMessage(client_socket, "Client request "
+                                                             "triggered error");
+            }
 		}
-	} while (false);		// Properly break out loop to prevent infinite looping
+	}
 }
 
 /**

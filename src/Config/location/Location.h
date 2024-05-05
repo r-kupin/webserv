@@ -55,6 +55,7 @@ struct Location {
     l_loc_it                parent_;
     bool                    ghost_;
 //-------------------fastcgi related
+    bool                    is_cgi_;
     m_str_str               fastcgi_params_;
     std::string             fastcgi_pass_;
 
@@ -112,6 +113,8 @@ struct Location {
     friend std::ostream &operator<<(std::ostream &os, const Location &location);
 
     void HandleAutoindex(const v_str &directive);
+
+    void HandleCGI(const v_str &directive);
 };
 
 //-------------------sublocation search predicate class-------------------------

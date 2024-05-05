@@ -57,7 +57,11 @@ void ServerResponse::ComposeResponse(const Location &synth) {
         if (headers_.find("Content-Type") == headers_.end())
             AddHeader("Content-Type", "text/html");
     } else {
-        AddHeader("Content-Type", "application/octet-stream");
+        if (!synth.is_cgi_)
+            AddHeader("Content-Type", "application/octet-stream");
+        else {
+            AddHeader("Content-Type", "text/html");
+        }
         body_str_ = synth.return_custom_message_;
     }
     AddHeader("Content-Length", Utils::NbrToString(body_str_.size()));
