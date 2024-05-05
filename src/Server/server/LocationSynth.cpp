@@ -91,16 +91,13 @@ Location Server::ProcessRequest(Connection &connection) const {
 
                     // Read CGI output from the child process
                     ssize_t bytes_read;
-                    sleep(1);
+                    waitpid(pid, NULL, 0);
                     while ((bytes_read = read(pipe_out[0], buffer, sizeof(buffer) - 1)) > 0) {
                         buffer[bytes_read] = '\0';
                         synth.return_custom_message_ += buffer;
                     }
                     synth.return_code_ = 200;
                     close(pipe_out[0]);
-
-                    // Wait for the child process to finish
-                    waitpid(pid, NULL, 0);
                 } else {
                     ThrowException("fork failed");
                 }
