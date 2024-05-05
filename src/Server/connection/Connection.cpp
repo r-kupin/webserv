@@ -12,18 +12,25 @@
 
 #include "Connection.h"
 
-// Constructor initializing with running status
-Connection::Connection(v_c_b &is_running)
-	: url_headers_done_(false),
-	body_done_(false),
-	open_time_(Utils::Get().TimeNow()),
-	connection_socket_(0),
-	server_listening_socket_(0),
-	request_(is_running),
-	method_(""),
-	query_string_(""),
-	content_type_(""),
-	url_("") {}
+
+Connection::Connection(v_c_b &is_running, int &active_cgis)
+: url_headers_done_(false),
+    body_done_(false),
+    open_time_(Utils::Get().TimeNow()),
+    connection_socket_(0),
+    server_listening_socket_(0),
+    request_(is_running),
+    active_cgis_
+    (active_cgis) {}
+
+Connection::Connection(v_c_b &is_running, int connection_socket, int server_socket, int &active_cgis)
+: url_headers_done_(false),
+    body_done_(false),
+    open_time_(Utils::Get().TimeNow()),
+    connection_socket_(connection_socket),
+    server_listening_socket_(server_socket),
+    request_(is_running),
+    active_cgis_(active_cgis) {}
 
 // Copy constructor
 Connection::Connection(const Connection &other)
@@ -34,23 +41,7 @@ Connection::Connection(const Connection &other)
 	server_listening_socket_(other.server_listening_socket_),
 	address_(other.address_),
 	request_(other.request_),
-	method_(other.method_),
-	query_string_(other.query_string_),
-	content_type_(other.content_type_),
-	url_(other.url_) {}
-
-// Constructor initializing with connection and server socket
-Connection::Connection(v_c_b &is_running, int connection_socket, int server_socket)
-	: url_headers_done_(false),
-	body_done_(false),
-	open_time_(Utils::Get().TimeNow()),
-	connection_socket_(connection_socket),
-	server_listening_socket_(server_socket),
-	request_(is_running),
-	method_(""),
-	query_string_(""),
-	content_type_(""),
-	url_("") {}
+    active_cgis_(other.active_cgis_){}
 
 // Assignement operator
 Connection &Connection::operator=(const Connection &other) {
@@ -63,10 +54,7 @@ Connection &Connection::operator=(const Connection &other) {
 	body_done_ = other.body_done_;
 	address_ = other.address_;
 	open_time_ = other.open_time_;
-	method_ = other.method_;
-	query_string_ = other.query_string_;
-	content_type_ = other.content_type_;
-	url_ = other.url_;
+	active_cgis_ = other.active_cgis_;
 	return *this;
 }
 

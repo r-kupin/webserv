@@ -124,8 +124,11 @@ protected:
     Location                    &HandleCGI(const Connection &connection,
                                            const Srch_c_Res &res,
                                            const l_loc_c_it &found, Location &synth) const;
-    void                        ChildCGI(const Connection &connection, const std::string &address, const int *pipe_out) const;
-    void                        ParentCGI(Location &synth, const int *pipe_out, pid_t pid) const;
+    void                        ChildCGI(const Connection &connection,
+                                         const std::string &address,
+                                         const int *pipe_out) const;
+    void                        ParentCGI(Location &synth, const int *pipe_out,
+                                          pid_t pid, int &active_cgis) const;
 //-------------------misc utils-------------------------------------------------
     void                        Log(const std::string &msg) const;
     void                        Log(const std::string &msg, int listen_sock) const;

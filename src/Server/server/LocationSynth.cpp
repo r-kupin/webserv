@@ -63,12 +63,13 @@ Location &Server::HandleCGI(const Connection &connection, const Srch_c_Res &res,
             ThrowException("pipe failed");
         }
 
+        connection.active_cgis_++;
         pid_t pid = fork();
         // Child process
         if (pid == 0) {
             ChildCGI(connection, address, pipe_out);
         } else if (pid > 0) {
-            ParentCGI(synth, pipe_out, pid);
+            ParentCGI(synth, pipe_out, pid, connection.active_cgis_);
         } else {
             ThrowException("fork failed");
         }
@@ -76,7 +77,7 @@ Location &Server::HandleCGI(const Connection &connection, const Srch_c_Res &res,
     return synth;
 }
 
-void Server::ParentCGI(Location &synth, const int *pipe_out, pid_t pid) const {
+void Server::ParentCGI(Location &synth, const int *pipe_out, pid_t pid, int &active_cgis) const {
     // Parent process closing unused write end of the pipe
     close(pipe_out[1]);
     char buffer[1024];
@@ -84,6 +85,7 @@ void Server::ParentCGI(Location &synth, const int *pipe_out, pid_t pid) const {
     // Read CGI output from the child process
     ssize_t bytes_read;
     waitpid(pid, NULL, 0);
+    active_cgis--;
     while ((bytes_read = read(pipe_out[0], buffer, sizeof(buffer) - 1)) > 0) {
         buffer[bytes_read] = '\0';
         synth.return_custom_message_ += buffer;

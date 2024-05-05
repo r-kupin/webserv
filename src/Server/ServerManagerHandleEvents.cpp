@@ -27,6 +27,7 @@ void ServerManager::HandleEventsOnExistingConnection(int client_socket) {
 	Connection		&connection = connections_[client_socket];
 
 	 while (is_running_) {
+         Log("cgis active:" + Utils::NbrToString(active_cgi_processes_));
 		if (!connection.url_headers_done_) {
 			if (!ProcessHeaders(connection))
 				 return;
@@ -141,6 +142,6 @@ bool ServerManager::Respond(Connection &connection) {
 	// this socket
 	connections_[connection.connection_socket_] =
 			Connection(is_running_, connection.connection_socket_,
-					   connection.server_listening_socket_);
+					   connection.server_listening_socket_, connection.active_cgis_);
 	return !Utils::Get().IsErrorCode(response.GetCode());
 }

@@ -62,7 +62,7 @@ void            ServerManager::ThrowException(const std::string &msg) const {
 void ServerManager::CloseConnectionWithLogMessage(int socket,
                                                   const std::string &msg) {
     Log("Connection closed. " + msg);
-    connections_[socket] = Connection(is_running_);
+    connections_[socket] = Connection(is_running_, active_cgi_processes_);
     // Explicitly delete socket from epoll instance to stop monitoring for events
     epoll_ctl(epoll_fd_, EPOLL_CTL_DEL, socket, NULL);
     // Before closing the socket, shutdown the write side to send a FIN packet

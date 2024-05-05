@@ -18,7 +18,7 @@
 #include <sys/wait.h>	// for waitpid
 
 // Default constructor for the ServerManager class.
-ServerManager::ServerManager() {}
+ServerManager::ServerManager() : active_cgi_processes_(0) {}
 
 // Destructor for the ServerManager class.
 ServerManager::~ServerManager() {}

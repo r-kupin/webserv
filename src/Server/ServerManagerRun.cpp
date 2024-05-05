@@ -56,6 +56,7 @@ void    ServerManager::EventLoop() {
             // check all existing connections and close expired ones
 //            CheckForPendingCGIs();
             CloseTimedOutConnections();
+            Log("cgis active:" + Utils::NbrToString(active_cgi_processes_));
         }
     }
 }
@@ -89,7 +90,7 @@ void ServerManager::AcceptNewConnection(int server_socket) {
     } else if (AddClientToEpoll(client_socket)) {
         // associate client's socket with server's listener
         connections_[client_socket] = Connection(is_running_, client_socket,
-                                                 server_socket);
+                                                 server_socket, active_cgi_processes_);
         Log("Accepted client connection from socket " + Utils::NbrToString(client_socket));
     } else {
         Log("Error adding client socket to epoll");

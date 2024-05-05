@@ -18,8 +18,8 @@
 
 struct Connection {
 	// Existing constructors
-	Connection(v_c_b &is_running);
-	Connection(v_c_b &is_running, int connection_socket, int server_socket);
+	Connection(v_c_b &is_running, int &active_cgis);
+	Connection(v_c_b &is_running, int connection_socket, int server_socket, int &active_cgis);
 	Connection(const Connection &other);
 
 	// Assignement operator
@@ -43,12 +43,7 @@ struct Connection {
 	ClientRequest       request_;
 	Location            location_;
 
-	private:
-	// New members for storing CGI-related data
-	std::string			method_;
-	std::string			query_string_;
-	std::string			content_type_;
-	std::string			url_;
+    int                 &active_cgis_;
 };
 
 #endif //WEBSERV_CONNECTION_H
