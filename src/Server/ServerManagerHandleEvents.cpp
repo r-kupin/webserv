@@ -6,7 +6,7 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/22 14:52:05 by  rokupin          #+#    #+#             */
-/*   Updated: 2024/05/04 20:29:19 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/05/05 16:22:27 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,14 +26,17 @@
 void ServerManager::HandleEventsOnExistingConnection(int client_socket) {
 	Connection		&connection = connections_[client_socket];
 
-	while (is_running_) {
+	// while (is_running_) {
+	do {
 		if (!connection.url_headers_done_) {
 			if (!ProcessHeaders(connection))
-				return;
+				// return;
+				break;
 		}
 		if (connection.url_headers_done_ && !connection.body_done_) {
 			if (!ProcessBody(connection))
-				return;
+				// return;
+				break;
 		}
 		if (connection.body_done_) {
 
@@ -67,7 +70,7 @@ void ServerManager::HandleEventsOnExistingConnection(int client_socket) {
 			}
 			
 		}
-	}
+	} while (false);		// Properly break out loop to prevent infinite looping
 }
 
 /**

@@ -6,7 +6,7 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/11 12:15:01 by  rokupin          #+#    #+#             */
-/*   Updated: 2024/05/04 20:45:03 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/05/05 16:20:09 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,8 @@ void ServerManager::Start() {
 // It checks if the signal received is SIGINT or SIGSTOP, and if so,
 // sets a flag to indicate that the servers should stop running.
 void ServerManager::Stop(int signal) {
-	if (signal == SIGINT || signal == SIGSTOP) {
+	// if (signal == SIGINT || signal == SIGSTOP) {
+	if (signal == SIGINT || signal == SIGTERM) {
 		std::cout << "\nStopping servers..." << std::endl;
 		is_running_ = false;
 	}
@@ -68,6 +69,12 @@ std::string ServerManager::ExecuteCGIScript(Connection &connection, const std::s
 	pid_t pid = fork();
 	// Child process
 	if (pid == 0) {
+
+		// Redirect stdout to pipe_out (write end of the pipe)
+		close(pipe_out[0]);
+		dup2(pipe_out[1], STDOUT_FILENO);
+		close(pipe_out[1]);
+
 		// Set environment variables
 		std::vector<std::string> env_strings;
 		std::vector<char*> env;
@@ -82,18 +89,16 @@ std::string ServerManager::ExecuteCGIScript(Connection &connection, const std::s
 			env.push_back(const_cast<char*>(env_strings[i].c_str()));
 		env.push_back(NULL);
 
-		// Redirect stdout to pipe_out (write end of the pipe)
-		close(pipe_out[0]);
-		dup2(pipe_out[1], STDOUT_FILENO);
-		close(pipe_out[1]);
-
 		// Execute the CGI script
 		char *args[] = { const_cast<char*>(cgi_path.c_str()), NULL };
 		execve(cgi_path.c_str(), args, env.data());
+
 		// Exit on failure
 		_exit(1);
+
 	// Parent process
 	} else if (pid > 0) {
+		// Parent process closing unused write end of the pipe
 		close(pipe_out[1]);
 		char buffer[1024];
 		std::string output;
