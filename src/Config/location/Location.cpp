@@ -276,8 +276,11 @@ void Location::ProcessDirectives(const std::vector<v_str> &directives) {
     bool err = false;
     bool cl_max_bd_size = false;
     bool uploads = false;
+    bool cgi = false;
 
     for (size_t i = 0; i < directives.size(); ++i) {
+        if (UMarkDefined("cgi", cgi, directives[i]))
+            HandleCGI(directives[i]);
         if (UMarkDefined("root", root, directives[i]))
             HandleRoot(directives[i]);
         if (UMarkDefined("autoindex", autoindex, directives[i]))
@@ -294,6 +297,20 @@ void Location::ProcessDirectives(const std::vector<v_str> &directives) {
         if (UMarkDefined("upload_store", uploads, directives[i]))
             SetUploadsDirectory(directives[i]);
     }
+}
+
+
+void Location::HandleCGI(const v_str &directive) {
+    if (directive.size() == 2) {
+        if (directive[1] == "true") {
+            is_cgi_ = true;
+            return;
+        } else if (directive[1] == "false") {
+            is_cgi_ = false;
+            return;
+        }
+    }
+    ThrowLocationException("cgi directive is wrong");
 }
 
 void Location::HandleAutoindex(const v_str &directive) {
@@ -638,3 +655,4 @@ std::ostream &operator<<(std::ostream &os, const Location &location) {
         print_sublocations(os, location);
     return os;
 }
+

@@ -13,6 +13,7 @@
 #include <iostream>
 #include <algorithm>
 #include <csignal>
+#include <sys/wait.h>
 #include "Server.h"
 
 /**
@@ -41,8 +42,69 @@ Location Server::ProcessRequest(Connection &connection) const {
         // return redirection rule isn't set
         if (!found->uploads_path_.empty()) {
             HandleUpload(request, connection.connection_socket_, found, synth);
-//      } else if (???) {
-//          Handle CGI
+        } else if (found->is_cgi_) {
+            std::string address = found->root_ + res.leftower_address_;
+            int fs_status = Utils::CheckFilesystem(address);
+            if (fs_status == COMM_FILE) {
+
+                int pipe_out[2];
+                if (pipe(pipe_out) == -1) {
+                    Log("Failed to create pipe for CGI execution");
+                    ThrowException("pipe failed");
+                }
+
+                pid_t pid = fork();
+                // Child process
+                if (pid == 0) {
+
+                    // Redirect stdout to pipe_out (write end of the pipe)
+                    close(pipe_out[0]);
+                    dup2(pipe_out[1], STDOUT_FILENO);
+                    close(pipe_out[1]);
+
+                    // Set environment variables
+                    std::vector<std::string> env_strings;
+                    std::vector<char*> env;
+                    std::string method = "REQUEST_METHOD=GET";
+//                    std::string query_string = "QUERY_STRING=" + connection.getQueryString();
+                    std::string content_type = "CONTENT_TYPE=" + connection.getContentType();
+                    env_strings.push_back(method);
+//                    env_strings.push_back(query_string);
+                    env_strings.push_back(content_type);
+
+                    for (size_t i = 0; i < env_strings.size(); ++i)
+                        env.push_back(const_cast<char*>(env_strings[i].c_str()));
+                    env.push_back(NULL);
+
+                    // Execute the CGI script
+                    char *args[] = { const_cast<char*>(address.c_str()), NULL };
+                    execve(address.c_str(), args, env.data());
+
+                    // Exit on failure
+                    _exit(1);
+
+                    // Parent process
+                } else if (pid > 0) {
+                    // Parent process closing unused write end of the pipe
+                    close(pipe_out[1]);
+                    char buffer[1024];
+
+                    // Read CGI output from the child process
+                    ssize_t bytes_read;
+                    sleep(1);
+                    while ((bytes_read = read(pipe_out[0], buffer, sizeof(buffer) - 1)) > 0) {
+                        buffer[bytes_read] = '\0';
+                        synth.return_custom_message_ += buffer;
+                    }
+                    synth.return_code_ = 200;
+                    close(pipe_out[0]);
+
+                    // Wait for the child process to finish
+                    waitpid(pid, NULL, 0);
+                } else {
+                    ThrowException("fork failed");
+                }
+            }
         } else {
             HandleStatic(request, res, found, synth);
         }
