@@ -22,13 +22,15 @@ Location::Location()
     autoindex_(false),
     return_code_(0),
     client_max_body_size_(1000000),
-    ghost_(false) {}
+    ghost_(false),
+    is_cgi_(false){}
 
 // link to parent? indexes?
 Location::Location(bool ghost, const std::string &address)
     : full_address_(HandleAddressInConstructor(address)),
     address_(GetParticularAddress(address)),
-    ghost_(ghost) {}
+    ghost_(ghost),
+    is_cgi_(false) {}
 
 Location::Location(const Location& other)
     : error_pages_(other.error_pages_),
@@ -50,8 +52,7 @@ Location::Location(const Location& other)
     body_file_(other.body_file_),
     parent_(other.parent_),
     ghost_(other.ghost_),
-    fastcgi_params_(other.fastcgi_params_),
-    fastcgi_pass_(other.fastcgi_pass_) {}
+    is_cgi_(other.is_cgi_) {}
 
 Location::Location(const std::string &address)
     : has_own_index_defined_(false),
@@ -61,7 +62,8 @@ Location::Location(const std::string &address)
     client_max_body_size_(1000000),
     full_address_(HandleAddressInConstructor(address)),
     address_(GetParticularAddress(address)),
-    ghost_(false) {}
+    ghost_(false),
+    is_cgi_(false) {}
 
 Location::Location(const std::string &address, l_loc_it parent)
     : has_own_index_defined_(false),
@@ -72,7 +74,8 @@ Location::Location(const std::string &address, l_loc_it parent)
     full_address_(HandleAddressInConstructor(address)),
     address_(GetParticularAddress(address)),
     parent_(parent),
-    ghost_(false) {
+    ghost_(false),
+    is_cgi_(false) {
     if (parent->index_defined_in_parent_ ||
         parent->has_own_index_defined_) {
         index_defined_in_parent_ = true;
@@ -303,7 +306,10 @@ void Location::ProcessDirectives(const std::vector<v_str> &directives) {
 void Location::HandleCGI(const v_str &directive) {
     if (directive.size() == 2) {
         if (directive[1] == "true") {
-            is_cgi_ = true;
+            if (uploads_path_.empty())
+                is_cgi_ = true;
+            else
+                ThrowLocationException("can't be an upload and cgi");
             return;
         } else if (directive[1] == "false") {
             is_cgi_ = false;
@@ -451,6 +457,8 @@ void Location::HandleRoot(const v_str &directive) {
 
 void Location::SetUploadsDirectory(const v_str &directive) {
     if (directive.size() == 2) {
+        if (is_cgi_)
+            ThrowLocationException("can't be an upload and cgi");
         std::string uploads = directive[1];
         if (uploads.empty() || uploads.at(uploads.size() - 1) != '/') {
             uploads_path_ = directive[1];
@@ -517,8 +525,6 @@ Location &Location::operator=(const Location &rhs) {
     body_file_ = rhs.body_file_;
     parent_ = rhs.parent_;
     ghost_ = rhs.ghost_;
-    fastcgi_params_ = rhs.fastcgi_params_;
-    fastcgi_pass_ = rhs.fastcgi_pass_;
     return *this;
 }
 
@@ -560,10 +566,6 @@ bool Location::operator==(const Location &rhs) const {
     if(parent_ != rhs.parent_)
         return false;
     if(ghost_ != rhs.ghost_)
-        return false;
-    if(fastcgi_params_ != rhs.fastcgi_params_)
-        return false;
-    if(fastcgi_pass_ != rhs.fastcgi_pass_)
         return false;
     return true;
 }
@@ -653,6 +655,8 @@ std::ostream &operator<<(std::ostream &os, const Location &location) {
         print_parent_info(os, location);
     if (!location.sublocations_.empty())
         print_sublocations(os, location);
+    if (location.is_cgi_)
+        os << location.full_address_ << "cgi true" << std::endl;
     return os;
 }
 

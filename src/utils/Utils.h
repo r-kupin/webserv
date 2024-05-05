@@ -44,6 +44,8 @@ typedef std::map<std::string, std::string>::const_iterator  m_str_str_c_it;
 typedef std::list<std::string>                              l_str;
 typedef std::list<std::string>::const_iterator              l_str_c_it;
 
+enum Methods {GET, POST, DELETE, UNSUPPORTED};
+
 class Utils {
 public:
     class UtilsException : public std::exception {};
@@ -67,6 +69,7 @@ public:
 //-------------------string/container utils-------------------------------------
     static std::string  NiceTimestamp();
 
+    static std::string  ExtractMethod(Methods methods);
     static std::string  NbrToString(size_t n);
     static int          FindFirstDifference(const std::string &s1,
                                             const std::string &s2);
@@ -79,9 +82,6 @@ public:
                                        const std::string &pattern);
     static void         OutputMap(const m_str_str &map, std::ostream &os);
     static bool         IsPositiveNumber(const std::string &str);
-    static bool         IsAddress(const std::string &str);
-    static bool         IsValidAddrWithPort(const std::string &str);
-
     static std::string  LookupDNS(const std::string &host);
 //-------------------HTTP utils-------------------------------------------------
     bool                IsErrorCode(int code);

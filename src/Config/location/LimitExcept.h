@@ -20,8 +20,6 @@
 
 #include "../Node.h"
 
-enum Methods {GET, POST, DELETE, UNSUPPORTED};
-
 struct Limit {
     class LimitExceptException : public std::exception {};
 

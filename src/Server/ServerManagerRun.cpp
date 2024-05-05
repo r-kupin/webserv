@@ -54,6 +54,7 @@ void    ServerManager::EventLoop() {
         } else {
             // no events were reported during epoll_wait timeout:
             // check all existing connections and close expired ones
+//            CheckForPendingCGIs();
             CloseTimedOutConnections();
         }
     }

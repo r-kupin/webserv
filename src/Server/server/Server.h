@@ -120,6 +120,12 @@ protected:
                                              Location &synth) const;
     void                        NoUpoladDataAvailable(int file_fd,
                                                       ssize_t bytes_read) const;
+//-------------------cgi related------------------------------------------------
+    Location                    &HandleCGI(const Connection &connection,
+                                           const Srch_c_Res &res,
+                                           const l_loc_c_it &found, Location &synth) const;
+    void                        ChildCGI(const Connection &connection, const std::string &address, const int *pipe_out) const;
+    void                        ParentCGI(Location &synth, const int *pipe_out, pid_t pid) const;
 //-------------------misc utils-------------------------------------------------
     void                        Log(const std::string &msg) const;
     void                        Log(const std::string &msg, int listen_sock) const;

@@ -29,19 +29,6 @@ struct Connection {
 	bool                IsOpen() const;
 	long                HowLongBeingActive(long now) const;
 
-	// CGI-related method declarations
-	void				setMethod(const std::string &method);
-	std::string			getMethod() const;
-
-	void				setQueryString(const std::string &query);
-	std::string			getQueryString() const;
-
-	void				setContentType(const std::string &type);
-	std::string			getContentType() const;
-
-	void				setUrl(const std::string &url);
-	std::string			getUrl() const;
-
 	// Connection status flags
 	bool                url_headers_done_;
 	bool                body_done_;

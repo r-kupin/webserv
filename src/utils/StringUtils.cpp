@@ -162,4 +162,16 @@ bool Utils::IsPositiveNumber(const std::string &str) {
             str.find_first_not_of("1234567890") == std::string::npos;
 }
 
+std::string Utils::ExtractMethod(Methods methods) {
+    if (methods == GET) {
+        return "GET";
+    } if (methods == POST) {
+        return "POST";
+    } if (methods == DELETE) {
+        return "DELETE";
+    } else {
+        return "UNSUPPORTED";
+    }
+}
+
 

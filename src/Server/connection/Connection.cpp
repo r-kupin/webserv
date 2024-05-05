@@ -79,16 +79,3 @@ bool	Connection::IsOpen() const {
 long	Connection::HowLongBeingActive(long now) const {
 	return now - open_time_;
 }
-
-// Set and get methods for CGI-related properties
-void		Connection::setMethod(const std::string &method) { method_ = method; }
-std::string	Connection::getMethod() const { return method_; }
-
-void		Connection::setQueryString(const std::string &query) { query_string_ = query; }
-std::string	Connection::getQueryString() const { return query_string_; }
-
-void		Connection::setContentType(const std::string &type) { content_type_ = type; }
-std::string	Connection::getContentType() const { return content_type_; }
-
-void		Connection::setUrl(const std::string &url) { url_ = url; }
-std::string	Connection::getUrl() const { return url_; }

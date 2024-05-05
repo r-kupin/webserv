@@ -48,8 +48,6 @@ class ServerManagerException : public std::exception {};
 	void            EventLoop();
 	bool            AddClientToEpoll(int client_sock);
 	static void     Stop(int signal);
-	// Declaring function for executing CGI scripts
-	std::string		ExecuteCGIScript(Connection &connection, const std::string &cgi_path);
 //-------------------handle-----------------------------------------------------
 	const Server    &FindServer(const Connection &connection) const;
 	void            AcceptNewConnection(int server_socket);
@@ -60,8 +58,6 @@ class ServerManagerException : public std::exception {};
 	bool            ProcessBody(Connection &connection);
 	bool            Respond(Connection &connection);
 	void            CloseTimedOutConnections();
-	// Declaring the helper function to extract the extension from a URL
-	std::string		GetCGIScriptPath(const std::string &url);
 //-------------------util-------------------------------------------------------
 	void            Cleanup();
 	void            PrintEventInfo(int events, int fd, int i) ;
@@ -80,6 +76,7 @@ private:
 	int             epoll_events_count_;
 	int             epoll_connection_count_;
 	int             epoll_in_out_count_;
+	int             active_cgi_processes_;
 
 	Config			config_;
 };

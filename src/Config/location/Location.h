@@ -56,8 +56,6 @@ struct Location {
     bool                    ghost_;
 //-------------------fastcgi related
     bool                    is_cgi_;
-    m_str_str               fastcgi_params_;
-    std::string             fastcgi_pass_;
 
     Location();
     Location(bool ghost, const std::string &address);
