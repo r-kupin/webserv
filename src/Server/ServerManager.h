@@ -53,24 +53,22 @@ class ServerManagerException : public std::exception {};
 	const Server    &FindServer(const Connection &connection) const;
 	void            AcceptNewConnection(int server_socket);
 	void            HandleEventsOnExistingConnection(int client_socket);
+    void            HandleCGIEvent(int fd);
 	bool            ProcessHeaders(Connection &connection);
 	void            CloseConnectionWithLogMessage(int socket,
 												  const std::string &msg);
 	bool            ProcessBody(Connection &connection);
 	bool            Respond(Connection &connection);
 	void            CloseTimedOutConnections();
+    bool            AddCgiToEpoll(int cgi_fd, Connection *connection);
+    void            RemoveCGIFromMap(int cgi_fd);
 //-------------------util-------------------------------------------------------
 	void            Cleanup();
 	void            PrintEventInfo(int events, int fd, int i) ;
 	void            ThrowException(const std::string &msg) const;
 	void            Log(const std::string &msg) const;
 	bool            IsListeningSocketFd(int socket) const;
-	static bool            SetDescriptorNonBlocking(int sockfd) ;
-
-    bool AddCgiToEpoll(int cgi_fd, Connection *connection);
-
-    void RemoveCGIFromMap(int cgi_fd);
-
+	static bool     SetDescriptorNonBlocking(int sockfd) ;
 private:
 	int             epoll_fd_;
 	v_servers       servers_;
@@ -85,8 +83,6 @@ private:
 	int             active_cgi_processes_;
 
 	Config			config_;
-
-    void HandleEventsCGI(int fd);
 };
 
 #endif //WEBSERV_SERVERMANAGER_H

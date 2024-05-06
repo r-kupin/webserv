@@ -14,7 +14,7 @@
 #include "connection/request/RequestExceptions.h"
 #include "connection/request/ClientRequest.h"
 #include "server/ServerExceptions.h"
-#include <unistd.h>
+
 
 /**
  *  Server retrieves the reference to the current connection.
@@ -27,7 +27,6 @@ void ServerManager::HandleEventsOnExistingConnection(int client_socket) {
     Connection		&connection = connections_[client_socket];
 
     while (is_running_) {
-         Log("cgis active:" + Utils::NbrToString(active_cgi_processes_));
 		if (!connection.url_headers_done_) {
 			if (!ProcessHeaders(connection))
 				 return;
@@ -45,7 +44,7 @@ void ServerManager::HandleEventsOnExistingConnection(int client_socket) {
 	}
 }
 
-void ServerManager::HandleEventsCGI(int fd) {
+void ServerManager::HandleCGIEvent(int fd) {
     if (cgi_fd_to_conn_.find(fd) != cgi_fd_to_conn_.end()) {
         Connection &connection = *cgi_fd_to_conn_[fd];
         ProcessBody(connection);

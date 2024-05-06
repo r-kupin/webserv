@@ -96,6 +96,8 @@ struct Location {
     void                HandleCode(const std::string &str);
     void                HandleRoot(const v_str &directive);
     void                HandleClientMaxBodySize(const v_str &directive);
+    void                HandleAutoindex(const v_str &directive);
+    void                HandleCGI(const v_str &directive);
     void                AddErrorPages(const v_str &directive);
     void                SetUploadsDirectory(const v_str &directive);
 //-------------------setup subcontexts handlers---------------------------------
@@ -109,10 +111,6 @@ struct Location {
     bool                operator==(const Location &rhs) const;
     Location&           operator=(const Location& rhs);
     friend std::ostream &operator<<(std::ostream &os, const Location &location);
-
-    void HandleAutoindex(const v_str &directive);
-
-    void HandleCGI(const v_str &directive);
 };
 
 //-------------------sublocation search predicate class-------------------------

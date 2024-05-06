@@ -50,14 +50,13 @@ void    ServerManager::EventLoop() {
                 } else if (event & EPOLLIN && event & EPOLLOUT) {
                     HandleEventsOnExistingConnection(socket_fd);
                 } else if (event & EPOLLIN || event & EPOLLOUT) {
-                    HandleEventsCGI(socket_fd);
+                    HandleCGIEvent(socket_fd);
                 }
             }
         } else {
             // no events were reported during epoll_wait timeout:
             // check all existing connections and close expired ones
             CloseTimedOutConnections();
-            Log("cgis active:" + Utils::NbrToString(active_cgi_processes_));
         }
     }
 }
