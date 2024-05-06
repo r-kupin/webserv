@@ -16,13 +16,14 @@
 
 Server::Server(const Server &other)
         : is_running_(other.is_running_),
+        sm_(other.sm_),
           config_(other.config_),
           sock_to_host_(other.sock_to_host_) {}
 
-Server::Server(const ServerConfiguration &config, v_c_b &is_running_ref,
-               const std::map<Host, int> &all_open_sockets)
+Server::Server(const ServerConfiguration &config, v_c_b &is_running_ref, const std::map<Host, int> &all_open_sockets, ServerManager &sm)
         : is_running_(is_running_ref),
-          config_(config) {
+        sm_(sm),
+        config_(config) {
     // iterate open sockets map from ServManager and match against ones defined
     // in config for current server
     const s_hosts &hosts_current_server = config.GetHosts();

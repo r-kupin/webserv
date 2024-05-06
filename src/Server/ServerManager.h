@@ -21,6 +21,7 @@ class Server;
 typedef std::vector<Server>         v_servers;
 typedef std::vector<Connection>     v_conn;
 typedef std::map<Host, int>         m_host_int;
+typedef std::map<int, Connection*>  m_cgi_fd_conn;
 
 static volatile bool        is_running_ = true;
 
@@ -64,12 +65,17 @@ class ServerManagerException : public std::exception {};
 	void            ThrowException(const std::string &msg) const;
 	void            Log(const std::string &msg) const;
 	bool            IsListeningSocketFd(int socket) const;
-	bool            SetDescriptorNonBlocking(int sockfd) const;
+	static bool            SetDescriptorNonBlocking(int sockfd) ;
+
+    bool AddCgiToEpoll(int cgi_fd, Connection *connection);
+
+    void RemoveCGIFromMap(int cgi_fd);
 
 private:
 	int             epoll_fd_;
 	v_servers       servers_;
 	m_host_int      host_to_socket_; /* quick find-by-host required by CreateListeningSockets */
+    m_cgi_fd_conn   cgi_fd_to_conn_;
 
 	v_conn          connections_;
 	int             epoll_returns_count_;
@@ -79,6 +85,8 @@ private:
 	int             active_cgi_processes_;
 
 	Config			config_;
+
+    void HandleEventsCGI(int fd);
 };
 
 #endif //WEBSERV_SERVERMANAGER_H

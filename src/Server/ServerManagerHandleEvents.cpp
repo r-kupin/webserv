@@ -24,9 +24,9 @@
  * is still incomplete and therefore response weren't yet sent.
  */
 void ServerManager::HandleEventsOnExistingConnection(int client_socket) {
-	Connection		&connection = connections_[client_socket];
+    Connection		&connection = connections_[client_socket];
 
-	 while (is_running_) {
+    while (is_running_) {
          Log("cgis active:" + Utils::NbrToString(active_cgi_processes_));
 		if (!connection.url_headers_done_) {
 			if (!ProcessHeaders(connection))
@@ -44,6 +44,20 @@ void ServerManager::HandleEventsOnExistingConnection(int client_socket) {
 		}
 	}
 }
+
+void ServerManager::HandleEventsCGI(int fd) {
+    if (cgi_fd_to_conn_.find(fd) != cgi_fd_to_conn_.end()) {
+        Connection &connection = *cgi_fd_to_conn_[fd];
+        ProcessBody(connection);
+        if (connection.body_done_) {
+            if (!Respond(connection)) {
+                CloseConnectionWithLogMessage(connection.connection_socket_,
+                                              "Client request triggered error");
+            }
+        }
+    }
+}
+
 
 /**
  *  @return false means that we a stopping processing of the current request
@@ -89,8 +103,13 @@ bool ServerManager::ProcessHeaders(Connection &connection) {
 
 bool ServerManager::ProcessBody(Connection &connection) {
 	try {
-		const Server    &server = FindServer(connection);
-		connection.location_ = server.ProcessRequest(connection);
+        const Server &server = FindServer(connection);
+        if (!connection.waiting_for_cgi_) {
+            connection.location_ = server.ProcessRequest(connection);
+            return false;
+        } else {
+            server.ParentCGI(connection);
+        }
 		Log("Request processed");
 		connection.body_done_ = true;
 	} catch (const ZeroRead &) {

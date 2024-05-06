@@ -96,10 +96,9 @@ void ServerManager::PrintEventInfo(int events, int fd, int i) {
     std::cout << events << std::endl;
 }
 
-bool    ServerManager::SetDescriptorNonBlocking(int sockfd) const {
+bool    ServerManager::SetDescriptorNonBlocking(int sockfd) {
     int flags = fcntl(sockfd, F_GETFL, 0);
     if (flags == -1) {
-        Log("fcntl get flags operation failed");
         return false;
     }
     flags |= O_NONBLOCK;

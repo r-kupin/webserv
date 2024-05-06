@@ -37,7 +37,8 @@ void ServerManager::Init(const Config &config) {
             // hosts if they aren't open yet
             CreateListeningSocket(*it);
             // Create Server with particular config
-            servers_.push_back(Server(*it, is_running_, host_to_socket_));
+            servers_.push_back(Server(*it, is_running_, host_to_socket_,
+                                      *this));
             std::cout << servers_.back() << std::endl;
         } catch (const Server::ServerException &) {
             Cleanup();

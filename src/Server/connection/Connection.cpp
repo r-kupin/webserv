@@ -16,16 +16,17 @@
 Connection::Connection(v_c_b &is_running, int &active_cgis)
 : url_headers_done_(false),
     body_done_(false),
+    waiting_for_cgi_(false),
     open_time_(Utils::Get().TimeNow()),
     connection_socket_(0),
     server_listening_socket_(0),
     request_(is_running),
-    active_cgis_
-    (active_cgis) {}
+    active_cgis_(active_cgis) {}
 
 Connection::Connection(v_c_b &is_running, int connection_socket, int server_socket, int &active_cgis)
 : url_headers_done_(false),
     body_done_(false),
+    waiting_for_cgi_(false),
     open_time_(Utils::Get().TimeNow()),
     connection_socket_(connection_socket),
     server_listening_socket_(server_socket),
@@ -34,8 +35,9 @@ Connection::Connection(v_c_b &is_running, int connection_socket, int server_sock
 
 // Copy constructor
 Connection::Connection(const Connection &other)
-	: url_headers_done_(other.url_headers_done_),
+: url_headers_done_(other.url_headers_done_),
 	body_done_(other.body_done_),
+    waiting_for_cgi_(other.waiting_for_cgi_),
 	open_time_(other.open_time_),
 	connection_socket_(other.connection_socket_),
 	server_listening_socket_(other.server_listening_socket_),
@@ -55,6 +57,7 @@ Connection &Connection::operator=(const Connection &other) {
 	address_ = other.address_;
 	open_time_ = other.open_time_;
 	active_cgis_ = other.active_cgis_;
+    waiting_for_cgi_ = other.waiting_for_cgi_;
 	return *this;
 }
 

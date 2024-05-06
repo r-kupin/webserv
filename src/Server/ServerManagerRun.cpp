@@ -49,12 +49,13 @@ void    ServerManager::EventLoop() {
                     AcceptNewConnection(socket_fd);
                 } else if (event & EPOLLIN && event & EPOLLOUT) {
                     HandleEventsOnExistingConnection(socket_fd);
+                } else if (event & EPOLLIN || event & EPOLLOUT) {
+                    HandleEventsCGI(socket_fd);
                 }
             }
         } else {
             // no events were reported during epoll_wait timeout:
             // check all existing connections and close expired ones
-//            CheckForPendingCGIs();
             CloseTimedOutConnections();
             Log("cgis active:" + Utils::NbrToString(active_cgi_processes_));
         }
@@ -110,5 +111,25 @@ bool ServerManager::AddClientToEpoll(int client_sock) {
     Log("Can't set descriptor " + Utils::NbrToString(client_sock) +
         " to nonblocking mode.");
     return false;
+}
+
+bool ServerManager::AddCgiToEpoll(int cgi_fd, Connection *connection) {
+    epoll_event event;
+    event.events = EPOLLIN | EPOLLOUT | EPOLLET;
+    event.data.fd = cgi_fd;
+    if (SetDescriptorNonBlocking(cgi_fd)) {
+        if (epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, cgi_fd, &event) != -1) {
+            cgi_fd_to_conn_[cgi_fd] = connection;
+            return true;
+        }
+    }
+    Log("Can't set descriptor " + Utils::NbrToString(cgi_fd) +
+        " to nonblocking mode.");
+    return false;
+}
+
+void ServerManager::RemoveCGIFromMap(int cgi_fd) {
+    cgi_fd_to_conn_.erase(cgi_fd);
+    close(cgi_fd);
 }
 

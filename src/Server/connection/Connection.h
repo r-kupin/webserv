@@ -32,6 +32,7 @@ struct Connection {
 	// Connection status flags
 	bool                url_headers_done_;
 	bool                body_done_;
+	bool                waiting_for_cgi_;
 
 	// Time and socket-related members
 	long                open_time_;
@@ -43,6 +44,7 @@ struct Connection {
 	ClientRequest       request_;
 	Location            location_;
 
+    int                 cgi_fd_;
     int                 &active_cgis_;
 };
 

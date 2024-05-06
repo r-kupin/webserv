@@ -15,6 +15,7 @@
 #include <csignal>
 #include <sys/wait.h>
 #include "Server.h"
+#include <fcntl.h>
 
 /**
  * Depending on compliance between what was requested and what is being
@@ -51,7 +52,7 @@ Location Server::ProcessRequest(Connection &connection) const {
     return synth;
 }
 
-Location &Server::HandleCGI(const Connection &connection, const Srch_c_Res &res,
+Location &Server::HandleCGI(Connection &connection, const Srch_c_Res &res,
                             const l_loc_c_it &found, Location &synth) const {
     std::string address = found->root_ + res.leftower_address_;
 
@@ -59,17 +60,20 @@ Location &Server::HandleCGI(const Connection &connection, const Srch_c_Res &res,
 
         int pipe_out[2];
         if (pipe(pipe_out) == -1) {
-            Log("Failed to create pipe for CGI execution");
-            ThrowException("pipe failed");
+            ThrowException("Failed to create pipe for CGI execution");
         }
-
+        connection.cgi_fd_ = pipe_out[0];
+        if (!sm_.AddCgiToEpoll(connection.cgi_fd_, &connection)) {
+            ThrowException("Can't add cgi fd to epoll instance");
+        }
         connection.active_cgis_++;
+        connection.waiting_for_cgi_ = true;
         pid_t pid = fork();
         // Child process
         if (pid == 0) {
             ChildCGI(connection, address, pipe_out);
         } else if (pid > 0) {
-            ParentCGI(synth, pipe_out, pid, connection.active_cgis_);
+            close(pipe_out[1]);
         } else {
             ThrowException("fork failed");
         }
@@ -77,21 +81,19 @@ Location &Server::HandleCGI(const Connection &connection, const Srch_c_Res &res,
     return synth;
 }
 
-void Server::ParentCGI(Location &synth, const int *pipe_out, pid_t pid, int &active_cgis) const {
-    // Parent process closing unused write end of the pipe
-    close(pipe_out[1]);
+void Server::ParentCGI(Connection &connection) const {
     char buffer[1024];
 
     // Read CGI output from the child process
     ssize_t bytes_read;
-    waitpid(pid, NULL, 0);
-    active_cgis--;
-    while ((bytes_read = read(pipe_out[0], buffer, sizeof(buffer) - 1)) > 0) {
+
+    connection.active_cgis_--;
+    while ((bytes_read = read(connection.cgi_fd_, buffer, sizeof(buffer) - 1)) > 0) {
         buffer[bytes_read] = '\0';
-        synth.return_custom_message_ += buffer;
+        connection.location_.return_custom_message_ += buffer;
     }
-    synth.return_code_ = 200;
-    close(pipe_out[0]);
+    connection.location_.return_code_ = 200;
+    sm_.RemoveCGIFromMap(connection.cgi_fd_);
 }
 
 void Server::ChildCGI(const Connection &connection, const std::string &address, const int *pipe_out) const {

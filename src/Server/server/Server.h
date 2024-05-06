@@ -63,14 +63,14 @@
 #define MAX_CLIENTS 2048
 #define MAX_EVENTS 1000
 
+class ServerManager;
+
 class Server {
 public:
     class ServerException : public std::exception {};
 
     Server(const Server &);
-    explicit Server(const ServerConfiguration &config,
-                    v_c_b &is_running_ref,
-                    const std::map<Host, int> &all_open_sockets);
+    explicit Server(const ServerConfiguration &config, v_c_b &is_running_ref, const std::map<Host, int> &all_open_sockets, ServerManager &sm);
 
     bool                        ListensTo(int socket) const;
     bool                        HasServerName(const std::string &server_name) const;
@@ -78,6 +78,7 @@ public:
     long                        GetConnectionTimeout() const;
 
     Location                    ProcessRequest(Connection &connection) const;
+    void ParentCGI(Connection &connection) const;
 
     friend std::ostream        &operator<<(std::ostream &os,
                                             const Server &server);
@@ -121,14 +122,12 @@ protected:
     void                        NoUpoladDataAvailable(int file_fd,
                                                       ssize_t bytes_read) const;
 //-------------------cgi related------------------------------------------------
-    Location                    &HandleCGI(const Connection &connection,
+    Location                    &HandleCGI(Connection &connection,
                                            const Srch_c_Res &res,
                                            const l_loc_c_it &found, Location &synth) const;
     void                        ChildCGI(const Connection &connection,
                                          const std::string &address,
                                          const int *pipe_out) const;
-    void                        ParentCGI(Location &synth, const int *pipe_out,
-                                          pid_t pid, int &active_cgis) const;
 //-------------------misc utils-------------------------------------------------
     void                        Log(const std::string &msg) const;
     void                        Log(const std::string &msg, int listen_sock) const;
@@ -136,6 +135,7 @@ protected:
     void                        ThrowException(const std::string &msg, int listen_sock) const;
 private:
     const volatile bool         &is_running_;
+    ServerManager               &sm_;
     const ServerConfiguration   &config_;
     std::map<int, Host>         sock_to_host_;
     /* quick find-by-socket required to:
