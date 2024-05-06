@@ -1,4 +1,5 @@
 #!/bin/bash
+echo "HTTP/1.1 200 OK"
 echo "Content-type: text/html"
 #sleep 1
 echo ""

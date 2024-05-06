@@ -54,6 +54,7 @@ class ServerManagerException : public std::exception {};
 	void            AcceptNewConnection(int server_socket);
 	void            HandleEventsOnExistingConnection(int client_socket);
     void            HandleCGIEvent(int fd);
+    int HandleCGIEvent(Connection &connection);
 	bool            ProcessHeaders(Connection &connection);
 	void            CloseConnectionWithLogMessage(int socket,
 												  const std::string &msg);

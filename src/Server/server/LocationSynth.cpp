@@ -82,18 +82,18 @@ Location &Server::HandleCGI(Connection &connection, const Srch_c_Res &res,
 }
 
 void Server::HandleCGIinput(Connection &connection) const {
-    char buffer[1024];
+    char                buffer[FILE_BUFFER_SIZE];
 
-    // Read CGI output from the child process
-    ssize_t bytes_read;
+    while (is_running_) {
+        int bytes_read = read(connection.cgi_fd_, buffer, FILE_BUFFER_SIZE - 1);
 
-    connection.active_cgis_--;
-    while ((bytes_read = read(connection.cgi_fd_, buffer, sizeof(buffer) - 1)) > 0) {
-        buffer[bytes_read] = '\0';
-        connection.location_.return_custom_message_ += buffer;
+        if (bytes_read < 1) {
+            NoDataAvailable(bytes_read);
+        } else {
+            if (send(connection.connection_socket_, buffer, bytes_read,  0) < 0)
+                ThrowException("send() returned negative number!");
+        }
     }
-    connection.location_.return_code_ = 200;
-    sm_.RemoveCGIFromMap(connection.cgi_fd_);
 }
 
 void Server::ChildCGI(const Connection &connection, const std::string &address,

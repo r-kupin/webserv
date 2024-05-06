@@ -56,6 +56,17 @@ void    ServerManager::EventLoop() {
         } else {
             // no events were reported during epoll_wait timeout:
             // check all existing connections and close expired ones
+            // 0 - no cgi connections
+            // -1 - no terminated cgi connections
+            // > 0 - terminated one
+            int terminated_cgi = 0;
+            for (std::map<int, Connection *>::iterator it = cgi_fd_to_conn_.begin();
+                 it != cgi_fd_to_conn_.end(); ++it) {
+                if((terminated_cgi = HandleCGIEvent(*it->second)) != -1)
+                    break;
+            }
+            if (terminated_cgi > 0)
+                cgi_fd_to_conn_.erase(terminated_cgi);
             CloseTimedOutConnections();
         }
     }

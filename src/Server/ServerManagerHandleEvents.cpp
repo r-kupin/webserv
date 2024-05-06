@@ -10,6 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <csignal>
 #include "ServerManager.h"
 #include "connection/request/RequestExceptions.h"
 #include "connection/request/ClientRequest.h"
@@ -46,15 +47,22 @@ void ServerManager::HandleEventsOnExistingConnection(int client_socket) {
 
 void ServerManager::HandleCGIEvent(int fd) {
     if (cgi_fd_to_conn_.find(fd) != cgi_fd_to_conn_.end()) {
-        Connection &connection = *cgi_fd_to_conn_[fd];
-        ProcessBody(connection);
-        if (connection.body_done_) {
-            if (!Respond(connection)) {
-                CloseConnectionWithLogMessage(connection.connection_socket_,
-                                              "Client request triggered error");
-            }
-        }
+        HandleCGIEvent(*cgi_fd_to_conn_[fd]);
     }
+}
+
+int ServerManager::HandleCGIEvent(Connection &connection) {
+    try {
+        FindServer(connection).HandleCGIinput(connection);
+    } catch (const EwouldblockEagainUpload &) {
+        Log("Red all available data, but cgi transmission is incomplete. "
+            "We'll come back later. Maybe.");
+    } catch (...) {
+        close(connection.cgi_fd_);
+        close(connection.connection_socket_);
+        return connection.cgi_fd_;
+    }
+    return -1;
 }
 
 
@@ -103,13 +111,9 @@ bool ServerManager::ProcessHeaders(Connection &connection) {
 bool ServerManager::ProcessBody(Connection &connection) {
 	try {
         const Server &server = FindServer(connection);
-        if (!connection.waiting_for_cgi_) {
-            connection.location_ = server.ProcessRequest(connection);
-            if (connection.location_.is_cgi_)
-                return false;
-        } else {
-            server.HandleCGIinput(connection);
-        }
+        connection.location_ = server.ProcessRequest(connection);
+        if (connection.location_.is_cgi_)
+            return false;
 		Log("Request processed");
 		connection.body_done_ = true;
 	} catch (const ZeroRead &) {

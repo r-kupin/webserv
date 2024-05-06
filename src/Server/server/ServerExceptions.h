@@ -36,4 +36,11 @@ public:
     const char *what() const throw();
 };
 
+class ZeroReadCGI : public Server::ServerException {
+public:
+    ZeroReadCGI() : Server::ServerException() {}
+
+    const char *what() const throw();
+};
+
 #endif //WEBSERV_SERVEREXCEPTIONS_H

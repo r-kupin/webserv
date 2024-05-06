@@ -525,6 +525,7 @@ Location &Location::operator=(const Location &rhs) {
     body_file_ = rhs.body_file_;
     parent_ = rhs.parent_;
     ghost_ = rhs.ghost_;
+    is_cgi_ = rhs.is_cgi_;
     return *this;
 }
 

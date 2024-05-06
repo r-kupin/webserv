@@ -119,8 +119,7 @@ protected:
                                              int socket,
                                              l_loc_c_it &found,
                                              Location &synth) const;
-    void                        NoUpoladDataAvailable(int file_fd,
-                                                      ssize_t bytes_read) const;
+    void NoDataAvailable(ssize_t bytes_read) const;
 //-------------------cgi related------------------------------------------------
     Location                    &HandleCGI(Connection &connection,
                                            const Srch_c_Res &res,

@@ -23,3 +23,7 @@ const char *EwouldblockEagainUpload::what() const throw() {
 const char *ZeroReadUpload::what() const throw() {
     return exception::what();
 }
+
+const char *ZeroReadCGI::what() const throw() {
+    return exception::what();
+}

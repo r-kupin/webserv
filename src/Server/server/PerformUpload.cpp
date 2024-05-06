@@ -72,7 +72,7 @@ int Server::PerformUpload(const ClientRequest &request, int socket, int file_fd,
         ssize_t bytes_read = recv(socket, buffer + body.size(),
                                   static_cast<size_t>(FILE_BUFFER_SIZE) - body.size(), 0);
         if (bytes_read < 1) {
-            NoUpoladDataAvailable(file_fd, bytes_read);
+            NoDataAvailable(bytes_read);
         } else {
             size_t  end = Utils::FindInBuffer(buffer, bytes_read + body.size(), delimiter);
 
@@ -91,16 +91,14 @@ int Server::PerformUpload(const ClientRequest &request, int socket, int file_fd,
     return OK;
 }
 
-void Server::NoUpoladDataAvailable(int file_fd, ssize_t bytes_read) const {
+void Server::NoDataAvailable(ssize_t bytes_read) const {
     if (bytes_read == 0) {
         Log("recv returned 0 while reading file contents.");
-        close(file_fd);
         throw ZeroReadUpload();
     } else {
         // errno == EWOULDBLOCK || errno == EAGAIN
         Log("recv returned -1 with EWOULDBLOCK || EAGAIN set while reading "
             "file contents. We'll try later.");
-        close(file_fd); // why ?
         throw EwouldblockEagainUpload();
     }
 }
