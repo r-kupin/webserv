@@ -81,7 +81,7 @@ Location &Server::HandleCGI(Connection &connection, const Srch_c_Res &res,
     return synth;
 }
 
-void Server::ParentCGI(Connection &connection) const {
+void Server::HandleCGIinput(Connection &connection) const {
     char buffer[1024];
 
     // Read CGI output from the child process
@@ -96,7 +96,8 @@ void Server::ParentCGI(Connection &connection) const {
     sm_.RemoveCGIFromMap(connection.cgi_fd_);
 }
 
-void Server::ChildCGI(const Connection &connection, const std::string &address, const int *pipe_out) const {
+void Server::ChildCGI(const Connection &connection, const std::string &address,
+                      const int *pipe_out) const {
     // Redirect stdout to pipe_out (write end of the pipe)
     close(pipe_out[0]);
     dup2(pipe_out[1], STDOUT_FILENO);

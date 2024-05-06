@@ -105,9 +105,10 @@ bool ServerManager::ProcessBody(Connection &connection) {
         const Server &server = FindServer(connection);
         if (!connection.waiting_for_cgi_) {
             connection.location_ = server.ProcessRequest(connection);
-            return false;
+            if (connection.location_.is_cgi_)
+                return false;
         } else {
-            server.ParentCGI(connection);
+            server.HandleCGIinput(connection);
         }
 		Log("Request processed");
 		connection.body_done_ = true;
