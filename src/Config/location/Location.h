@@ -55,7 +55,7 @@ struct Location {
     l_loc_it                parent_;
     bool                    ghost_;
 //-------------------fastcgi related
-    bool                    is_cgi_;
+    std::string             cgi_address_;
 
     Location();
     Location(bool ghost, const std::string &address);

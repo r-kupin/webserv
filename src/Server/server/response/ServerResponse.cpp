@@ -14,7 +14,6 @@
 #include <iostream>
 
 #include "ServerResponse.h"
-#include "../../connection/Connection.h"
 
 ServerResponse::ServerResponse(const Connection &connection)
         :  addr_(connection.address_),
@@ -57,7 +56,7 @@ void ServerResponse::ComposeResponse(const Location &synth) {
         if (headers_.find("Content-Type") == headers_.end())
             AddHeader("Content-Type", "text/html");
     } else {
-        if (!synth.is_cgi_)
+        if (synth.cgi_address_.empty())
             AddHeader("Content-Type", "application/octet-stream");
         else {
             AddHeader("Content-Type", "text/html");

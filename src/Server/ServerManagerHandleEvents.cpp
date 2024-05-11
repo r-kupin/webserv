@@ -112,7 +112,7 @@ bool ServerManager::ProcessBody(Connection &connection) {
 	try {
         const Server &server = FindServer(connection);
         connection.location_ = server.ProcessRequest(connection);
-        if (connection.location_.is_cgi_)
+        if (!connection.location_.cgi_address_.empty())
             return false;
 		Log("Request processed");
 		connection.body_done_ = true;

@@ -43,7 +43,7 @@ Location Server::ProcessRequest(Connection &connection) const {
         // return redirection rule isn't set
         if (!found->uploads_path_.empty()) {
             HandleUpload(request, connection.connection_socket_, found, synth);
-        } else if (found->is_cgi_) {
+        } else if (!found->cgi_address_.empty()) {
             HandleCGI(connection, res, found, synth);
         } else {
             HandleStatic(request, res, found, synth);

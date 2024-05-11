@@ -19,63 +19,59 @@
 
 Location::Location()
     : has_own_index_defined_(false),
-    autoindex_(false),
-    return_code_(0),
-    client_max_body_size_(1000000),
-    ghost_(false),
-    is_cgi_(false){}
+      autoindex_(false),
+      return_code_(0),
+      client_max_body_size_(1000000),
+      ghost_(false){}
 
 // link to parent? indexes?
 Location::Location(bool ghost, const std::string &address)
     : full_address_(HandleAddressInConstructor(address)),
-    address_(GetParticularAddress(address)),
-    ghost_(ghost),
-    is_cgi_(false) {}
+      address_(GetParticularAddress(address)),
+      ghost_(ghost) {}
 
 Location::Location(const Location& other)
     : error_pages_(other.error_pages_),
-    sublocations_(other.sublocations_),
-    has_own_index_defined_(other.has_own_index_defined_),
-    index_defined_in_parent_(other.index_defined_in_parent_),
-    own_index_(other.own_index_),
-    limit_except_(other.limit_except_),
-    autoindex_(other.autoindex_),
-    return_code_(other.return_code_),
-    return_internal_address_(other.return_internal_address_),
-    return_external_address_(other.return_external_address_),
-    return_custom_message_(other.return_custom_message_),
-    client_max_body_size_(other.client_max_body_size_),
-    uploads_path_(other.uploads_path_),
-    root_(other.root_),
-    full_address_(other.full_address_),
-    address_(other.address_),
-    body_file_(other.body_file_),
-    parent_(other.parent_),
-    ghost_(other.ghost_),
-    is_cgi_(other.is_cgi_) {}
+      sublocations_(other.sublocations_),
+      has_own_index_defined_(other.has_own_index_defined_),
+      index_defined_in_parent_(other.index_defined_in_parent_),
+      own_index_(other.own_index_),
+      limit_except_(other.limit_except_),
+      autoindex_(other.autoindex_),
+      return_code_(other.return_code_),
+      return_internal_address_(other.return_internal_address_),
+      return_external_address_(other.return_external_address_),
+      return_custom_message_(other.return_custom_message_),
+      client_max_body_size_(other.client_max_body_size_),
+      uploads_path_(other.uploads_path_),
+      root_(other.root_),
+      full_address_(other.full_address_),
+      address_(other.address_),
+      body_file_(other.body_file_),
+      parent_(other.parent_),
+      ghost_(other.ghost_),
+      cgi_address_(other.cgi_address_) {}
 
 Location::Location(const std::string &address)
     : has_own_index_defined_(false),
-    index_defined_in_parent_(false),
-    autoindex_(false),
-    return_code_(0),
-    client_max_body_size_(1000000),
-    full_address_(HandleAddressInConstructor(address)),
-    address_(GetParticularAddress(address)),
-    ghost_(false),
-    is_cgi_(false) {}
+      index_defined_in_parent_(false),
+      autoindex_(false),
+      return_code_(0),
+      client_max_body_size_(1000000),
+      full_address_(HandleAddressInConstructor(address)),
+      address_(GetParticularAddress(address)),
+      ghost_(false) {}
 
 Location::Location(const std::string &address, l_loc_it parent)
     : has_own_index_defined_(false),
-    index_defined_in_parent_(false),
-    autoindex_(false),
-    return_code_(0),
-    client_max_body_size_(1000000),
-    full_address_(HandleAddressInConstructor(address)),
-    address_(GetParticularAddress(address)),
-    parent_(parent),
-    ghost_(false),
-    is_cgi_(false) {
+      index_defined_in_parent_(false),
+      autoindex_(false),
+      return_code_(0),
+      client_max_body_size_(1000000),
+      full_address_(HandleAddressInConstructor(address)),
+      address_(GetParticularAddress(address)),
+      parent_(parent),
+      ghost_(false) {
     if (parent->index_defined_in_parent_ ||
         parent->has_own_index_defined_) {
         index_defined_in_parent_ = true;
@@ -282,7 +278,7 @@ void Location::ProcessDirectives(const std::vector<v_str> &directives) {
     bool cgi = false;
 
     for (size_t i = 0; i < directives.size(); ++i) {
-        if (UMarkDefined("cgi", cgi, directives[i]))
+        if (UMarkDefined("cgi_address", cgi, directives[i]))
             HandleCGI(directives[i]);
         if (UMarkDefined("root", root, directives[i]))
             HandleRoot(directives[i]);
@@ -302,19 +298,13 @@ void Location::ProcessDirectives(const std::vector<v_str> &directives) {
     }
 }
 
-
 void Location::HandleCGI(const v_str &directive) {
     if (directive.size() == 2) {
-        if (directive[1] == "true") {
-            if (uploads_path_.empty())
-                is_cgi_ = true;
-            else
-                ThrowLocationException("can't be an upload and cgi");
-            return;
-        } else if (directive[1] == "false") {
-            is_cgi_ = false;
-            return;
-        }
+        if (uploads_path_.empty())
+            cgi_address_ = directive[1];
+        else
+            ThrowLocationException("can't be an upload and cgi");
+        return;
     }
     ThrowLocationException("cgi directive is wrong");
 }
@@ -457,7 +447,7 @@ void Location::HandleRoot(const v_str &directive) {
 
 void Location::SetUploadsDirectory(const v_str &directive) {
     if (directive.size() == 2) {
-        if (is_cgi_)
+        if (!cgi_address_.empty())
             ThrowLocationException("can't be an upload and cgi");
         std::string uploads = directive[1];
         if (uploads.empty() || uploads.at(uploads.size() - 1) != '/') {
@@ -525,7 +515,7 @@ Location &Location::operator=(const Location &rhs) {
     body_file_ = rhs.body_file_;
     parent_ = rhs.parent_;
     ghost_ = rhs.ghost_;
-    is_cgi_ = rhs.is_cgi_;
+    cgi_address_ = rhs.cgi_address_;
     return *this;
 }
 
@@ -656,8 +646,9 @@ std::ostream &operator<<(std::ostream &os, const Location &location) {
         print_parent_info(os, location);
     if (!location.sublocations_.empty())
         print_sublocations(os, location);
-    if (location.is_cgi_)
-        os << location.full_address_ << "cgi true" << std::endl;
+    if (!location.cgi_address_.empty())
+        os << location.full_address_ << ":\tcgi_address: " <<
+        location.cgi_address_ << std::endl;
     return os;
 }
 
