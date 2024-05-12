@@ -12,10 +12,8 @@
 
 #include <iostream>
 #include <algorithm>
-#include <csignal>
 #include <sys/wait.h>
 #include "Server.h"
-#include <fcntl.h>
 
 /**
  * Depending on compliance between what was requested and what is being
@@ -44,105 +42,49 @@ Location Server::ProcessRequest(Connection &connection) const {
         if (!found->uploads_path_.empty()) {
             HandleUpload(request, connection.connection_socket_, found, synth);
         } else if (!found->cgi_address_.empty()) {
-            HandleCGI(connection, res, found, synth);
+            HandleCGI(connection, found, synth);
         } else {
-            HandleStatic(request, res, found, synth);
+            HandleStatic(request, res, found->root_ + res.leftower_address_, synth);
         }
     }
     return synth;
 }
 
-Location &Server::HandleCGI(Connection &connection, const Srch_c_Res &res,
-                            const l_loc_c_it &found, Location &synth) const {
-    std::string address = found->root_ + res.leftower_address_;
-
+Location &Server::HandleCGI(Connection &connection, const l_loc_c_it &found,
+                            Location &synth) const {
+    std::string address = found->cgi_address_;
+    if (found->cgi_address_[0] != '/')
+        address = found->root_ + "/" + found->cgi_address_;
     if (Utils::CheckFilesystem(address) == COMM_FILE) {
-
-        int pipe_out[2];
-        if (pipe(pipe_out) == -1) {
-            ThrowException("Failed to create pipe for CGI execution");
-        }
-        connection.cgi_fd_ = pipe_out[0];
-        if (!sm_.AddCgiToEpoll(connection.cgi_fd_, &connection)) {
-            ThrowException("Can't add cgi fd to epoll instance");
-        }
-        connection.active_cgis_++;
-        connection.waiting_for_cgi_ = true;
-        pid_t pid = fork();
-        // Child process
-        if (pid == 0) {
-            ChildCGI(connection, address, pipe_out);
-        } else if (pid > 0) {
-            close(pipe_out[1]);
+        if (connection.active_cgis_ < MAX_CGI_PROCESSES) {
+            ForkCGI(connection, address);
         } else {
-            ThrowException("fork failed");
+            Log("Too much CGI requests. Adding this one to queue");
         }
+    } else {
+        Log("cgi_address \"" + address + "\" doesn't exists or is not a file");
+        synth.SetReturnCode(NOT_FOUND);
     }
     return synth;
-}
-
-void Server::HandleCGIinput(Connection &connection) const {
-    char                buffer[FILE_BUFFER_SIZE];
-
-    while (is_running_) {
-        int bytes_read = read(connection.cgi_fd_, buffer, FILE_BUFFER_SIZE - 1);
-
-        if (bytes_read < 1) {
-            NoDataAvailable(bytes_read);
-        } else {
-            if (send(connection.connection_socket_, buffer, bytes_read,  0) < 0)
-                ThrowException("send() returned negative number!");
-        }
-    }
-}
-
-void Server::ChildCGI(const Connection &connection, const std::string &address,
-                      const int *pipe_out) const {
-    // Redirect stdout to pipe_out (write end of the pipe)
-    close(pipe_out[0]);
-    dup2(pipe_out[1], STDOUT_FILENO);
-    close(pipe_out[1]);
-
-    // Set environment variables
-    std::vector<std::string> env_strings;
-    std::vector<char*> env;
-    std::string method = "REQUEST_METHOD=" + Utils::ExtractMethod(connection.request_.GetMethod());
-    std::string query_string = "QUERY_STRING=" + connection.request_.GetQueryString();
-    env_strings.push_back(method);
-    env_strings.push_back(query_string);
-    if (connection.request_.HasHeader("Content-Type")) {
-        env_strings.push_back(connection.request_.GetHeaderValue("Content-Type"));
-    }
-
-    for (size_t i = 0; i < env_strings.size(); ++i)
-        env.push_back(const_cast<char*>(env_strings[i].c_str()));
-    env.push_back(NULL);
-
-    // Execute the CGI script
-    char *args[] = { const_cast<char*>(address.c_str()), NULL };
-    execve(address.c_str(), args, env.data());
-
-    // Exit on failure
-    _exit(1);
 }
 
 void Server::HandleStatic(const ClientRequest &request, const Srch_c_Res &res,
-                          const l_loc_c_it &found, Location &synth) const {
+                          const std::string &address, Location &synth) const {
     // It seems like there is no reason to even read the body because it's
     // not clear how should static file handle it ?
-    std::string address = found->root_ + res.leftower_address_;
     int fs_status = Utils::CheckFilesystem(address);
     if (fs_status == ELSE) {
-        // something exist on specified address, but it is neither a file nor a directory
+        // something exist on specified address, but it is neither a file nor a
+        // directory
         Log(address + " is neither a file nor a directory.. "
                       "I don't know what to do with it..");
         synth.SetReturnCode(REQUESTED_FILE_IS_NOT_A_FILE);
     } else {
         if (request.IsDirectoryRequest()) {
-            // request's address part of URI ends with "/"
+            // request's addr part of URI ends with "/"
             SynthIndex(synth, res, fs_status);
         } else {
-            // request's address part of URI has a filename after the last "/"
+            // request's addr part of URI has a filename after the last "/"
             SynthFile(synth, res, fs_status, request.GetAddress());
         }
     }

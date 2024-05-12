@@ -62,6 +62,7 @@
 
 #define MAX_CLIENTS 2048
 #define MAX_EVENTS 1000
+#define MAX_CGI_PROCESSES 100
 
 class ServerManager;
 
@@ -91,7 +92,7 @@ protected:
 //-------------------static request processing----------------------------------
     void                        HandleStatic(const ClientRequest &request,
                                              const Srch_c_Res &res,
-                                             const l_loc_c_it &found,
+                                             const std::string &address,
                                              Location &synth) const;
     void                        SynthIndex(Location &synth,
                                            const Srch_c_Res &res,
@@ -121,9 +122,7 @@ protected:
                                              Location &synth) const;
     void NoDataAvailable(ssize_t bytes_read) const;
 //-------------------cgi related------------------------------------------------
-    Location                    &HandleCGI(Connection &connection,
-                                           const Srch_c_Res &res,
-                                           const l_loc_c_it &found, Location &synth) const;
+    Location &HandleCGI(Connection &connection, const l_loc_c_it &found, Location &synth) const;
     void                        ChildCGI(const Connection &connection,
                                          const std::string &address,
                                          const int *pipe_out) const;
@@ -141,6 +140,7 @@ private:
      *  1. find out does this server listens to this socket
      *  2. find address
      * */
+    void ForkCGI(Connection &connection, const std::string &address) const;
 };
 
 #endif //WEBSERV_SERVER_H

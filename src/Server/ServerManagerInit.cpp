@@ -47,7 +47,7 @@ void ServerManager::Init(const Config &config) {
     }
     // Create Connection instances for each fd dedicated to keep the state of
     // communication between the client and server
-    for (int i = 0; i < MAX_CLIENTS; ++i) {
+    for (int i = 0; i < CONNECTIONS; ++i) {
         connections_.push_back(Connection(is_running_, active_cgi_processes_));
     }
     std::cout << "Servers created successfully!" << std::endl;

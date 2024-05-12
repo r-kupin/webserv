@@ -16,7 +16,6 @@
 #include "connection/request/ClientRequest.h"
 #include "server/ServerExceptions.h"
 
-
 /**
  *  Server retrieves the reference to the current connection.
  *  It essentially serves to save the state of the connection, due to the
@@ -44,27 +43,6 @@ void ServerManager::HandleEventsOnExistingConnection(int client_socket) {
 		}
 	}
 }
-
-void ServerManager::HandleCGIEvent(int fd) {
-    if (cgi_fd_to_conn_.find(fd) != cgi_fd_to_conn_.end()) {
-        HandleCGIEvent(*cgi_fd_to_conn_[fd]);
-    }
-}
-
-int ServerManager::HandleCGIEvent(Connection &connection) {
-    try {
-        FindServer(connection).HandleCGIinput(connection);
-    } catch (const EwouldblockEagainUpload &) {
-        Log("Red all available data, but cgi transmission is incomplete. "
-            "We'll come back later. Maybe.");
-    } catch (...) {
-        close(connection.cgi_fd_);
-        close(connection.connection_socket_);
-        return connection.cgi_fd_;
-    }
-    return -1;
-}
-
 
 /**
  *  @return false means that we a stopping processing of the current request
@@ -112,8 +90,10 @@ bool ServerManager::ProcessBody(Connection &connection) {
 	try {
         const Server &server = FindServer(connection);
         connection.location_ = server.ProcessRequest(connection);
-        if (!connection.location_.cgi_address_.empty())
+        if (!connection.location_.cgi_address_.empty()) {
+            // CGI-generated responses bypass "Respond()" mechanism
             return false;
+        }
 		Log("Request processed");
 		connection.body_done_ = true;
 	} catch (const ZeroRead &) {

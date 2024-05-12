@@ -16,6 +16,8 @@
 #include "server/Server.h"
 #include "../Config/config/Config.h"
 
+#define CONNECTIONS 2048
+
 class Server;
 
 typedef std::vector<Server>         v_servers;
@@ -54,7 +56,7 @@ class ServerManagerException : public std::exception {};
 	void            AcceptNewConnection(int server_socket);
 	void            HandleEventsOnExistingConnection(int client_socket);
     void            HandleCGIEvent(int fd);
-    int HandleCGIEvent(Connection &connection);
+    int             HandleCGIEvent(Connection &connection);
 	bool            ProcessHeaders(Connection &connection);
 	void            CloseConnectionWithLogMessage(int socket,
 												  const std::string &msg);
@@ -79,11 +81,15 @@ private:
 	v_conn          connections_;
 	int             epoll_returns_count_;
 	int             epoll_events_count_;
-	int             epoll_connection_count_;
 	int             epoll_in_out_count_;
+    int             epoll_connection_count_;
 	int             active_cgi_processes_;
 
 	Config			config_;
+
+    void CheckInactiveCGIs();
+
+    void ReInvokeRequestProcessing(Connection &connection);
 };
 
 #endif //WEBSERV_SERVERMANAGER_H

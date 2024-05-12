@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.23.2)
 project(webserv)
 project(webserv_lib)
 
-add_compile_options(-gdwarf-4 -O1 -fno-limit-debug-info  -Wall -Wextra -Werror)
+add_compile_options(-gdwarf-4 -O0 -fno-limit-debug-info  -Wall -Wextra -Werror)
 set(CMAKE_CXX_STANDARD 98)
 
 add_executable(webserv src/main.cpp
@@ -42,6 +42,8 @@ add_executable(webserv src/main.cpp
         src/Config/location/LocationHandleReturn.cpp
         src/Config/location/LimitExcept.cpp
         src/Config/server_configuration/Host.cpp
+        src/Server/ServerManagerCGI.cpp
+        src/Server/server/ServerCGIHandler.cpp
 )
 add_library(webserv_lib
         src/utils/Utils.cpp
@@ -80,6 +82,8 @@ add_library(webserv_lib
         src/Config/location/LocationHandleReturn.cpp
         src/Config/location/LimitExcept.cpp
         src/Config/server_configuration/Host.cpp
+        src/Server/ServerManagerCGI.cpp
+        src/Server/server/ServerCGIHandler.cpp
 )
 
 add_subdirectory(test)
