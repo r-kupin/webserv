@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ServerManagerRun.cpp                               :+:      :+:    :+:   */
+/*   ServerManagerCGI.cpp                               :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rokupin <rokupin@student.42.fr>            +#+  +:+       +#+        */
+/*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/31 16:20:03 by  rokupin          #+#    #+#             */
-/*                                                    ###   ########.fr       */
+/*   Updated: 2024/05/13 16:11:59 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,7 +86,7 @@ int ServerManager::HandleCGIEvent(Connection &connection) {
         const Server &server = FindServer(connection);
         server.HandleCGIinput(connection);
     } catch (const EwouldblockEagainUpload &) {
-        Log("Red all available data, but cgi transmission is incomplete. "
+        Log("Read all available data, but cgi transmission is incomplete. "
             "We'll come back later. Maybe.");
     } catch (...) {
         // Reset connection state for a particular client (keep client's fd)

@@ -6,7 +6,7 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/22 14:52:05 by  rokupin          #+#    #+#             */
-/*   Updated: 2024/05/05 16:22:27 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/05/13 16:12:07 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -108,11 +108,11 @@ bool ServerManager::ProcessBody(Connection &connection) {
 		return false;
 	} catch (const EwouldblockEagain &) {
 		// socket is still active, but no data is available.
-		Log("Red all available data, but request is incomplete. "
+		Log("Read all available data, but request is incomplete. "
 			"We'll come back later. Maybe.");
 		return false;
 	} catch (const EwouldblockEagainUpload &) {
-		Log("Red all available data, but request is incomplete. "
+		Log("Read all available data, but request is incomplete. "
 			"We'll come back later. Maybe.");
 		return false;
 	} catch (const SendContinueFailedException &) {
