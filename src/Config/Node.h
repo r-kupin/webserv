@@ -6,7 +6,7 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/13 12:21:35 by mede-mas          #+#    #+#             */
-/*   Updated: 2024/05/13 12:21:36 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/05/13 12:36:53 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,23 +29,23 @@ typedef std::vector<Node>::const_iterator           v_node_c_it;
  * @param child_nodes_ nested blocks
  */
 struct Node {
-    v_str main_;
-    std::vector<v_str> directives_;
-    v_node child_nodes_;
+	v_str main_;
+	std::vector<v_str> directives_;
+	v_node child_nodes_;
 
-    Node();
-    Node(const v_str &main, const std::vector<v_str> &directives);
-    Node(const v_str &main, const v_node &childNodes);
-    Node(const v_str &main, const std::vector<v_str> &directives,
-         const v_node &childNodes);
+	Node();
+	Node(const v_str &main, const std::vector<v_str> &directives);
+	Node(const v_str &main, const v_node &childNodes);
+	Node(const v_str &main, const std::vector<v_str> &directives,
+		 const v_node &childNodes);
 
-    bool                IsLocation() const;
-    bool                IsLimitExcept() const;
-    bool                LocationContextHasPropperAddress() const;
-    bool                LocationContextIsNotEmpty() const;
-    bool                ContextDoesntHaveSubLocationsWithSameAddress() const;
+	bool                IsLocation() const;
+	bool                IsLimitExcept() const;
+	bool                LocationContextHasPropperAddress() const;
+	bool                LocationContextIsNotEmpty() const;
+	bool                ContextDoesntHaveSubLocationsWithSameAddress() const;
 
-    const std::string   &LocationContextGetAddress() const;
+	const std::string   &LocationContextGetAddress() const;
 };
 
 #endif //WEBSERV_NODE_H
