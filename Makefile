@@ -6,7 +6,7 @@
 #    By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/03/15 11:45:50 by mede-mas          #+#    #+#              #
-#    Updated: 2024/05/13 12:35:25 by mede-mas         ###   ########.fr        #
+#    Updated: 2024/05/13 12:52:03 by mede-mas         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -145,6 +145,7 @@ LIB_CXX =	ar rvs
 CXXFLAGS =		-Wall -Wextra -Werror -std=c++98
 LINKER_FLAGS =	-lgtest -lgtest_main -pthread
 ASANFLAGS =		-g -fsanitize=address
+DFLAGS = 		-MMD -MP
 
 all: $(NAME)
 
@@ -172,12 +173,13 @@ $(NAME_LIB): $(LIB_OBJS)
 $(TEST): $(TEST_LIBS) $(TEST_OBJS) $(NAME_LIB)
 	$(GXX) -L$(TEST_LIB_LIB_DIR) $(TEST_OBJS) $(NAME_LIB) $(LINKER_FLAGS) -no-pie -o $(TEST)
 
+
+# Rule to compile object files and generate dependency files
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) $(DFLAGS) -c $< -o $@
+
 # Include dependency rules
 -include $(DEPS)
-
-# RUle to compile object files and generate dependency files
-%.o: %.cpp
-	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
 
 src/%.o: src/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
