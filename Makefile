@@ -6,7 +6,7 @@
 #    By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/03/15 11:45:50 by mede-mas          #+#    #+#              #
-#    Updated: 2024/03/15 11:45:53 by mede-mas         ###   ########.fr        #
+#    Updated: 2024/05/13 12:52:03 by mede-mas         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -134,6 +134,7 @@ TEST_LIBS =			$(TEST_LIB_LIB_DIR)/libgtest.a \
 					$(TEST_LIB_LIB_DIR)/libgtest_main.a
 
 OBJS =		$(SRCS:.cpp=.o)
+DEPS =		$(OBJS:.o=.d)		# Dependency files for each object file
 LIB_OBJS =	$(LIB_SRCS:.cpp=.o)
 TEST_OBJS =	$(TEST_SRCS:.cpp=.o)
 
@@ -144,6 +145,7 @@ LIB_CXX =	ar rvs
 CXXFLAGS =		-Wall -Wextra -Werror -std=c++98
 LINKER_FLAGS =	-lgtest -lgtest_main -pthread
 ASANFLAGS =		-g -fsanitize=address
+DFLAGS = 		-MMD -MP
 
 all: $(NAME)
 
@@ -171,6 +173,14 @@ $(NAME_LIB): $(LIB_OBJS)
 $(TEST): $(TEST_LIBS) $(TEST_OBJS) $(NAME_LIB)
 	$(GXX) -L$(TEST_LIB_LIB_DIR) $(TEST_OBJS) $(NAME_LIB) $(LINKER_FLAGS) -no-pie -o $(TEST)
 
+
+# Rule to compile object files and generate dependency files
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) $(DFLAGS) -c $< -o $@
+
+# Include dependency rules
+-include $(DEPS)
+
 src/%.o: src/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
@@ -178,7 +188,7 @@ unit_tests/%.o: unit_tests/%.cpp
 	$(GXX) -I$(TEST_LIB_INCL_DIR) -c $< -o $@
 
 clean:
-	@rm -fr $(OBJS)
+	@rm -fr $(OBJS) $(DEPS)
 	@rm -fr $(TEST_OBJS)
 
 fclean: clean
@@ -190,3 +200,5 @@ fclean: clean
 re:
 	@$(MAKE) fclean
 	@$(MAKE) all
+
+.PHONY: all clean fclean re
