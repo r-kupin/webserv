@@ -61,8 +61,7 @@ void ServerManager::CheckInactiveCGIs() {
         close(terminated_cgi);
         // remove mapping entry
         CloseConnectionWithLogMessage(cgifd_to_cl_sock_[terminated_cgi],
-                                      "Cgi transmission ended. Closing the "
-                                      "connection");
+                                      "Cgi transmission ended.");
         cgifd_to_cl_sock_.erase(terminated_cgi);
         active_cgi_processes_--;
         // Check the rest of them

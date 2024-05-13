@@ -42,7 +42,7 @@ Location Server::ProcessRequest(Connection &connection) const {
         if (!found->uploads_path_.empty()) {
             HandleUpload(request, connection.connection_socket_, found, synth);
         } else if (!found->cgi_address_.empty()) {
-            HandleCGI(connection, found, synth);
+            HandleCGI(connection, found, synth, res.leftower_address_);
         } else {
             HandleStatic(request, res, found->root_ + res.leftower_address_, synth);
         }
@@ -50,14 +50,13 @@ Location Server::ProcessRequest(Connection &connection) const {
     return synth;
 }
 
-Location &Server::HandleCGI(Connection &connection, const l_loc_c_it &found,
-                            Location &synth) const {
+Location &Server::HandleCGI(Connection &connection, const l_loc_c_it &found, Location &synth, const std::string &path_info) const {
     std::string address = found->cgi_address_;
     if (found->cgi_address_[0] != '/')
         address = found->root_ + "/" + found->cgi_address_;
     if (Utils::CheckFilesystem(address) == COMM_FILE) {
         if (connection.active_cgis_ < MAX_CGI_PROCESSES) {
-            ForkCGI(connection, address);
+            ForkCGI(connection, address, path_info);
         } else {
             Log("Too much CGI requests. Adding this one to queue");
         }

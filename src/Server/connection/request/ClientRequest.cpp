@@ -41,10 +41,10 @@ void ClientRequest::Init(int client_sock) {
     socket_ = client_sock;
     ReadFromSocket(socket_, BUFFER_SIZE);
     std::string url = ExtractUrl(raw_request_[0]);
-    CheckURL(url);
     addr_ = ExtractAddr(url);
     addr_last_step_ = ExtractLastAddrStep(addr_);
 	method_ = ExtractMethod(raw_request_[0]);		// added for CGI
+    CheckURL(url);
     if (addr_[addr_.size() - 1] == '/') {
         index_request_ = true;
         if (addr_ != "/")
@@ -282,4 +282,8 @@ bool ClientRequest::IsCurlRequest() const {
 
 bool ClientRequest::IsFirefoxRequest() const {
     return GetHeaderValue("User-Agent").find("Mozilla") != std::string::npos;
+}
+
+const v_str &ClientRequest::GetRawRequest() const {
+    return raw_request_;
 }

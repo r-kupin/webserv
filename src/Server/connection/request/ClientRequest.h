@@ -77,6 +77,9 @@ public:
     const std::string   &GetAssociatedFilename() const;
 	std::string			GetMethodAsString() const;
 	std::string			GetQueryString() const;
+
+    const v_str &GetRawRequest() const;
+
     void                SetAssociatedFilename(const std::string &associatedFilename);
 //-------------------manual body processing-------------------------------------
     void                TellClientToContinueIfNeed(int socket) const;

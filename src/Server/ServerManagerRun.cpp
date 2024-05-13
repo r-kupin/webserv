@@ -72,7 +72,9 @@ void ServerManager::CloseTimedOutConnections() {
         if (connections_[i].IsOpen()) {
             long timeout = FindServer(connections_[i]).GetConnectionTimeout();
             if (connections_[i].HowLongBeingActive(time_right_now) > timeout) {
-                CloseConnectionWithLogMessage(i, "Connection timed out");
+                if (connections_[i].location_.cgi_address_.empty()) {
+                    CloseConnectionWithLogMessage(i, "Connection timed out");
+                }
             }
         }
     }

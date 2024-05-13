@@ -71,7 +71,9 @@ public:
     class ServerException : public std::exception {};
 
     Server(const Server &);
-    explicit Server(const ServerConfiguration &config, v_c_b &is_running_ref, const std::map<Host, int> &all_open_sockets, ServerManager &sm);
+    explicit Server(const ServerConfiguration &config, v_c_b &is_running_ref,
+                    const std::map<Host, int> &all_open_sockets,
+                    ServerManager &sm);
 
     bool                        ListensTo(int socket) const;
     bool                        HasServerName(const std::string &server_name) const;
@@ -120,12 +122,11 @@ protected:
                                              int socket,
                                              l_loc_c_it &found,
                                              Location &synth) const;
-    void NoDataAvailable(ssize_t bytes_read) const;
+    void                        NoDataAvailable(ssize_t bytes_read) const;
 //-------------------cgi related------------------------------------------------
-    Location &HandleCGI(Connection &connection, const l_loc_c_it &found, Location &synth) const;
-    void                        ChildCGI(const Connection &connection,
-                                         const std::string &address,
-                                         const int *pipe_out) const;
+    Location &HandleCGI(Connection &connection, const l_loc_c_it &found, Location &synth, const std::string &path_info) const;
+    void ForkCGI(Connection &connection, const std::string &address, const std::string &path_info) const;
+    void ChildCGI(const Connection &connection, const std::string &address, const int *pipe_out, const std::string &path_info) const;
 //-------------------misc utils-------------------------------------------------
     void                        Log(const std::string &msg) const;
     void                        Log(const std::string &msg, int listen_sock) const;
@@ -140,7 +141,6 @@ private:
      *  1. find out does this server listens to this socket
      *  2. find address
      * */
-    void ForkCGI(Connection &connection, const std::string &address) const;
 };
 
 #endif //WEBSERV_SERVER_H

@@ -7,10 +7,12 @@ echo "<html><head>"
 echo "  <meta charset="utf-8" />"
 echo "  <title>CGI</title>"
 echo "</head><body>"
-for (( j = 0; j < 10; j++ )); do
-    for (( i = 0; i < 10; i++ )); do
-        echo "Test CGI Script"
-    done
-    sleep 1
+echo $REQUEST_METHOD
+echo $QUERY_STRING
+echo $SERVER_PROTOCOL
+
+for arg in "$@"
+do
+    echo $arg
 done
 echo "</body></html>"
