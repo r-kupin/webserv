@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Print HTTP content type header
+echo "HTTP/1.1 200 OK"
 echo "Content-type: text/html"
 echo ""
 

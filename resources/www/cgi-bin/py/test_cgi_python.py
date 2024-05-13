@@ -3,6 +3,7 @@ import os
 import sys
 
 # Print HTTP content type header
+print ("HTTP/1.1 200 OK")
 print("Content-type: text/html")
 print()
 
