@@ -19,7 +19,7 @@ void Server::ForkCGI(Connection &connection, const std::string &address) const {
         ThrowException("Failed to create pipe for CGI execution");
     }
     connection.cgi_fd_ = pipe_out[0];
-    if (!sm_.AddCgiToEpoll(connection.cgi_fd_, &connection)) {
+    if (!sm_.AddCgiToEpoll(connection.cgi_fd_, connection)) {
         ThrowException("Can't add cgi fd to epoll instance");
     }
     connection.active_cgis_++;

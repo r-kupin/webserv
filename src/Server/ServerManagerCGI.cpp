@@ -36,10 +36,10 @@ void ServerManager::CheckInactiveCGIs() {
     // -1 - no terminated cgi connections
     // > 0 - terminated one
     int terminated_cgi = 0;
-    for (std::map<int, Connection *>::iterator it = cgi_fd_to_conn_.begin();
+    for (std::map<int, Connection &>::iterator it = cgi_fd_to_conn_.begin();
          it != cgi_fd_to_conn_.end(); ++it) {
         // There are some CGI connections
-        Connection connection = *it->second;
+        Connection connection = it->second;
         if (connection.waiting_for_cgi_) {
             if ((terminated_cgi = HandleCGIEvent(connection)) != -1) {
                 // can't erase element from a map in wich we are iterating.
@@ -67,7 +67,7 @@ void ServerManager::ReInvokeRequestProcessing(Connection &connection) {
 
 void ServerManager::HandleCGIEvent(int fd) {
     if (cgi_fd_to_conn_.find(fd) != cgi_fd_to_conn_.end()) {
-        HandleCGIEvent(*cgi_fd_to_conn_[fd]);
+        HandleCGIEvent(cgi_fd_to_conn_.find(fd)->second);
     }
 }
 
@@ -79,8 +79,13 @@ int ServerManager::HandleCGIEvent(Connection &connection) {
         Log("Red all available data, but cgi transmission is incomplete. "
             "We'll come back later. Maybe.");
     } catch (...) {
+        // delete cgi fd from epoll
+        epoll_ctl(connection.cgi_fd_, EPOLL_CTL_DEL, epoll_fd_, NULL);
+        // close communication socket
         close(connection.cgi_fd_);
-        close(connection.connection_socket_);
+        connections_[connection.connection_socket_] =
+                Connection(is_running_, connection.connection_socket_,
+                           connection.server_listening_socket_, connection.active_cgis_);
         return connection.cgi_fd_;
     }
     return -1;

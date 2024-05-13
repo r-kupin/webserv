@@ -117,7 +117,7 @@ bool ServerManager::AddClientToEpoll(int client_sock) {
     return false;
 }
 
-bool ServerManager::AddCgiToEpoll(int cgi_fd, Connection *connection) {
+bool ServerManager::AddCgiToEpoll(int cgi_fd, Connection &connection) {
     epoll_event event;
     event.events = EPOLLIN | EPOLLOUT | EPOLLET;
     event.data.fd = cgi_fd;
@@ -125,7 +125,8 @@ bool ServerManager::AddCgiToEpoll(int cgi_fd, Connection *connection) {
         if (epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, cgi_fd, &event) != -1) {
             // map connection with cgi_fd, so when cgi event will be
             // reported, we could find a corresponding connection
-            cgi_fd_to_conn_[cgi_fd] = connection;
+            cgi_fd_to_conn_.insert(
+                    std::pair<int, Connection&>(cgi_fd, connection));
             return true;
         }
     }

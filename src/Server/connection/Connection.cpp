@@ -21,6 +21,7 @@ Connection::Connection(v_c_b &is_running, int &active_cgis)
     connection_socket_(0),
     server_listening_socket_(0),
     request_(is_running),
+    cgi_fd_(0),
     active_cgis_(active_cgis) {}
 
 Connection::Connection(v_c_b &is_running, int connection_socket, int server_socket, int &active_cgis)
@@ -31,33 +32,37 @@ Connection::Connection(v_c_b &is_running, int connection_socket, int server_sock
     connection_socket_(connection_socket),
     server_listening_socket_(server_socket),
     request_(is_running),
+    cgi_fd_(0),
     active_cgis_(active_cgis) {}
 
 // Copy constructor
 Connection::Connection(const Connection &other)
 : url_headers_done_(other.url_headers_done_),
-	body_done_(other.body_done_),
+    body_done_(other.body_done_),
     waiting_for_cgi_(other.waiting_for_cgi_),
-	open_time_(other.open_time_),
-	connection_socket_(other.connection_socket_),
-	server_listening_socket_(other.server_listening_socket_),
-	address_(other.address_),
-	request_(other.request_),
-    active_cgis_(other.active_cgis_){}
+    open_time_(other.open_time_),
+    connection_socket_(other.connection_socket_),
+    server_listening_socket_(other.server_listening_socket_),
+    address_(other.address_),
+    request_(other.request_),
+    location_(other.location_),
+    cgi_fd_(other.cgi_fd_),
+    active_cgis_(other.active_cgis_) {}
 
 // Assignement operator
 Connection &Connection::operator=(const Connection &other) {
 	if (this == &other)
 		return *this;
-	connection_socket_ = other.connection_socket_;
-	server_listening_socket_ = other.server_listening_socket_;
-	request_ = other.request_;
-	url_headers_done_ = other.url_headers_done_;
-	body_done_ = other.body_done_;
-	address_ = other.address_;
-	open_time_ = other.open_time_;
-	active_cgis_ = other.active_cgis_;
+    url_headers_done_ = other.url_headers_done_;
+    body_done_ = other.body_done_;
     waiting_for_cgi_ = other.waiting_for_cgi_;
+    open_time_ = other.open_time_;
+    connection_socket_ = other.connection_socket_;
+    server_listening_socket_ = other.server_listening_socket_;
+    address_ = other.address_;
+    request_ = other.request_;
+    location_ = other.location_;
+    cgi_fd_ = other.cgi_fd_;
 	return *this;
 }
 

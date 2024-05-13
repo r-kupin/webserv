@@ -23,7 +23,7 @@ class Server;
 typedef std::vector<Server>         v_servers;
 typedef std::vector<Connection>     v_conn;
 typedef std::map<Host, int>         m_host_int;
-typedef std::map<int, Connection*>  m_cgi_fd_conn;
+typedef std::map<int, Connection&>  m_cgi_fd_conn;
 
 static volatile bool        is_running_ = true;
 
@@ -63,7 +63,7 @@ class ServerManagerException : public std::exception {};
 	bool            ProcessBody(Connection &connection);
 	bool            Respond(Connection &connection);
 	void            CloseTimedOutConnections();
-    bool            AddCgiToEpoll(int cgi_fd, Connection *connection);
+    bool            AddCgiToEpoll(int cgi_fd, Connection &connection);
     void            RemoveCGIFromMap(int cgi_fd);
 //-------------------util-------------------------------------------------------
 	void            Cleanup();
