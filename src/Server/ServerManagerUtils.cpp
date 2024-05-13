@@ -84,6 +84,7 @@ void ServerManager::PrintEventInfo(int events, int fd, int i) {
 
     std::cout << "\n== events " << epoll_events_count_ <<
     " == connections " << epoll_connection_count_ <<
+    " == cgis " << active_cgi_processes_ <<
     " == IO " << epoll_in_out_count_ << "\n";
 
     std::cout << "nfd: " << i << "\n" << "fd: " << fd << "\n";

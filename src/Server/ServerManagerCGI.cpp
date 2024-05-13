@@ -36,10 +36,10 @@ void ServerManager::CheckInactiveCGIs() {
     // -1 - no terminated cgi connections
     // > 0 - terminated one
     int terminated_cgi = 0;
-    for (std::map<int, Connection &>::iterator it = cgi_fd_to_conn_.begin();
-         it != cgi_fd_to_conn_.end(); ++it) {
+    for (std::map<int, int>::iterator it = cgifd_to_cl_sock_.begin();
+         it != cgifd_to_cl_sock_.end(); ++it) {
         // There are some CGI connections
-        Connection connection = it->second;
+        Connection &connection = connections_[it->second];
         if (connection.waiting_for_cgi_) {
             if ((terminated_cgi = HandleCGIEvent(connection)) != -1) {
                 // can't erase element from a map in wich we are iterating.
@@ -54,7 +54,17 @@ void ServerManager::CheckInactiveCGIs() {
         // found map entry with a connection that ended it's communication with a
         // CGI process, and needs to be removed to avoid further attempts to
         // access the FD associated with a dead cgi process
-        cgi_fd_to_conn_.erase(terminated_cgi);
+        
+        // delete cgi fd from epoll
+        epoll_ctl(terminated_cgi, EPOLL_CTL_DEL, epoll_fd_, NULL);
+        // close communication socket
+        close(terminated_cgi);
+        // remove mapping entry
+        CloseConnectionWithLogMessage(cgifd_to_cl_sock_[terminated_cgi],
+                                      "Cgi transmission ended. Closing the "
+                                      "connection");
+        cgifd_to_cl_sock_.erase(terminated_cgi);
+        active_cgi_processes_--;
         // Check the rest of them
         CheckInactiveCGIs();
     }
@@ -65,9 +75,9 @@ void ServerManager::ReInvokeRequestProcessing(Connection &connection) {
     connection.location_ = server.ProcessRequest(connection);
 }
 
-void ServerManager::HandleCGIEvent(int fd) {
-    if (cgi_fd_to_conn_.find(fd) != cgi_fd_to_conn_.end()) {
-        HandleCGIEvent(cgi_fd_to_conn_.find(fd)->second);
+void ServerManager::HandleCGIEvent(int cgi_fd) {
+    if (cgifd_to_cl_sock_.find(cgi_fd) != cgifd_to_cl_sock_.end()) {
+        HandleCGIEvent(connections_[cgifd_to_cl_sock_.find(cgi_fd)->second]);
     }
 }
 
@@ -79,14 +89,9 @@ int ServerManager::HandleCGIEvent(Connection &connection) {
         Log("Red all available data, but cgi transmission is incomplete. "
             "We'll come back later. Maybe.");
     } catch (...) {
-        // delete cgi fd from epoll
-        epoll_ctl(connection.cgi_fd_, EPOLL_CTL_DEL, epoll_fd_, NULL);
-        // close communication socket
-        close(connection.cgi_fd_);
-        connections_[connection.connection_socket_] =
-                Connection(is_running_, connection.connection_socket_,
-                           connection.server_listening_socket_, connection.active_cgis_);
-        return connection.cgi_fd_;
+        // Reset connection state for a particular client (keep client's fd)
+        int cgi_fd = connection.cgi_fd_;
+        return cgi_fd;
     }
     return -1;
 }

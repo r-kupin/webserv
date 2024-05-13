@@ -62,7 +62,7 @@
 
 #define MAX_CLIENTS 2048
 #define MAX_EVENTS 1000
-#define MAX_CGI_PROCESSES 100
+#define MAX_CGI_PROCESSES 300
 
 class ServerManager;
 

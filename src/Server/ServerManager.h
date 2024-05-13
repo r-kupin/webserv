@@ -23,7 +23,7 @@ class Server;
 typedef std::vector<Server>         v_servers;
 typedef std::vector<Connection>     v_conn;
 typedef std::map<Host, int>         m_host_int;
-typedef std::map<int, Connection&>  m_cgi_fd_conn;
+typedef std::map<int, int>          m_cgifd_to_clientfd;
 
 static volatile bool        is_running_ = true;
 
@@ -55,7 +55,7 @@ class ServerManagerException : public std::exception {};
 	const Server    &FindServer(const Connection &connection) const;
 	void            AcceptNewConnection(int server_socket);
 	void            HandleEventsOnExistingConnection(int client_socket);
-    void            HandleCGIEvent(int fd);
+    void            HandleCGIEvent(int cgi_fd);
     int             HandleCGIEvent(Connection &connection);
 	bool            ProcessHeaders(Connection &connection);
 	void            CloseConnectionWithLogMessage(int socket,
@@ -76,7 +76,7 @@ private:
 	int             epoll_fd_;
 	v_servers       servers_;
 	m_host_int      host_to_socket_; /* quick find-by-host required by CreateListeningSockets */
-    m_cgi_fd_conn   cgi_fd_to_conn_;
+    m_cgifd_to_clientfd   cgifd_to_cl_sock_;
 
 	v_conn          connections_;
 	int             epoll_returns_count_;

@@ -125,8 +125,7 @@ bool ServerManager::AddCgiToEpoll(int cgi_fd, Connection &connection) {
         if (epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, cgi_fd, &event) != -1) {
             // map connection with cgi_fd, so when cgi event will be
             // reported, we could find a corresponding connection
-            cgi_fd_to_conn_.insert(
-                    std::pair<int, Connection&>(cgi_fd, connection));
+            cgifd_to_cl_sock_[cgi_fd] = connection.connection_socket_;
             return true;
         }
     }
@@ -136,7 +135,7 @@ bool ServerManager::AddCgiToEpoll(int cgi_fd, Connection &connection) {
 }
 
 void ServerManager::RemoveCGIFromMap(int cgi_fd) {
-    cgi_fd_to_conn_.erase(cgi_fd);
+    cgifd_to_cl_sock_.erase(cgi_fd);
     close(cgi_fd);
 }
 

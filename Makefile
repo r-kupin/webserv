@@ -137,7 +137,7 @@ OBJS =		$(SRCS:.cpp=.o)
 LIB_OBJS =	$(LIB_SRCS:.cpp=.o)
 TEST_OBJS =	$(TEST_SRCS:.cpp=.o)
 
-CXX =		clang++
+CXX =		c++
 GXX =		g++
 LIB_CXX =	ar rvs
 

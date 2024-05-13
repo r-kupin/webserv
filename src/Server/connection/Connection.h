@@ -13,6 +13,7 @@
 #ifndef WEBSERV_CONNECTION_H
 #define WEBSERV_CONNECTION_H
 
+#include <ostream>
 #include "request/ClientRequest.h"
 #include "../../Config/location/Location.h"
 
@@ -36,7 +37,10 @@ struct Connection {
 
 	// Time and socket-related members
 	long                open_time_;
-	int                 connection_socket_;
+
+    friend std::ostream &operator<<(std::ostream &os, const Connection &connection);
+
+    int                 connection_socket_;
 	int                 server_listening_socket_;
 	std::string         address_;
 

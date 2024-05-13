@@ -75,3 +75,18 @@ bool	Connection::IsOpen() const {
 long	Connection::HowLongBeingActive(long now) const {
 	return now - open_time_;
 }
+
+std::ostream &operator<<(std::ostream &os, const Connection &connection) {
+    os << "url_headers_done_: " << connection.url_headers_done_ << "\n" <<
+    " body_done_: " << connection.body_done_ << "\n" <<
+    " waiting_for_cgi_: " << connection.waiting_for_cgi_ << "\n" <<
+    " open_time_: " << connection.open_time_ << "\n" <<
+    " connection_socket_: " << connection.connection_socket_ << "\n" <<
+    " server_listening_socket_: " << connection.server_listening_socket_ << "\n" <<
+    " address_: " << connection.address_ << "\n" <<
+    " request_: " << connection.request_ << "\n" <<
+    " location_: " << connection.location_ << "\n" <<
+    " cgi_fd_: " << connection.cgi_fd_ << "\n" <<
+    " active_cgis_: " << connection.active_cgis_ << "\n";
+    return os;
+}
