@@ -44,7 +44,7 @@ typedef std::map<std::string, std::string>::const_iterator  m_str_str_c_it;
 typedef std::list<std::string>                              l_str;
 typedef std::list<std::string>::const_iterator              l_str_c_it;
 
-enum Methods {GET, POST, DELETE, UNSUPPORTED};
+enum Methods {GET, POST, DELETE, PUT, UNSUPPORTED};
 
 class Utils {
 public:

@@ -169,6 +169,8 @@ std::string Utils::ExtractMethod(Methods methods) {
         return "POST";
     } if (methods == DELETE) {
         return "DELETE";
+    } if (methods == PUT) {
+        return "PUT";
     } else {
         return "UNSUPPORTED";
     }

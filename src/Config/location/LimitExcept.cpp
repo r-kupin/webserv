@@ -69,9 +69,11 @@ void Limit::LimExHandleMethods(const v_str &main) {
             except_.insert(POST);
         } else if (*it == "DELETE" && except_.find(DELETE) == except_.end()) {
             except_.insert(DELETE);
+        } else if (*it == "PUT" && except_.find(PUT) == except_.end()) {
+            except_.insert(PUT);
         } else {
             ThrowLimitExceptError("Seems like there are repeatable or  "
-                                  "unsupported  methods methods, in the "
+                                  "unsupported methods, in the "
                                   "limit_except block");
         }
     }

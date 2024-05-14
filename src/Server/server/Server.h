@@ -81,7 +81,7 @@ public:
     long                        GetConnectionTimeout() const;
 
     Location                    ProcessRequest(Connection &connection) const;
-    bool HandleCGIinput(Connection &connection) const;
+    bool                        HandleCGIinput(Connection &connection) const;
 
     friend std::ostream        &operator<<(std::ostream &os,
                                             const Server &server);
@@ -124,9 +124,22 @@ protected:
                                              Location &synth) const;
     void                        NoDataAvailable(ssize_t bytes_read) const;
 //-------------------cgi related------------------------------------------------
-    Location &HandleCGI(Connection &connection, const l_loc_c_it &found, Location &synth, const std::string &path_info) const;
-    void ForkCGI(Connection &connection, const std::string &address, const std::string &path_info) const;
-    void ChildCGI(const Connection &connection, const std::string &address, const int *pipe_out, const std::string &path_info) const;
+    Location                    &HandleCGI(Connection &connection,
+                                           const l_loc_c_it &found,
+                                           Location &synth,
+                                           const std::string &path_info) const;
+    void                        ForkCGI(Connection &connection,
+                                        const std::string &address,
+                                        const std::string &path_info) const;
+    void                        ChildCGI(const Connection &connection,
+                                         const std::string &address,
+                                         const int *pipe_out,
+                                         const std::string &path_info) const;
+    bool                        VerifyCGIFirstLine(Connection &connection) const;
+    bool                        CheckParsedFirstLine(Connection &connection,
+                                                     const std::string &http_version,
+                                                     const std::string &code,
+                                                     const std::string &description) const;
 //-------------------misc utils-------------------------------------------------
     void                        Log(const std::string &msg) const;
     void                        Log(const std::string &msg, int listen_sock) const;

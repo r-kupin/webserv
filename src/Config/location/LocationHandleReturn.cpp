@@ -59,7 +59,7 @@ void Location::Handle2ArgReturn(const v_str &directives_) {
             ThrowLocationException("Return directive is wrong");
         HandleAddress(directives_[2]);
     } else {
-        if (!Utils::Get().IsRedirectCode(return_code_))
+        if (Utils::Get().IsRedirectCode(return_code_))
             ThrowLocationException("Return directive is wrong");
         return_custom_message_ = directives_[2];
     }

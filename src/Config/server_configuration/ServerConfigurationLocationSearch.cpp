@@ -88,7 +88,6 @@ Srch_c_Res  ServerConfiguration::FindConstLocation(
     if (status == "found") {
         leftower = "";
     } else {
-        std::cout << "wtf?" << std::endl;
         leftower = address.substr(res->full_address_.size());
     }
     return LocConstSearchResult(res, status, address, leftower);

@@ -175,6 +175,9 @@ void    print_method(std::ostream &os, Methods method) {
         case GET:
             os << "GET" << " ";
             break;
+        case PUT:
+            os << "PUT" << " ";
+            break;
         case POST:
             os << "POST" << " ";
             break;
@@ -263,8 +266,9 @@ std::string ClientRequest::GetHeaderValue(const std::string &key) const {
 
 size_t ClientRequest::GetDeclaredBodySize() const {
     if (!HasHeader("Content-Length")) {
-        ThrowException("Content-Length header is missing",
-                       "BadRequestException");
+        std::cout << "Content-Length header is missing" << std::endl;
+//        ThrowException("Content-Length header is missing",
+//                       "BadRequestException");
     } else {
         try {
             return Utils::StringToULong(GetHeaderValue("Content-Length"));
