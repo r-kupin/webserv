@@ -56,7 +56,8 @@ Location &Server::HandleCGI(Connection &connection, const l_loc_c_it &found, Loc
         address = found->root_ + "/" + found->cgi_address_;
     if (Utils::CheckFilesystem(address) == COMM_FILE) {
         if (connection.active_cgis_ < MAX_CGI_PROCESSES) {
-            ForkCGI(connection, address, path_info);
+            if (!connection.waiting_for_cgi_)
+                ForkCGI(connection, address, path_info);
         } else {
             Log("Too much CGI requests. Adding this one to queue");
         }

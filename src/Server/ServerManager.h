@@ -55,7 +55,7 @@ class ServerManagerException : public std::exception {};
 	const Server    &FindServer(const Connection &connection) const;
 	void            AcceptNewConnection(int server_socket);
 	void            HandleEventsOnExistingConnection(int client_socket);
-    void            HandleCGIEvent(int cgi_fd);
+    int HandleCGIEvent(int cgi_fd);
     int             HandleCGIEvent(Connection &connection);
 	bool            ProcessHeaders(Connection &connection);
 	void            CloseConnectionWithLogMessage(int socket,
@@ -90,6 +90,8 @@ private:
     void CheckInactiveCGIs();
 
     void ReInvokeRequestProcessing(Connection &connection);
+
+    void HandleFailedClient(int fd);
 };
 
 #endif //WEBSERV_SERVERMANAGER_H

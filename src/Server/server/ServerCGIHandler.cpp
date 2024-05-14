@@ -36,19 +36,73 @@ void Server::ForkCGI(Connection &connection, const std::string &address, const s
     }
 }
 
-void Server::HandleCGIinput(Connection &connection) const {
+size_t  find_response_endline(const v_char &buff) {
+    size_t line_break = Utils::FindInCharVect(buff, "\n");
+
+    if (line_break != std::string::npos && line_break > 0) {
+        if (buff[line_break - 1] == '\r')
+            line_break--;
+    }
+    return line_break;
+}
+
+bool Server::HandleCGIinput(Connection &connection) const {
     char    buffer[FILE_BUFFER_SIZE];
 
     while (is_running_) {
-        int bytes_read = read(connection.cgi_fd_, buffer, FILE_BUFFER_SIZE - 1);
+        size_t bytes_read = read(connection.cgi_fd_, buffer,FILE_BUFFER_SIZE - 1);
+        connection.buffer_.insert(connection.buffer_.end(), buffer,
+                                  buffer + bytes_read);
 
         if (bytes_read < 1) {
             NoDataAvailable(bytes_read);
         } else {
-            if (send(connection.connection_socket_, buffer, bytes_read,  0) < 0)
-                ThrowException("send() returned negative number!");
+            if (!connection.cgi_response_verified_) {
+                size_t line_break = find_response_endline(connection.buffer_);
+                if (line_break != std::string::npos) {
+                    std::string first_line(connection.buffer_.begin(),
+                                           connection.buffer_.begin() + line_break);
+                    std::istringstream iss(first_line);
+                    std::string http_version, code, description;
+                    if (iss >> http_version >> code >> description) {
+                        if (http_version == "HTTP/1.1" &&
+                        Utils::Get().IsValidHTTPCode(Utils::StringToNbr(code)) &&
+                                !description.empty()) {
+                            connection.cgi_response_verified_ = true;
+                            size_t sent = send(connection.connection_socket_,
+                                               connection.buffer_.data(),
+                                               connection.buffer_.size(), 0);
+                            connection.cgi_response_verified_ = true;
+                            if (sent == connection.buffer_.size()) {
+                                connection.buffer_.clear();
+                            } else {
+                                // todo clear part being sent
+                                Log("not all data is sent");
+                            }
+                            return true;
+                        } else {
+                            Log("CGI sent bad response");
+                            return false;
+                        }
+                    } else {
+                        Log("CGI sent bad response");
+                        return false;
+                    }
+                } else {
+                    return true;
+                }
+            } else {
+                size_t sent = send(connection.connection_socket_, buffer, bytes_read, 0);
+                Log(Utils::NbrToString(sent) + " bytes sent " );
+                if (sent == bytes_read) {
+                    return true;
+                } else {
+                    ThrowException("send() returned negative number!");
+                }
+            }
         }
     }
+    return false;
 }
 
 void Server::ChildCGI(const Connection &connection, const std::string &address, const int *pipe_out, const std::string &path_info) const {

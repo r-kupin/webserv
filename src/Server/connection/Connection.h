@@ -50,6 +50,8 @@ struct Connection {
 
     int                 cgi_fd_;
     int                 &active_cgis_;
+    bool                cgi_response_verified_;
+    v_char              buffer_;
 };
 
 #endif //WEBSERV_CONNECTION_H

@@ -38,6 +38,8 @@ void ServerManager::CheckInactiveCGIs() {
     int terminated_cgi = 0;
     for (std::map<int, int>::iterator it = cgifd_to_cl_sock_.begin();
          it != cgifd_to_cl_sock_.end(); ++it) {
+        std::cout << "cgi fd: " << it->first << " socket: " << it->second <<
+        std::endl;
         // There are some CGI connections
         Connection &connection = connections_[it->second];
         if (connection.waiting_for_cgi_) {
@@ -74,16 +76,22 @@ void ServerManager::ReInvokeRequestProcessing(Connection &connection) {
     connection.location_ = server.ProcessRequest(connection);
 }
 
-void ServerManager::HandleCGIEvent(int cgi_fd) {
+int ServerManager::HandleCGIEvent(int cgi_fd) {
     if (cgifd_to_cl_sock_.find(cgi_fd) != cgifd_to_cl_sock_.end()) {
-        HandleCGIEvent(connections_[cgifd_to_cl_sock_.find(cgi_fd)->second]);
+        int clients_socket = cgifd_to_cl_sock_.find(cgi_fd)->second;
+        Connection &conection = connections_[clients_socket];
+        int handling_result = HandleCGIEvent(conection);
+        return handling_result;
     }
+    Log("Pair CGI_fd - Client socket not found");
+    return -1;
 }
 
 int ServerManager::HandleCGIEvent(Connection &connection) {
     try {
         const Server &server = FindServer(connection);
-        server.HandleCGIinput(connection);
+        if(!server.HandleCGIinput(connection))
+            return connection.cgi_fd_;
     } catch (const EwouldblockEagainUpload &) {
         Log("Read all available data, but cgi transmission is incomplete. "
             "We'll come back later. Maybe.");
