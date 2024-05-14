@@ -106,7 +106,7 @@ void ServerResponse::SendResponse(int dest) {
     std::string response_string = ss.str();
     const char *response_buffer = response_string.c_str();
     size_t response_size = response_string.size();
-
+// todo: check -1
     if (send(dest, response_buffer, response_size,  0) < 0)
         ThrowResponseException("send() returned negative number!");
 }
