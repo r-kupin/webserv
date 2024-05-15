@@ -6,7 +6,7 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/17 12:34:02 by  rokupin          #+#    #+#             */
-/*   Updated: 2024/05/02 17:41:03 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/05/15 18:20:38 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,9 +38,9 @@ struct Connection {
 	// Time and socket-related members
 	long                open_time_;
 
-    friend std::ostream &operator<<(std::ostream &os, const Connection &connection);
+	friend std::ostream &operator<<(std::ostream &os, const Connection &connection);
 
-    int                 connection_socket_;
+	int                 connection_socket_;
 	int                 server_listening_socket_;
 	std::string         address_;
 
@@ -48,10 +48,11 @@ struct Connection {
 	ClientRequest       request_;
 	Location            location_;
 
-    int                 cgi_fd_;
-    int                 &active_cgis_;
-    bool                cgi_response_verified_;
-    v_char              buffer_;
+	int                 cgi_stdin_fd_;
+	int                 cgi_stdout_fd_;
+	int                 &active_cgis_;
+	bool                cgi_response_verified_;
+	v_char              buffer_;
 };
 
 #endif //WEBSERV_CONNECTION_H
