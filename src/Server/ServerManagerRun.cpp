@@ -6,7 +6,7 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/31 16:20:03 by  rokupin          #+#    #+#             */
-/*   Updated: 2024/05/15 20:07:43 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/05/15 20:23:52 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,8 +46,8 @@ void    ServerManager::EventLoop() {
                 if (!(event & EPOLLERR)) {
                     IncomingEvent(socket_fd, event);
                 } else {
-                    if (connections_[socket_fd].cgi_fd_ != 0) {
-                        HandleTerminatedCGIProcess(connections_[socket_fd].cgi_fd_);
+                    if (connections_[socket_fd].cgi_stdout_fd_ != 0) {
+                        HandleTerminatedCGIProcess(connections_[socket_fd].cgi_stdout_fd_);
                     } else {
                         CloseConnectionWithLogMessage(socket_fd,
                                                       "client interrupted communication");
