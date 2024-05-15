@@ -6,7 +6,7 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/12 18:29:03 by  rokupin          #+#    #+#             */
-/*   Updated: 2024/05/15 18:17:08 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/05/15 18:57:59 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,7 @@ void Server::ForkCGI(Connection &connection, const std::string &address, const s
 			ThrowException("Can't add cgi_stdout_fd to epoll instance");
 		}
 		connection.active_cgis_++;
-		connection.waiting_for_cgi_ = true;
+		// connection.waiting_for_cgi_ = true;
 	} else {
 		ThrowException("fork failed");
 	}
@@ -169,7 +169,7 @@ void Server::ChildCGI(const Connection &connection, const std::string &address, 
 
 bool	Server::SendDataToCGI(Connection &connection, const std::string &data) const {
 	ssize_t	bytes_written = write(connection.cgi_stdin_fd_, data.c_str(), data.size());
-	if (bytes_written < data.size()) {
+	if (bytes_written < static_cast<ssize_t>(data.size())) {
 		Log("Failed to send all data to CGI stdin");
 		return false;
 	}
