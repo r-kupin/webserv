@@ -16,7 +16,6 @@ add_executable(webserv src/main.cpp
         src/Server/server/SynthFoundExact.cpp
         src/Server/server/Server.cpp
         src/Server/server/LocationSynth.cpp
-        src/Server/server/SynthNotFound.cpp
         src/Server/server/PerformUpload.cpp
         src/Server/ServerManagerHandleEvents.cpp
         src/Server/ServerManagerInit.cpp
@@ -56,7 +55,6 @@ add_library(webserv_lib
         src/Server/server/SynthFoundExact.cpp
         src/Server/server/Server.cpp
         src/Server/server/LocationSynth.cpp
-        src/Server/server/SynthNotFound.cpp
         src/Server/server/PerformUpload.cpp
         src/Server/ServerManagerHandleEvents.cpp
         src/Server/ServerManagerInit.cpp
