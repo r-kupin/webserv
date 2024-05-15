@@ -6,7 +6,7 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/31 16:20:03 by  rokupin          #+#    #+#             */
-/*   Updated: 2024/05/13 16:11:59 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/05/15 20:10:55 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@
  * reported, because cgi process ended and / or closed the connection. In
  * this method we are looping across all connections:
  * - If connection is waiting for CGI process to end - we'll try to read a  bit
- * from cgi_fd ("handle" event that didn't happen).
+ * from cgi_stdout_fd ("handle" event that didn't happen).
  *      - If read returns -1 - cgi process is still running and might send us
  *      something.
  *      - If read returns 0 - cgi process is done, and we need to close the
@@ -76,33 +76,33 @@ void ServerManager::HandleTerminatedCGIProcess(int terminated_cgi) {
 
 
 void ServerManager::ReInvokeRequestProcessing(Connection &connection) {
-    const Server &server = FindServer(connection);
-    connection.location_ = server.ProcessRequest(connection);
+	const Server &server = FindServer(connection);
+	connection.location_ = server.ProcessRequest(connection);
 }
 
-int ServerManager::HandleCGIEvent(int cgi_fd) {
-    if (cgifd_to_cl_sock_.find(cgi_fd) != cgifd_to_cl_sock_.end()) {
-        int clients_socket = cgifd_to_cl_sock_.find(cgi_fd)->second;
-        Connection &conection = connections_[clients_socket];
-        int handling_result = HandleCGIEvent(conection);
-        return handling_result;
-    }
-    Log("Pair CGI_fd - Client socket not found");
-    return -1;
+int ServerManager::HandleCGIEvent(int cgi_stdout_fd) {
+	if (cgifd_to_cl_sock_.find(cgi_stdout_fd) != cgifd_to_cl_sock_.end()) {
+		int clients_socket = cgifd_to_cl_sock_.find(cgi_stdout_fd)->second;
+		Connection &conection = connections_[clients_socket];
+		int handling_result = HandleCGIEvent(conection);
+		return handling_result;
+	}
+	Log("Pair CGI_stdout_fd - Client socket not found");
+	return -1;
 }
 
 int ServerManager::HandleCGIEvent(Connection &connection) {
-    try {
-        const Server &server = FindServer(connection);
-        if(!server.HandleCGIinput(connection))
-            return connection.cgi_fd_;
-    } catch (const EwouldblockEagainUpload &) {
-        Log("Read all available data, but cgi transmission is incomplete. "
-            "We'll come back later. Maybe.");
-    } catch (...) {
-        // Reset connection state for a particular client (keep client's fd)
-        int cgi_fd = connection.cgi_fd_;
-        return cgi_fd;
-    }
-    return -1;
+	try {
+		const Server &server = FindServer(connection);
+		if(!server.HandleCGIinput(connection))
+			return connection.cgi_stdout_fd_;
+	} catch (const EwouldblockEagainUpload &) {
+		Log("Read all available data, but cgi transmission is incomplete. "
+			"We'll come back later. Maybe.");
+	} catch (...) {
+		// Reset connection state for a particular client (keep client's fd)
+		int cgi_stdout_fd = connection.cgi_stdout_fd_;
+		return cgi_stdout_fd;
+	}
+	return -1;
 }
