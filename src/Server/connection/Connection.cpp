@@ -22,8 +22,7 @@ Connection::Connection(v_c_b &is_running, int &active_cgis)
   server_listening_socket_(0),
   request_(is_running),
   cgi_fd_(0),
-  active_cgis_(active_cgis),
-  cgi_response_verified_(false) {}
+  active_cgis_(active_cgis) {}
 
 Connection::Connection(v_c_b &is_running, int connection_socket, int server_socket, int &active_cgis)
 : url_headers_done_(false),
@@ -34,8 +33,7 @@ Connection::Connection(v_c_b &is_running, int connection_socket, int server_sock
   server_listening_socket_(server_socket),
   request_(is_running),
   cgi_fd_(0),
-  active_cgis_(active_cgis),
-  cgi_response_verified_(false) {}
+  active_cgis_(active_cgis) {}
 
 // Copy constructor
 Connection::Connection(const Connection &other)
@@ -49,8 +47,7 @@ Connection::Connection(const Connection &other)
   request_(other.request_),
   location_(other.location_),
   cgi_fd_(other.cgi_fd_),
-  active_cgis_(other.active_cgis_),
-  cgi_response_verified_(other.cgi_response_verified_) {}
+  active_cgis_(other.active_cgis_) {}
 
 // Assignement operator
 Connection &Connection::operator=(const Connection &other) {
@@ -66,7 +63,6 @@ Connection &Connection::operator=(const Connection &other) {
     request_ = other.request_;
     location_ = other.location_;
     cgi_fd_ = other.cgi_fd_;
-    cgi_response_verified_ = other.cgi_response_verified_;
 	return *this;
 }
 

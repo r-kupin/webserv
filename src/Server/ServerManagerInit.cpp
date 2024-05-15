@@ -22,8 +22,9 @@
 // and creating server instances based on the configuration provided.
 void ServerManager::Init(const Config &config) {
     // Setup signal handlers to allow for graceful shutdown on SIGINT (Ctrl+C) and SIGSTOP signals.
-    signal(SIGINT, Stop);
-    signal(SIGSTOP, Stop);
+    signal(SIGINT, Signals);
+    signal(SIGSTOP, Signals);
+    signal(SIGPIPE, Signals);
 
     // Current version uses only 1 epoll instance to monitor all connections
     // on all servers

@@ -94,7 +94,7 @@ void ServerResponse::GetDefinedErrorPage(const Location &synth) {
     }
 }
 
-void ServerResponse::SendResponse(int dest) {
+std::string ServerResponse::MakeResponseString() {
     std::stringstream ss;
 
     ss << top_header_ << "\r\n";
@@ -103,12 +103,7 @@ void ServerResponse::SendResponse(int dest) {
     }
     ss << "\r\n" << body_str_;
 
-    std::string response_string = ss.str();
-    const char *response_buffer = response_string.c_str();
-    size_t response_size = response_string.size();
-// todo: check -1
-    if (send(dest, response_buffer, response_size,  0) < 0)
-        ThrowResponseException("send() returned negative number!");
+    return ss.str();
 }
 
 void ServerResponse::AddHeader(const std::string &key,

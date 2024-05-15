@@ -26,6 +26,7 @@ typedef std::map<Host, int>         m_host_int;
 typedef std::map<int, int>          m_cgifd_to_clientfd;
 
 static volatile bool        is_running_ = true;
+static volatile bool        sigpipe_ = false;
 
 class ServerManager {
 public:
@@ -50,21 +51,25 @@ class ServerManagerException : public std::exception {};
 	void            Start();
 	void            EventLoop();
 	bool            AddClientToEpoll(int client_sock);
-	static void     Stop(int signal);
+	static void     Signals(int signal);
+    void            ReInvokeRequestProcessing(Connection &connection);
+    void            IncomingEvent(int socket_fd, uint32_t event);
+    void            AcceptNewConnection(int server_socket);
+    void            HandleEventsOnExistingConnection(int client_socket);
 //-------------------handle-----------------------------------------------------
 	const Server    &FindServer(const Connection &connection) const;
-	void            AcceptNewConnection(int server_socket);
-	void            HandleEventsOnExistingConnection(int client_socket);
-    int HandleCGIEvent(int cgi_fd);
-    int             HandleCGIEvent(Connection &connection);
 	bool            ProcessHeaders(Connection &connection);
 	void            CloseConnectionWithLogMessage(int socket,
 												  const std::string &msg);
 	bool            ProcessBody(Connection &connection);
 	bool            Respond(Connection &connection);
 	void            CloseTimedOutConnections();
+//-------------------cgi--------------------------------------------------------
+    int             HandleCGIEvent(int cgi_fd);
+    int             HandleCGIEvent(Connection &connection);
     bool            AddCgiToEpoll(int cgi_fd, Connection &connection);
-    void            RemoveCGIFromMap(int cgi_fd);
+    void            CheckInactiveCGIs();
+    void            HandleTerminatedCGIProcess(int terminated_cgi);
 //-------------------util-------------------------------------------------------
 	void            Cleanup();
 	void            PrintEventInfo(int events, int fd, int i) ;
@@ -73,9 +78,9 @@ class ServerManagerException : public std::exception {};
 	bool            IsListeningSocketFd(int socket) const;
 	static bool     SetDescriptorNonBlocking(int sockfd) ;
 private:
-	int             epoll_fd_;
-	v_servers       servers_;
-	m_host_int      host_to_socket_; /* quick find-by-host required by CreateListeningSockets */
+	int                   epoll_fd_;
+	v_servers             servers_;
+	m_host_int            host_to_socket_; /* quick find-by-host required by CreateListeningSockets */
     m_cgifd_to_clientfd   cgifd_to_cl_sock_;
 
 	v_conn          connections_;
@@ -86,14 +91,6 @@ private:
 	int             active_cgi_processes_;
 
 	Config			config_;
-
-    void CheckInactiveCGIs();
-
-    void ReInvokeRequestProcessing(Connection &connection);
-
-    void HandleTerminatedCGIProcess(int terminated_cgi);
-
-    void IncomingEvent(int socket_fd, uint32_t event);
 };
 
 #endif //WEBSERV_SERVERMANAGER_H
