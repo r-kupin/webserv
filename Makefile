@@ -6,7 +6,7 @@
 #    By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/03/15 11:45:50 by mede-mas          #+#    #+#              #
-#    Updated: 2024/05/13 12:52:03 by mede-mas         ###   ########.fr        #
+#    Updated: 2024/05/15 18:23:59 by mede-mas         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -27,7 +27,6 @@ SRCS =	src/main.cpp \
         src/Server/server/Server.cpp \
         src/Server/server/LocationSynth.cpp \
         src/Server/server/CheckUpload.cpp \
-        src/Server/server/SynthNotFound.cpp \
         src/Server/server/ServerCGIHandler.cpp \
         src/Server/ServerManagerHandleEvents.cpp \
         src/Server/ServerManagerInit.cpp \
@@ -66,7 +65,6 @@ LIB_SRCS = 	src/utils/Utils.cpp \
            	src/Server/server/SynthFoundExact.cpp \
            	src/Server/server/Server.cpp \
            	src/Server/server/LocationSynth.cpp \
-           	src/Server/server/SynthNotFound.cpp \
            	src/Server/server/PerformUpload.cpp \
            	src/Server/ServerManagerHandleEvents.cpp \
            	src/Server/ServerManagerInit.cpp \
