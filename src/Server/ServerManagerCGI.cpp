@@ -30,46 +30,50 @@
  * launch it 
  */
 void ServerManager::CheckInactiveCGIs() {
-	// no events were reported during epoll_wait timeout:
-	// check all existing connections and close expired ones
-	// 0 - no cgi connections
-	// -1 - no terminated cgi connections
-	// > 0 - terminated one
-	int terminated_cgi = 0;
-	for (std::map<int, int>::iterator it = cgifd_to_cl_sock_.begin();
-		 it != cgifd_to_cl_sock_.end(); ++it) {
-		std::cout << "cgi fd: " << it->first << " socket: " << it->second <<
-		std::endl;
-		// There are some CGI connections
-		Connection &connection = connections_[it->second];
-		if (connection.waiting_for_cgi_) {
-			if ((terminated_cgi = HandleCGIEvent(connection)) != -1) {
-				// can't erase element from a map in wich we are iterating.
-				// break and relaunch
-				break;
-			}
-		} else if (active_cgi_processes_ < MAX_CGI_PROCESSES) {
-			ReInvokeRequestProcessing(connection);
-		}
-	}
-	if (terminated_cgi > 0) {
-		// found map entry with a connection that ended it's communication with a
-		// CGI process, and needs to be removed to avoid further attempts to
-		// access the FD associated with a dead cgi process
-		
-		// delete cgi fd from epoll
-		epoll_ctl(terminated_cgi, EPOLL_CTL_DEL, epoll_fd_, NULL);
-		// close communication socket
-		close(terminated_cgi);
-		// remove mapping entry
-		CloseConnectionWithLogMessage(cgifd_to_cl_sock_[terminated_cgi],
-									  "Cgi transmission ended.");
-		cgifd_to_cl_sock_.erase(terminated_cgi);
-		active_cgi_processes_--;
-		// Check the rest of them
-		CheckInactiveCGIs();
-	}
+    // no events were reported during epoll_wait timeout:
+    // check all existing connections and close expired ones
+    // 0 - no cgi connections
+    // -1 - no terminated cgi connections
+    // > 0 - terminated one
+    int terminated_cgi = 0;
+    for (std::map<int, int>::iterator it = cgifd_to_cl_sock_.begin();
+         it != cgifd_to_cl_sock_.end(); ++it) {
+        std::cout << "cgi fd: " << it->first << " socket: " << it->second <<
+        std::endl;
+        // There are some CGI connections
+        Connection &connection = connections_[it->second];
+        if (connection.waiting_for_cgi_) {
+            if ((terminated_cgi = HandleCGIEvent(connection)) != -1) {
+                // can't erase element from a map in wich we are iterating.
+                // break and relaunch
+                break;
+            }
+        } else if (active_cgi_processes_ < MAX_CGI_PROCESSES) {
+            ReInvokeRequestProcessing(connection);
+        }
+    }
+    if (terminated_cgi > 0) {
+        // found map entry with a connection that ended it's communication with a
+        // CGI process, and needs to be removed to avoid further attempts to
+        // access the FD associated with a dead cgi process
+        HandleTerminatedCGIProcess(terminated_cgi);
+        // Check the rest of them
+        CheckInactiveCGIs();
+    }
 }
+
+void ServerManager::HandleTerminatedCGIProcess(int terminated_cgi) {
+    // delete cgi fd from epoll
+    epoll_ctl(terminated_cgi, EPOLL_CTL_DEL, epoll_fd_, NULL);
+    // close communication socket
+    close(terminated_cgi);
+    // remove mapping entry
+    CloseConnectionWithLogMessage(cgifd_to_cl_sock_[terminated_cgi],
+                                  "Cgi transmission ended.");
+    cgifd_to_cl_sock_.erase(terminated_cgi);
+    active_cgi_processes_--;
+}
+
 
 void ServerManager::ReInvokeRequestProcessing(Connection &connection) {
 	const Server &server = FindServer(connection);

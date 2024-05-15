@@ -14,7 +14,6 @@
 #include <iostream>
 #include <algorithm>
 #include <sstream>
-#include <cerrno>
 #include "ClientRequest.h"
 
 void ClientRequest::TellClientToContinueIfNeed(int socket) const {
