@@ -6,7 +6,7 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/17 12:34:02 by  rokupin          #+#    #+#             */
-/*   Updated: 2024/05/02 17:39:56 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/05/15 19:03:47 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ Connection::Connection(v_c_b &is_running, int &active_cgis)
   connection_socket_(0),
   server_listening_socket_(0),
   request_(is_running),
-  cgi_fd_(0),
+  cgi_stdout_fd_(0),
   active_cgis_(active_cgis),
   cgi_response_verified_(false) {}
 
@@ -33,7 +33,7 @@ Connection::Connection(v_c_b &is_running, int connection_socket, int server_sock
   connection_socket_(connection_socket),
   server_listening_socket_(server_socket),
   request_(is_running),
-  cgi_fd_(0),
+  cgi_stdout_fd_(0),
   active_cgis_(active_cgis),
   cgi_response_verified_(false) {}
 
@@ -48,7 +48,7 @@ Connection::Connection(const Connection &other)
   address_(other.address_),
   request_(other.request_),
   location_(other.location_),
-  cgi_fd_(other.cgi_fd_),
+  cgi_stdout_fd_(other.cgi_stdout_fd_),
   active_cgis_(other.active_cgis_),
   cgi_response_verified_(other.cgi_response_verified_) {}
 
@@ -65,7 +65,7 @@ Connection &Connection::operator=(const Connection &other) {
     address_ = other.address_;
     request_ = other.request_;
     location_ = other.location_;
-    cgi_fd_ = other.cgi_fd_;
+    cgi_stdout_fd_ = other.cgi_stdout_fd_;
     cgi_response_verified_ = other.cgi_response_verified_;
 	return *this;
 }
@@ -90,7 +90,7 @@ std::ostream &operator<<(std::ostream &os, const Connection &connection) {
     " address_: " << connection.address_ << "\n" <<
     " request_: " << connection.request_ << "\n" <<
     " location_: " << connection.location_ << "\n" <<
-    " cgi_fd_: " << connection.cgi_fd_ << "\n" <<
+    " cgi_stdout_fd_: " << connection.cgi_stdout_fd_ << "\n" <<
     " active_cgis_: " << connection.active_cgis_ << "\n";
     return os;
 }
