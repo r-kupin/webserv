@@ -45,27 +45,14 @@ void    ServerManager::EventLoop() {
 
                 PrintEventInfo(event, socket_fd, i);
                 if (!(event & EPOLLERR)) {
-                    if (IsListeningSocketFd(socket_fd)) {
-                        AcceptNewConnection(socket_fd);
-                    } else if (event & EPOLLIN && event & EPOLLOUT) {
-                        HandleEventsOnExistingConnection(socket_fd);
-                    } else if ((event & EPOLLIN || event & EPOLLOUT) &&
-                    cgifd_to_cl_sock_.find(socket_fd) != cgifd_to_cl_sock_.end()) {
-                        int terminated_cgi;
-                        if ((terminated_cgi = HandleCGIEvent(socket_fd)) > 0) {
-                            // delete cgi fd from epoll
-                            epoll_ctl(terminated_cgi, EPOLL_CTL_DEL, epoll_fd_, NULL);
-                            // close communication socket
-                            close(terminated_cgi);
-                            // remove mapping entry
-                            CloseConnectionWithLogMessage(cgifd_to_cl_sock_[terminated_cgi],
-                                                          "Cgi transmission ended.");
-                            cgifd_to_cl_sock_.erase(terminated_cgi);
-                            active_cgi_processes_--;
-                        }
-                    }
+                    IncomingEvent(socket_fd, event);
                 } else {
-                    HandleFailedClient(socket_fd);
+                    if (connections_[socket_fd].cgi_fd_ != 0) {
+                        HandleTerminatedCGIProcess(connections_[socket_fd].cgi_fd_);
+                    } else {
+                        CloseConnectionWithLogMessage(socket_fd,
+                                                      "client interrupted communication");
+                    }
                 }
             }
         } else {
@@ -75,24 +62,17 @@ void    ServerManager::EventLoop() {
     }
 }
 
-
-void ServerManager::HandleFailedClient(int fd) {
-    if (connections_[fd].cgi_fd_ != 0) {
-        std::cout << "X cgi fd: " << connections_[fd].cgi_fd_ << " socket: "
-        << fd <<
-                  std::endl;
-        int cgi_fd = connections_[fd].cgi_fd_;
-        // delete cgi fd from epoll
-        epoll_ctl(cgi_fd, EPOLL_CTL_DEL, epoll_fd_, NULL);
-        // close communication socket
-        close(cgi_fd);
-        // remove mapping entry
-        CloseConnectionWithLogMessage(cgifd_to_cl_sock_[cgi_fd],
-                                      "Cgi transmission aborted.");
-        cgifd_to_cl_sock_.erase(cgi_fd);
-        active_cgi_processes_--;
-    } else {
-        CloseConnectionWithLogMessage(fd, "client interrupted communication");
+void ServerManager::IncomingEvent(int socket_fd, uint32_t event) {
+    if (IsListeningSocketFd(socket_fd)) {
+        AcceptNewConnection(socket_fd);
+    } else if (event & EPOLLIN && event & EPOLLOUT) {
+        HandleEventsOnExistingConnection(socket_fd);
+    } else if ((event & EPOLLIN || event & EPOLLOUT) &&
+               cgifd_to_cl_sock_.find(socket_fd) != cgifd_to_cl_sock_.end()) {
+        int terminated_cgi;
+        if ((terminated_cgi = HandleCGIEvent(socket_fd)) > 0) {
+            HandleTerminatedCGIProcess(terminated_cgi);
+        }
     }
 }
 

@@ -91,7 +91,9 @@ private:
 
     void ReInvokeRequestProcessing(Connection &connection);
 
-    void HandleFailedClient(int fd);
+    void HandleTerminatedCGIProcess(int terminated_cgi);
+
+    void IncomingEvent(int socket_fd, uint32_t event);
 };
 
 #endif //WEBSERV_SERVERMANAGER_H

@@ -56,20 +56,24 @@ void ServerManager::CheckInactiveCGIs() {
         // found map entry with a connection that ended it's communication with a
         // CGI process, and needs to be removed to avoid further attempts to
         // access the FD associated with a dead cgi process
-        
-        // delete cgi fd from epoll
-        epoll_ctl(terminated_cgi, EPOLL_CTL_DEL, epoll_fd_, NULL);
-        // close communication socket
-        close(terminated_cgi);
-        // remove mapping entry
-        CloseConnectionWithLogMessage(cgifd_to_cl_sock_[terminated_cgi],
-                                      "Cgi transmission ended.");
-        cgifd_to_cl_sock_.erase(terminated_cgi);
-        active_cgi_processes_--;
+        HandleTerminatedCGIProcess(terminated_cgi);
         // Check the rest of them
         CheckInactiveCGIs();
     }
 }
+
+void ServerManager::HandleTerminatedCGIProcess(int terminated_cgi) {
+    // delete cgi fd from epoll
+    epoll_ctl(terminated_cgi, EPOLL_CTL_DEL, epoll_fd_, NULL);
+    // close communication socket
+    close(terminated_cgi);
+    // remove mapping entry
+    CloseConnectionWithLogMessage(cgifd_to_cl_sock_[terminated_cgi],
+                                  "Cgi transmission ended.");
+    cgifd_to_cl_sock_.erase(terminated_cgi);
+    active_cgi_processes_--;
+}
+
 
 void ServerManager::ReInvokeRequestProcessing(Connection &connection) {
     const Server &server = FindServer(connection);
