@@ -30,36 +30,14 @@
  * launch it 
  */
 void ServerManager::CheckInactiveCGIs() {
-//    // no events were reported during epoll_wait timeout:
-//    // check all existing connections and close expired ones
-//    // 0 - no cgi connections
-//    // -1 - no terminated cgi connections
-//    // > 0 - terminated one
-//    int terminated_cgi = 0;
-//    for (std::map<int, int>::iterator it = cgifd_to_cl_sock_.begin();
-//         it != cgifd_to_cl_sock_.end(); ++it) {
-//        std::cout << "cgi fd: " << it->first << " socket: " << it->second <<
-//        std::endl;
-//        // There are some CGI connections
-//        Connection &connection = connections_[it->second];
-//        if (connection.waiting_for_cgi_) {
-//            if ((terminated_cgi = HandleCGIEvent(connection, 0)) != -1) {
-//                // can't erase element from a map in wich we are iterating.
-//                // break and relaunch
-//                break;
-//            }
-//        } else if (active_cgi_processes_ < MAX_CGI_PROCESSES) {
-//            ReInvokeRequestProcessing(connection);
-//        }
-//    }
-//    if (terminated_cgi > 0) {
-//        // found map entry with a connection that ended it's communication with a
-//        // CGI process, and needs to be removed to avoid further attempts to
-//        // access the FD associated with a dead cgi process
-//        HandleClosedCGIfd(terminated_cgi);
-//        // Check the rest of them
-//        CheckInactiveCGIs();
-//    }
+    for (std::map<int, int>::iterator it = cgifd_to_cl_sock_.begin();
+         it != cgifd_to_cl_sock_.end(); ++it) {
+        Connection &connection = connections_[it->second];
+        if (active_cgi_processes_ < MAX_CGI_PROCESSES) {
+            const Server &server = FindServer(connection);
+            connection.location_ = server.ProcessRequest(connection);
+        }
+    }
 }
 
 //void ServerManager::HandleClosedCGIfd(int terminated_cgi) {
@@ -82,12 +60,6 @@ void ServerManager::HandleClosedCGIfd(int terminated_cgi) {
     cgifd_to_cl_sock_.erase(terminated_cgi);
 }
 
-
-void ServerManager::ReInvokeRequestProcessing(Connection &connection) {
-	const Server &server = FindServer(connection);
-	connection.location_ = server.ProcessRequest(connection);
-}
-
 void ServerManager::HandleCGIEvent(int cgi_fd) {
     int             clients_socket = cgifd_to_cl_sock_.find(cgi_fd)->second;
     Connection      &connection = connections_[clients_socket];
@@ -103,15 +75,20 @@ void ServerManager::HandleCGIEvent(int cgi_fd) {
         } else if (status == NOT_ALL_DATA_READ_FROM_CGI) {
             return;
         } else if (status == ALL_READ_ALL_SENT) {
+            std::cout << " all sent "<< std::endl;
             HandleClosedCGIfd(connection.cgi_stdin_fd_);
             HandleClosedCGIfd(connection.cgi_stdout_fd_);
             active_cgi_processes_--;
-            close(connection.connection_socket_);
             // request answered. reset connection.
+
             connections_[connection.connection_socket_] = Connection(
                     is_running_, connection.connection_socket_,
                     connection.server_listening_socket_,
                     connection.active_cgis_);
+            std::cout << connections_[connection.connection_socket_].cgi_output_buffer_
+            .size() << std::endl;
+            std::cout << connections_[connection.connection_socket_].cgi_input_buffer_
+                    .size() << std::endl;
         }
     } else if (connection.cgi_stdin_fd_ == cgi_fd) {
         int status = server.HandleCGIoutput(connection);

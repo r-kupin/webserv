@@ -12,6 +12,7 @@
 
 #include <csignal>
 #include <cstring>
+#include <cstdlib>
 #include "Server.h"
 
 void Server::ForkCGI(Connection &connection, const std::string &address, const std::string &path_info) const {
@@ -50,11 +51,14 @@ int Server::HandleCGIinput(Connection &connection) const {
 	char    buffer[FILE_BUFFER_SIZE];
 
 	while (is_running_) {
+        std::cout << "input size: " << connection.cgi_input_buffer_.size() <<
+        std::endl;
         while (!connection.cgi_input_buffer_.empty()) {
             ssize_t sent = send(connection.connection_socket_,
                                 connection.cgi_input_buffer_.data(),
                                 connection.cgi_input_buffer_.size(), 0);
-            if (sent < 0) {
+            std::cout << "sent: " << sent << std::endl;
+            if (sent < 1) {
                 if (sigpipe_) {
                     sigpipe_ = false;
                     return CLIENT_CLOSED_CONNECTION_WHILE_CGI_SENDS_DATA;
@@ -66,6 +70,7 @@ int Server::HandleCGIinput(Connection &connection) const {
             }
         }
 		ssize_t bytes_read = read(connection.cgi_stdout_fd_, buffer,FILE_BUFFER_SIZE - 1);
+        std::cout << "read: " << bytes_read << std::endl;
         if (bytes_read < 0) {
             return NOT_ALL_DATA_READ_FROM_CGI;
         } else if (bytes_read == 0 ) {

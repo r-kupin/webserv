@@ -64,6 +64,7 @@ void ServerManager::CloseConnectionWithLogMessage(int socket,
     Log("Connection closed. " + msg);
     connections_[socket] = Connection(is_running_, active_cgi_processes_);
     connections_[socket].cgi_input_buffer_.clear();
+    connections_[socket].cgi_output_buffer_.clear();
     // Explicitly delete socket from epoll instance to stop monitoring for events
     epoll_ctl(epoll_fd_, EPOLL_CTL_DEL, socket, NULL);
     // Before closing the socket, shutdown the write side to send a FIN packet
@@ -89,7 +90,8 @@ void ServerManager::PrintEventInfo(int events, int fd, int i) {
     " == IO " << epoll_in_out_count_ << "\n";
 
     if (cgifd_to_cl_sock_.find(fd) != cgifd_to_cl_sock_.end()) {
-        std::cout << "CGI (" << fd << ")" << std::endl;
+        std::cout << "Client (" << connections_[cgifd_to_cl_sock_[fd]].connection_socket_ << ")" <<
+                        " CGI (" << fd << ")" << std::endl;
     } else {
         std::cout << "Client (" << fd << ")" << std::endl;
     }

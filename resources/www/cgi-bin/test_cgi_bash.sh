@@ -3,17 +3,11 @@ data=""
 while IFS= read -r line; do
     data="$data$line\n"
 done
+data_size=$(echo -e "$data" | wc -c)
 
 echo "HTTP/1.1 200 OK"
 echo "Content-type: text/html"
-
+echo "Content-Length: $((data_size))"
 echo ""
-echo "<html><head>"
-echo "  <meta charset="utf-8" />"
-echo "  <title>CGI</title>"
-echo "</head><body>"
-#echo $REQUEST_METHOD
-#echo $QUERY_STRING
-#echo $SERVER_PROTOCOL
+
 echo -e "$data"
-echo "</body></html>"
