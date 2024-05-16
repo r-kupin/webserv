@@ -55,6 +55,7 @@ void    ServerManager::EventLoop() {
                 }
             }
         } else {
+            std::cout << "epoll wait" << std::endl;
             CheckInactiveCGIs();
             CloseTimedOutConnections();
         }
@@ -62,6 +63,7 @@ void    ServerManager::EventLoop() {
 }
 
 void ServerManager::IncomingEvent(int socket_fd, uint32_t event) {
+    std::cout << "incoming event" << std::endl;
     if (IsListeningSocketFd(socket_fd)) {
         AcceptNewConnection(socket_fd);
     } else if (event & EPOLLIN && event & EPOLLOUT) {

@@ -86,6 +86,9 @@ void ServerManager::HandleCGIEvent(int cgi_fd) {
                     is_running_, connection.connection_socket_,
                     connection.server_listening_socket_,
                     connection.active_cgis_);
+            connections_[connection.connection_socket_].to_send_buffer_.clear();
+            connections_[connection.connection_socket_].cgi_input_buffer_.clear();
+            connections_[connection.connection_socket_].cgi_output_buffer_.clear();
         }
     } else if (connection.cgi_stdin_fd_ == cgi_fd) {
         int status = server.HandleCGIoutput(connection);

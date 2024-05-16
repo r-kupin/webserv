@@ -75,11 +75,24 @@ int Server::HandleCGIinput(Connection &connection) const {
         }
 		ssize_t bytes_read = read(connection.cgi_stdout_fd_, buffer,FILE_BUFFER_SIZE - 1);
         std::cout << "read: " << bytes_read << std::endl;
+//        if (bytes_read < 0) {
+//            return NOT_ALL_DATA_READ_FROM_CGI;
+//        } else if (bytes_read == 0 ) {
+//            return ALL_READ_ALL_SENT;
         if (bytes_read < 0) {
-            return NOT_ALL_DATA_READ_FROM_CGI;
-        } else if (bytes_read == 0 ) {
+            while ((bytes_read = read(connection.cgi_stdout_fd_,
+                        buffer,FILE_BUFFER_SIZE - 1 )) == -1) {
+                std::cout << "READ -1 " << std::endl;
+            }
+            if (bytes_read == 0) {
+                return ALL_READ_ALL_SENT;
+            } else {
+                connection.cgi_input_buffer_.insert(connection.cgi_input_buffer_.end(),
+                                                    buffer, buffer + bytes_read);
+            }
+		} else if (bytes_read == 0) {
             return ALL_READ_ALL_SENT;
-		} else {
+        } else {
 			connection.cgi_input_buffer_.insert(connection.cgi_input_buffer_.end(),
                                                 buffer, buffer + bytes_read);
         }

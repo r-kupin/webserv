@@ -26,13 +26,17 @@
 void ServerManager::HandleEventsOnExistingConnection(int client_socket) {
     Connection		&connection = connections_[client_socket];
 
+    std::cout << connection << std::endl;
     while (is_running_) {
+        std::cout << "handling generic event" << std::endl;
         // some data is (still) present on this fd
 		if (!connection.url_headers_done_) {
+            std::cout << "handling headers" << std::endl;
 			if (!ProcessHeaders(connection))
 				 return;
 		}
 		if (connection.url_headers_done_ && !connection.body_done_) {
+            std::cout << "handling body" << std::endl;
 			if (!ProcessBody(connection))
 				 return;
 		}
@@ -90,6 +94,7 @@ bool ServerManager::ProcessBody(Connection &connection) {
         const Server &server = FindServer(connection);
         connection.location_ = server.ProcessRequest(connection);
         if (!connection.location_.cgi_address_.empty()) {
+            std::cout << "cgi" << std::endl;
             // CGI-generated responses bypass "Respond()" mechanism
             return false;
         }
