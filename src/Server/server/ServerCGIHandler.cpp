@@ -41,7 +41,7 @@ void Server::ForkCGI(Connection &connection, const std::string &address, const s
 			ThrowException("Can't add cgi_stdin_fd to epoll instance");
 		}
 		connection.active_cgis_++;
-		// connection.waiting_for_cgi_ = true;
+		 connection.waiting_for_cgi_ = true;
 	} else {
 		ThrowException("fork failed");
 	}
@@ -60,7 +60,11 @@ int Server::HandleCGIinput(Connection &connection) const {
             std::cout << "sent: " << sent << std::endl;
             if (sent < 1) {
                 if (sigpipe_) {
+                    std::cout << "sigpipe true" << std::endl;
                     sigpipe_ = false;
+                    return CLIENT_CLOSED_CONNECTION_WHILE_CGI_SENDS_DATA;
+                } else {
+                    std::cout << "sigpipe false" << std::endl;
                     return CLIENT_CLOSED_CONNECTION_WHILE_CGI_SENDS_DATA;
                 }
             } else {

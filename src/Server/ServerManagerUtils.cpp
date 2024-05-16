@@ -90,8 +90,8 @@ void ServerManager::PrintEventInfo(int events, int fd, int i) {
     " == IO " << epoll_in_out_count_ << "\n";
 
     if (cgifd_to_cl_sock_.find(fd) != cgifd_to_cl_sock_.end()) {
-        std::cout << "Client (" << connections_[cgifd_to_cl_sock_[fd]].connection_socket_ << ")" <<
-                        " CGI (" << fd << ")" << std::endl;
+        int sock = connections_[cgifd_to_cl_sock_[fd]].connection_socket_;
+        std::cout << "Client (" << sock << ")" <<" CGI (" << fd << ")" << std::endl;
     } else {
         std::cout << "Client (" << fd << ")" << std::endl;
     }

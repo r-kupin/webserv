@@ -68,10 +68,11 @@ void ServerManager::HandleCGIEvent(int cgi_fd) {
     if (connection.cgi_stdout_fd_ == cgi_fd) {// reading from cgi
         int status = server.HandleCGIinput(connection);
         if (status == CLIENT_CLOSED_CONNECTION_WHILE_CGI_SENDS_DATA) {
-            kill(connection.cgi_pid_, SIGSTOP);
+//            kill(connection.cgi_pid_, SIGSTOP);
             HandleClosedCGIfd(connection.cgi_stdin_fd_);
             HandleClosedCGIfd(connection.cgi_stdout_fd_);
             active_cgi_processes_--;
+            CloseConnectionWithLogMessage(clients_socket, "Clent died");
         } else if (status == NOT_ALL_DATA_READ_FROM_CGI) {
             return;
         } else if (status == ALL_READ_ALL_SENT) {
@@ -85,10 +86,6 @@ void ServerManager::HandleCGIEvent(int cgi_fd) {
                     is_running_, connection.connection_socket_,
                     connection.server_listening_socket_,
                     connection.active_cgis_);
-            std::cout << connections_[connection.connection_socket_].cgi_output_buffer_
-            .size() << std::endl;
-            std::cout << connections_[connection.connection_socket_].cgi_input_buffer_
-                    .size() << std::endl;
         }
     } else if (connection.cgi_stdin_fd_ == cgi_fd) {
         int status = server.HandleCGIoutput(connection);
