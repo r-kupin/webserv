@@ -43,7 +43,7 @@ void ServerManager::CheckInactiveCGIs() {
         // There are some CGI connections
         Connection &connection = connections_[it->second];
         if (connection.waiting_for_cgi_) {
-            if ((terminated_cgi = HandleCGIEvent(connection)) != -1) {
+            if ((terminated_cgi = HandleCGIEvent(connection, 0)) != -1) {
                 // can't erase element from a map in wich we are iterating.
                 // break and relaunch
                 break;
@@ -80,22 +80,28 @@ void ServerManager::ReInvokeRequestProcessing(Connection &connection) {
 	connection.location_ = server.ProcessRequest(connection);
 }
 
-int ServerManager::HandleCGIEvent(int cgi_stdout_fd) {
-	if (cgifd_to_cl_sock_.find(cgi_stdout_fd) != cgifd_to_cl_sock_.end()) {
-		int clients_socket = cgifd_to_cl_sock_.find(cgi_stdout_fd)->second;
-		Connection &conection = connections_[clients_socket];
-		int handling_result = HandleCGIEvent(conection);
-		return handling_result;
-	}
-	Log("Pair CGI_stdout_fd - Client socket not found");
-	return -1;
+int ServerManager::HandleCGIEvent(int cgi_fd) {
+    int clients_socket = cgifd_to_cl_sock_.find(cgi_fd)->second;
+    Connection &conection = connections_[clients_socket];
+    int handling_result = HandleCGIEvent(conection, cgi_fd);
+    return handling_result;
 }
 
-int ServerManager::HandleCGIEvent(Connection &connection) {
+int ServerManager::HandleCGIEvent(Connection &connection, int cgi_fd) {
 	try {
 		const Server &server = FindServer(connection);
-		if(!server.HandleCGIinput(connection))
-			return connection.cgi_stdout_fd_;
+        if (connection.cgi_stdout_fd_ == cgi_fd) {// reading from cgi
+            if(!server.HandleCGIinput(connection))
+                return connection.cgi_stdout_fd_;
+        } else if (connection.cgi_stdin_fd_ == cgi_fd) {
+            if (server.HandleCGIoutput(connection)) {
+                // delete cgi fd from epoll
+                epoll_ctl(cgi_fd, EPOLL_CTL_DEL, epoll_fd_, NULL);
+                // close communication socket
+                close(cgi_fd);
+                cgifd_to_cl_sock_.erase(cgi_fd);
+            }
+        }
 	} catch (const EwouldblockEagainUpload &) {
 		Log("Read all available data, but cgi transmission is incomplete. "
 			"We'll come back later. Maybe.");

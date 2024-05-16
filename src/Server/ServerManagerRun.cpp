@@ -46,8 +46,8 @@ void    ServerManager::EventLoop() {
                 if (!(event & EPOLLERR)) {
                     IncomingEvent(socket_fd, event);
                 } else {
-                    if (connections_[socket_fd].cgi_fd_ != 0) {
-                        HandleTerminatedCGIProcess(connections_[socket_fd].cgi_fd_);
+                    if (connections_[socket_fd].cgi_stdin_fd_ != 0) {
+                        HandleTerminatedCGIProcess(connections_[socket_fd].cgi_stdin_fd_);
                     } else {
                         CloseConnectionWithLogMessage(socket_fd,
                                                       "client interrupted communication");
@@ -152,9 +152,5 @@ bool ServerManager::AddCgiToEpoll(int cgi_fd, Connection &connection) {
 	return false;
 }
 
-void ServerManager::RemoveCGIFromMap(int cgi_fd) {
-	cgifd_to_cl_sock_.erase(cgi_fd);
-	close(cgi_fd);
-}
 
 

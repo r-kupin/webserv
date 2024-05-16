@@ -36,6 +36,9 @@ void Server::ForkCGI(Connection &connection, const std::string &address, const s
 		if (!sm_.AddCgiToEpoll(connection.cgi_stdout_fd_, connection)) {
 			ThrowException("Can't add cgi_stdout_fd to epoll instance");
 		}
+        if (!sm_.AddCgiToEpoll(connection.cgi_stdin_fd_, connection)) {
+			ThrowException("Can't add cgi_stdin_fd to epoll instance");
+		}
 		connection.active_cgis_++;
 		// connection.waiting_for_cgi_ = true;
 	} else {
@@ -53,17 +56,51 @@ bool Server::HandleCGIinput(Connection &connection) const {
 		} else {
 			connection.cgi_input_buffer_.insert(connection.cgi_input_buffer_.end(),
                                                 buffer, buffer + bytes_read);
-			ssize_t sent = send(connection.connection_socket_, buffer,
-                                bytes_read, 0);
-            Log(Utils::NbrToString(sent) + " bytes sent " );
-            if (sent == bytes_read) {
-                return true;
+			ssize_t sent = send(connection.connection_socket_,
+                                connection.cgi_input_buffer_.data(),
+                                connection.cgi_input_buffer_.size(), 0);
+            if (sent < 0) {
+                if (sigpipe_) {
+                    sigpipe_ = false;
+                    sm_.CloseConnectionWithLogMessage(connection.connection_socket_,
+                                                      "Client shut the pipe.");
+                    return false;
+                }
+                return true; // todo probably
             } else {
-                ThrowException("send() returned negative number!");
+                connection.cgi_input_buffer_.erase(
+                        connection.cgi_input_buffer_.begin(),
+                        connection.cgi_input_buffer_.begin() + sent);
             }
         }
     }
     return false;
+}
+
+
+bool Server::HandleCGIoutput(Connection &connection) const {
+    v_char  &what = connection.cgi_output_buffer_;
+    int     where = connection.cgi_stdin_fd_;
+    // copy lines from request to the argument of cgi script
+    if (what.empty()) {
+        for (v_str_c_it it = connection.request_.GetRawRequest().begin();
+                it != connection.request_.GetRawRequest().end(); ++it) {
+            v_char tmp(it->begin(), it->end());
+            what.insert(what.end(), tmp.begin(), tmp.begin() + tmp.size());
+            what.push_back('\n');
+        }
+    }
+    while (is_running_ && !what.empty()) {
+        ssize_t bytes_written = write(where, what.data(), what.size());
+        if (bytes_written < 0) {
+            // keep and come later
+        } else if (bytes_written == 0) {
+            // close connection
+        } else {
+            what.erase(what.begin(), what.begin() + bytes_written);
+        }
+    }
+    return true;
 }
 
 void Server::ChildCGI(const Connection &connection, const std::string &address, const int *pipe_stdin, const int *pipe_stdout, const std::string &path_info) const {
@@ -78,17 +115,12 @@ void Server::ChildCGI(const Connection &connection, const std::string &address, 
 	close(pipe_stdin[1]);
 
 	// copy lines from request to the argument of cgi script
-	const v_str &request = connection.request_.GetRawRequest();
 	std::vector<char*> args;
-	char *constarg[request.size() + 2];
+	char *constarg[2];
 
 	args.push_back((char *)address.c_str());
 	constarg[0] = args[0];
-	for (size_t i = 0; i < request.size(); ++i) {
-		args.push_back((char *)request[i].c_str());
-		constarg[i + 1] = args[i + 1];
-	}
-	constarg[request.size() + 1] = NULL;
+	constarg[1] = NULL;
 
 	// Set environment variables
 	v_str env;
@@ -106,6 +138,7 @@ void Server::ChildCGI(const Connection &connection, const std::string &address, 
 		constenv[i] = env_char_arr[i];
 	}
 	constenv[env.size()] = NULL;
+
 
 	execve(address.c_str(), constarg, constenv);
 

@@ -66,7 +66,7 @@ class ServerManagerException : public std::exception {};
 	void            CloseTimedOutConnections();
 //-------------------cgi--------------------------------------------------------
     int             HandleCGIEvent(int cgi_fd);
-    int             HandleCGIEvent(Connection &connection);
+    int HandleCGIEvent(Connection &connection, int cgi_fd);
     bool            AddCgiToEpoll(int cgi_fd, Connection &connection);
     void            CheckInactiveCGIs();
     void            HandleTerminatedCGIProcess(int terminated_cgi);

@@ -1,19 +1,19 @@
 #!/bin/bash
+data=""
+while IFS= read -r line; do
+    data="$data$line\n"
+done
+
 echo "HTTP/1.1 200 OK"
-echo "helo"
-#echo "Content-type: text/html"
-#
-#echo ""
-#echo "<html><head>"
-#echo "  <meta charset="utf-8" />"
-#echo "  <title>CGI</title>"
-#echo "</head><body>"
+echo "Content-type: text/html"
+
+echo ""
+echo "<html><head>"
+echo "  <meta charset="utf-8" />"
+echo "  <title>CGI</title>"
+echo "</head><body>"
 #echo $REQUEST_METHOD
 #echo $QUERY_STRING
 #echo $SERVER_PROTOCOL
-#
-#for arg in "$@"
-#do
-#    echo $arg
-#done
-#echo "</body></html>"
+echo -e "$data"
+echo "</body></html>"

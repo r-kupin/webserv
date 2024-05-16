@@ -83,9 +83,11 @@ public:
 
 	Location                    ProcessRequest(Connection &connection) const;
 	bool                        HandleCGIinput(Connection &connection) const;
+    bool                        HandleCGIoutput(Connection &connection) const;
 
 	friend std::ostream        &operator<<(std::ostream &os,
 											const Server &server);
+
 protected:
 //-------------------request server-side processing-----------------------------
 	bool                        AccessForbidden(l_loc_c_it found,
