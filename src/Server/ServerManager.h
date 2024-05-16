@@ -26,6 +26,7 @@ typedef std::map<Host, int>         m_host_int;
 typedef std::map<int, int>          m_cgifd_to_clientfd;
 
 static volatile bool        is_running_ = true;
+static volatile bool        sigpipe_ = false;
 
 class ServerManager {
 public:

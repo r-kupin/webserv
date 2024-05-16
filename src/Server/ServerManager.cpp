@@ -46,5 +46,7 @@ void ServerManager::Stop(int signal) {
 	if (signal == SIGINT || signal == SIGTERM) {
 		std::cout << "\nStopping servers..." << std::endl;
 		is_running_ = false;
-	}
+	} else {
+        sigpipe_ = true;
+    }
 }

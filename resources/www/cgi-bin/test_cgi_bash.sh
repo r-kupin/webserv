@@ -1,7 +1,9 @@
 #!/bin/bash
 echo "HTTP/1.1 200 OK"
+echo "Content-Length: 5"
+echo "Content-type: text/html"
+echo ""
 echo "helo"
-#echo "Content-type: text/html"
 #
 #echo ""
 #echo "<html><head>"
