@@ -82,8 +82,8 @@ public:
 	long                        GetConnectionTimeout() const;
 
 	Location                    ProcessRequest(Connection &connection) const;
-	bool                        HandleCGIinput(Connection &connection) const;
-    bool                        HandleCGIoutput(Connection &connection) const;
+	int HandleCGIinput(Connection &connection) const;
+    int HandleCGIoutput(Connection &connection) const;
 
 	friend std::ostream        &operator<<(std::ostream &os,
 											const Server &server);

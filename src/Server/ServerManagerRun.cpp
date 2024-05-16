@@ -47,7 +47,7 @@ void    ServerManager::EventLoop() {
                     IncomingEvent(socket_fd, event);
                 } else {
                     if (connections_[socket_fd].cgi_stdin_fd_ != 0) {
-                        HandleTerminatedCGIProcess(connections_[socket_fd].cgi_stdin_fd_);
+                        HandleClosedCGIfd(connections_[socket_fd].cgi_stdin_fd_);
                     } else {
                         CloseConnectionWithLogMessage(socket_fd,
                                                       "client interrupted communication");
@@ -66,12 +66,9 @@ void ServerManager::IncomingEvent(int socket_fd, uint32_t event) {
         AcceptNewConnection(socket_fd);
     } else if (event & EPOLLIN && event & EPOLLOUT) {
         HandleEventsOnExistingConnection(socket_fd);
-    } else if ((event & EPOLLIN || event & EPOLLOUT) &&
+    } else if ((event & EPOLLIN || event & EPOLLOUT || event & EPOLLHUP) &&
                cgifd_to_cl_sock_.find(socket_fd) != cgifd_to_cl_sock_.end()) {
-        int terminated_cgi;
-        if ((terminated_cgi = HandleCGIEvent(socket_fd)) > 0) {
-            HandleTerminatedCGIProcess(terminated_cgi);
-        }
+        HandleCGIEvent(socket_fd);
     }
 }
 

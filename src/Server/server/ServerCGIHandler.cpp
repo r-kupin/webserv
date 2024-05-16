@@ -21,12 +21,12 @@ void Server::ForkCGI(Connection &connection, const std::string &address, const s
 		ThrowException("Failed to create pipe for CGI execution");
 	}
 
-	pid_t pid = fork();
+	connection.cgi_pid_ = fork();
 
 	// Child process
-	if (pid == 0) {
+	if (connection.cgi_pid_ == 0) {
 		ChildCGI(connection, address, pipe_stdin, pipe_stdout, path_info);
-	} else if (pid > 0) {
+	} else if (connection.cgi_pid_ > 0) {
 		close(pipe_stdin[0]);		// Close read-end of the stdin pipe
 		close(pipe_stdout[1]);		// Close the write end of the stdout pipe
 
@@ -46,43 +46,46 @@ void Server::ForkCGI(Connection &connection, const std::string &address, const s
 	}
 }
 
-bool Server::HandleCGIinput(Connection &connection) const {
+int Server::HandleCGIinput(Connection &connection) const {
 	char    buffer[FILE_BUFFER_SIZE];
 
 	while (is_running_) {
-		ssize_t bytes_read = read(connection.cgi_stdout_fd_, buffer,FILE_BUFFER_SIZE - 1);
-		if (bytes_read < 1) {
-			NoDataAvailable(bytes_read);
-		} else {
-			connection.cgi_input_buffer_.insert(connection.cgi_input_buffer_.end(),
-                                                buffer, buffer + bytes_read);
-			ssize_t sent = send(connection.connection_socket_,
+        while (!connection.cgi_input_buffer_.empty()) {
+            ssize_t sent = send(connection.connection_socket_,
                                 connection.cgi_input_buffer_.data(),
                                 connection.cgi_input_buffer_.size(), 0);
             if (sent < 0) {
                 if (sigpipe_) {
                     sigpipe_ = false;
-                    sm_.CloseConnectionWithLogMessage(connection.connection_socket_,
-                                                      "Client shut the pipe.");
-                    return false;
+                    return CLIENT_CLOSED_CONNECTION_WHILE_CGI_SENDS_DATA;
                 }
-                return true; // todo probably
             } else {
                 connection.cgi_input_buffer_.erase(
                         connection.cgi_input_buffer_.begin(),
                         connection.cgi_input_buffer_.begin() + sent);
             }
         }
+		ssize_t bytes_read = read(connection.cgi_stdout_fd_, buffer,FILE_BUFFER_SIZE - 1);
+        if (bytes_read < 0) {
+            return NOT_ALL_DATA_READ_FROM_CGI;
+        } else if (bytes_read == 0 ) {
+            return ALL_READ_ALL_SENT;
+		} else {
+			connection.cgi_input_buffer_.insert(connection.cgi_input_buffer_.end(),
+                                                buffer, buffer + bytes_read);
+        }
     }
-    return false;
+    // server stopped
+    return -1;
 }
 
 
-bool Server::HandleCGIoutput(Connection &connection) const {
+int Server::HandleCGIoutput(Connection &connection) const {
     v_char  &what = connection.cgi_output_buffer_;
     int     where = connection.cgi_stdin_fd_;
-    // copy lines from request to the argument of cgi script
+
     if (what.empty()) {
+        // copy lines from request to the argument of cgi script
         for (v_str_c_it it = connection.request_.GetRawRequest().begin();
                 it != connection.request_.GetRawRequest().end(); ++it) {
             v_char tmp(it->begin(), it->end());
@@ -93,17 +96,19 @@ bool Server::HandleCGIoutput(Connection &connection) const {
     while (is_running_ && !what.empty()) {
         ssize_t bytes_written = write(where, what.data(), what.size());
         if (bytes_written < 0) {
-            // keep and come later
+            return NOT_ALL_DATA_WRITTEN_TO_CGI;
         } else if (bytes_written == 0) {
-            // close connection
+            return CGI_CLOSED_INPUT_FD;
         } else {
             what.erase(what.begin(), what.begin() + bytes_written);
         }
     }
-    return true;
+    return ALL_DATA_SENT_TO_CGI;
 }
 
-void Server::ChildCGI(const Connection &connection, const std::string &address, const int *pipe_stdin, const int *pipe_stdout, const std::string &path_info) const {
+void Server::ChildCGI(const Connection &connection, const std::string &address,
+                      const int *pipe_stdin, const int *pipe_stdout,
+                      const std::string &path_info) const {
 	// Redirect stdout to pipe_stdout (write end of the pipe)
 	dup2(pipe_stdout[1], STDOUT_FILENO);
 	close(pipe_stdout[0]);
@@ -138,7 +143,6 @@ void Server::ChildCGI(const Connection &connection, const std::string &address, 
 		constenv[i] = env_char_arr[i];
 	}
 	constenv[env.size()] = NULL;
-
 
 	execve(address.c_str(), constarg, constenv);
 

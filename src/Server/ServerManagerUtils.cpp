@@ -88,13 +88,42 @@ void ServerManager::PrintEventInfo(int events, int fd, int i) {
     " == cgis " << active_cgi_processes_ <<
     " == IO " << epoll_in_out_count_ << "\n";
 
+    if (cgifd_to_cl_sock_.find(fd) != cgifd_to_cl_sock_.end()) {
+        std::cout << "CGI (" << fd << ")" << std::endl;
+    } else {
+        std::cout << "Client (" << fd << ")" << std::endl;
+    }
+
     std::cout << "nfd: " << i << "\n" << "fd: " << fd << "\n";
     if (events & EPOLLIN)
         std::cout << "EPOLLIN " << EPOLLIN << "\n";
+    if (events & EPOLLPRI)
+        std::cout << "EPOLLPRI " << EPOLLPRI << "\n";
     if (events & EPOLLOUT)
         std::cout << "EPOLLOUT " << EPOLLOUT << "\n";
+    if (events & EPOLLRDNORM)
+        std::cout << "EPOLLRDNORM " << EPOLLRDNORM << "\n";
+    if (events & EPOLLRDBAND)
+        std::cout << "EPOLLRDBAND " << EPOLLRDBAND << "\n";
+    if (events & EPOLLWRNORM)
+        std::cout << "EPOLLWRNORM " << EPOLLWRNORM << "\n";
+    if (events & EPOLLWRBAND)
+        std::cout << "EPOLLWRBAND " << EPOLLWRBAND << "\n";
+    if (events & EPOLLMSG)
+        std::cout << "EPOLLMSG " << EPOLLMSG << "\n";
     if (events & EPOLLERR)
         std::cout << "EPOLLERR " << EPOLLERR << "\n";
+    if (events & EPOLLHUP)
+        std::cout << "EPOLLHUP " << EPOLLHUP << "\n";
+    if (events & EPOLLRDHUP)
+        std::cout << "EPOLLRDHUP " << EPOLLRDHUP << "\n";
+    if (events & EPOLLEXCLUSIVE)
+        std::cout << "EPOLLEXCLUSIVE " << EPOLLEXCLUSIVE << "\n";
+    if (events & EPOLLWAKEUP)
+        std::cout << "EPOLLWAKEUP " << EPOLLWAKEUP << "\n";
+    if (events & EPOLLONESHOT)
+        std::cout << "EPOLLONESHOT " << EPOLLONESHOT << "\n";
+
     std::cout << events << std::endl;
 }
 

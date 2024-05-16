@@ -16,6 +16,13 @@
 #include "server/Server.h"
 #include "../Config/config/Config.h"
 
+#define NOT_ALL_DATA_WRITTEN_TO_CGI 0
+#define CGI_CLOSED_INPUT_FD 1
+#define ALL_DATA_SENT_TO_CGI 2
+#define NOT_ALL_DATA_READ_FROM_CGI 3
+#define CLIENT_CLOSED_CONNECTION_WHILE_CGI_SENDS_DATA 4
+#define ALL_READ_ALL_SENT 5
+
 #define CONNECTIONS 2048
 
 class Server;
@@ -65,11 +72,10 @@ class ServerManagerException : public std::exception {};
 	bool            Respond(Connection &connection);
 	void            CloseTimedOutConnections();
 //-------------------cgi--------------------------------------------------------
-    int             HandleCGIEvent(int cgi_fd);
-    int HandleCGIEvent(Connection &connection, int cgi_fd);
+    void            HandleCGIEvent(int cgi_fd);
     bool            AddCgiToEpoll(int cgi_fd, Connection &connection);
     void            CheckInactiveCGIs();
-    void            HandleTerminatedCGIProcess(int terminated_cgi);
+    void            HandleClosedCGIfd(int terminated_cgi);
 //-------------------util-------------------------------------------------------
 	void            Cleanup();
 	void            PrintEventInfo(int events, int fd, int i) ;

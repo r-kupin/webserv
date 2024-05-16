@@ -52,6 +52,8 @@ struct Connection {
 	v_char              cgi_input_buffer_;
 	v_char              cgi_output_buffer_;
     v_char              to_send_buffer_;
+
+    int                 cgi_pid_;
 };
 
 #endif //WEBSERV_CONNECTION_H
