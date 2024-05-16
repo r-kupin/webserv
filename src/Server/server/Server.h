@@ -6,7 +6,7 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/15 18:20:59 by mede-mas          #+#    #+#             */
-/*   Updated: 2024/05/15 18:21:09 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/05/16 13:32:27 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,6 +83,10 @@ public:
 
 	Location                    ProcessRequest(Connection &connection) const;
 	bool                        HandleCGIinput(Connection &connection) const;
+	bool						ProcessCGIOutput(Connection &connection) const;
+	bool						SendDataToCGI(Connection &connection,
+												const std::string &data) const;
+
 
 	friend std::ostream        &operator<<(std::ostream &os,
 											const Server &server);
@@ -142,8 +146,6 @@ protected:
 													 const std::string &http_version,
 													 const std::string &code,
 													 const std::string &description) const;
-	bool						SendDataToCGI(Connection &connection,
-												const std::string &data) const;
 
 //-------------------misc utils-------------------------------------------------
 	void                        Log(const std::string &msg) const;

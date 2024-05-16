@@ -6,7 +6,7 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/12 18:29:03 by  rokupin          #+#    #+#             */
-/*   Updated: 2024/05/15 18:57:59 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/05/16 13:47:03 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,31 +53,52 @@ size_t  find_response_endline(const v_char &buff) {
 	return line_break;
 }
 
-bool Server::HandleCGIinput(Connection &connection) const {
-	char    buffer[FILE_BUFFER_SIZE];
+// bool Server::HandleCGIinput(Connection &connection) const {
+// 	char    buffer[FILE_BUFFER_SIZE];
 
-	while (is_running_) {
-		ssize_t bytes_read = read(connection.cgi_stdout_fd_, buffer,FILE_BUFFER_SIZE - 1);
-		if (bytes_read < 1) {
-			NoDataAvailable(bytes_read);
-		} else {
-			connection.buffer_.insert(connection.buffer_.end(), buffer,
-									  buffer + bytes_read);
-			if (!connection.cgi_response_verified_) {
-				return VerifyCGIFirstLine(connection);
-			} else {
-				ssize_t sent = send(connection.connection_socket_, buffer,
-							  bytes_read, 0);
-				Log(Utils::NbrToString(sent) + " bytes sent " );
-				if (sent == bytes_read) {
-					return true;
-				} else {
-					ThrowException("send() returned negative number!");
-				}
-			}
+// 	while (is_running_) {
+// 		ssize_t bytes_read = read(connection.cgi_stdout_fd_, buffer,FILE_BUFFER_SIZE - 1);
+// 		if (bytes_read < 1) {
+// 			NoDataAvailable(bytes_read);
+// 		} else {
+// 			connection.buffer_.insert(connection.buffer_.end(), buffer,
+// 									  buffer + bytes_read);
+// 			if (!connection.cgi_response_verified_) {
+// 				return VerifyCGIFirstLine(connection);
+// 			} else {
+// 				ssize_t sent = send(connection.connection_socket_, buffer,
+// 							  bytes_read, 0);
+// 				Log(Utils::NbrToString(sent) + " bytes sent " );
+// 				if (sent == bytes_read) {
+// 					return true;
+// 				} else {
+// 					ThrowException("send() returned negative number!");
+// 				}
+// 			}
+// 		}
+// 	}
+// 	return false;
+// }
+
+// Read data from CGI's stdout
+bool Server::HandleCGIinput(Connection &connection) const {
+	char buffer[FILE_BUFFER_SIZE];
+	ssize_t bytes_read = read(connection.cgi_stdout_fd_, buffer, sizeof(buffer) - 1);
+
+	if (bytes_read > 0) {
+		buffer[bytes_read] = '\0';
+		connection.buffer_.insert(connection.buffer_.end(), buffer, buffer + bytes_read);
+		return ProcessCGIOutput(connection); // Process the output from CGI
+	} else if (bytes_read == 0) {
+		Log("CGI process completed.");
+		return true; // CGI completed
+	} else {
+		if (errno != EAGAIN && errno != EWOULDBLOCK) {
+			Log("Error reading from CGI stdout.");
+			return false; // Error case
 		}
 	}
-	return false;
+	return false; // Indicate more data is expected
 }
 
 bool Server::VerifyCGIFirstLine(Connection &connection) const {

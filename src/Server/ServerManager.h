@@ -6,7 +6,7 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/11 12:15:01 by  rokupin          #+#    #+#             */
-/*   Updated: 2024/05/13 12:55:21 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/05/16 13:26:39 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,7 +55,7 @@ class ServerManagerException : public std::exception {};
 	const Server    &FindServer(const Connection &connection) const;
 	void            AcceptNewConnection(int server_socket);
 	void            HandleEventsOnExistingConnection(int client_socket);
-    int HandleCGIEvent(int cgi_fd);
+    int 			HandleCGIEvent(int cgi_fd);
     int             HandleCGIEvent(Connection &connection);
 	bool            ProcessHeaders(Connection &connection);
 	void            CloseConnectionWithLogMessage(int socket,

@@ -6,7 +6,7 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/31 16:20:03 by  rokupin          #+#    #+#             */
-/*   Updated: 2024/05/16 13:21:34 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/05/16 13:46:47 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -137,10 +137,11 @@ int ServerManager::HandleCGIEvent(int cgi_stdout_fd) {
 // Handle incoming or outgoing CGI events
 int ServerManager::HandleCGIEvent(Connection &connection) {
 	try {
-		if (!HandleCGIInput(connection)) {
+		const Server &server = FindServer(connection);
+		if (!server.HandleCGIinput(connection)) {
 			return -1; // Continue if more data is expected
 		}
-		if (!SendDataToCGI(connection, "Data to send")) {
+		if (!server.SendDataToCGI(connection, "Data to send")) {
 			Log("Failed to send data to CGI");
 			return -1;
 		}
@@ -151,31 +152,12 @@ int ServerManager::HandleCGIEvent(Connection &connection) {
 	}
 }
 
-// Read data from CGI's stdout
-bool Server::HandleCGIInput(Connection &connection) const {
-	char buffer[FILE_BUFFER_SIZE];
-	ssize_t bytes_read = read(connection.cgi_stdout_fd_, buffer, sizeof(buffer) - 1);
-
-	if (bytes_read > 0) {
-		buffer[bytes_read] = '\0';
-		connection.buffer_.append(buffer);
-		return ProcessCGIOutput(connection); // Process the output from CGI
-	} else if (bytes_read == 0) {
-		Log("CGI process completed.");
-		return true; // CGI completed
-	} else {
-		if (errno != EAGAIN && errno != EWOULDBLOCK) {
-			Log("Error reading from CGI stdout.");
-			return false; // Error case
-		}
-	}
-	return false; // Indicate more data is expected
-}
-
 // Example processing of CGI output for simplicity
 bool Server::ProcessCGIOutput(Connection &connection) const {
+	// Convert vector<char> to string for logging
+	std::string output(connection.buffer_.begin(), connection.buffer_.end());
 	// Simple response verification and sending logic
-	Log("Processing CGI output: " + connection.buffer_);
+	Log("Processing CGI output: " + output);
 	send(connection.connection_socket_, connection.buffer_.data(), connection.buffer_.size(), 0);
 	connection.buffer_.clear();
 	return true;
