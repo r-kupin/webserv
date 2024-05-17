@@ -6,7 +6,7 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/12 18:29:03 by  rokupin          #+#    #+#             */
-/*   Updated: 2024/05/17 12:15:25 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/05/17 13:21:33 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,11 +34,11 @@ void Server::ForkCGI(Connection &connection, const std::string &address, const s
 		connection.cgi_stdin_fd_ = pipe_stdin[1];		// Store write-end to write to CGI
 		connection.cgi_stdout_fd_ = pipe_stdout[0];		// Store read-end to read from CGI
 
-		if (!sm_.AddCgiToEpoll(connection.cgi_stdout_fd_, connection)) {
+		std::cout << "Fork succeeded: cgi_stdin_fd: " << connection.cgi_stdin_fd_
+					<< " cgi_stdout_fd: " << connection.cgi_stdout_fd_ << std::endl;
+		if (!sm_.AddCgiToEpoll(connection.cgi_stdout_fd_, connection) ||
+			!sm_.AddCgiToEpoll(connection.cgi_stdin_fd_, connection)) {
 			ThrowException("Can't add cgi_stdout_fd to epoll instance");
-		}
-		if (!sm_.AddCgiToEpoll(connection.cgi_stdin_fd_, connection)) {
-			ThrowException("Can't add cgi_stdin_fd to epoll instance");
 		}
 		connection.active_cgis_++;
 		connection.waiting_for_cgi_ = true;
@@ -47,8 +47,8 @@ void Server::ForkCGI(Connection &connection, const std::string &address, const s
 	}
 }
 
-int Server::HandleCGIinput(Connection &connection) const {
-	char    buffer[FILE_BUFFER_SIZE];
+int	Server::HandleCGIinput(Connection &connection) const {
+	char	buffer[FILE_BUFFER_SIZE];
 
 	while (is_running_) {
 		std::cout << "input size: " << connection.cgi_input_buffer_.size() <<
@@ -111,12 +111,12 @@ int Server::HandleCGIoutput(Connection &connection) const {
 		for (v_str_c_it it = connection.request_.GetRawRequest().begin();
 				it != connection.request_.GetRawRequest().end(); ++it) {
 			v_char tmp(it->begin(), it->end());
-			what.insert(what.end(), tmp.begin(), tmp.begin() + tmp.size());
+			what.insert(what.end(), tmp.begin(), tmp.end());
 			what.push_back('\n');
 		}
 	}
 	while (is_running_ && !what.empty()) {
-		ssize_t bytes_written = write(where, what.data(), what.size());
+		ssize_t bytes_written = write(where, &what[0], what.size());
 		if (bytes_written < 0) {
 			return NOT_ALL_DATA_WRITTEN_TO_CGI;
 		} else if (bytes_written == 0) {
