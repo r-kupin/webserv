@@ -68,8 +68,12 @@ Connection &Connection::operator=(const Connection &other) {
     address_ = other.address_;
     request_ = other.request_;
     location_ = other.location_;
-    cgi_stdout_fd_ = other.cgi_stdout_fd_;
     cgi_stdin_fd_ = other.cgi_stdin_fd_;
+    cgi_stdout_fd_ = other.cgi_stdout_fd_;
+    active_cgis_ = other.active_cgis_;
+    cgi_input_buffer_ = other.cgi_input_buffer_;
+    cgi_output_buffer_ = other.cgi_output_buffer_;
+    to_send_buffer_ = other.to_send_buffer_;
     cgi_pid_ = other.cgi_pid_;
 	return *this;
 }

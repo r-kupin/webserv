@@ -24,6 +24,16 @@
  * is still incomplete and therefore response weren't yet sent.
  */
 void ServerManager::HandleEventsOnExistingConnection(int client_socket) {
+    if (connections_[client_socket].url_headers_done_ &&
+            !connections_[client_socket].location_.cgi_address_.empty()) {
+        std::cout << "reset connection" << std::endl;
+        HandleClosedCGIfd(connections_[client_socket].cgi_stdin_fd_);
+        HandleClosedCGIfd(connections_[client_socket].cgi_stdout_fd_);
+        active_cgi_processes_--;
+        connections_[client_socket] = Connection(is_running_, client_socket,
+                                                 connections_[client_socket].server_listening_socket_,
+                                                 active_cgi_processes_);
+    }
     Connection		&connection = connections_[client_socket];
 
     std::cout << connection << std::endl;
