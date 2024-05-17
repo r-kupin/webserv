@@ -6,14 +6,16 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/21 18:31:01 by  rokupin          #+#    #+#             */
-/*   Updated: 2024/05/17 12:23:08 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/05/17 19:34:44 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <iostream>
 #include <algorithm>
 #include <sys/wait.h>
+#include <cstdio>
 #include "Server.h"
+// #include "Utils.h"
 
 /**
  * Depending on compliance between what was requested and what is being
@@ -81,11 +83,17 @@ void Server::HandleStatic(const ClientRequest &request, const Srch_c_Res &res,
 		synth.SetReturnCode(REQUESTED_FILE_IS_NOT_A_FILE);
 	} else {
 		if (request.IsDirectoryRequest()) {
-			// request's addr part of URI ends with "/"
+			if (request.GetMethod() == DELETE) {
+				DeleteFile(address, synth);
+			}
 			SynthIndex(synth, res, fs_status);
 		} else {
 			// request's addr part of URI has a filename after the last "/"
-			SynthFile(synth, res, fs_status, request.GetAddress());
+			if (request.GetMethod() == DELETE) {
+				DeleteFile(address, synth);
+			} else {
+				SynthFile(synth, res, fs_status, request.GetAddress());
+			}
 		}
 	}
 }
@@ -144,4 +152,22 @@ bool Server::AccessForbidden(l_loc_c_it found, Methods method) const {
 		return false;
 	}
 	return true;
+}
+
+void	Server::DeleteFile(const std::string &filepath, Location &synth) const {
+	if (Utils::CheckFilesystem(filepath) == COMM_FILE) {
+		if (remove(filepath.c_str()) == 0) {
+			Log("File " + filepath + " deleted successfully.");
+			synth.SetReturnCode(OK);
+			synth.return_custom_message_ = "File deleted successfully";
+		} else {
+			Log("Failed to delete file " + filepath);
+			synth.SetReturnCode(INTERNAL_SERVER_ERROR);
+			synth.return_custom_message_ = "Failed to delete file";
+		}
+	} else {
+		Log("File " + filepath + " not found.");
+		synth.SetReturnCode(NOT_FOUND);
+		synth.return_custom_message_ = "File not found";
+	}
 }
