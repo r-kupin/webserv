@@ -6,7 +6,7 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/31 16:20:03 by  rokupin          #+#    #+#             */
-/*   Updated: 2024/05/15 20:07:43 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/05/17 13:03:03 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,36 +42,36 @@ void    ServerManager::EventLoop() {
 			for (int i = 0; i < nfds; ++i) {
 				int         socket_fd = events[i].data.fd;
 				uint32_t    event = events[i].events;
-                PrintEventInfo(event, socket_fd, i);
-                if (!(event & EPOLLERR)) {
-                    IncomingEvent(socket_fd, event);
-                } else {
-                    if (connections_[socket_fd].cgi_stdin_fd_ != 0) {
-                        HandleClosedCGIfd(connections_[socket_fd].cgi_stdin_fd_);
-                    } else {
-                        CloseConnectionWithLogMessage(socket_fd,
-                                                      "client interrupted communication");
-                    }
-                }
-            }
-        } else {
-            std::cout << "epoll wait" << std::endl;
-            CheckInactiveCGIs();
-            CloseTimedOutConnections();
-        }
-    }
+				PrintEventInfo(event, socket_fd, i);
+				if (!(event & EPOLLERR)) {
+					IncomingEvent(socket_fd, event);
+				} else {
+					if (connections_[socket_fd].cgi_stdin_fd_ != 0) {
+						HandleClosedCGIfd(connections_[socket_fd].cgi_stdin_fd_);
+					} else {
+						CloseConnectionWithLogMessage(socket_fd,
+													  "client interrupted communication");
+					}
+				}
+			}
+		} else {
+			std::cout << "epoll wait" << std::endl;
+			CheckInactiveCGIs();
+			CloseTimedOutConnections();
+		}
+	}
 }
 
 void ServerManager::IncomingEvent(int socket_fd, uint32_t event) {
-    std::cout << "incoming event" << std::endl;
-    if (IsListeningSocketFd(socket_fd)) {
-        AcceptNewConnection(socket_fd);
-    } else if (event & EPOLLIN && event & EPOLLOUT) {
-        HandleEventsOnExistingConnection(socket_fd);
-    } else if ((event & EPOLLIN || event & EPOLLOUT || event & EPOLLHUP) &&
-               cgifd_to_cl_sock_.find(socket_fd) != cgifd_to_cl_sock_.end()) {
-        HandleCGIEvent(socket_fd);
-    }
+	std::cout << "incoming event" << std::endl;
+	if (IsListeningSocketFd(socket_fd)) {
+		AcceptNewConnection(socket_fd);
+	} else if (event & EPOLLIN && event & EPOLLOUT) {
+		HandleEventsOnExistingConnection(socket_fd);
+	} else if ((event & EPOLLIN || event & EPOLLOUT || event & EPOLLHUP) &&
+			   cgifd_to_cl_sock_.find(socket_fd) != cgifd_to_cl_sock_.end()) {
+		HandleCGIEvent(socket_fd);
+	}
 }
 
 /**
