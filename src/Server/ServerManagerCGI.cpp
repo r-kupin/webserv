@@ -97,7 +97,7 @@ void ServerManager::HandleCGIEvent(int cgi_fd) {
 		} else if (status == CGI_CLOSED_INPUT_FD) {
 			HandleClosedCGIfd(cgi_fd);
 		} else if (status == ALL_DATA_SENT_TO_CGI) {
-			HandleClosedCGIfd(cgi_fd);
+//			HandleClosedCGIfd(cgi_fd);
 		}
 	}
 }

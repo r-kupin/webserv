@@ -73,46 +73,13 @@ int Server::HandleCGIinput(Connection &connection) const {
                         connection.cgi_input_buffer_.begin() + sent);
             }
         }
-
-
-//        ssize_t bytes_read = read(connection.cgi_stdout_fd_, buffer, sizeof(buffer) - 1);
-//        std::cout << "read: " << bytes_read << std::endl;
-//        if (bytes_read < 0) {
-//            // If errno check commented, availability dropping from 98% to < 90% and segfault after stopping server
-//            if (errno == EAGAIN || errno == EWOULDBLOCK) {
-//                std::cout << "EAGAIN or EWOULDBLOCK on read" << std::endl;
-//                return NOT_ALL_DATA_READ_FROM_CGI;
-//            }
-//            return CLIENT_CLOSED_CONNECTION_WHILE_CGI_SENDS_DATA;
-//        } else if (bytes_read == 0) {
-//            return ALL_READ_ALL_SENT;
-//        } else {
-//            connection.cgi_input_buffer_.insert(connection.cgi_input_buffer_.end(),
-//                                                buffer, buffer + bytes_read);
-//        }
-//    }
-//    return -1;
-
-
-		ssize_t bytes_read = read(connection.cgi_stdout_fd_, buffer,FILE_BUFFER_SIZE - 1);
+		ssize_t bytes_read = read(connection.cgi_stdout_fd_, buffer,
+                                  FILE_BUFFER_SIZE - 1);
         std::cout << "read: " << bytes_read << std::endl;
         if (bytes_read < 0) {
             return NOT_ALL_DATA_READ_FROM_CGI;
         } else if (bytes_read == 0 ) {
             return ALL_READ_ALL_SENT;
-//        if (bytes_read < 0) {
-//            while ((bytes_read = read(connection.cgi_stdout_fd_,
-//                        buffer,FILE_BUFFER_SIZE - 1 )) == -1) {
-//                std::cout << "READ -1 " << std::endl;
-//            }
-//            if (bytes_read == 0) {
-//                return ALL_READ_ALL_SENT;
-//            } else {
-//                connection.cgi_input_buffer_.insert(connection.cgi_input_buffer_.end(),
-//                                                    buffer, buffer + bytes_read);
-//            }
-//		} else if (bytes_read == 0) {
-//            return ALL_READ_ALL_SENT;
         } else {
 			connection.cgi_input_buffer_.insert(connection.cgi_input_buffer_.end(),
                                                 buffer, buffer + bytes_read);
@@ -138,6 +105,7 @@ int Server::HandleCGIoutput(Connection &connection) const {
     }
     while (is_running_ && !what.empty()) {
         ssize_t bytes_written = write(where, what.data(), what.size());
+        std::cout << "written to CGI: " << bytes_written << std::endl;
         if (bytes_written < 0) {
             return NOT_ALL_DATA_WRITTEN_TO_CGI;
         } else if (bytes_written == 0) {
