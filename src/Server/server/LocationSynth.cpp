@@ -6,7 +6,7 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/21 18:31:01 by  rokupin          #+#    #+#             */
-/*   Updated: 2024/05/17 19:34:44 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/05/17 19:38:26 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -159,15 +159,15 @@ void	Server::DeleteFile(const std::string &filepath, Location &synth) const {
 		if (remove(filepath.c_str()) == 0) {
 			Log("File " + filepath + " deleted successfully.");
 			synth.SetReturnCode(OK);
-			synth.return_custom_message_ = "File deleted successfully";
+			synth.return_custom_message_ = "File deleted successfully\n";
 		} else {
 			Log("Failed to delete file " + filepath);
 			synth.SetReturnCode(INTERNAL_SERVER_ERROR);
-			synth.return_custom_message_ = "Failed to delete file";
+			synth.return_custom_message_ = "Failed to delete file\n";
 		}
 	} else {
 		Log("File " + filepath + " not found.");
 		synth.SetReturnCode(NOT_FOUND);
-		synth.return_custom_message_ = "File not found";
+		synth.return_custom_message_ = "File not found\n";
 	}
 }
