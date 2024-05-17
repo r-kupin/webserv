@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 
 #include <csignal>
+#include <cstring>
 #include "ServerManager.h"
 
 /**
@@ -43,16 +44,17 @@ void    ServerManager::EventLoop() {
 				int         socket_fd = events[i].data.fd;
 				uint32_t    event = events[i].events;
 				PrintEventInfo(event, socket_fd, i);
-//				if (!(event & EPOLLERR)) {
+				if (!(event & EPOLLERR)) {
 					IncomingEvent(socket_fd, event);
-//				} else {
-//					if (connections_[socket_fd].cgi_stdin_fd_ != 0) {
-//						HandleClosedCGIfd(connections_[socket_fd].cgi_stdin_fd_);
-//					} else {
-//						CloseConnectionWithLogMessage(socket_fd,
-//													  "client interrupted communication");
-//					}
-//				}
+				} else if (IsRealError(socket_fd)) {
+                    std::cout << "Real error" << std::endl;
+					if (connections_[socket_fd].cgi_stdin_fd_ != 0) {
+						HandleClosedCGIfd(connections_[socket_fd].cgi_stdin_fd_);
+					} else {
+						CloseConnectionWithLogMessage(socket_fd,
+													  "client interrupted communication");
+					}
+				}
 			}
 		} else {
 			std::cout << "epoll wait" << std::endl;
@@ -63,15 +65,11 @@ void    ServerManager::EventLoop() {
 }
 
 void ServerManager::IncomingEvent(int socket_fd, uint32_t event) {
-	std::cout << "incoming event" << std::endl;
 	if (IsListeningSocketFd(socket_fd)) {
 		AcceptNewConnection(socket_fd);
 	} else if (event & EPOLLIN && event & EPOLLOUT) {
 		HandleEventsOnExistingConnection(socket_fd);
-	} else if ((event & EPOLLIN || event & EPOLLOUT || event & EPOLLHUP) &&
-			   cgifd_to_cl_sock_.find(socket_fd) != cgifd_to_cl_sock_.end()) {
-        if (event & EPOLLHUP)
-		    std::cout << "HUP" << std::endl;
+	} else if (cgifd_to_cl_sock_.find(socket_fd) != cgifd_to_cl_sock_.end()) {
 		HandleCGIEvent(socket_fd);
 	}
 }
@@ -151,6 +149,13 @@ bool ServerManager::AddCgiToEpoll(int cgi_fd, Connection &connection) {
 	Log("Can't set descriptor " + Utils::NbrToString(cgi_fd) +
 		" to nonblocking mode.");
 	return false;
+}
+
+bool ServerManager::IsRealError(int fd) {
+    int err = 0;
+    socklen_t len = sizeof(err);
+    getsockopt(fd, SOL_SOCKET, SO_ERROR, &err, &len);
+    return err != 0;
 }
 
 

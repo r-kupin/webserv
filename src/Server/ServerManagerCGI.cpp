@@ -90,14 +90,15 @@ void ServerManager::HandleCGIEvent(int cgi_fd) {
 			connections_[connection.connection_socket_].cgi_input_buffer_.clear();
 			connections_[connection.connection_socket_].cgi_output_buffer_.clear();
 		}
-	} else if (connection.cgi_stdin_fd_ == cgi_fd) {
-		int status = server.HandleCGIoutput(connection);
-		if (status == NOT_ALL_DATA_WRITTEN_TO_CGI) {
-			return;
-		} else if (status == CGI_CLOSED_INPUT_FD) {
-			HandleClosedCGIfd(cgi_fd);
-		} else if (status == ALL_DATA_SENT_TO_CGI) {
-//			HandleClosedCGIfd(cgi_fd);
-		}
 	}
+//    else if (connection.cgi_stdin_fd_ == cgi_fd) {
+//		int status = server.HandleCGIoutput(connection);
+//		if (status == NOT_ALL_DATA_WRITTEN_TO_CGI) {
+//			return;
+//		} else if (status == CGI_CLOSED_INPUT_FD) {
+//			HandleClosedCGIfd(cgi_fd);
+//		} else if (status == ALL_DATA_SENT_TO_CGI) {
+////			HandleClosedCGIfd(cgi_fd);
+//		}
+//	}
 }

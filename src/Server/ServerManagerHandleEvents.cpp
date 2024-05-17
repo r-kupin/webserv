@@ -24,8 +24,7 @@
  * is still incomplete and therefore response weren't yet sent.
  */
 void ServerManager::HandleEventsOnExistingConnection(int client_socket) {
-    if (connections_[client_socket].url_headers_done_ &&
-            !connections_[client_socket].location_.cgi_address_.empty()) {
+    if (connections_[client_socket].waiting_for_cgi_) {
         std::cout << "reset connection" << std::endl;
         HandleClosedCGIfd(connections_[client_socket].cgi_stdin_fd_);
         HandleClosedCGIfd(connections_[client_socket].cgi_stdout_fd_);
@@ -35,18 +34,13 @@ void ServerManager::HandleEventsOnExistingConnection(int client_socket) {
                                                  active_cgi_processes_);
     }
     Connection		&connection = connections_[client_socket];
-
-    std::cout << connection << std::endl;
     while (is_running_) {
-        std::cout << "handling generic event" << std::endl;
-        // some data is (still) present on this fd
+        // some data is (still) present on this fd, if not a cgi connection
 		if (!connection.url_headers_done_) {
-            std::cout << "handling headers" << std::endl;
 			if (!ProcessHeaders(connection))
 				 return;
 		}
 		if (connection.url_headers_done_ && !connection.body_done_) {
-            std::cout << "handling body" << std::endl;
 			if (!ProcessBody(connection))
 				 return;
 		}
@@ -66,6 +60,7 @@ void ServerManager::HandleEventsOnExistingConnection(int client_socket) {
  */
 bool ServerManager::ProcessHeaders(Connection &connection) {
 	try {
+        requests_made_++;
 		connection.request_.Init(connection.connection_socket_);
 		connection.address_ = connection.request_.GetHeaderValue("Host");
 		Log("Got client request:");

@@ -103,15 +103,15 @@ int Server::HandleCGIoutput(Connection &connection) const {
             what.push_back('\n');
         }
     }
-    while (is_running_ && !what.empty()) {
-        ssize_t bytes_written = write(where, what.data(), what.size());
+    while (is_running_ && !what.empty() && ProbeWriteToCGI(what, where)) {
+        ssize_t bytes_written = write(where, what.data() + 1, what.size() - 1);
         std::cout << "written to CGI: " << bytes_written << std::endl;
         if (bytes_written < 0) {
             return NOT_ALL_DATA_WRITTEN_TO_CGI;
         } else if (bytes_written == 0) {
             return CGI_CLOSED_INPUT_FD;
         } else {
-            what.erase(what.begin(), what.begin() + bytes_written);
+            what.erase(what.begin(), what.begin() + bytes_written + 1);
         }
     }
     return ALL_DATA_SENT_TO_CGI;

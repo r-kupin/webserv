@@ -161,6 +161,7 @@ private:
 	 *  1. find out does this server listens to this socket
 	 *  2. find address
 	 * */
+    bool ProbeWriteToCGI(const v_char &what, int i) const;
 };
 
 #endif //WEBSERV_SERVER_H

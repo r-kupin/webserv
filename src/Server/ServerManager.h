@@ -91,12 +91,15 @@ private:
 
 	v_conn          connections_;
 	int             epoll_returns_count_;
+	int             requests_made_;
 	int             epoll_events_count_;
 	int             epoll_in_out_count_;
     int             epoll_connection_count_;
 	int             active_cgi_processes_;
 
 	Config			config_;
+
+    bool IsRealError(int fd);
 };
 
 #endif //WEBSERV_SERVERMANAGER_H
