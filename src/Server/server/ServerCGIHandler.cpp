@@ -6,7 +6,7 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/12 18:29:03 by  rokupin          #+#    #+#             */
-/*   Updated: 2024/05/17 13:21:33 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/05/17 13:30:55 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,59 +47,102 @@ void Server::ForkCGI(Connection &connection, const std::string &address, const s
 	}
 }
 
-int	Server::HandleCGIinput(Connection &connection) const {
-	char	buffer[FILE_BUFFER_SIZE];
-
-	while (is_running_) {
-		std::cout << "input size: " << connection.cgi_input_buffer_.size() <<
-		std::endl;
-		while (!connection.cgi_input_buffer_.empty()) {
-			ssize_t sent = send(connection.connection_socket_,
-								connection.cgi_input_buffer_.data(),
-								connection.cgi_input_buffer_.size(), 0);
-			std::cout << "sent: " << sent << std::endl;
-			if (sent < 1) {
-				if (sigpipe_) {
-					std::cout << "sigpipe true" << std::endl;
-					sigpipe_ = false;
-					return CLIENT_CLOSED_CONNECTION_WHILE_CGI_SENDS_DATA;
-				} else {
-					std::cout << "sigpipe false" << std::endl;
-					return CLIENT_CLOSED_CONNECTION_WHILE_CGI_SENDS_DATA;
-				}
-			} else {
-				connection.cgi_input_buffer_.erase(
-						connection.cgi_input_buffer_.begin(),
-						connection.cgi_input_buffer_.begin() + sent);
-			}
-		}
-		ssize_t bytes_read = read(connection.cgi_stdout_fd_, buffer,FILE_BUFFER_SIZE - 1);
-		std::cout << "read: " << bytes_read << std::endl;
-//        if (bytes_read < 0) {
-//            return NOT_ALL_DATA_READ_FROM_CGI;
-//        } else if (bytes_read == 0 ) {
-//            return ALL_READ_ALL_SENT;
-		if (bytes_read < 0) {
-			while ((bytes_read = read(connection.cgi_stdout_fd_,
-						buffer,FILE_BUFFER_SIZE - 1 )) == -1) {
-				std::cout << "READ -1 " << std::endl;
-			}
-			if (bytes_read == 0) {
-				return ALL_READ_ALL_SENT;
-			} else {
-				connection.cgi_input_buffer_.insert(connection.cgi_input_buffer_.end(),
-													buffer, buffer + bytes_read);
-			}
-		} else if (bytes_read == 0) {
-			return ALL_READ_ALL_SENT;
-		} else {
-			connection.cgi_input_buffer_.insert(connection.cgi_input_buffer_.end(),
-												buffer, buffer + bytes_read);
-		}
-	}
-	// server stopped
-	return -1;
+int Server::HandleCGIinput(Connection &connection) const {
+    char buffer[FILE_BUFFER_SIZE];
+    while (is_running_) {
+        std::cout << "input size: " << connection.cgi_input_buffer_.size() << std::endl;
+        while (!connection.cgi_input_buffer_.empty()) {
+            ssize_t sent = send(connection.connection_socket_,
+                                &connection.cgi_input_buffer_[0],
+                                connection.cgi_input_buffer_.size(), 0);
+            std::cout << "sent: " << sent << std::endl;
+            if (sent < 1) {
+                if (sigpipe_) {
+                    std::cout << "sigpipe true" << std::endl;
+                    sigpipe_ = false;
+                    return CLIENT_CLOSED_CONNECTION_WHILE_CGI_SENDS_DATA;
+                } else {
+                    std::cout << "sigpipe false" << std::endl;
+                    return CLIENT_CLOSED_CONNECTION_WHILE_CGI_SENDS_DATA;
+                }
+            } else {
+                connection.cgi_input_buffer_.erase(connection.cgi_input_buffer_.begin(),
+                                                   connection.cgi_input_buffer_.begin() + sent);
+            }
+        }
+        ssize_t bytes_read = read(connection.cgi_stdout_fd_, buffer, sizeof(buffer) - 1);
+        std::cout << "read: " << bytes_read << std::endl;
+        if (bytes_read < 0) {
+			// If errno check commented, availability dropping from 98% to < 90% and segfault after stopping server
+            if (errno == EAGAIN || errno == EWOULDBLOCK) {
+                std::cout << "EAGAIN or EWOULDBLOCK on read" << std::endl;
+                return NOT_ALL_DATA_READ_FROM_CGI;
+            }
+            return CLIENT_CLOSED_CONNECTION_WHILE_CGI_SENDS_DATA;
+        } else if (bytes_read == 0) {
+            return ALL_READ_ALL_SENT;
+        } else {
+            connection.cgi_input_buffer_.insert(connection.cgi_input_buffer_.end(),
+                                                buffer, buffer + bytes_read);
+        }
+    }
+    return -1;
 }
+
+
+// int	Server::HandleCGIinput(Connection &connection) const {
+// 	char	buffer[FILE_BUFFER_SIZE];
+
+// 	while (is_running_) {
+// 		std::cout << "input size: " << connection.cgi_input_buffer_.size() <<
+// 		std::endl;
+// 		while (!connection.cgi_input_buffer_.empty()) {
+// 			ssize_t sent = send(connection.connection_socket_,
+// 								connection.cgi_input_buffer_.data(),
+// 								connection.cgi_input_buffer_.size(), 0);
+// 			std::cout << "sent: " << sent << std::endl;
+// 			if (sent < 1) {
+// 				if (sigpipe_) {
+// 					std::cout << "sigpipe true" << std::endl;
+// 					sigpipe_ = false;
+// 					return CLIENT_CLOSED_CONNECTION_WHILE_CGI_SENDS_DATA;
+// 				} else {
+// 					std::cout << "sigpipe false" << std::endl;
+// 					return CLIENT_CLOSED_CONNECTION_WHILE_CGI_SENDS_DATA;
+// 				}
+// 			} else {
+// 				connection.cgi_input_buffer_.erase(
+// 						connection.cgi_input_buffer_.begin(),
+// 						connection.cgi_input_buffer_.begin() + sent);
+// 			}
+// 		}
+// 		ssize_t bytes_read = read(connection.cgi_stdout_fd_, buffer,FILE_BUFFER_SIZE - 1);
+// 		std::cout << "read: " << bytes_read << std::endl;
+// //        if (bytes_read < 0) {
+// //            return NOT_ALL_DATA_READ_FROM_CGI;
+// //        } else if (bytes_read == 0 ) {
+// //            return ALL_READ_ALL_SENT;
+// 		if (bytes_read < 0) {
+// 			while ((bytes_read = read(connection.cgi_stdout_fd_,
+// 						buffer,FILE_BUFFER_SIZE - 1 )) == -1) {
+// 				std::cout << "READ -1 " << std::endl;
+// 			}
+// 			if (bytes_read == 0) {
+// 				return ALL_READ_ALL_SENT;
+// 			} else {
+// 				connection.cgi_input_buffer_.insert(connection.cgi_input_buffer_.end(),
+// 													buffer, buffer + bytes_read);
+// 			}
+// 		} else if (bytes_read == 0) {
+// 			return ALL_READ_ALL_SENT;
+// 		} else {
+// 			connection.cgi_input_buffer_.insert(connection.cgi_input_buffer_.end(),
+// 												buffer, buffer + bytes_read);
+// 		}
+// 	}
+// 	// server stopped
+// 	return -1;
+// }
 
 
 int Server::HandleCGIoutput(Connection &connection) const {
