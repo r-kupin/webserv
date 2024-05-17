@@ -6,7 +6,7 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/15 18:20:59 by mede-mas          #+#    #+#             */
-/*   Updated: 2024/05/15 18:21:09 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/05/17 19:33:47 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,6 +57,7 @@
 #define BODY_TOO_LARGE 413
 #define REQUESTED_FILE_IS_NOT_A_FILE 500
 #define FAILED_IO 500
+#define INTERNAL_SERVER_ERROR 500
 #define ONLY_CURL_UPLOADS_SUPPORTED 501
 #define FAILED_TO_CREATE_OUTPUT_FILE 503
 #define BAD_HTTP_VERSION 505
@@ -82,8 +83,10 @@ public:
 	long                        GetConnectionTimeout() const;
 
 	Location                    ProcessRequest(Connection &connection) const;
-	int HandleCGIinput(Connection &connection) const;
-    int HandleCGIoutput(Connection &connection) const;
+	int							HandleCGIinput(Connection &connection) const;
+	int							HandleCGIoutput(Connection &connection) const;
+	void						DeleteFile(const std::string &filepath, Location &synth) const;
+
 
 	friend std::ostream        &operator<<(std::ostream &os,
 											const Server &server);
