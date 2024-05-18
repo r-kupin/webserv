@@ -6,7 +6,7 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/31 16:20:03 by  rokupin          #+#    #+#             */
-/*   Updated: 2024/05/18 10:27:27 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/05/18 10:43:42 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,7 +57,7 @@ void    ServerManager::EventLoop() {
 				}
 			}
 		} else {
-			std::cout << "epoll wait" << std::endl;
+			// std::cout << "epoll wait" << std::endl;
 			CheckInactiveCGIs();
 			CloseTimedOutConnections();
 		}
