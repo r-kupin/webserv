@@ -24,9 +24,18 @@
  * is still incomplete and therefore response weren't yet sent.
  */
 void ServerManager::HandleEventsOnExistingConnection(int client_socket) {
+    if (connections_[client_socket].waiting_for_cgi_) {
+        std::cout << "reset connection" << std::endl;
+        HandleClosedCGIfd(connections_[client_socket].cgi_stdin_fd_);
+        HandleClosedCGIfd(connections_[client_socket].cgi_stdout_fd_);
+        active_cgi_processes_--;
+        connections_[client_socket] = Connection(is_running_, client_socket,
+                                                 connections_[client_socket].server_listening_socket_,
+                                                 active_cgi_processes_);
+    }
     Connection		&connection = connections_[client_socket];
-
     while (is_running_) {
+        // some data is (still) present on this fd, if not a cgi connection
 		if (!connection.url_headers_done_) {
 			if (!ProcessHeaders(connection))
 				 return;
@@ -36,10 +45,8 @@ void ServerManager::HandleEventsOnExistingConnection(int client_socket) {
 				 return;
 		}
 		if (connection.body_done_) {
-            if (!Respond(connection)) {
-                CloseConnectionWithLogMessage(client_socket, "Client request "
-                                                             "triggered error");
-            }
+            if (!Respond(connection))
+                return;
 		}
 	}
 }
@@ -53,6 +60,7 @@ void ServerManager::HandleEventsOnExistingConnection(int client_socket) {
  */
 bool ServerManager::ProcessHeaders(Connection &connection) {
 	try {
+        requests_made_++;
 		connection.request_.Init(connection.connection_socket_);
 		connection.address_ = connection.request_.GetHeaderValue("Host");
 		Log("Got client request:");
@@ -91,6 +99,7 @@ bool ServerManager::ProcessBody(Connection &connection) {
         const Server &server = FindServer(connection);
         connection.location_ = server.ProcessRequest(connection);
         if (!connection.location_.cgi_address_.empty()) {
+            std::cout << "cgi" << std::endl;
             // CGI-generated responses bypass "Respond()" mechanism
             return false;
         }
@@ -134,17 +143,34 @@ bool ServerManager::ProcessBody(Connection &connection) {
 }
 
 bool ServerManager::Respond(Connection &connection) {
-	// Checking if resquest if for CGI
-	ServerResponse response(connection);
+    v_char  &what = connection.to_send_buffer_;
+    int     where = connection.connection_socket_;
 
-	Log("Prepared response:");
-	std::cout << response << std::endl;
-	response.SendResponse(connection.connection_socket_);
-	Log("Response sent");
-	// response sent: reset the connection for potentially more requests on
-	// this socket
-	connections_[connection.connection_socket_] =
-			Connection(is_running_, connection.connection_socket_,
-					   connection.server_listening_socket_, connection.active_cgis_);
-	return !Utils::Get().IsErrorCode(response.GetCode());
+    if (what.empty()) {
+        ServerResponse response(connection);
+        const std::string &response_str = response.MakeResponseString();
+        what = v_char(response_str.begin(), response_str.end());
+        Log("Prepared response:");
+        std::cout << response << std::endl;
+    }
+    while ( is_running_ && !what.empty()) {
+        // we (still) have data to send
+        ssize_t sent = send(where, what.data(), what.size(), 0);
+        if (sent < 0) {
+            if (sigpipe_) {
+                sigpipe_ = false;
+                CloseConnectionWithLogMessage(where, "Client shut the pipe.");
+                return false;
+            }
+            return true; // todo probably
+        } else {
+            // 0 can't happen
+            what.erase(what.begin(), what.begin() + sent);
+        }
+    }
+    // request answered. reset connection.
+    connections_[where] = Connection(is_running_, where,
+                                     connection.server_listening_socket_,
+                                     connection.active_cgis_);
+    return false;
 }

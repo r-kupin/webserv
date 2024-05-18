@@ -6,7 +6,7 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/31 16:20:03 by  rokupin          #+#    #+#             */
-/*   Updated: 2024/05/16 13:46:47 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/05/18 10:22:58 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,102 +64,76 @@
 
 // Check and handle inactive or terminated CGI processes
 void ServerManager::CheckInactiveCGIs() {
-	std::map<int, int>::iterator it = cgifd_to_cl_sock_.begin();
-	while (it != cgifd_to_cl_sock_.end()) {
+	for (std::map<int, int>::iterator it = cgifd_to_cl_sock_.begin();
+		 it != cgifd_to_cl_sock_.end(); ++it) {
 		Connection &connection = connections_[it->second];
-		if (connection.waiting_for_cgi_) {
-			int cgi_status = HandleCGIEvent(connection);
-			if (cgi_status == 0) {
-				cgifd_to_cl_sock_.erase(it++);  // Safely erase while iterating
-			} else {
-				++it;
-			}
-		} else {
-			++it; // Continue if not waiting for CGI
+		if (active_cgi_processes_ < MAX_CGI_PROCESSES) {
+			const Server &server = FindServer(connection);
+			connection.location_ = server.ProcessRequest(connection);
 		}
 	}
 }
 
+//void ServerManager::HandleClosedCGIfd(int terminated_cgi) {
+//    // delete cgi fd from epoll
+//    epoll_ctl(terminated_cgi, EPOLL_CTL_DEL, epoll_fd_, NULL);
+//    // close communication socket
+//    close(terminated_cgi);
+//    // remove mapping entry
+//    CloseConnectionWithLogMessage(cgifd_to_cl_sock_[terminated_cgi],
+//                                  "Cgi transmission ended.");
+//    cgifd_to_cl_sock_.erase(terminated_cgi);
+//    active_cgi_processes_--;
+//}
 
-// void ServerManager::HandleTerminatedCGIProcess(int terminated_cgi) {
-// 	// delete cgi fd from epoll
-// 	epoll_ctl(terminated_cgi, EPOLL_CTL_DEL, epoll_fd_, NULL);
-// 	// close communication socket
-// 	close(terminated_cgi);
-// 	// remove mapping entry
-// 	CloseConnectionWithLogMessage(cgifd_to_cl_sock_[terminated_cgi],
-// 								  "Cgi transmission ended.");
-// 	cgifd_to_cl_sock_.erase(terminated_cgi);
-// 	active_cgi_processes_--;
-// }
-
-// Handles terminated CGI processes, cleaning up file descriptors and epoll entries
-void ServerManager::HandleTerminatedCGIProcess(int cgi_fd) {
-	epoll_ctl(epoll_fd_, EPOLL_CTL_DEL, cgi_fd, NULL); // Remove from epoll
-	close(cgi_fd); // Close CGI file descriptor
-	cgifd_to_cl_sock_.erase(cgi_fd); // Erase from tracking map
-	Log("CGI process terminated and cleaned up.");
+void ServerManager::HandleClosedCGIfd(int terminated_cgi) {
+	// delete cgi fd from epoll
+	epoll_ctl(terminated_cgi, EPOLL_CTL_DEL, epoll_fd_, NULL);
+	// close communication socket
+	close(terminated_cgi);
+	cgifd_to_cl_sock_.erase(terminated_cgi);
 }
 
+void ServerManager::HandleCGIEvent(int cgi_fd) {
+	int             clients_socket = cgifd_to_cl_sock_.find(cgi_fd)->second;
+	Connection      &connection = connections_[clients_socket];
+	const Server    &server = FindServer(connection);
 
-void ServerManager::ReInvokeRequestProcessing(Connection &connection) {
-	const Server &server = FindServer(connection);
-	connection.location_ = server.ProcessRequest(connection);
-}
+	if (connection.cgi_stdout_fd_ == cgi_fd) {// reading from cgi
+		int status = server.HandleCGIinput(connection);
+		if (status == CLIENT_CLOSED_CONNECTION_WHILE_CGI_SENDS_DATA) {
+//            kill(connection.cgi_pid_, SIGSTOP);
+			HandleClosedCGIfd(connection.cgi_stdin_fd_);
+			HandleClosedCGIfd(connection.cgi_stdout_fd_);
+			active_cgi_processes_--;
+			CloseConnectionWithLogMessage(clients_socket, "Clent died");
+		} else if (status == NOT_ALL_DATA_READ_FROM_CGI) {
+			return;
+		} else if (status == ALL_READ_ALL_SENT) {
+			std::cout << " all sent "<< std::endl;
+			HandleClosedCGIfd(connection.cgi_stdin_fd_);
+			HandleClosedCGIfd(connection.cgi_stdout_fd_);
+			active_cgi_processes_--;
+			// request answered. reset connection.
 
-int ServerManager::HandleCGIEvent(int cgi_stdout_fd) {
-	if (cgifd_to_cl_sock_.find(cgi_stdout_fd) != cgifd_to_cl_sock_.end()) {
-		int clients_socket = cgifd_to_cl_sock_.find(cgi_stdout_fd)->second;
-		Connection &conection = connections_[clients_socket];
-		int handling_result = HandleCGIEvent(conection);
-		return handling_result;
-	}
-	Log("Pair CGI_stdout_fd - Client socket not found");
-	return -1;
-}
-
-// int ServerManager::HandleCGIEvent(Connection &connection) {
-// 	try {
-// 		const Server &server = FindServer(connection);
-// 		if(!server.HandleCGIinput(connection))
-// 			return connection.cgi_stdout_fd_;
-// 	} catch (const EwouldblockEagainUpload &) {
-// 		Log("Read all available data, but cgi transmission is incomplete. "
-// 			"We'll come back later. Maybe.");
-// 	} catch (...) {
-// 		// Reset connection state for a particular client (keep client's fd)
-// 		int cgi_stdout_fd = connection.cgi_stdout_fd_;
-// 		return cgi_stdout_fd;
-// 	}
-// 	return -1;
-// }
-
-// Handle incoming or outgoing CGI events
-int ServerManager::HandleCGIEvent(Connection &connection) {
-	try {
-		const Server &server = FindServer(connection);
-		if (!server.HandleCGIinput(connection)) {
-			return -1; // Continue if more data is expected
+			connections_[connection.connection_socket_] = Connection(
+					is_running_, connection.connection_socket_,
+					connection.server_listening_socket_,
+					connection.active_cgis_);
+			connections_[connection.connection_socket_].to_send_buffer_.clear();
+			connections_[connection.connection_socket_].cgi_input_buffer_.clear();
+			connections_[connection.connection_socket_].cgi_output_buffer_.clear();
 		}
-		if (!server.SendDataToCGI(connection, "Data to send")) {
-			Log("Failed to send data to CGI");
-			return -1;
-		}
-		return 0; // Indicate CGI processing complete
-	} catch (...) {
-		Log("Unexpected error during CGI handling.");
-		return -1;
 	}
-}
-
-// Example processing of CGI output for simplicity
-bool Server::ProcessCGIOutput(Connection &connection) const {
-	// Convert vector<char> to string for logging
-	std::string output(connection.buffer_.begin(), connection.buffer_.end());
-	// Simple response verification and sending logic
-	Log("Processing CGI output: " + output);
-	send(connection.connection_socket_, connection.buffer_.data(), connection.buffer_.size(), 0);
-	connection.buffer_.clear();
-	return true;
+//    else if (connection.cgi_stdin_fd_ == cgi_fd) {
+//		int status = server.HandleCGIoutput(connection);
+//		if (status == NOT_ALL_DATA_WRITTEN_TO_CGI) {
+//			return;
+//		} else if (status == CGI_CLOSED_INPUT_FD) {
+//			HandleClosedCGIfd(cgi_fd);
+//		} else if (status == ALL_DATA_SENT_TO_CGI) {
+////			HandleClosedCGIfd(cgi_fd);
+//		}
+//	}
 }
 

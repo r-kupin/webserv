@@ -6,7 +6,7 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/11 12:15:01 by  rokupin          #+#    #+#             */
-/*   Updated: 2024/05/16 13:26:39 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/05/18 10:22:13 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,13 @@
 
 #include "server/Server.h"
 #include "../Config/config/Config.h"
+
+#define NOT_ALL_DATA_WRITTEN_TO_CGI 0
+#define CGI_CLOSED_INPUT_FD 1
+#define ALL_DATA_SENT_TO_CGI 2
+#define NOT_ALL_DATA_READ_FROM_CGI 3
+#define CLIENT_CLOSED_CONNECTION_WHILE_CGI_SENDS_DATA 4
+#define ALL_READ_ALL_SENT 5
 
 #define CONNECTIONS 2048
 
@@ -26,6 +33,7 @@ typedef std::map<Host, int>         m_host_int;
 typedef std::map<int, int>          m_cgifd_to_clientfd;
 
 static volatile bool        is_running_ = true;
+static volatile bool        sigpipe_ = false;
 
 class ServerManager {
 public:
@@ -50,21 +58,24 @@ class ServerManagerException : public std::exception {};
 	void            Start();
 	void            EventLoop();
 	bool            AddClientToEpoll(int client_sock);
-	static void     Stop(int signal);
+	static void     Signals(int signal);
+    void            ReInvokeRequestProcessing(Connection &connection);
+    void            IncomingEvent(int socket_fd, uint32_t event);
+    void            AcceptNewConnection(int server_socket);
+    void            HandleEventsOnExistingConnection(int client_socket);
 //-------------------handle-----------------------------------------------------
 	const Server    &FindServer(const Connection &connection) const;
-	void            AcceptNewConnection(int server_socket);
-	void            HandleEventsOnExistingConnection(int client_socket);
-    int 			HandleCGIEvent(int cgi_fd);
-    int             HandleCGIEvent(Connection &connection);
 	bool            ProcessHeaders(Connection &connection);
 	void            CloseConnectionWithLogMessage(int socket,
 												  const std::string &msg);
 	bool            ProcessBody(Connection &connection);
 	bool            Respond(Connection &connection);
 	void            CloseTimedOutConnections();
+//-------------------cgi--------------------------------------------------------
+    void            HandleCGIEvent(int cgi_fd);
     bool            AddCgiToEpoll(int cgi_fd, Connection &connection);
-    void            RemoveCGIFromMap(int cgi_fd);
+    void            CheckInactiveCGIs();
+    void            HandleClosedCGIfd(int terminated_cgi);
 //-------------------util-------------------------------------------------------
 	void            Cleanup();
 	void            PrintEventInfo(int events, int fd, int i) ;
@@ -73,13 +84,14 @@ class ServerManagerException : public std::exception {};
 	bool            IsListeningSocketFd(int socket) const;
 	static bool     SetDescriptorNonBlocking(int sockfd) ;
 private:
-	int             epoll_fd_;
-	v_servers       servers_;
-	m_host_int      host_to_socket_; /* quick find-by-host required by CreateListeningSockets */
+	int                   epoll_fd_;
+	v_servers             servers_;
+	m_host_int            host_to_socket_; /* quick find-by-host required by CreateListeningSockets */
     m_cgifd_to_clientfd   cgifd_to_cl_sock_;
 
 	v_conn          connections_;
 	int             epoll_returns_count_;
+	int             requests_made_;
 	int             epoll_events_count_;
 	int             epoll_in_out_count_;
     int             epoll_connection_count_;
@@ -87,13 +99,7 @@ private:
 
 	Config			config_;
 
-    void CheckInactiveCGIs();
-
-    void ReInvokeRequestProcessing(Connection &connection);
-
-    void HandleTerminatedCGIProcess(int terminated_cgi);
-
-    void IncomingEvent(int socket_fd, uint32_t event);
+    bool IsRealError(int fd);
 };
 
 #endif //WEBSERV_SERVERMANAGER_H

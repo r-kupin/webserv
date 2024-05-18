@@ -21,9 +21,10 @@ Connection::Connection(v_c_b &is_running, int &active_cgis)
   connection_socket_(0),
   server_listening_socket_(0),
   request_(is_running),
+  cgi_stdin_fd_(0),
   cgi_stdout_fd_(0),
   active_cgis_(active_cgis),
-  cgi_response_verified_(false) {}
+  cgi_pid_(-1) {}
 
 Connection::Connection(v_c_b &is_running, int connection_socket, int server_socket, int &active_cgis)
 : url_headers_done_(false),
@@ -33,9 +34,10 @@ Connection::Connection(v_c_b &is_running, int connection_socket, int server_sock
   connection_socket_(connection_socket),
   server_listening_socket_(server_socket),
   request_(is_running),
+  cgi_stdin_fd_(0),
   cgi_stdout_fd_(0),
   active_cgis_(active_cgis),
-  cgi_response_verified_(false) {}
+  cgi_pid_(-1) {}
 
 // Copy constructor
 Connection::Connection(const Connection &other)
@@ -48,9 +50,10 @@ Connection::Connection(const Connection &other)
   address_(other.address_),
   request_(other.request_),
   location_(other.location_),
+  cgi_stdin_fd_(other.cgi_stdin_fd_),
   cgi_stdout_fd_(other.cgi_stdout_fd_),
   active_cgis_(other.active_cgis_),
-  cgi_response_verified_(other.cgi_response_verified_) {}
+  cgi_pid_(other.cgi_pid_) {}
 
 // Assignement operator
 Connection &Connection::operator=(const Connection &other) {
@@ -65,8 +68,13 @@ Connection &Connection::operator=(const Connection &other) {
     address_ = other.address_;
     request_ = other.request_;
     location_ = other.location_;
+    cgi_stdin_fd_ = other.cgi_stdin_fd_;
     cgi_stdout_fd_ = other.cgi_stdout_fd_;
-    cgi_response_verified_ = other.cgi_response_verified_;
+    active_cgis_ = other.active_cgis_;
+    cgi_input_buffer_ = other.cgi_input_buffer_;
+    cgi_output_buffer_ = other.cgi_output_buffer_;
+    to_send_buffer_ = other.to_send_buffer_;
+    cgi_pid_ = other.cgi_pid_;
 	return *this;
 }
 
@@ -89,7 +97,8 @@ std::ostream &operator<<(std::ostream &os, const Connection &connection) {
     " server_listening_socket_: " << connection.server_listening_socket_ << "\n" <<
     " address_: " << connection.address_ << "\n" <<
     " request_: " << connection.request_ << "\n" <<
-    " location_: " << connection.location_ << "\n" <<
+//    " location_: " << connection.location_ << "\n" <<
+    " cgi_stdin_fd_: " << connection.cgi_stdin_fd_ << "\n" <<
     " cgi_stdout_fd_: " << connection.cgi_stdout_fd_ << "\n" <<
     " active_cgis_: " << connection.active_cgis_ << "\n";
     return os;

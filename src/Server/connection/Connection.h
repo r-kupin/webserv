@@ -25,7 +25,7 @@ struct Connection {
 
 	// Assignement operator
 	Connection          &operator=(const Connection &);
-
+    friend std::ostream &operator<<(std::ostream &os, const Connection &connection);
 	// Methods to check connection state
 	bool                IsOpen() const;
 	long                HowLongBeingActive(long now) const;
@@ -38,8 +38,6 @@ struct Connection {
 	// Time and socket-related members
 	long                open_time_;
 
-	friend std::ostream &operator<<(std::ostream &os, const Connection &connection);
-
 	int                 connection_socket_;
 	int                 server_listening_socket_;
 	std::string         address_;
@@ -51,8 +49,11 @@ struct Connection {
 	int                 cgi_stdin_fd_;
 	int                 cgi_stdout_fd_;
 	int                 &active_cgis_;
-	bool                cgi_response_verified_;
-	v_char              buffer_;
+	v_char              cgi_input_buffer_;
+	v_char              cgi_output_buffer_;
+    v_char              to_send_buffer_;
+
+    int                 cgi_pid_;
 };
 
 #endif //WEBSERV_CONNECTION_H

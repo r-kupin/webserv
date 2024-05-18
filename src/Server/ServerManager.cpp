@@ -13,13 +13,12 @@
 // Include necessary headers for signal handling and the server manager's declaration.
 #include "ServerManager.h"
 #include "connection/Connection.h"
-#include <csignal>
-#include <unistd.h>		// for fork and pipe
 #include <sys/wait.h>	// for waitpid
 
 // Default constructor for the ServerManager class.
 ServerManager::ServerManager()
 : epoll_returns_count_(0),
+requests_made_(0),
 epoll_events_count_(0),
 epoll_in_out_count_(0),
 epoll_connection_count_(0),
@@ -41,10 +40,13 @@ void ServerManager::Start() {
 // Signal handler method for stopping all servers.
 // It checks if the signal received is SIGINT or SIGSTOP, and if so,
 // sets a flag to indicate that the servers should stop running.
-void ServerManager::Stop(int signal) {
+void ServerManager::Signals(int signal) {
 	// if (signal == SIGINT || signal == SIGSTOP) {
 	if (signal == SIGINT || signal == SIGTERM) {
 		std::cout << "\nStopping servers..." << std::endl;
 		is_running_ = false;
-	}
+	} else if (signal == SIGPIPE) {
+        sigpipe_ = true;
+        std::cout << "Communication pipe failed " << std::endl;
+    }
 }

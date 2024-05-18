@@ -27,7 +27,7 @@ public:
     ~ServerResponse();
 
     void                        ComposeResponse(const Location &synth);
-    void                        SendResponse(int dest);
+    std::string                 MakeResponseString();
 
     const std::string           &GetTopHeader() const;
     const std::string           &GetBodyStr() const;

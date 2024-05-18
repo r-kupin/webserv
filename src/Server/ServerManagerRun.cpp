@@ -6,11 +6,12 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/31 16:20:03 by  rokupin          #+#    #+#             */
-/*   Updated: 2024/05/15 20:23:52 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/05/18 10:27:27 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <csignal>
+#include <cstring>
 #include "ServerManager.h"
 
 /**
@@ -42,37 +43,35 @@ void    ServerManager::EventLoop() {
 			for (int i = 0; i < nfds; ++i) {
 				int         socket_fd = events[i].data.fd;
 				uint32_t    event = events[i].events;
-                PrintEventInfo(event, socket_fd, i);
-                if (!(event & EPOLLERR)) {
-                    IncomingEvent(socket_fd, event);
-                } else {
-                    if (connections_[socket_fd].cgi_stdout_fd_ != 0) {
-                        HandleTerminatedCGIProcess(connections_[socket_fd].cgi_stdout_fd_);
-                    } else {
-                        CloseConnectionWithLogMessage(socket_fd,
-                                                      "client interrupted communication");
-                    }
-                }
-            }
-        } else {
-            CheckInactiveCGIs();
-            CloseTimedOutConnections();
-        }
-    }
+				PrintEventInfo(event, socket_fd, i);
+				if (!(event & EPOLLERR)) {
+					IncomingEvent(socket_fd, event);
+				} else if (IsRealError(socket_fd)) {
+                    std::cout << "Real error" << std::endl;
+					if (connections_[socket_fd].cgi_stdin_fd_ != 0) {
+						HandleClosedCGIfd(connections_[socket_fd].cgi_stdin_fd_);
+					} else {
+						CloseConnectionWithLogMessage(socket_fd,
+													  "client interrupted communication");
+					}
+				}
+			}
+		} else {
+			std::cout << "epoll wait" << std::endl;
+			CheckInactiveCGIs();
+			CloseTimedOutConnections();
+		}
+	}
 }
 
 void ServerManager::IncomingEvent(int socket_fd, uint32_t event) {
-    if (IsListeningSocketFd(socket_fd)) {
-        AcceptNewConnection(socket_fd);
-    } else if (event & EPOLLIN && event & EPOLLOUT) {
-        HandleEventsOnExistingConnection(socket_fd);
-    } else if ((event & EPOLLIN || event & EPOLLOUT) &&
-               cgifd_to_cl_sock_.find(socket_fd) != cgifd_to_cl_sock_.end()) {
-        int terminated_cgi;
-        if ((terminated_cgi = HandleCGIEvent(socket_fd)) > 0) {
-            HandleTerminatedCGIProcess(terminated_cgi);
-        }
-    }
+	if (IsListeningSocketFd(socket_fd)) {
+		AcceptNewConnection(socket_fd);
+	} else if (event & EPOLLIN && event & EPOLLOUT) {
+		HandleEventsOnExistingConnection(socket_fd);
+	} else if (cgifd_to_cl_sock_.find(socket_fd) != cgifd_to_cl_sock_.end()) {
+		HandleCGIEvent(socket_fd);
+	}
 }
 
 /**
@@ -152,9 +151,12 @@ bool ServerManager::AddCgiToEpoll(int cgi_fd, Connection &connection) {
 	return false;
 }
 
-void ServerManager::RemoveCGIFromMap(int cgi_fd) {
-	cgifd_to_cl_sock_.erase(cgi_fd);
-	close(cgi_fd);
+bool ServerManager::IsRealError(int fd) {
+    int err = 0;
+    socklen_t len = sizeof(err);
+    getsockopt(fd, SOL_SOCKET, SO_ERROR, &err, &len);
+    return err != 0;
 }
+
 
 

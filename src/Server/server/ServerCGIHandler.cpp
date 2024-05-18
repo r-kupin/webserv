@@ -6,12 +6,13 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/12 18:29:03 by  rokupin          #+#    #+#             */
-/*   Updated: 2024/05/16 13:47:03 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/05/18 10:27:59 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <csignal>
 #include <cstring>
+#include <cstdlib>
 #include "Server.h"
 
 void Server::ForkCGI(Connection &connection, const std::string &address, const std::string &path_info) const {
@@ -20,13 +21,13 @@ void Server::ForkCGI(Connection &connection, const std::string &address, const s
 	if (pipe(pipe_stdout) == -1 || pipe(pipe_stdin) == -1) {
 		ThrowException("Failed to create pipe for CGI execution");
 	}
-	
-	pid_t pid = fork();
+
+	connection.cgi_pid_ = fork();
 
 	// Child process
-	if (pid == 0) {
+	if (connection.cgi_pid_ == 0) {
 		ChildCGI(connection, address, pipe_stdin, pipe_stdout, path_info);
-	} else if (pid > 0) {
+	} else if (connection.cgi_pid_ > 0) {
 		close(pipe_stdin[0]);		// Close read-end of the stdin pipe
 		close(pipe_stdout[1]);		// Close the write end of the stdout pipe
 
@@ -36,112 +37,89 @@ void Server::ForkCGI(Connection &connection, const std::string &address, const s
 		if (!sm_.AddCgiToEpoll(connection.cgi_stdout_fd_, connection)) {
 			ThrowException("Can't add cgi_stdout_fd to epoll instance");
 		}
+        if (!sm_.AddCgiToEpoll(connection.cgi_stdin_fd_, connection)) {
+			ThrowException("Can't add cgi_stdin_fd to epoll instance");
+		}
 		connection.active_cgis_++;
-		// connection.waiting_for_cgi_ = true;
+		 connection.waiting_for_cgi_ = true;
 	} else {
 		ThrowException("fork failed");
 	}
 }
 
-size_t  find_response_endline(const v_char &buff) {
-	size_t line_break = Utils::FindInCharVect(buff, "\n");
+int Server::HandleCGIinput(Connection &connection) const {
+	char    buffer[FILE_BUFFER_SIZE];
 
-	if (line_break != std::string::npos && line_break > 0) {
-		if (buff[line_break - 1] == '\r')
-			line_break--;
-	}
-	return line_break;
+	while (is_running_) {
+        std::cout << "input size: " << connection.cgi_input_buffer_.size() <<
+        std::endl;
+        while (!connection.cgi_input_buffer_.empty()) {
+            ssize_t sent = send(connection.connection_socket_,
+                                connection.cgi_input_buffer_.data(),
+                                connection.cgi_input_buffer_.size(), 0);
+            std::cout << "sent: " << sent << std::endl;
+            if (sent < 1) {
+                if (sigpipe_) {
+                    std::cout << "sigpipe true" << std::endl;
+                    sigpipe_ = false;
+                    return CLIENT_CLOSED_CONNECTION_WHILE_CGI_SENDS_DATA;
+                } else {
+                    std::cout << "sigpipe false" << std::endl;
+                    return CLIENT_CLOSED_CONNECTION_WHILE_CGI_SENDS_DATA;
+                }
+            } else {
+                connection.cgi_input_buffer_.erase(
+                        connection.cgi_input_buffer_.begin(),
+                        connection.cgi_input_buffer_.begin() + sent);
+            }
+        }
+		ssize_t bytes_read = read(connection.cgi_stdout_fd_, buffer,
+                                  FILE_BUFFER_SIZE - 1);
+        std::cout << "read: " << bytes_read << std::endl;
+        if (bytes_read < 0) {
+            return NOT_ALL_DATA_READ_FROM_CGI;
+        } else if (bytes_read == 0 ) {
+            return ALL_READ_ALL_SENT;
+        } else {
+			connection.cgi_input_buffer_.insert(connection.cgi_input_buffer_.end(),
+                                                buffer, buffer + bytes_read);
+        }
+    }
+    // server stopped
+    return -1;
 }
 
-// bool Server::HandleCGIinput(Connection &connection) const {
-// 	char    buffer[FILE_BUFFER_SIZE];
 
-// 	while (is_running_) {
-// 		ssize_t bytes_read = read(connection.cgi_stdout_fd_, buffer,FILE_BUFFER_SIZE - 1);
-// 		if (bytes_read < 1) {
-// 			NoDataAvailable(bytes_read);
-// 		} else {
-// 			connection.buffer_.insert(connection.buffer_.end(), buffer,
-// 									  buffer + bytes_read);
-// 			if (!connection.cgi_response_verified_) {
-// 				return VerifyCGIFirstLine(connection);
-// 			} else {
-// 				ssize_t sent = send(connection.connection_socket_, buffer,
-// 							  bytes_read, 0);
-// 				Log(Utils::NbrToString(sent) + " bytes sent " );
-// 				if (sent == bytes_read) {
-// 					return true;
-// 				} else {
-// 					ThrowException("send() returned negative number!");
-// 				}
-// 			}
-// 		}
-// 	}
-// 	return false;
-// }
+int Server::HandleCGIoutput(Connection &connection) const {
+    v_char  &what = connection.cgi_output_buffer_;
+    int     where = connection.cgi_stdin_fd_;
 
-// Read data from CGI's stdout
-bool Server::HandleCGIinput(Connection &connection) const {
-	char buffer[FILE_BUFFER_SIZE];
-	ssize_t bytes_read = read(connection.cgi_stdout_fd_, buffer, sizeof(buffer) - 1);
-
-	if (bytes_read > 0) {
-		buffer[bytes_read] = '\0';
-		connection.buffer_.insert(connection.buffer_.end(), buffer, buffer + bytes_read);
-		return ProcessCGIOutput(connection); // Process the output from CGI
-	} else if (bytes_read == 0) {
-		Log("CGI process completed.");
-		return true; // CGI completed
-	} else {
-		if (errno != EAGAIN && errno != EWOULDBLOCK) {
-			Log("Error reading from CGI stdout.");
-			return false; // Error case
-		}
-	}
-	return false; // Indicate more data is expected
+    if (what.empty()) {
+        // copy lines from request to the argument of cgi script
+        for (v_str_c_it it = connection.request_.GetRawRequest().begin();
+                it != connection.request_.GetRawRequest().end(); ++it) {
+            v_char tmp(it->begin(), it->end());
+            what.insert(what.end(), tmp.begin(), tmp.begin() + tmp.size());
+            what.push_back('\n');
+        }
+    }
+    while (is_running_ && !what.empty() && ProbeWriteToCGI(what, where)) {
+        ssize_t bytes_written = write(where, what.data() + 1, what.size() - 1);
+        std::cout << "written to CGI: " << bytes_written << std::endl;
+        if (bytes_written < 0) {
+            return NOT_ALL_DATA_WRITTEN_TO_CGI;
+        } else if (bytes_written == 0) {
+            return CGI_CLOSED_INPUT_FD;
+        } else {
+            what.erase(what.begin(), what.begin() + bytes_written + 1);
+        }
+    }
+    return ALL_DATA_SENT_TO_CGI;
 }
 
-bool Server::VerifyCGIFirstLine(Connection &connection) const {
-	size_t line_break = find_response_endline(connection.buffer_);
-	if (line_break != std::string::npos) {
-		std::string first_line(connection.buffer_.begin(),
-							   connection.buffer_.begin() + line_break);
-		std::istringstream iss(first_line);
-		std::string http_version, code, description;
-		if (iss >> http_version >> code >> description) {
-			return CheckParsedFirstLine(connection, http_version, code, description);
-		} else {
-			Log("CGI sent bad response");
-			return false;
-		}
-	} else {
-		return true;
-	}
-}
-
-bool Server::CheckParsedFirstLine(Connection &connection, const std::string &http_version, const std::string &code, const std::string &description) const {
-	if (http_version == "HTTP/1.1" &&
-			Utils::Get().IsValidHTTPCode(Utils::StringToNbr(code)) &&
-			!description.empty()) {
-		connection.cgi_response_verified_ = true;
-		size_t sent = send(connection.connection_socket_,
-						   connection.buffer_.data(),
-						   connection.buffer_.size(), 0);
-		connection.cgi_response_verified_ = true;
-		if (sent == connection.buffer_.size()) {
-			connection.buffer_.clear();
-		} else {
-			// todo clear part being sent
-			Log("not all data is sent");
-		}
-		return true;
-	} else {
-		Log("CGI sent bad response");
-		return false;
-	}
-}
-
-void Server::ChildCGI(const Connection &connection, const std::string &address, const int *pipe_stdin, const int *pipe_stdout, const std::string &path_info) const {
+void Server::ChildCGI(const Connection &connection, const std::string &address,
+                      const int *pipe_stdin, const int *pipe_stdout,
+                      const std::string &path_info) const {
 	// Redirect stdout to pipe_stdout (write end of the pipe)
 	dup2(pipe_stdout[1], STDOUT_FILENO);
 	close(pipe_stdout[0]);
@@ -153,17 +131,12 @@ void Server::ChildCGI(const Connection &connection, const std::string &address, 
 	close(pipe_stdin[1]);
 
 	// copy lines from request to the argument of cgi script
-	const v_str &request = connection.request_.GetRawRequest();
 	std::vector<char*> args;
-	char *constarg[request.size() + 2];
+	char *constarg[2];
 
 	args.push_back((char *)address.c_str());
 	constarg[0] = args[0];
-	for (size_t i = 0; i < request.size(); ++i) {
-		args.push_back((char *)request[i].c_str());
-		constarg[i + 1] = args[i + 1];
-	}
-	constarg[request.size() + 1] = NULL;
+	constarg[1] = NULL;
 
 	// Set environment variables
 	v_str env;

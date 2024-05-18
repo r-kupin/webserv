@@ -29,8 +29,8 @@ void ClientRequest::TellClientToContinueIfNeed(int socket) const {
         std::string response = oss.str();
         const char *response_buffer = response.c_str();
         size_t response_size = response.size();
-// todo: check -1
-        if (send(socket, response_buffer, response_size, 0) < 0)
+
+        if (send(socket, response_buffer, response_size, 0) < 1)
             ThrowException("Server has \"Expect\": \"100-continue\" header "
                        "set, but server is unable to send this response",
                        "SendContinueFailed");

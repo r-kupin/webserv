@@ -1,19 +1,14 @@
 #!/bin/bash
-echo "HTTP/1.1 200 OK"
-echo "helo"
-#echo "Content-type: text/html"
-#
-#echo ""
-#echo "<html><head>"
-#echo "  <meta charset="utf-8" />"
-#echo "  <title>CGI</title>"
-#echo "</head><body>"
-#echo $REQUEST_METHOD
-#echo $QUERY_STRING
-#echo $SERVER_PROTOCOL
-#
-#for arg in "$@"
-#do
-#    echo $arg
+#data=""
+#while IFS= read -r line; do
+#    data="$data$line\n"
 #done
-#echo "</body></html>"
+#data_size=$(echo -e "$data" | wc -c)
+data_size=0
+
+echo "HTTP/1.1 200 OK"
+echo "Content-type: text/html"
+echo "Content-Length: $((data_size))"
+echo ""
+
+#echo -e "$data"
