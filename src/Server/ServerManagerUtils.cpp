@@ -63,8 +63,8 @@ void ServerManager::CloseConnectionWithLogMessage(int socket,
                                                   const std::string &msg) {
     Log("Connection closed. " + msg);
     if (connections_[socket].waiting_for_cgi_) {
-        HandleClosedCGIfd(connections_[socket].cgi_stdin_fd_);
-        HandleClosedCGIfd(connections_[socket].cgi_stdout_fd_);
+        CloseCGIfd(connections_[socket].cgi_stdin_fd_);
+        CloseCGIfd(connections_[socket].cgi_stdout_fd_);
         active_cgi_processes_--;
     }
     // Explicitly delete socket from epoll instance to stop monitoring for events
@@ -91,15 +91,27 @@ void ServerManager::PrintEventInfo(int events, int fd, int i) {
 
     std::cout << "\n== events " << epoll_events_count_ <<
     " == connections " << epoll_connection_count_ <<
-    " == cgis " << active_cgi_processes_ <<
     " == requests  " << requests_made_ << "\n";
 
     if (cgifd_to_cl_sock_.find(fd) != cgifd_to_cl_sock_.end()) {
         int sock = connections_[cgifd_to_cl_sock_[fd]].connection_socket_;
-        std::cout << "Client (" << sock << ")" <<" CGI (" << fd << ")" << std::endl;
+        if (events == EPOLLOUT) {
+            std::cout << "Client (" << sock << ") >>> " <<
+                      " CGI (" << fd << ")" << std::endl;
+        } else if (events == EPOLLIN) {
+            std::cout << "Client (" << sock << ") <<< " <<
+                      "CGI (" << fd << ")" << std::endl;
+        }
     } else {
         std::cout << "Client (" << fd << ")" << std::endl;
     }
+
+    std::cout << "cgi map size: " << cgifd_to_cl_sock_.size() << std::endl;
+    std::cout << "closed cgi processes: " << closed_cgi_processes_ << std::endl;
+    std::cout << "opened cgi processes: " << opened_cgi_processes_ << std::endl;
+    std::cout << "tracked cgi processes: " << active_cgi_processes_ <<std::endl;
+    if (opened_cgi_processes_ - closed_cgi_processes_ != active_cgi_processes_)
+        ThrowException("lost");
 
     std::cout << "nfd: " << i << "\n" << "fd: " << fd << "\n";
     if (events & EPOLLIN)
@@ -130,8 +142,6 @@ void ServerManager::PrintEventInfo(int events, int fd, int i) {
         std::cout << "EPOLLWAKEUP " << EPOLLWAKEUP << "\n";
     if (events & EPOLLONESHOT)
         std::cout << "EPOLLONESHOT " << EPOLLONESHOT << "\n";
-
-    std::cout << events << std::endl;
 }
 
 bool    ServerManager::SetDescriptorNonBlocking(int sockfd) {

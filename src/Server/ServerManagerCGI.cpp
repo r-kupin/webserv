@@ -40,7 +40,7 @@ void ServerManager::CheckInactiveCGIs() {
 	}
 }
 
-//void ServerManager::HandleClosedCGIfd(int terminated_cgi) {
+//void ServerManager::CloseCGIfd(int terminated_cgi) {
 //    // delete cgi fd from epoll
 //    epoll_ctl(terminated_cgi, EPOLL_CTL_DEL, epoll_fd_, NULL);
 //    // close communication socket
@@ -52,7 +52,7 @@ void ServerManager::CheckInactiveCGIs() {
 //    active_cgi_processes_--;
 //}
 
-void ServerManager::HandleClosedCGIfd(int terminated_cgi) {
+void ServerManager::CloseCGIfd(int terminated_cgi) {
 	// delete cgi fd from epoll
 	epoll_ctl(terminated_cgi, EPOLL_CTL_DEL, epoll_fd_, NULL);
 	// close communication socket
@@ -65,40 +65,38 @@ void ServerManager::HandleCGIEvent(int cgi_fd) {
 	Connection      &connection = connections_[clients_socket];
 	const Server    &server = FindServer(connection);
 
-	if (connection.cgi_stdout_fd_ == cgi_fd) {// reading from cgi
+	if (connection.cgi_stdout_fd_ == cgi_fd) {
+        // reading from cgi
 		int status = server.HandleCGIinput(connection);
 		if (status == CLIENT_CLOSED_CONNECTION_WHILE_CGI_SENDS_DATA) {
-//            kill(connection.cgi_pid_, SIGSTOP);
-			HandleClosedCGIfd(connection.cgi_stdin_fd_);
-			HandleClosedCGIfd(connection.cgi_stdout_fd_);
-			active_cgi_processes_--;
-			CloseConnectionWithLogMessage(clients_socket, "Clent died");
+////            kill(connection.cgi_pid_, SIGSTOP);
+//			CloseCGIfd(connection.cgi_stdin_fd_);
+//			CloseCGIfd(connection.cgi_stdout_fd_);
+//			active_cgi_processes_--;
+//			CloseConnectionWithLogMessage(clients_socket, "Clent died");
 		} else if (status == NOT_ALL_DATA_READ_FROM_CGI) {
 			return;
 		} else if (status == ALL_READ_ALL_SENT) {
-			std::cout << " all sent "<< std::endl;
-			HandleClosedCGIfd(connection.cgi_stdin_fd_);
-			HandleClosedCGIfd(connection.cgi_stdout_fd_);
-			active_cgi_processes_--;
-			// request answered. reset connection.
-
-			connections_[connection.connection_socket_] = Connection(
-					is_running_, connection.connection_socket_,
-					connection.server_listening_socket_,
-					connection.active_cgis_);
-			connections_[connection.connection_socket_].to_send_buffer_.clear();
-			connections_[connection.connection_socket_].cgi_input_buffer_.clear();
-			connections_[connection.connection_socket_].cgi_output_buffer_.clear();
+            Log("Closing up CGI");
+//            kill(connection.cgi_pid_, SIGSTOP);
+            CloseCGIfd(connection.cgi_stdout_fd_);
+            active_cgi_processes_--;
+            closed_cgi_processes_++;
+            connection = Connection(is_running_, connection.connection_socket_,
+                                                     connection.server_listening_socket_,
+                                                     active_cgi_processes_);
 		}
 	}
-//    else if (connection.cgi_stdin_fd_ == cgi_fd) {
-//		int status = server.HandleCGIoutput(connection);
-//		if (status == NOT_ALL_DATA_WRITTEN_TO_CGI) {
-//			return;
-//		} else if (status == CGI_CLOSED_INPUT_FD) {
-//			HandleClosedCGIfd(cgi_fd);
-//		} else if (status == ALL_DATA_SENT_TO_CGI) {
-////			HandleClosedCGIfd(cgi_fd);
-//		}
-//	}
+    else if (connection.cgi_stdin_fd_ == cgi_fd) {
+        // writing to cgi
+		int status = server.HandleCGIoutput(connection);
+		if (status == NOT_ALL_DATA_WRITTEN_TO_CGI) {
+			return;
+		} else if (status == CGI_CLOSED_INPUT_FD) {
+//			CloseCGIfd(cgi_fd);
+		} else if (status == ALL_DATA_SENT_TO_CGI) {
+            CloseCGIfd(cgi_fd);
+            connection.cgi_stdin_fd_ = -1;
+		}
+	}
 }

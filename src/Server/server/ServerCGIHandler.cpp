@@ -40,8 +40,9 @@ void Server::ForkCGI(Connection &connection, const std::string &address, const s
         if (!sm_.AddCgiToEpoll(connection.cgi_stdin_fd_, connection)) {
 			ThrowException("Can't add cgi_stdin_fd to epoll instance");
 		}
-		connection.active_cgis_++;
-		 connection.waiting_for_cgi_ = true;
+        connection.active_cgis_++;
+        sm_.opened_cgi_processes_++;
+        connection.waiting_for_cgi_ = true;
 	} else {
 		ThrowException("fork failed");
 	}
@@ -77,6 +78,7 @@ int Server::HandleCGIinput(Connection &connection) const {
                                   FILE_BUFFER_SIZE - 1);
         std::cout << "read: " << bytes_read << std::endl;
         if (bytes_read < 0) {
+            // Next event on this connection should be a
             return NOT_ALL_DATA_READ_FROM_CGI;
         } else if (bytes_read == 0 ) {
             return ALL_READ_ALL_SENT;

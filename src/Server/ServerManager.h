@@ -38,7 +38,7 @@ static volatile bool        sigpipe_ = false;
 class ServerManager {
 public:
 class ServerManagerException : public std::exception {};
-
+    int             opened_cgi_processes_;
 	ServerManager();
 
 	~ServerManager();
@@ -75,7 +75,7 @@ class ServerManagerException : public std::exception {};
     void            HandleCGIEvent(int cgi_fd);
     bool            AddCgiToEpoll(int cgi_fd, Connection &connection);
     void            CheckInactiveCGIs();
-    void            HandleClosedCGIfd(int terminated_cgi);
+    void            CloseCGIfd(int terminated_cgi);
 //-------------------util-------------------------------------------------------
 	void            Cleanup();
 	void            PrintEventInfo(int events, int fd, int i) ;
@@ -96,6 +96,7 @@ private:
 	int             epoll_in_out_count_;
     int             epoll_connection_count_;
 	int             active_cgi_processes_;
+	int             closed_cgi_processes_;
 
 	Config			config_;
 

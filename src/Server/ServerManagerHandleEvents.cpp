@@ -25,10 +25,13 @@
  */
 void ServerManager::HandleEventsOnExistingConnection(int client_socket) {
     if (connections_[client_socket].waiting_for_cgi_) {
-        std::cout << "reset connection" << std::endl;
-        HandleClosedCGIfd(connections_[client_socket].cgi_stdin_fd_);
-        HandleClosedCGIfd(connections_[client_socket].cgi_stdout_fd_);
+        Log("Closing up CGI");
+        CloseCGIfd(connections_[client_socket].cgi_stdout_fd_);
         active_cgi_processes_--;
+        closed_cgi_processes_++;
+        char c;
+        if (read(connections_[client_socket].cgi_stdout_fd_, &c, 1) == -1)
+            kill(connections_[client_socket].cgi_pid_, SIGSTOP);
         connections_[client_socket] = Connection(is_running_, client_socket,
                                                  connections_[client_socket].server_listening_socket_,
                                                  active_cgi_processes_);

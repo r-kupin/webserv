@@ -15,7 +15,6 @@
 #include <sys/wait.h>
 #include <cstdio>
 #include "Server.h"
-// #include "Utils.h"
 
 /**
  * Depending on compliance between what was requested and what is being
@@ -57,12 +56,12 @@ Location &Server::HandleCGI(Connection &connection, const l_loc_c_it &found, Loc
 	if (found->cgi_address_[0] != '/')
 		address = found->root_ + "/" + found->cgi_address_;
 	if (Utils::CheckFilesystem(address) == COMM_FILE) {
-		if (connection.active_cgis_ < MAX_CGI_PROCESSES) {
+//		if (connection.active_cgis_ < MAX_CGI_PROCESSES) {
 			if (!connection.waiting_for_cgi_)
 				ForkCGI(connection, address, path_info);
-		} else {
-			Log("Too much CGI requests. Adding this one to queue");
-		}
+//		} else {
+//			Log("Too much CGI requests. Adding this one to queue");
+//		}
 	} else {
 		Log("cgi_address \"" + address + "\" doesn't exists or is not a file");
 		synth.SetReturnCode(NOT_FOUND);

@@ -49,7 +49,7 @@ void    ServerManager::EventLoop() {
 				} else if (IsRealError(socket_fd)) {
                     std::cout << "Real error" << std::endl;
 					if (connections_[socket_fd].cgi_stdin_fd_ != 0) {
-						HandleClosedCGIfd(connections_[socket_fd].cgi_stdin_fd_);
+                        CloseCGIfd(connections_[socket_fd].cgi_stdin_fd_);
 					} else {
 						CloseConnectionWithLogMessage(socket_fd,
 													  "client interrupted communication");
@@ -57,9 +57,9 @@ void    ServerManager::EventLoop() {
 				}
 			}
 		} else {
-			std::cout << "epoll wait" << std::endl;
-			CheckInactiveCGIs();
-			CloseTimedOutConnections();
+//			std::cout << "epoll wait" << std::endl;
+//			CheckInactiveCGIs();
+//			CloseTimedOutConnections();
 		}
 	}
 }
