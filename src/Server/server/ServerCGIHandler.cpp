@@ -6,7 +6,7 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/12 18:29:03 by  rokupin          #+#    #+#             */
-/*   Updated: 2024/05/18 10:27:59 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/05/18 10:37:22 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -161,11 +161,12 @@ void Server::ChildCGI(const Connection &connection, const std::string &address,
 	_exit(1);
 }
 
-bool	Server::SendDataToCGI(Connection &connection, const std::string &data) const {
-	ssize_t	bytes_written = write(connection.cgi_stdin_fd_, data.c_str(), data.size());
-	if (bytes_written < static_cast<ssize_t>(data.size())) {
-		Log("Failed to send all data to CGI stdin");
-		return false;
-	}
-	return true;
-}
+// Obsolete: replaced by ProbeWriteToCGI (to be confirmed)
+// bool	Server::SendDataToCGI(Connection &connection, const std::string &data) const {
+// 	ssize_t	bytes_written = write(connection.cgi_stdin_fd_, data.c_str(), data.size());
+// 	if (bytes_written < static_cast<ssize_t>(data.size())) {
+// 		Log("Failed to send all data to CGI stdin");
+// 		return false;
+// 	}
+// 	return true;
+// }
