@@ -15,11 +15,12 @@
 #include <cstdlib>
 #include "Server.h"
 
-void Server::ForkCGI(Connection &connection, const std::string &address, const std::string &path_info) const {
+bool Server::ForkCGI(Connection &connection, const std::string &address, const std::string &path_info) const {
 	int pipe_stdin[2];			// Pipe to write in CGI stdin
 	int pipe_stdout[2];			// Pipe to read from CGI stdout
 	if (pipe(pipe_stdout) == -1 || pipe(pipe_stdin) == -1) {
-		ThrowException("Failed to create pipe for CGI execution");
+		Log("Failed to create pipe for CGI execution");
+        return false;
 	}
 
 	connection.cgi_pid_ = fork();
@@ -33,19 +34,27 @@ void Server::ForkCGI(Connection &connection, const std::string &address, const s
 
 		connection.cgi_stdin_fd_ = pipe_stdin[1];		// Store write-end to write to CGI
 		connection.cgi_stdout_fd_ = pipe_stdout[0];		// Store read-end to read from CGI
-
-		if (!sm_.AddCgiToEpoll(connection.cgi_stdout_fd_, connection)) {
-			ThrowException("Can't add cgi_stdout_fd to epoll instance");
-		}
+        if (!sm_.AddCgiToEpoll(connection.cgi_stdout_fd_, connection)) {
+            Log("Can't add cgi_stdout_fd to epoll instance");
+            return false;
+        }
         if (!sm_.AddCgiToEpoll(connection.cgi_stdin_fd_, connection)) {
-			ThrowException("Can't add cgi_stdin_fd to epoll instance");
-		}
+            Log("Can't add cgi_stdin_fd to epoll instance");
+            return false;
+        }
+        Log("New CGI process. Server: " +
+            Utils::NbrToString(connection.server_listening_socket_) +
+            ", Client: "  + Utils::NbrToString(connection.connection_socket_) +
+            ", CGI stdin: "  + Utils::NbrToString(connection.cgi_stdin_fd_) +
+            ", CGI stdout: "  + Utils::NbrToString(connection.cgi_stdout_fd_));
         connection.active_cgis_++;
         sm_.opened_cgi_processes_++;
         connection.waiting_for_cgi_ = true;
 	} else {
-		ThrowException("fork failed");
+        Log("Failed to fork CGI process");
+        return false;
 	}
+    return true;
 }
 
 int Server::HandleCGIinput(Connection &connection) const {
@@ -123,12 +132,15 @@ void Server::ChildCGI(const Connection &connection, const std::string &address,
                       const int *pipe_stdin, const int *pipe_stdout,
                       const std::string &path_info) const {
 	// Redirect stdout to pipe_stdout (write end of the pipe)
-	dup2(pipe_stdout[1], STDOUT_FILENO);
+	if (dup2(pipe_stdout[1], STDOUT_FILENO) == -1)
+        ThrowException("Dup failed!");
 	close(pipe_stdout[0]);
 	close(pipe_stdout[1]);
 
 	// Redirect stdin to pipe_stdin (read end of the pipe)
-	dup2(pipe_stdin[0], STDIN_FILENO);
+    if (dup2(pipe_stdin[0], STDIN_FILENO) == -1) {
+        ThrowException("Dup failed!");
+    }
 	close(pipe_stdin[0]);
 	close(pipe_stdin[1]);
 
@@ -159,15 +171,7 @@ void Server::ChildCGI(const Connection &connection, const std::string &address,
 
 	execve(address.c_str(), constarg, constenv);
 
+    ThrowException("EXECVE failed");
 	// Exit on failure
 	_exit(1);
-}
-
-bool	Server::SendDataToCGI(Connection &connection, const std::string &data) const {
-	ssize_t	bytes_written = write(connection.cgi_stdin_fd_, data.c_str(), data.size());
-	if (bytes_written < static_cast<ssize_t>(data.size())) {
-		Log("Failed to send all data to CGI stdin");
-		return false;
-	}
-	return true;
 }

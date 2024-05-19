@@ -101,6 +101,10 @@ private:
 	Config			config_;
 
     bool IsRealError(int fd);
+
+    void CheckCGIState(int client_socket);
+
+    void DetachCGI(Connection &connection);
 };
 
 #endif //WEBSERV_SERVERMANAGER_H

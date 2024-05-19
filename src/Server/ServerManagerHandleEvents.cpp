@@ -24,18 +24,7 @@
  * is still incomplete and therefore response weren't yet sent.
  */
 void ServerManager::HandleEventsOnExistingConnection(int client_socket) {
-    if (connections_[client_socket].waiting_for_cgi_) {
-        Log("Closing up CGI");
-        CloseCGIfd(connections_[client_socket].cgi_stdout_fd_);
-        active_cgi_processes_--;
-        closed_cgi_processes_++;
-        char c;
-        if (read(connections_[client_socket].cgi_stdout_fd_, &c, 1) == -1)
-            kill(connections_[client_socket].cgi_pid_, SIGSTOP);
-        connections_[client_socket] = Connection(is_running_, client_socket,
-                                                 connections_[client_socket].server_listening_socket_,
-                                                 active_cgi_processes_);
-    }
+    CheckCGIState(client_socket);
     Connection		&connection = connections_[client_socket];
     while (is_running_) {
         // some data is (still) present on this fd, if not a cgi connection

@@ -55,13 +55,11 @@ Location &Server::HandleCGI(Connection &connection, const l_loc_c_it &found, Loc
 	std::string address = found->cgi_address_;
 	if (found->cgi_address_[0] != '/')
 		address = found->root_ + "/" + found->cgi_address_;
-	if (Utils::CheckFilesystem(address) == COMM_FILE) {
-//		if (connection.active_cgis_ < MAX_CGI_PROCESSES) {
-			if (!connection.waiting_for_cgi_)
-				ForkCGI(connection, address, path_info);
-//		} else {
-//			Log("Too much CGI requests. Adding this one to queue");
-//		}
+	if (Utils::CheckFilesystem(address) == COMM_FILE &&
+            !connection.waiting_for_cgi_) {
+        if (!ForkCGI(connection, address, path_info)) {
+            synth.SetReturnCode(FAILED_CGI);
+        }
 	} else {
 		Log("cgi_address \"" + address + "\" doesn't exists or is not a file");
 		synth.SetReturnCode(NOT_FOUND);

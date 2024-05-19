@@ -57,9 +57,7 @@ void    ServerManager::EventLoop() {
 				}
 			}
 		} else {
-//			std::cout << "epoll wait" << std::endl;
-//			CheckInactiveCGIs();
-//			CloseTimedOutConnections();
+			CloseTimedOutConnections();
 		}
 	}
 }
@@ -82,17 +80,41 @@ void ServerManager::IncomingEvent(int socket_fd, uint32_t event) {
  */
 void ServerManager::CloseTimedOutConnections() {
 	long time_right_now = Utils::Get().TimeNow();
-
+    Log("Closing expired connections");
+    int open_connections = 0;
 	for (size_t i = 0; i < connections_.size(); i++) {
 		if (connections_[i].IsOpen()) {
+            open_connections++;
 			long timeout = FindServer(connections_[i]).GetConnectionTimeout();
 			if (connections_[i].HowLongBeingActive(time_right_now) > timeout) {
-				if (connections_[i].location_.cgi_address_.empty()) {
+                if (connections_[i].waiting_for_cgi_) {
+                    DetachCGI(connections_[i]);
+                    // prepare to respond with 500
+                    connections_[i].waiting_for_cgi_ = false;
+                    connections_[i].body_done_ = true;
+                    connections_[i].location_.SetReturnCode(FAILED_CGI);
+                    connections_[i].location_.return_custom_message_ =
+                            "Connection timed out while no events were "
+                            "reported on the CGI's IO";
+                    Respond(connections_[i]);
+                } else {
 					CloseConnectionWithLogMessage(i, "Connection timed out");
 				}
 			}
 		}
 	}
+    Log(Utils::NbrToString(open_connections) + " open connections");
+}
+
+void ServerManager::DetachCGI(Connection &connection) {
+    char c;
+    if (read(connection.cgi_stdout_fd_, &c, 1) == -1)
+        kill(connection.cgi_pid_, SIGSTOP);
+    if (connection.cgi_stdin_fd_ > 0)
+        CloseCGIfd(connection.cgi_stdin_fd_);
+    CloseCGIfd(connection.cgi_stdout_fd_);
+    active_cgi_processes_--;
+    closed_cgi_processes_++;
 }
 
 void ServerManager::AcceptNewConnection(int server_socket) {

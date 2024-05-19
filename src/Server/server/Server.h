@@ -57,6 +57,7 @@
 #define BODY_TOO_LARGE 413
 #define REQUESTED_FILE_IS_NOT_A_FILE 500
 #define FAILED_IO 500
+#define FAILED_CGI 500
 #define INTERNAL_SERVER_ERROR 500
 #define ONLY_CURL_UPLOADS_SUPPORTED 501
 #define FAILED_TO_CREATE_OUTPUT_FILE 503
@@ -134,9 +135,9 @@ protected:
 										   const l_loc_c_it &found,
 										   Location &synth,
 										   const std::string &path_info) const;
-	void                        ForkCGI(Connection &connection,
-										const std::string &address,
-										const std::string &path_info) const;
+	bool ForkCGI(Connection &connection,
+                 const std::string &address,
+                 const std::string &path_info) const;
 	void                        ChildCGI(const Connection &connection,
 										 const std::string &address,
 										 const int *pipe_stdin,

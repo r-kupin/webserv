@@ -14,6 +14,21 @@
 #include "ServerManager.h"
 #include "server/ServerExceptions.h"
 
+void ServerManager::CheckCGIState(int client_socket) {
+    Connection		&connection = connections_[client_socket];
+
+    if (connection.waiting_for_cgi_) {
+        // todo: remove before eval!
+        if (!connection.cgi_input_buffer_.empty() ||
+            !connection.cgi_output_buffer_.empty())
+            ThrowException("New request while full buffer");
+        DetachCGI(connection);
+        connections_[client_socket] = Connection(is_running_, client_socket,
+                                                 connection.server_listening_socket_,
+                                                 active_cgi_processes_);
+    }
+}
+
 /**
  * At this point there might be cgi connections on which events weren't
  * reported, because cgi process ended and / or closed the connection. In
@@ -33,11 +48,18 @@ void ServerManager::CheckInactiveCGIs() {
 	for (std::map<int, int>::iterator it = cgifd_to_cl_sock_.begin();
 		 it != cgifd_to_cl_sock_.end(); ++it) {
 		Connection &connection = connections_[it->second];
-		if (active_cgi_processes_ < MAX_CGI_PROCESSES) {
-			const Server &server = FindServer(connection);
-			connection.location_ = server.ProcessRequest(connection);
-		}
+        if (connection.waiting_for_cgi_) {
+            char c;
+            if (read(connection.cgi_stdout_fd_, &c, 1) == -1)
+                kill(connection.cgi_pid_, SIGSTOP);
+            if (connection.cgi_stdin_fd_ > 0)
+                CloseCGIfd(connection.cgi_stdin_fd_);
+            CloseCGIfd(connection.cgi_stdout_fd_);
+        } else {
+
+        }
 	}
+    ThrowException("fini");
 }
 
 //void ServerManager::CloseCGIfd(int terminated_cgi) {
@@ -69,7 +91,7 @@ void ServerManager::HandleCGIEvent(int cgi_fd) {
         // reading from cgi
 		int status = server.HandleCGIinput(connection);
 		if (status == CLIENT_CLOSED_CONNECTION_WHILE_CGI_SENDS_DATA) {
-////            kill(connection.cgi_pid_, SIGSTOP);
+//          kill(connection.cgi_pid_, SIGSTOP);
 //			CloseCGIfd(connection.cgi_stdin_fd_);
 //			CloseCGIfd(connection.cgi_stdout_fd_);
 //			active_cgi_processes_--;
@@ -77,25 +99,19 @@ void ServerManager::HandleCGIEvent(int cgi_fd) {
 		} else if (status == NOT_ALL_DATA_READ_FROM_CGI) {
 			return;
 		} else if (status == ALL_READ_ALL_SENT) {
-            Log("Closing up CGI");
-//            kill(connection.cgi_pid_, SIGSTOP);
-            CloseCGIfd(connection.cgi_stdout_fd_);
-            active_cgi_processes_--;
-            closed_cgi_processes_++;
-            connection = Connection(is_running_, connection.connection_socket_,
-                                                     connection.server_listening_socket_,
-                                                     active_cgi_processes_);
+            DetachCGI(connection);
+            CloseConnectionWithLogMessage(connection.connection_socket_,
+                                          "CGI transmission ended");
 		}
-	}
-    else if (connection.cgi_stdin_fd_ == cgi_fd) {
+	} else if (connection.cgi_stdin_fd_ == cgi_fd) {
         // writing to cgi
 		int status = server.HandleCGIoutput(connection);
 		if (status == NOT_ALL_DATA_WRITTEN_TO_CGI) {
 			return;
 		} else if (status == CGI_CLOSED_INPUT_FD) {
-//			CloseCGIfd(cgi_fd);
+            ThrowException("CGI_CLOSED_INPUT_FD");
 		} else if (status == ALL_DATA_SENT_TO_CGI) {
-            CloseCGIfd(cgi_fd);
+            CloseCGIfd(connection.cgi_stdin_fd_);
             connection.cgi_stdin_fd_ = -1;
 		}
 	}
