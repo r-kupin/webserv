@@ -135,20 +135,15 @@ protected:
 										   const l_loc_c_it &found,
 										   Location &synth,
 										   const std::string &path_info) const;
-	bool ForkCGI(Connection &connection,
-                 const std::string &address,
-                 const std::string &path_info) const;
+	bool                        ForkCGI(Connection &connection,
+                                        const std::string &address,
+                                        const std::string &path_info) const;
 	void                        ChildCGI(const Connection &connection,
 										 const std::string &address,
 										 const int *pipe_stdin,
 										 const int *pipe_stdout,
 										 const std::string &path_info) const;
-	bool                        VerifyCGIFirstLine(Connection &connection) const;
-	bool                        CheckParsedFirstLine(Connection &connection,
-													 const std::string &http_version,
-													 const std::string &code,
-													 const std::string &description) const;
-
+    bool                        ProbeWriteToCGI(const v_char &what, int i) const;
 //-------------------misc utils-------------------------------------------------
 	void                        Log(const std::string &msg) const;
 	void                        Log(const std::string &msg, int listen_sock) const;
@@ -163,7 +158,6 @@ private:
 	 *  1. find out does this server listens to this socket
 	 *  2. find address
 	 * */
-    bool ProbeWriteToCGI(const v_char &what, int i) const;
 };
 
 #endif //WEBSERV_SERVER_H

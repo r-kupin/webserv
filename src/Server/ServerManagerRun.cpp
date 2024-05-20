@@ -54,7 +54,6 @@ void    ServerManager::EventLoop() {
 		} else {
             bool all = false;
             if (nfds < 0) {
-                ThrowException("Epoll wait failed. Shutting down.");
                 all = true;
                 is_running_ = false;
             }
