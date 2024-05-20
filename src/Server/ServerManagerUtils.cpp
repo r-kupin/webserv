@@ -99,12 +99,14 @@ void ServerManager::PrintEventInfo(int events, int fd, int i) {
         std::cout << "Client (" << fd << ")" << std::endl;
     }
 
-    std::cout << "cgi map size: " << cgifd_to_cl_sock_.size() << std::endl;
-    std::cout << "closed cgi processes: " << closed_cgi_processes_ << std::endl;
-    std::cout << "opened cgi processes: " << opened_cgi_processes_ << std::endl;
-    std::cout << "tracked cgi processes: " << active_cgi_processes_ <<std::endl;
-    if (opened_cgi_processes_ - closed_cgi_processes_ != active_cgi_processes_)
-        ThrowException("lost");
+    if (cgifd_to_cl_sock_.size() != 0)
+        std::cout << "cgi map size: " << cgifd_to_cl_sock_.size() << std::endl;
+    if (closed_cgi_processes_ != 0)
+        std::cout << "closed cgi processes: " << closed_cgi_processes_ << std::endl;
+    if (opened_cgi_processes_ != 0)
+        std::cout << "opened cgi processes: " << opened_cgi_processes_ << std::endl;
+    if (active_cgi_processes_ != 0)
+        std::cout << "tracked cgi processes: " << active_cgi_processes_ <<std::endl;
 
     std::cout << "nfd: " << i << "\n" << "fd: " << fd << "\n";
     if (events & EPOLLIN)
@@ -156,3 +158,42 @@ void ServerManager::Cleanup() {
     }
     close(epoll_fd_);
 }
+
+/**
+ * Add new socket created by accept to epoll instance
+ */
+bool ServerManager::AddClientToEpoll(int client_sock) {
+    epoll_event event;
+    event.events = EPOLLIN | EPOLLOUT | EPOLLET;
+    event.data.fd = client_sock;
+    if (SetDescriptorNonBlocking(client_sock))
+        return epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, client_sock, &event) != -1;
+    Log("Can't set descriptor " + Utils::NbrToString(client_sock) +
+        " to nonblocking mode.");
+    return false;
+}
+
+bool ServerManager::AddCgiToEpoll(int cgi_fd, Connection &connection) {
+    epoll_event event;
+    event.events = EPOLLIN | EPOLLOUT | EPOLLET;
+    event.data.fd = cgi_fd;
+    if (SetDescriptorNonBlocking(cgi_fd)) {
+        if (epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, cgi_fd, &event) != -1) {
+            // map connection with cgi_fd, so when cgi event will be
+            // reported, we could find a corresponding connection
+            cgifd_to_cl_sock_[cgi_fd] = connection.connection_socket_;
+            return true;
+        }
+    }
+    Log("Can't set descriptor " + Utils::NbrToString(cgi_fd) +
+        " to nonblocking mode.");
+    return false;
+}
+
+bool ServerManager::IsRealError(int fd) {
+    int err = 0;
+    socklen_t len = sizeof(err);
+    getsockopt(fd, SOL_SOCKET, SO_ERROR, &err, &len);
+    return err != 0;
+}
+
