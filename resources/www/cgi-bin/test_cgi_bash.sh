@@ -4,7 +4,6 @@
      data="$data$line\n"
  done
  data_size=$(echo -e "$data" | wc -c)
-data_size=0
 
 echo "HTTP/1.1 200 OK"
 echo "Content-type: text/html"
