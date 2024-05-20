@@ -6,7 +6,7 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/15 18:20:59 by mede-mas          #+#    #+#             */
-/*   Updated: 2024/05/17 19:33:47 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/05/18 10:27:34 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -148,8 +148,6 @@ protected:
 													 const std::string &http_version,
 													 const std::string &code,
 													 const std::string &description) const;
-	bool						SendDataToCGI(Connection &connection,
-												const std::string &data) const;
 
 //-------------------misc utils-------------------------------------------------
 	void                        Log(const std::string &msg) const;

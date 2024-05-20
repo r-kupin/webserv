@@ -6,7 +6,7 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/12 18:29:03 by  rokupin          #+#    #+#             */
-/*   Updated: 2024/05/15 18:57:59 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/05/18 10:37:22 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,7 +87,6 @@ int Server::HandleCGIinput(Connection &connection) const {
                                   FILE_BUFFER_SIZE - 1);
         std::cout << "read: " << bytes_read << std::endl;
         if (bytes_read < 0) {
-            // Next event on this connection should be a
             return NOT_ALL_DATA_READ_FROM_CGI;
         } else if (bytes_read == 0 ) {
             return ALL_READ_ALL_SENT;
