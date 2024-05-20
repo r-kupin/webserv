@@ -82,7 +82,6 @@ size_t Utils::StringToULong(const std::string &str) {
     const char* val_ptr = str.c_str();
     if (str.find_first_not_of("0123456789") != std::string::npos)
         throw ConversionException();
-    errno = 0; // To distinguish success/failure after call
     size_t nbr = strtoul(val_ptr, &end_ptr, 10);
     if ((errno == ERANGE && (nbr == ULONG_MAX || nbr == 0)) ||
         (errno != 0 && nbr == 0)) {
