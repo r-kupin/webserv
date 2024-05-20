@@ -59,10 +59,11 @@ class ServerManagerException : public std::exception {};
 	void            EventLoop();
 	bool            AddClientToEpoll(int client_sock);
 	static void     Signals(int signal);
-    void            ReInvokeRequestProcessing(Connection &connection);
+    bool            IsRealError(int fd);
     void            IncomingEvent(int socket_fd, uint32_t event);
     void            AcceptNewConnection(int server_socket);
     void            HandleEventsOnExistingConnection(int client_socket);
+    void            Respond500(Connection &connection);
 //-------------------handle-----------------------------------------------------
 	const Server    &FindServer(const Connection &connection) const;
 	bool            ProcessHeaders(Connection &connection);
@@ -70,13 +71,14 @@ class ServerManagerException : public std::exception {};
 												  const std::string &msg);
 	bool            ProcessBody(Connection &connection);
 	bool            Respond(Connection &connection);
-	void CloseConnections(bool close_all);
+	void            CloseConnections(bool close_all);
 //-------------------cgi--------------------------------------------------------
     void            HandleCGIEvent(int cgi_fd);
     bool            AddCgiToEpoll(int cgi_fd, Connection &connection);
-    void            CheckInactiveCGIs();
     void            CloseCGIfd(int terminated_cgi);
-//-------------------util-------------------------------------------------------
+    void            CheckCGIState(int client_socket);
+    void            DetachCGI(Connection &connection);
+    //-------------------util-------------------------------------------------------
 	void            Cleanup();
 	void            PrintEventInfo(int events, int fd, int i) ;
 	void            ThrowException(const std::string &msg) const;
@@ -99,12 +101,6 @@ private:
 	int             closed_cgi_processes_;
 
 	Config			config_;
-
-    bool IsRealError(int fd);
-
-    void CheckCGIState(int client_socket);
-
-    void DetachCGI(Connection &connection);
 };
 
 #endif //WEBSERV_SERVERMANAGER_H

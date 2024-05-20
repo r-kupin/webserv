@@ -11,7 +11,6 @@
 /* ************************************************************************** */
 
 #include <csignal>
-#include <cstring>
 #include "ServerManager.h"
 
 /**
@@ -44,7 +43,6 @@ void    ServerManager::EventLoop() {
 				if (!(event & EPOLLERR)) {
 					IncomingEvent(socket_fd, event);
 				} else if (IsRealError(socket_fd)) {
-                    std::cout << "Real error" << std::endl;
 					if (connections_[socket_fd].cgi_stdin_fd_ != 0) {
                         CloseCGIfd(connections_[socket_fd].cgi_stdin_fd_);
 					} else {
@@ -56,7 +54,6 @@ void    ServerManager::EventLoop() {
 		} else {
             bool all = false;
             if (nfds < 0) {
-                ThrowException("Epoll wait failed. Shutting down.");
                 all = true;
                 is_running_ = false;
             }
@@ -91,31 +88,12 @@ void ServerManager::CloseConnections(bool close_all) {
 			if (close_all ||
                 connections_[i].HowLongBeingActive(time_right_now) > timeout) {
                 if (connections_[i].waiting_for_cgi_) {
-                    DetachCGI(connections_[i]);
-                    // prepare to respond with 500
-                    connections_[i].waiting_for_cgi_ = false;
-                    connections_[i].body_done_ = true;
-                    connections_[i].location_.SetReturnCode(FAILED_CGI);
-                    connections_[i].location_.return_custom_message_ =
-                            "Connection closed out while no events were "
-                            "reported on the CGI's IO";
-                    Respond(connections_[i]);
+                    Respond500(connections_[i]);
                 }
                 CloseConnectionWithLogMessage(i, msg);
 			}
 		}
 	}
-}
-
-void ServerManager::DetachCGI(Connection &connection) {
-    char c;
-    if (read(connection.cgi_stdout_fd_, &c, 1) == -1)
-        kill(connection.cgi_pid_, SIGSTOP);
-    if (connection.cgi_stdin_fd_ > 0)
-        CloseCGIfd(connection.cgi_stdin_fd_);
-    CloseCGIfd(connection.cgi_stdout_fd_);
-    active_cgi_processes_--;
-    closed_cgi_processes_++;
 }
 
 void ServerManager::AcceptNewConnection(int server_socket) {
