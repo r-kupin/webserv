@@ -105,6 +105,8 @@ private:
     void CheckCGIState(int client_socket);
 
     void DetachCGI(Connection &connection);
+
+    void Respond500(Connection &connection);
 };
 
 #endif //WEBSERV_SERVERMANAGER_H

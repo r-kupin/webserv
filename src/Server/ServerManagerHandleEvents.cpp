@@ -26,7 +26,6 @@
 void ServerManager::HandleEventsOnExistingConnection(int client_socket) {
     CheckCGIState(client_socket);
     Connection		&connection = connections_[client_socket];
-    std::cout << connection << std::endl;
     while (is_running_) {
         // some data is (still) present on this fd, if not a cgi connection
 		if (!connection.url_headers_done_) {
