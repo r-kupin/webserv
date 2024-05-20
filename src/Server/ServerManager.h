@@ -70,7 +70,7 @@ class ServerManagerException : public std::exception {};
 												  const std::string &msg);
 	bool            ProcessBody(Connection &connection);
 	bool            Respond(Connection &connection);
-	void            CloseTimedOutConnections();
+	void CloseConnections(bool close_all);
 //-------------------cgi--------------------------------------------------------
     void            HandleCGIEvent(int cgi_fd);
     bool            AddCgiToEpoll(int cgi_fd, Connection &connection);

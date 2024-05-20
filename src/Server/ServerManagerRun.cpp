@@ -35,10 +35,7 @@ void    ServerManager::EventLoop() {
 	int         nfds = epoll_wait(epoll_fd_, events, MAX_EVENTS, 1000);
 
 	if (is_running_) {
-		epoll_returns_count_++;
-		if (nfds == -1) {
-			ThrowException("Epoll wait failed. Shutting down.");
-		} else if (nfds > 0) {
+        if (nfds > 0) {
 			// handle reported events
 			for (int i = 0; i < nfds; ++i) {
 				int         socket_fd = events[i].data.fd;
@@ -57,7 +54,13 @@ void    ServerManager::EventLoop() {
 				}
 			}
 		} else {
-			CloseTimedOutConnections();
+            bool all = false;
+            if (nfds < 0) {
+                ThrowException("Epoll wait failed. Shutting down.");
+                all = true;
+                is_running_ = false;
+            }
+            CloseConnections(all);
 		}
 	}
 }
@@ -78,15 +81,15 @@ void ServerManager::IncomingEvent(int socket_fd, uint32_t event) {
  * And when server has basically nothing to do - it checks all active
  * connections and closes all expired ones.
  */
-void ServerManager::CloseTimedOutConnections() {
+void ServerManager::CloseConnections(bool close_all) {
 	long time_right_now = Utils::Get().TimeNow();
-    Log("Closing expired connections");
-    int open_connections = 0;
+    std::string msg = close_all ? "Server stopped" : "Connection timed out";
+    Log("No events reported: closing connections");
 	for (size_t i = 0; i < connections_.size(); i++) {
 		if (connections_[i].IsOpen()) {
-            open_connections++;
 			long timeout = FindServer(connections_[i]).GetConnectionTimeout();
-			if (connections_[i].HowLongBeingActive(time_right_now) > timeout) {
+			if (close_all ||
+                connections_[i].HowLongBeingActive(time_right_now) > timeout) {
                 if (connections_[i].waiting_for_cgi_) {
                     DetachCGI(connections_[i]);
                     // prepare to respond with 500
@@ -94,16 +97,14 @@ void ServerManager::CloseTimedOutConnections() {
                     connections_[i].body_done_ = true;
                     connections_[i].location_.SetReturnCode(FAILED_CGI);
                     connections_[i].location_.return_custom_message_ =
-                            "Connection timed out while no events were "
+                            "Connection closed out while no events were "
                             "reported on the CGI's IO";
                     Respond(connections_[i]);
-                } else {
-					CloseConnectionWithLogMessage(i, "Connection timed out");
-				}
+                }
+                CloseConnectionWithLogMessage(i, msg);
 			}
 		}
 	}
-    Log(Utils::NbrToString(open_connections) + " open connections");
 }
 
 void ServerManager::DetachCGI(Connection &connection) {

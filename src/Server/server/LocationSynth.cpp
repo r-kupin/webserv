@@ -56,7 +56,7 @@ Location &Server::HandleCGI(Connection &connection, const l_loc_c_it &found, Loc
 	if (found->cgi_address_[0] != '/')
 		address = found->root_ + "/" + found->cgi_address_;
 	if (Utils::CheckFilesystem(address) == COMM_FILE &&
-            !connection.waiting_for_cgi_) {
+                                        !connection.waiting_for_cgi_) {
         if (!ForkCGI(connection, address, path_info)) {
             synth.SetReturnCode(FAILED_CGI);
         }
