@@ -64,12 +64,10 @@ void ServerManager::CloseConnectionWithLogMessage(int socket,
     Log("Connection " + Utils::NbrToString(socket) + " closed. " + msg);
     // Explicitly delete socket from epoll instance to stop monitoring for events
     epoll_ctl(epoll_fd_, EPOLL_CTL_DEL, socket, NULL);
-    connections_[socket] = Connection(is_running_, active_cgi_processes_);
-//    connections_[socket].cgi_input_buffer_.clear();
-//    connections_[socket].cgi_output_buffer_.clear();
     // Before closing the socket, shutdown the write side to send a FIN packet
     shutdown(socket, SHUT_RDWR);
     close(socket);
+    connections_[socket] = Connection(is_running_, active_cgi_processes_);
 }
 
 void ServerManager::Log(const std::string &msg) const {

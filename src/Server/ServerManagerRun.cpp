@@ -126,16 +126,14 @@ void ServerManager::AcceptNewConnection(int server_socket) {
 	if (client_socket < 0) {
 		Log("Error accepting connection!");
 	} else if (AddClientToEpoll(client_socket)) {
-		if (connections_.size() > (size_t)client_socket) {
-			// associate client's socket with server's listener
-			connections_[client_socket] = Connection(is_running_, client_socket,
-													 server_socket,
-													 active_cgi_processes_);
-		} else {
-			connections_.push_back(Connection(is_running_, client_socket,
-											  server_socket,
-											  active_cgi_processes_));
-		}
+        // associate client's socket with server's listener
+        while (connections_.size() <= (size_t)client_socket) {
+            connections_.push_back(Connection(is_running_, active_cgi_processes_));
+        }
+        connections_[client_socket] = Connection(is_running_,
+                                                 client_socket,
+                                                 server_socket,
+                                                 active_cgi_processes_);
 		Log("Accepted client connection from socket " + Utils::NbrToString(client_socket));
 	} else {
 		Log("Error adding client socket to epoll");

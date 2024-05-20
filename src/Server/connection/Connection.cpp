@@ -96,10 +96,10 @@ std::ostream &operator<<(std::ostream &os, const Connection &connection) {
     " connection_socket_: " << connection.connection_socket_ << "\n" <<
     " server_listening_socket_: " << connection.server_listening_socket_ << "\n" <<
     " address_: " << connection.address_ << "\n" <<
-    " request_: " << connection.request_ << "\n" <<
+//    " request_: " << connection.request_ << "\n" <<
 //    " location_: " << connection.location_ << "\n" <<
     " cgi_stdin_fd_: " << connection.cgi_stdin_fd_ << "\n" <<
-    " cgi_stdout_fd_: " << connection.cgi_stdout_fd_ << "\n" <<
-    " active_cgis_: " << connection.active_cgis_ << "\n";
+    " cgi_stdout_fd_: " << connection.cgi_stdout_fd_ << "\n" /*<<
+    " active_cgis_: " << connection.active_cgis_ << "\n"*/;
     return os;
 }

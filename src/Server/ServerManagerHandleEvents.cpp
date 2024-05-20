@@ -26,6 +26,7 @@
 void ServerManager::HandleEventsOnExistingConnection(int client_socket) {
     CheckCGIState(client_socket);
     Connection		&connection = connections_[client_socket];
+    std::cout << connection << std::endl;
     while (is_running_) {
         // some data is (still) present on this fd, if not a cgi connection
 		if (!connection.url_headers_done_) {
@@ -161,8 +162,6 @@ bool ServerManager::Respond(Connection &connection) {
         }
     }
     // request answered. reset connection.
-    connections_[where] = Connection(is_running_, where,
-                                     connection.server_listening_socket_,
-                                     connection.active_cgis_);
+    CloseConnectionWithLogMessage(where, "Responded");
     return false;
 }

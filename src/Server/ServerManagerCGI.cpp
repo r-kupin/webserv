@@ -18,10 +18,6 @@ void ServerManager::CheckCGIState(int client_socket) {
     Connection		&connection = connections_[client_socket];
 
     if (connection.waiting_for_cgi_) {
-        // todo: remove before eval!
-        if (!connection.cgi_input_buffer_.empty() ||
-            !connection.cgi_output_buffer_.empty())
-            ThrowException("New request while full buffer");
         DetachCGI(connection);
         connections_[client_socket] = Connection(is_running_, client_socket,
                                                  connection.server_listening_socket_,
