@@ -154,7 +154,7 @@ bool ServerManager::Respond(Connection &connection) {
                 CloseConnectionWithLogMessage(where, "Client shut the pipe.");
                 return false;
             }
-            return true; // todo probably
+            return true;
         } else {
             // 0 can't happen
             what.erase(what.begin(), what.begin() + sent);

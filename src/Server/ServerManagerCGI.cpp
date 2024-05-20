@@ -75,11 +75,7 @@ void ServerManager::HandleCGIEvent(int cgi_fd) {
         // reading from cgi
 		int status = server.HandleCGIinput(connection);
 		if (status == CLIENT_CLOSED_CONNECTION_WHILE_CGI_SENDS_DATA) {
-//          kill(connection.cgi_pid_, SIGSTOP);
-//			CloseCGIfd(connection.cgi_stdin_fd_);
-//			CloseCGIfd(connection.cgi_stdout_fd_);
-//			active_cgi_processes_--;
-//			CloseConnectionWithLogMessage(clients_socket, "Clent died");
+            return;
 		} else if (status == NOT_ALL_DATA_READ_FROM_CGI) {
 			return;
 		} else if (status == ALL_READ_ALL_SENT) {
