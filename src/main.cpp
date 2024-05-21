@@ -6,7 +6,7 @@
 /*   By: mede-mas <mede-mas@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/27 16:06:01 by  rokupin          #+#    #+#             */
-/*   Updated: 2024/04/04 20:59:14 by mede-mas         ###   ########.fr       */
+/*   Updated: 2024/05/21 09:58:29 by mede-mas         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -97,7 +97,7 @@ int main(int ac, char** av) {
 		std::cout << "No config is loaded, startup failed!" << std::endl;
 		return (1);
 	} catch (const ServerManager::ServerManagerException &) {
-        return (1);
-    }
+		return (1);
+	}
 	return 0;
 }
