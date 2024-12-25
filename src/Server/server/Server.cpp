@@ -20,7 +20,8 @@ Server::Server(const Server &other)
           config_(other.config_),
           sock_to_host_(other.sock_to_host_) {}
 
-Server::Server(const ServerConfiguration &config, v_c_b &is_running_ref, const std::map<Host, int> &all_open_sockets, ServerManager &sm)
+Server::Server(const ServerConfiguration &config, v_c_b &is_running_ref,
+               const std::map<Host, int> &all_open_sockets, ServerManager &sm)
         : is_running_(is_running_ref),
         sm_(sm),
         config_(config) {

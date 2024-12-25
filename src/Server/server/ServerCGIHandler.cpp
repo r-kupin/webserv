@@ -13,6 +13,7 @@
 #include <csignal>
 #include <cstring>
 #include <cstdlib>
+#include <algorithm>
 #include "Server.h"
 
 bool Server::ForkCGI(Connection &connection, const std::string &address, const std::string &path_info) const {
@@ -99,18 +100,25 @@ int Server::HandleCGIinput(Connection &connection) const {
     return -1;
 }
 
-
 int Server::HandleCGIoutput(Connection &connection) const {
-    v_char  &what = connection.cgi_output_buffer_;
-    int     where = connection.cgi_stdin_fd_;
+    v_char          &what = connection.cgi_output_buffer_;
+    int             where = connection.cgi_stdin_fd_;
+    ClientRequest   &request = connection.request_;
 
     if (what.empty()) {
-        // copy lines from request to the argument of cgi script
-        for (v_str_c_it it = connection.request_.GetRawRequest().begin();
-                it != connection.request_.GetRawRequest().end(); ++it) {
+        for (v_str_c_it it = request.GetRawRequest().begin();
+             it != request.GetRawRequest().end(); ++it) {
             v_char tmp(it->begin(), it->end());
             what.insert(what.end(), tmp.begin(), tmp.begin() + tmp.size());
             what.push_back('\n');
+        }
+        if (request.HasHeader("Content-Length") &&
+            Utils::StringToULong(request.GetHeaderValue("Content-Length")) > 0L) {
+            what.push_back('\n');
+            const v_char &body = request.GetBody();
+            what.insert(what.end(),
+                        body.begin() + 2,
+                        body.begin() + body.size() - 2);
         }
     }
     while (is_running_ && !what.empty() && ProbeWriteToCGI(what, where)) {
@@ -124,13 +132,26 @@ int Server::HandleCGIoutput(Connection &connection) const {
             what.erase(what.begin(), what.begin() + bytes_written + 1);
         }
     }
+    char    buffer[FILE_BUFFER_SIZE];
+    ssize_t bytes_read, bytes_written = 0;
+    do {
+        bytes_read = recv(connection.connection_socket_, buffer,
+                                  static_cast<size_t>(FILE_BUFFER_SIZE), 0);
+        if (bytes_read > 0) {
+            bytes_written = write(where, buffer, bytes_read);
+            if (bytes_written == -1) {
+                Log("Write to file failed");
+                return NOT_ALL_DATA_WRITTEN_TO_CGI;
+            }
+        }
+    }  while (is_running_ && bytes_read > 0 && bytes_written > 0);
     return ALL_DATA_SENT_TO_CGI;
 }
 
 void Server::ChildCGI(const Connection &connection, const std::string &address,
                       const int *pipe_stdin, const int *pipe_stdout,
                       const std::string &path_info) const {
-	// Redirect stdout to pipe_stdout (write end of the pipe)
+	// Redirect stdout to pipe_stdout ('write end' of the pipe)
 	if (dup2(pipe_stdout[1], STDOUT_FILENO) == -1)
         ThrowException("Dup failed!");
 	close(pipe_stdout[0]);

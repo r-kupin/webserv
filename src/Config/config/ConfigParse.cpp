@@ -53,35 +53,13 @@ void Config::ParseConfig(std::ifstream &config) {
 	std::string empty = std::string("");
 	RawNode root = ParseNode(config, empty, main);
 
-	// Check for leftover data after parsing main block
+	// Check for leftover data after parsing the main block
 	if (!root.leftover_.empty()) {
 		ThrowSyntaxError("main block isn't closed!", config);
 	}
 
 	// Assign the parsed root node to the configuration root
 	conf_root_ = root.node_;
-
-	// Reset the input stream to parse the CGI block
-	config.clear();
-	config.seekg(0);
-
-	std::string line;
-
-	// Read the configuration file line by line
-	while (std::getline(config, line)) {
-		// Check for the presence of a CGI block
-		if (line.find("cgi {") != std::string::npos) {
-			std::stringstream cgi_block;
-
-			// Read lines until the end of the CGI block (marked by '}')
-			while (std::getline(config, line) && line.find('}') == std::string::npos) {
-				cgi_block << line << "\n";
-			}
-
-			// Pass the CGI block to ParseCGIConfig to extract mappings
-			ParseCGIConfig(cgi_block);
-		}
-	}
 }
 
 /**
@@ -283,22 +261,4 @@ void
 Config::FinishMainNode(RawNode &current, std::ifstream &config) const {
 	if (current.node_.main_[0] != "main")
 		ThrowSyntaxError("missing '}' !", config);
-}
-
-// Parse the CGI block from the configuration file
-void	Config::ParseCGIConfig(std::stringstream& source) {
-	std::string line;
-	while (std::getline(source, line)) {
-		std::istringstream iss(line);
-		std::string key, value, path;
-
-		// Extract the key, value (extension), and path (handler executable)
-		if (iss >> key >> value >> path) {
-			// If the kei is "CGIHandler, " add the extension-handler pair to the map
-			if (key == "CGIHandler") {
-				// store in the CGI map
-				this->cgi_handlers[value] = path;		// value = extension, path = handler
-			}
-		}
-	}
 }

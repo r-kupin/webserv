@@ -1,19 +1,11 @@
-Minimalist re-implementation of nginx web server.
 # HowTo
-**WARNING**
-*TESTS ARE OUTDATED*
-I am not using `Makefile` in development process, so the **lists of source files might be outdated**, and therefore - project might not compile. However - it is quite easy to get up-to-date source lists:
-- Enter repository root
-- *SRCS*: all project sources `find src/ -name \*.cpp -print `
-- *LIB_SRCS*: *SRCS*, but without `src/main.cpp`
-- *TEST_SRCS*: `find test/tests/ -name \*.cpp -print  `
 ## Run
 1. Compile with `make`
 2. Launch as `webserv [ path_to_config ]`
 3. Connect to the servers on ports defined in the config with any HTTP network-accessing app
 ## Test
-1. Prepare test library 
-    ```shell
+1. Prepare a test library 
+	```shell
 	git clone git@github.com:google/googletest.git test/lib
 	mkdir test/lib/build && cd test/lib/build 
 	cmake ..
@@ -24,9 +16,9 @@ I am not using `Makefile` in development process, so the **lists of source files
 ## Done
 - Your program has to take a configuration file as argument, or use a default path.
 - Your server must never block.
-- Client can be bounced properly if necessary. (? return, I guess)
+- The Client can be bounced properly if necessary. (? return, I guess)
 - It must be non-blocking
-- Use only 1 poll() (or equivalent) for all the I/O operations between the client and the server (listen included).
+- Use only one poll() (or equivalent) for all the I/O operations between the client and the server (listen included).
 - poll() (or equivalent) must check read and write at the same time.
 - Never do a read or a write operation without going through poll() (or equivalent).
 - No **errno** checking
@@ -34,100 +26,43 @@ I am not using `Makefile` in development process, so the **lists of source files
 - A request to your server should never hang forever.
 - Your server must be compatible with the web browser of your choice
 - Your HTTP response status codes must be accurate.
-- You server must have default error pages if none are provided.
+- Your server must have default error pages if none are provided.
 - You must be able to serve a fully static website.
 - Clients must be able to upload files. ([upload_store](#upload_store))
 - Make it work with DELETE, POST and GET methods.
 - Stress test resilience
 - Multiple ports
 - Choose the [port](#listen) and [host](#server_name) of each server.
-- Setup the server_names or not
+- Set up the server_names or not
 - default server for host:port 
 - Setup default [error_pages](#error_page).
 - Limit [client_max_body_size](#client_max_body_size).
 - Setup routes with one or multiple of the following rules/configuration:
 	- Define a list of accepted HTTP methods for the route. ([limit_except](#Limit_except))
-	- Define a HTTP redirection. ([return](#return))
+	- Define an HTTP redirection. ([return](#return))
 	- Define a directory or a file from where the file should be searched. ([root](#root))
 	- Set a default file to answer if the request is a directory ([index](#index)).
-	- %% CGI %%
+	- CGI ([proxy_pass](#proxy_pass))
 	- Make the route able to accept uploaded files and configure where they should be saved. ([upload_store](#upload_store))
 	- Turn on or off directory listing. ([autoindex](#autoindex))
-## ToDo
-- Execute CGI based on certain file extension (for example .php)
-# Checklist
-## Check the code and ask questions
-- [x] Launch the installation of siege with homebrew.
-- [x] Ask explanations about the basics of an HTTP server.
-- [x] Ask what function the group used for I/O Multiplexing.
-- [x] Ask for an explanation of how does select() (or equivalent) work.
-- [x] Ask if they use only one select() (or equivalent) and how they've managed the server to accept and the client to read/write.
-- [x] The select() (or equivalent) should be in the main loop and should check file descriptors for read and write AT THE SAME TIME. If not, the grade is 0 and the evaluation process ends now.
-- [x] There should be only one read or one write per client per select() (or equivalent). Ask the group to show you the code from the select() (or equivalent) to the read and write of a client.
-- [x] Search for all read/recv/write/send on a socket and check that, if an error is returned, the client is removed.
-- [x] Search for all read/recv/write/send and check if the returned value is correctly checked (checking only -1 or 0 values is not enough, both should be checked).
-- [x] If errno is checked after read/recv/write/send, the grade is 0 and the evaluation process ends now.
-- [x] Writing or reading ANY file descriptor without going through the select() (or equivalent) is strictly FORBIDDEN.
-- [x] The project must compile without any re-link issue. If not, use the 'Invalid compilation' flag.
-- [x] If any point is unclear or is not correct, the evaluation stops.
-## Configuration
-In the configuration file, check whether you can do the following and  
-test the result:
-- [x] Search for the HTTP response status codes list on the internet. During this evaluation, if any status codes is wrong, don't give any related points.
-- [x] Setup multiple servers with different ports.
-- [ ] Setup multiple servers with different hostnames (use something like: curl --resolve example.com:80:127.0.0.1 [http://example.com/](http://example.com/)).
-- [x] Setup default error page (try to change the error 404).
-- [x] Limit the client body (use: curl -X POST -H "Content-Type: plain/text" --data "BODY IS HERE write something shorter or longer than body limit").
-- [x] Setup routes in a server to different directories.
-- [x] Setup a default file to search for if you ask for a directory.
-- [x] Setup a list of methods accepted for a certain route (e.g., try to delete something with and without permission).
-## Basic checks
-Using telnet, curl, prepared files, demonstrate that the following
-features work properly:
-- [x] GET, POST and DELETE requests should work.
-- [x] UNKNOWN requests should not result in a crash.
-- [x] For every test you should receive the appropriate status code.
-- [ ] Upload some file to the server and get it back.
-## Check CGI
-Pay attention to the following:
-- [ ] The server is working fine using a CGI.
-- [ ] The CGI should be run in the correct directory for relative path file access.
-- [ ] With the help of the students you should check that everything is working properly. You have to test the CGI with the "GET" and "POST" methods.
-- [ ] You need to test with files containing errors to see if the error handling works properly. You can use a script containing an infinite loop or an error; you are free to do whatever tests you want within the limits of acceptability that remain at your discretion. The group being evaluated should help you with this.
-## Check with a browser
-- [x] Use the reference browser of the team. Open the network part of it, and try to connect to the server using it.
-- [x] Look at the request header and response header.
-- [x] It should be compatible to serve a fully static website.
-- [x] Try a wrong URL on the server.
-- [x] Try to list a directory.
-- [x] Try a redirected URL.
-- [x] Try anything you want to.
-## Port issues
-- [x] In the configuration file setup multiple ports and use different websites. Use the browser to ensure that the configuration works as expected and shows the right website.
-- [ ] In the configuration, try to setup the same port multiple times. It should not work.
-- [ ] Launch multiple servers at the same time with different configurations but with common ports. Does it work? If it does, ask why the server should work if one of the configurations isn't functional. Keep going.
-## Siege & stress test
-- [ ] Use Siege to run some stress tests.
-- [ ] Availability should be above 99.5% for a simple GET on an empty page with a siege -b on that page.
-- [ ] Verify there is no memory leak (Monitor the process memory usage. It should not go up indefinitely).
-- [ ] Check if there is no hanging connection.
-- [ ] You should be able to use siege indefinitely without having to restart the server (take a look at siege -b).
+    
 # Config
-Like `nginx.conf` but with less functional supported. This project follows philosophy of forward compatibility - meaning that all valid configs for WebServ will be also valid for NGINX, and will work in exact same way *EXCEPT* for the [upload_store](#upload_store) directive. More on that in dedicated section.
+Like `nginx.conf` but with less functional supported. This project follows the philosophy of forward compatibility—meaning that all valid configs for WebServ will be also valid for NGINX and will work in the exact same way *EXCEPT* for the [upload_store](#upload_store) directive. More on that in the dedicated section.
 Feel free to consult the test configs provided in `test/test_resources`. 
 ## Config structure
 Config consists of **contexts** and **directives**.
 ### Contexts
-Context  is a block defined in a following way:
+Context is a block defined in the following way:
 ``` nginx
 context_name [ ARG ] {
 	...
 }
 ```
+
 For now, webserv supports the following contexts:
 #### Server
 The main context of the instance of the HTTP server. At least one should be defined in the config. 
-Server context can't be empty - it should contain mandatory server-level directives: 
+Server context can't be empty—it should contain mandatory server-level directives: 
 - *[server_name](#server_name)* (unique)
 - *[listen](#listen)*
 - *[keepalive_timeout](#keepalive_timeout)* (unique)
@@ -144,21 +79,23 @@ Inside server context multiple **location** sub-contexts can be defined, to hand
 ```nginx
 server {
 	listen 4281;  
-    server_name localhost;  
-    root /var/www;
+	server_name localhost;  
+	root /var/www;
 
 	location / { ... }
 }
 ```
+
 #### Location
 Location sets configuration depending on a request URI. 
-Locations can be defined inside of the server or parent location context (nested locations). Server matches the request URI against all defined location, and then assigns handling to the location with the closest matching *address*.
+Locations can be defined inside of the server or parent location context (nested locations). The Server matches the request URI against all defined locations, and then assigns handling to the location with the closest matching *address*.
 Location context should be defined with a single argument, which is *address*.
 ```nginx
 location address {
 	...
 }
 ```
+
 The *address* - is the absolute path from the **root** location, there are no relative paths. It means, that if location *"loc_n"* should be placed inside location *"/loc_1"* - the address should be defined as follows: *"/loc_1/loc_n"*, regardless of whether the super-context is *location /loc_1*, *location /* or *server*:
 ```nginx
 # OK
@@ -174,7 +111,8 @@ location /loc_1/loc_3 {
 	....
 }
 ```
-But it can't be defined in any context, apart of the mentioned above:
+
+But it can't be defined in any context, a part of the mentioned above:
 ```nginx
 # NOT OK
 location / {
@@ -187,6 +125,7 @@ location / {
 }
 # or here
 ```
+
 Redefinition of locations is possible:
 ```nginx
 # OK
@@ -207,7 +146,8 @@ location /loc_1 {
 	... 
 }
 ```
- However one super-location/server can't contain multiple sub-locations with the same addresses:
+
+However, one super-location/server can't contain multiple sub-locations with the same addresses:
  ```nginx
 # NOT OK
 location / {
@@ -221,13 +161,14 @@ location / {
 	}
 }
 ```
+
 Locations also can be mentioned, but not defined explicitly:
 ```nginx
 # OK
 server {
 	listen 4281;  
-    server_name localhost;  
-    root /var/www;
+	server_name localhost;  
+	root /var/www;
 	
 	location /loc_1/loc_2 {
 		# definition of "/loc_1/loc_2"
@@ -236,15 +177,17 @@ server {
 	# no explicit definition of "/loc_1"
 }
 ```
+
 In this project, such locations referred as **ghost** locations. In the example above, request to `localhost:4281/loc_1/` will lead to `403 Forbidden` server response.
-Locations can be empty, or contain following directives:
+Locations can be empty or contain the following directives:
 - *[root](#root)* (unique)
 - *[client_max_body_size](#client_max_body_size)* (unique)
 - *[upload_store](#upload_store)* (unique)
 - *[index](#index)*
 - *[return](#return)* (unique)
 - *[error_page](#error_page)*
-- [autoindex](#autoindex) (unique)
+- *[autoindex](#autoindex)* (unique)
+- *[proxy_pass](#proxy_pass)* (unique)
 
 Locations can also contain sub-contexts:
 - *[limit_except](#limit_except)* (unique)
@@ -256,32 +199,34 @@ limit_except METHOD {
 	...
 }
 ```
+
 The `METHOD` parameter can be one of the following: `GET`, `POST`,  or  `DELETE`, as subject requires. The *limit_except* is a first thing being checked upon the access to the *location*. If request method is not allowed - server immediately responds with *403 Forbidden*.
-Limit_except can't be empty, and should contain following directives:
+Limit_except can't be empty, and should contain the following directives:
 - *deny*
 - *allow*
 
-Depending on intention of prohibiting or allowing access. 
+Depending on the intention of prohibiting or allowing access. 
 Limit_except can't have any sub-contexts.
 ### Directives
-Directive is a single-line instruction defined in a following way:
+Directive is a single-line instruction defined in the following way:
 ```nginx
 directive [ ARG1 ] [ ARG... ];
 ```
+
 #### Server-level directives
 ##### listen
-Has only one arg which sets **IP**:**port** used to open the socket, on which requests will be monitored. If **IP** is not specified - *localhost* used by default.
+It Has only one arg which sets **IP**:**port** used to open the socket, on which requests will be monitored. If **IP** is not specified - *localhost* used by default.
 ##### server_name
-The `server_name` directive defines the domain name(s) that the server block should respond to. When server receives an HTTP request, it checks the `Host` header of the request against the `server_name` values configured in each server block to determine which block should handle the request. If there's a match, Nginx forwards the request to that server block, or it uses default server otherwise. Default server is the first server defiled in config file and listens **host**:**port** on which request was reported.
+The `server_name` directive defines the domain name(s) that the server block should respond to. When server receives an HTTP request, it checks the `Host` header of the request against the `server_name` values configured in each server block to determine which block should handle the request. If there's a match, Nginx forwards the request to that server block, or it uses the default server otherwise. Default server is the first server defiled in config file and listens **host**:**port** on which request was reported.
 ##### keepalive_timeout
-Accepts one number, which is a timeout during which server keeps connection open waiting for data to arrive. Default is 60 sec. It gives no warranty that connection will be closed in 60 seconds, but connection will stay open for at least during this time.
+Accepts one number, which is a timeout during which server keeps connection open waiting for data to arrive. Default is 60 sec. It gives no warranty that the connection will be closed in 60 seconds, but the connection will stay open for at least during this time.
 #### Location-level directives
 ##### root
 Can have only one arg, which is a path for a location, or server's root directory. For example:
 ```nginx
 server {
 	...
-    root /var/www; # absolute path
+	root /var/www; # absolute path
 	
 	location /loc_0 {}
 	
@@ -291,73 +236,79 @@ server {
 	}
 }
 ```
+
 In this case:
 - URI with address `/text.txt` would make server look for `text.txt` in `/var/www/`.
 - URI `/loc_0/text.txt` will be handled in `/var/www/loc_0/`, because nginx appends location address to parent location's root, if it isn't overridden.
 - URI `/loc_1/text.txt` will be handled by path, constructed as `path to executable` + `resources` + `/loc_1`
 - URI `/loc_1/loc_2/text.txt` will be handled by path, constructed as `parrent's root` + `/loc_2`
+
 ##### client_max_body_size
-Should have only one arg, which is a number in bytes.
-Sets bounds for request's body size. Works in the following way: while reading client's body, server keeps track of it's size. If `client_max_body_size` is defined, and client's body exceeds it - server abandon's further request processing and returns error **413**. If not specified - default value of 1Mb is being applied.
+Should have only one arg, which is a number of bytes.
+Sets bounds for request's body size. Works in the following way: while reading client's body, server keeps track of its size. If `client_max_body_size` is defined, and client's body exceeds it - server abandon's further request processing and returns error **413**. If not specified - default value of 1Mb is being applied.
 ##### upload_store
-In this project, it's behavior is slightly simplified, because this directive is not a part of vanilla nginx, but from a third-party module, more info [here](#Uploads).
+In this project, its behavior is slightly simplified because this directive is not a part of vanilla nginx, but from a third-party module, more info [here](#Uploads).
  **Works only for requests done with CURL**
-Should have only one arg, which is path to the uploads directory.
-Set's path to uploads directory. When location containing this directive handles POST request, it creates a file in specified directory, and writes request's body to it. The name of the file being created is it's number: first is `1`, second is `2`, etc. If File already exists or it's not possible to create it - server returns 503
+Should have only one arg, which is a path to the uploads' directory.
+Set's path to upload directory. When the location containing this directive handles POST request, it creates a file in specified directory, and writes the request's body to it. The name of the file being created is it's number: first is `1`, second is `2`, etc. If File already exists or it's not possible to create it - server returns 503
 ##### index
 May have multiple args that define files that will be used as an index - meaning - shown when location get's accessed by address, following with `/`. Files are checked in the specified order - left to right. The last element of the list can be a file with an absolute path - meaning, path not from the current location's root - but from **root**-location's root.
 ```nginx
 index index_X.html index_1.html index_2.html;
 ```
+
 Indexes are checked in the following order: 
 ###### defined in current location
 1. Return first index found
 2. Return *403* if none of specified files exists & is accessible
+3. 
 ###### not defined in current location, but in parent location
 Check parent location in the same way, except parent *index filenames* specified in *parent* are expected to be located at the *current location's root*:
 ```nginx
 server {  
-		...
-        root www;
-        index index_X.html index_1.html index_2.html;
-
-        location /loc_1 {
-		    # Request /loc_1/
-	        # Checks www/loc_1/index_X.html first, /loc_4/index.html - then
-	        # Returns 403 if both are not accessible
-            index index_X.html /loc_4/index.html;
-        }  
-  
-        location /loc_2 {
-	        # Request /loc_2/
-	        # Checks www/loc_2/index_X.html, www/loc_2/index_1.html then
-	        # www/loc_2/index_2.html
-	        # Returns 403 if all are not accessible
-        }
+	...
+	root www;
+	index index_X.html index_1.html index_2.html;
+	
+	location /loc_1 {
+	    # Request /loc_1/
+	    # Checks www/loc_1/index_X.html first, /loc_4/index.html - then
+	    # Returns 403 if both are not accessible
+	    index index_X.html /loc_4/index.html;
+	}  
+	
+	location /loc_2 {
+	    # Request /loc_2/
+	    # Checks www/loc_2/index_X.html, www/loc_2/index_1.html then
+	    # www/loc_2/index_2.html
+	    # Returns 403 if all are not accessible
+	}
 }
 ```
+
 ###### no definition up to the root
 Default index `index.html` is being checked 
 ```nginx
 server {  
-		...
-        root www; # webserv
-        # no index definition
-  
-        location /loc_1 {
-	        index index_X.html /loc_4/index.html;
-		    # Request /loc_1/
-	        # Checks www/loc_1/index_X.html first, /loc_4/index.html - then
-	        # Returns 403 if both are not accessible
-        }  
-  
-        location /loc_2 {
-	        # Request /loc_2/
-	        # Checks www/loc_2/index.html
-	        # Returns 403 if it is not accessible
-        }
+	...
+	root www; # webserv
+	# no index definition
+	
+	location /loc_1 {
+	    index index_X.html /loc_4/index.html;
+	    # Request /loc_1/
+	    # Checks www/loc_1/index_X.html first, /loc_4/index.html - then
+	    # Returns 403 if both are not accessible
+	}  
+	
+	location /loc_2 {
+	    # Request /loc_2/
+	    # Checks www/loc_2/index.html
+	    # Returns 403 if it is not accessible
+	}
 }
 ```
+
 ##### return
 Directive, responsible for redirection. Stops processing request and returns the specified code to a client. Should have one or two args.
 ```nginx
@@ -377,10 +328,12 @@ location /target_location {
     return 200 "Welcome to the target location!";  
 }
 ```
-- If return has 1 argument, it is should be a `return code` or `address`.  
-- If return has 2 arguments, it is should be a `return code` and `address` or `custom message` - depending on the `return code` value.
+
+- If return has 1 argument, it should be a `return code` or `address`.  
+- If return has 2 arguments, it should be a `return code` and `address` or `custom message` - depending on the `return code` value.
 - There can't be more than 2 args, and `code` can't be the second arg. 
 - The redirect, if only address specified, is done with *302* code
+
 ##### error_page
 Similar to *index* - it is possible to define custom error pages for each location.
 Error_page directive expects one or more `error code`(s) followed by a `filename` of the error page, that should be sent to the client in case if one of the specified errors will happen.
@@ -389,11 +342,16 @@ Example:
 ```nginx
 error_page 403 404 /error.html;
 ```
+
 ##### autoindex
 Takes a single argument - `on` or `off`.
 Is `off` by default, in this case server behaves as usual.
 If `on` - server will ignore all implicit or explicit indexes that are present in it's root and would generate *directory listing html* instead. This is basically a page that mimics direct access to the file system - content's of the location's root specifically. All files are accessible via links.
 If any subdirectory of the autoindexed location's root is defined as location explicitly - it's own rules would be applied.
+
+##### proxy_pass
+
+
 # How it actually works?
 ## Init
 ### Arg check
@@ -405,42 +363,45 @@ Main class, storing configurations for all servers is `Config`. All its methods 
 ### ServerConfiguration
 Particular config, the backbone of each server. Contains server-level data, such as *server_name*, *port* and the root of the tree of `Locations`.
 `ServerConfiguration`'s functionality is narrowed to function
-```c++
+```cpp
 LocConstSearchResult    FindConstLocation(const std::string &address) const;
 ```
+
 that searches the locations tree for a requested location, and returns a `LocSearchResult`, that contains iterator to the closest found location, as well as some additional info.
 ### Location
 Stores data about all [locations](#location) mentioned in config:
-```c++
+```cpp
 	std::set<ErrPage>       error_pages_;  
-    l_loc                   sublocations_;  
+	l_loc                   sublocations_;  
 //-------------------index related  
-    bool                    has_own_index_defined_;  
-    bool                    index_defined_in_parent_;  
-    l_str                   own_index_;  
-  
-    Limit                   limit_except_;
-    bool                    autoindex_;  
+	bool                    has_own_index_defined_;  
+	bool                    index_defined_in_parent_;  
+	l_str                   own_index_;  
+
+	Limit                   limit_except_;
+	bool                    autoindex_;  
 	std::string             dir_to_list_;
 //-------------------redirect related  
-    int                     return_code_;  
-    std::string             return_internal_address_;  
-    std::string             return_external_address_;  
-    std::string             return_custom_message_;  
+	int                     return_code_;  
+	std::string             return_internal_address_;  
+	std::string             return_external_address_;  
+	std::string             return_custom_message_;  
   
-    std::string             root_;  
-    std::string             full_address_; // address from the root path
-    std::string             address_; // particular location's address
-    std::string             body_file_; // address of file being sent to client
-    l_loc_it                parent_; // root location's "parent" points on itself
-    bool                    ghost_;
+	std::string             root_;  
+	std::string             full_address_;	// address from the root path
+	std::string             address_;	// particular location's address
+	std::string             body_file_;	// address of file being sent to client
+	l_loc_it                parent_;	// root location's "parent" points on itself
+	bool                    ghost_;
 ```
+
 ## ServerManager
 ServerManager class is main and the only active element in the single-threaded non-blocking event-driven web server application. It is built around 
 - `epoll_fd_` : file descriptor referring to the epoll instance in kernel
 - `servers_` : container of the `Server` class
 - `host_to_socket_` : map for all open sockets to `Host`s  - IPv4 and port
 - `connections_` : connection-to-fd mapping in order to keep data sent by parts
+
 ### Setting up 
 #### Setting up epoll
 **Epoll** is a monitoring system for the file descriptors. It helps to see if I/O is possible on any of them. It's API consists of :
@@ -450,6 +411,7 @@ ServerManager class is main and the only active element in the single-threaded n
 	- `epoll_create()` creates new instance and returns it's fd
 	- `epoll_ctl()` performs some actions on given epoll_instance such as adding or removing of file descriptors being monitored
 	- `epoll_wait()` blocks execution of the program waiting for events on monitored file descriptors to happen
+
 #### Opening of the sockets for each server
 Each of the defined server listens for one or multiple addresses, and the external interface of each address is a **socket**.
 It is a data structure that represents an endpoint for communication. It's basically a like a file descriptor used by the kernel to manage network communication between processes. In order to open socket for communication several setup steps are required.
@@ -488,9 +450,11 @@ In other words, `EPOLLONESHOT` controls under what conditions a file descriptor 
 1. **Edge-triggered mode with EPOLLONESHOT:**
     - In edge-triggered mode, EPOLLONESHOT means that once an event occurs on a file descriptor and is reported by epoll_wait(), the associated file descriptor is deactivated until it is re-armed using epoll_ctl() with EPOLL_CTL_MOD and EPOLLONESHOT again.
     - In this mode, epoll_wait() will report an event only once for a given file descriptor until it is re-armed. Subsequent events on the same file descriptor will not be reported until it is re-armed.
+
 2. **Level-triggered mode with EPOLLONESHOT:**
     - In level-triggered mode, EPOLLONESHOT behaves differently. Once an event occurs on a file descriptor and is reported by epoll_wait(), the associated file descriptor remains active, and epoll_wait() will continue to report events on that file descriptor as long as the condition for the event remains true.
     - In this mode, EPOLLONESHOT doesn't mean the file descriptor is deactivated after one event. Instead, it indicates that epoll_wait() will not report further events on the file descriptor until the current event condition changes and then resets the EPOLLONESHOT flag.
+
 *In summary*:
 - With edge-triggered mode, EPOLLONESHOT means the file descriptor is deactivated until rearmed.
 - With level-triggered mode, EPOLLONESHOT means the file descriptor remains active, but epoll_wait() will not report further events until the current event condition changes.
@@ -632,6 +596,7 @@ int main(int argc, char** argv)
     return 0;
 }
 ```
+
 More on that [here](https://linux.die.net/man/7/epoll) and [here](https://stackoverflow.com/questions/41582560/how-does-epolls-epollexclusive-mode-interact-with-level-triggering). If you are super curious about the topic - check out [this](http://www.kegel.com/c10k.html) as well.
 
 When adding a socket to the epoll watch list, the `EPOLL_CTL_ADD` command is used. This command instructs the kernel to add the specified socket to the epoll instance's watch list, associating it with a set of events to monitor (e.g., read, write, error).
@@ -692,6 +657,7 @@ std::string                         fragment_;
 m_str_str                           headers_;
 std::string                         body_;  
 ```
+
 ### Request line
 -  Method(`method_`): the HTTP method or verb specifies the type of request being made. WebServ is supposed to handle GET, POST and DELETE methods
 ### [URL](https://developer.mozilla.org/en-US/docs/Learn/Common_questions/Web_mechanics/What_is_a_URL)
@@ -700,6 +666,7 @@ std::string                         body_;
 - Index Request (`index_request_`): flag indicating whether the request is for the default index resource. WebServ, automatically serves a default file (e.g., index.html) when the path points to a directory meaning if address ends with `/`.
 - Fragment (`fragment_`): the fragment identifier, often used in conjunction with anchors in HTML documents. It points to a specific section within the requested resource.
 - Parameters (`params_`): additional parameters sent with the request. In the URL, these are typically query parameters (e.g., `?key1=value1&key2=value2`).
+
 ### Headers (`headers_`)
 HTTP headers provide additional information about the request, such as the type of client making the request, the preferred response format, authentication information, etc. In request processing *Webserv* uses following headers:
 #### [Host](#https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Host) 
@@ -713,9 +680,10 @@ The **User-Agent** [request header](https://developer.mozilla.org/en-US/docs/Glo
 This header is being checked when server handles the upload request. Because any client uses different convention of wrapping the file being uploaded - uploads from different clients are handled differently.
 For example, here is a request to upload a file `test.txt`:
 ```sh
-> cat -e test.txt
+$> cat -e test.txt
 test$
 ```
+
 That's what **curl** sends to the server:
 ```
 POST /uploads HTTP/1.1\r\n
@@ -733,6 +701,7 @@ test\n
 \r\n
 --------------------------ceae335717f1b7a7--\r\n
 ```
+
 *Firefox*:
 ```
 POST /uploads HTTP/1.1\r\n
@@ -765,7 +734,8 @@ Content-Disposition: form-data; name="submit"\r\n
 Upload File\r\n
 -----------------------------14556203736442811903568275294--\r\n
 ```
-*Chrome* :
+
+*Chrome*:
 ```
 POST /uploads HTTP/1.1\r\n
 Host: localhost:4281\r\n
@@ -800,6 +770,7 @@ Content-Disposition: form-data; name="submit"\r\n
 Upload File\r\n
 ------WebKitFormBoundaryQwNkA1TP3mE9cVAE--\r\n
 ```
+
 All these clients are supported, but anything else will trigger error *501* response.
 ### Body (`body_`)
 The body of the HTTP request, which contains additional data sent to the server. This is particularly relevant for POST requests or other methods where data is sent in the request body. In case of file upload the body will contain file contents.
@@ -808,6 +779,7 @@ Right after the creation of the `ClientRequest` server starts generating respons
 - Finding of the server to which request was sent
 - Creating a synthetic location 
 - Creating a `ServerResponse` class
+
 ### Finding requested server
 Request should be processed by a server that:  
 * Listens on the socket, on which request was reported  
@@ -836,17 +808,21 @@ If found location contains [upload_store](#upload_store)  - all requests to it w
 	2. Contain some file metadata (optional) followed by `\r\n\r\n` (mandatory)
 	3. Contain actual file contents
 	4. End up with delimiter preceded by `\r\n--`
-If amount of bytes processed corresponds with the value of `Content-Length` and the last thing received was delimiter - request is correct. Otherwise - [400  Bad Request](#400  Bad Request) will be returned.
+
+If number of bytes processed corresponds with the value of `Content-Length` and the last thing received was delimiter - request is correct. Otherwise - [400  Bad Request](#400  Bad Request) will be returned.
 Before the start of the upload process, server also checks the file being created to store this upload:
 - Check that the value of `upload_store` points indeed to the directory where we are supposed to create files
 - Check that file intended to store current upload doesn't already exist
 - Check that server has permissions to create the file
 - Check that server's storage has enough free space to store file
-If any of those fails - [503 Service Unavailable](#503)  will be returned
-##### CGI request
+If any of those fails - [503 Service Unavailable](#503) will be returned
+
+##### Proxied request
+
+
 ##### Static request
-If found location doesn't contain any directives specifying that request should be uploaded or handled by CGI, server proceeds with checking for the existence of the requested resource.
-There are 2 types of static requests - for file and for index. If `path` part of the URL ends with `/` - this is an index request, otherwise - file request. That requests are handled differently.
+If found location doesn't contain any directives specifying that request should be uploaded or proxied, the server proceeds with checking for the existence of the requested resource.
+There are two types of static requests—for a file and for index. If `path` part of the URL ends with `/` - this is an index request, otherwise - file request. That requests are handled differently.
 ###### Synthetic location for file request
 If `path` part of the URL has something after the last `/` symbol, it is assumed that it is a name of the file, that should be located in the root directory of the location, that preceded the filename. Depending on the result of the file system check server finishes response location:
 ```c++
@@ -862,6 +838,7 @@ if (fs_status == NOTHING) {
     synth.return_code_ = 200;  
 }
 ```
+
 ###### Synthetic location for index request
 At this point, server determines which file should be returned. Server checks index files defined in found location or in parenting ones, or the default `index.html` if nothing were defined at all. More info here:  [index](#index)
 Depending on filesystem response status of the directory being requested `fs_status` and of the index file of a particular location - server set's `return_code` and `body_file`:
@@ -884,8 +861,10 @@ if (Utils::CheckFilesystem(index_address) == NOTHING) {
     synth.body_file_ = index_address;  
 }
 ```
+
 ###### Synthetic location for autoindex request (directory listing)
-### Creating `ServerResponse` class
+Creating `ServerResponse` class and sending response back to client.
+
 Just as in case with `ClientRequest` class, `ServerResponse` is intended to contain data, corresponding to different parts of server's response message
 
 ![response](https://github.com/r-kupin/webserv/blob/main/notes/response.jpg)
@@ -904,7 +883,8 @@ Server creates response in a following way:
 		2. If an external or internal address is provided, sets the `Location` header accordingly.
 	4. If a body file is specified, its content is read.
 4. Sets additional headers like `Content-Type`, `Content-Length`, and `Connection`.
-### Sending response back to client
+5. Sends response back to the client.
+
 #  Additional info
 ## Server response codes implemented
 ### OK
@@ -919,12 +899,13 @@ This status code is returned when client requests for a static file, but specifi
 #### 302 Found
 If there is a `return http://somewhere.out` directive - response will have 302 code and `Location` header set
 ### Client side errors
-#### 400  Bad Request
+#### 400 Bad Request
 If the server cannot process the client's request due to malformed syntax or other errors on the client side, it returns this status code. It indicates that there was an error in the client's request, or method is not *GET*, *POST* or *DELETE*.
 #### 403 Forbidden
-- If client has no access to requested location
+- If a client has no access to the requested location
 - If request method is limited in `limit_except` block
-- If client tries to access directory's index, but the file doesn't exist and `autoindex` is off
+- If a client tries to access directory's index, but the file doesn't exist and `autoindex` is off
+
 #### 404  Not Found
 Should I explain it?
 #### 405  Method Not Allowed
@@ -933,12 +914,13 @@ If client requests location that has `upload_store` set with any method, except 
 If client intends to send body that exceeds `client_max_body_size` limit
 ### Server side errors
 #### 500 Internal Server Error
-- if server requests a file, but what was found is neither file, nor a directory
-- When server's fails to perform IO on the socket (It never happens)
-#### 501  Not Implemented
-If client would try to upload file from unsupported client.
-#### 503  Service Unavailable
-If server is unable to create a file intended to store an upload
+- if server requests a file, but what was found is neither a file, nor a directory
+- When server fails to perform IO on the socket (It never happens)
+
+#### 501 Not Implemented
+If a client tries to upload a file from an unsupported client.
+#### 503 Service Unavailable
+If a server is unable to create a file intended to store an upload
 ## Uploads
 
 ![one_does_not_simply](https://github.com/r-kupin/webserv/blob/main/notes/one_does_not_simply.jpg)
@@ -950,18 +932,18 @@ In order to make real nginx store uploaded files, the most intuitive way I found
 3. Launch server with test configuration.
 	```nginx
 	server {
-	 	# specify server name, port, root
+		# specify server name, port, root
 		location /upload {
-		    upload_pass   @test;
-		    upload_store /path/to/upload_directory 1;
+			upload_pass   @test;
+			upload_store /path/to/upload_directory 1;
 		}
 		
 		location @test {
-		    return 200 "Hello from test";
+			return 200 "Hello from test";
 		}
 	}
 	```
-4. Use web client to upload file. Here's one of the simplest ways: `curl -v -F "file=@file_name" http://server_name:port/upload/ `
+4. Use a web client to upload a file. Here's one of the simplest ways: `curl -v -F "file=@file_name" http://server_name:port/upload/ `
 
 As described at module's page:
 -  [upload_pass](https://www.nginx.com/resources/wiki/modules/upload/#upload-pass "Permalink to this headline"): specifies location to pass request body to. File fields will be stripped and replaced by fields, containig necessary information to handle uploaded files.
@@ -969,7 +951,7 @@ As described at module's page:
 
 Important notes:
 1. *upload_store* won't work if *upload_pass* is not specified - server will return *403* if there is no index file in uploads directory, or *405* otherwise. Nothing will be stored.
-2. In  *upload_directory* sub-directories 0 1 2 3 4 5 6 7 8 9 should exist and be accessible by user, that is used by nginx. I have tested nginx on Debian machine with nginx installed via `apt install`, and the username used by nginx was *www-data*, however, it might be different on other systems and/or if other ways of installation were used. In my case, working *upload_directory* looked like this:
+2. In  *upload_directory* subdirectories 0 1 2 3 4 5 6 7 8 9 should exist and be accessible by user, that is used by nginx. I have tested nginx on Debian machine with nginx installed via `apt install`, and the username used by nginx was *www-data*, however, it might be different on other systems and/or if other ways of installation were used. In my case, working *upload_directory* looked like this:
 	```
 	❯ ls -l
 	total 40
@@ -986,7 +968,7 @@ Important notes:
 	```
  	Otherwise, nginx would be unable to create files to save the uploads and will return *503*
  3. The only request method supported is *POST*
- 4. Works in a following way: 
+ 4. Works in the following way: 
 	 1. for each request that posts to *upload_directory* nginx creates file with name which is a numbers of files saved preceded with zeros, so each file being saved has name of 10 characters.
 	 2. files are placed in 10 directories, based on the last digit:
 		 1. `0000000001`, `0000000021`, etc.. - in `./1`

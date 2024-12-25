@@ -61,7 +61,7 @@ bool ServerManager::ProcessHeaders(Connection &connection) {
 	} catch (const Stopped &e) {
 		return true;
 	} catch (const ZeroRead &e) {
-		// socket is closed on the client's side. Remove connection
+		// The socket is closed on the client's side. Remove connection
 		CloseConnectionWithLogMessage(connection.connection_socket_,
 									  "Done with all available request data,"
 									  "response already sent");
@@ -72,8 +72,8 @@ bool ServerManager::ProcessHeaders(Connection &connection) {
 			"We'll come back later. Maybe.");
 		return false;
 	} catch (const ReadFromSocketFailedException &) {
-		// Probably, client wouldn't even be able to read our response
-		// so just shut down this connection
+		// Probably, a client wouldn't even be able to read our response,
+		// so shut down this connection
 		CloseConnectionWithLogMessage(connection.connection_socket_, "IO failed");
 		return false;
 	} catch (const ClientRequest::RequestException &) {

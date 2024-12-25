@@ -131,10 +131,10 @@ protected:
 											 Location &synth) const;
 	void                        NoDataAvailable(ssize_t bytes_read) const;
 //-------------------cgi related------------------------------------------------
-	Location                    &HandleCGI(Connection &connection,
-										   const l_loc_c_it &found,
-										   Location &synth,
-										   const std::string &path_info) const;
+    Location                    &HandleCGI(Connection &connection,
+                                           const l_loc_c_it &found,
+                                           Location &synth,
+                                           const std::string &path_info) const;
 	bool                        ForkCGI(Connection &connection,
                                         const std::string &address,
                                         const std::string &path_info) const;
@@ -144,6 +144,11 @@ protected:
 										 const int *pipe_stdout,
 										 const std::string &path_info) const;
     bool                        ProbeWriteToCGI(const v_char &what, int i) const;
+//-------------------proxy related----------------------------------------------
+    Location                    &HandleProxy(Connection &connection,
+                                             const l_loc_c_it &found,
+                                             Location &synth,
+                                             const std::string &path_info) const;
 //-------------------misc utils-------------------------------------------------
 	void                        Log(const std::string &msg) const;
 	void                        Log(const std::string &msg, int listen_sock) const;
