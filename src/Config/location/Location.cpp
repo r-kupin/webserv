@@ -50,7 +50,8 @@ Location::Location(const Location& other)
       body_file_(other.body_file_),
       parent_(other.parent_),
       ghost_(other.ghost_),
-      cgi_address_(other.cgi_address_) {}
+      cgi_address_(other.cgi_address_),
+      proxy_pass_(other.proxy_pass_) {}
 
 Location::Location(const std::string &address)
     : has_own_index_defined_(false),
@@ -276,10 +277,13 @@ void Location::ProcessDirectives(const std::vector<v_str> &directives) {
     bool cl_max_bd_size = false;
     bool uploads = false;
     bool cgi = false;
+    bool proxy = false;
 
     for (size_t i = 0; i < directives.size(); ++i) {
         if (UMarkDefined("cgi_address", cgi, directives[i]))
             HandleCGI(directives[i]);
+        if (UMarkDefined("proxy_pass", proxy, directives[i]))
+            HandleProxy(directives[i]);
         if (UMarkDefined("root", root, directives[i]))
             HandleRoot(directives[i]);
         if (UMarkDefined("autoindex", autoindex, directives[i]))
@@ -294,20 +298,64 @@ void Location::ProcessDirectives(const std::vector<v_str> &directives) {
         if (MarkDefined("error_page", err, directives[i]))
             AddErrorPages(directives[i]);
         if (UMarkDefined("upload_store", uploads, directives[i]))
-            SetUploadsDirectory(directives[i]);
+            HandleUploads(directives[i]);
     }
 }
 
 void Location::HandleCGI(const v_str &directive) {
     if (directive.size() == 2) {
-        if (uploads_path_.empty())
-            cgi_address_ = directive[1];
-        else
+        if (uploads_path_.empty()) {
+            if (proxy_pass_.empty()) {
+                cgi_address_ = directive[1];
+            } else {
+                ThrowLocationException("can't be an proxy and cgi");
+            }
+        } else {
             ThrowLocationException("can't be an upload and cgi");
+        }
         return;
     }
     ThrowLocationException("cgi directive is wrong");
 }
+
+void Location::HandleProxy(const v_str &directive) {
+    if (directive.size() == 2) {
+        if (uploads_path_.empty()) {
+            if (cgi_address_.empty()) {
+                proxy_pass_ = directive[1];
+            } else {
+                ThrowLocationException("can't be an cgi and proxy");
+            }
+        } else {
+            ThrowLocationException("can't be an upload and proxy");
+        }
+        return;
+    }
+    ThrowLocationException("proxy_pass directive is wrong");
+}
+
+
+void Location::HandleUploads(const v_str &directive) {
+    if (directive.size() == 2) {
+        if (cgi_address_.empty()) {
+            if (proxy_pass_.empty()) {
+                const std::string& uploads = directive[1];
+                if (uploads.empty() || uploads.at(uploads.size() - 1) != '/') {
+                    uploads_path_ = directive[1];
+                } else {
+                    ThrowLocationException("upload_store directive is wrong");
+                }
+            } else {
+                ThrowLocationException("can't be an proxy and upload");
+            }
+        } else {
+            ThrowLocationException("can't be an cgi and uploads");
+        }
+        return;
+    }
+    ThrowLocationException("upload_store directive is wrong");
+}
+
 
 void Location::HandleAutoindex(const v_str &directive) {
     if (directive.size() == 2) {
@@ -445,19 +493,6 @@ void Location::HandleRoot(const v_str &directive) {
     ThrowLocationException("Root directive is wrong");
 }
 
-void Location::SetUploadsDirectory(const v_str &directive) {
-    if (directive.size() == 2) {
-        if (!cgi_address_.empty())
-            ThrowLocationException("can't be an upload and cgi");
-        std::string uploads = directive[1];
-        if (uploads.empty() || uploads.at(uploads.size() - 1) != '/') {
-            uploads_path_ = directive[1];
-            return;
-        }
-    }
-    ThrowLocationException("upload_store directive is wrong");
-}
-
 //-------------------setup subcontexts handlers---------------------------------
 void Location::HandleLimitExcept(const Node &node) {
     if (HasDefinedLimitExcept()) {
@@ -515,6 +550,7 @@ Location &Location::operator=(const Location &rhs) {
     body_file_ = rhs.body_file_;
     parent_ = rhs.parent_;
     ghost_ = rhs.ghost_;
+    proxy_pass_ = rhs.proxy_pass_;
     cgi_address_ = rhs.cgi_address_;
     return *this;
 }
@@ -646,9 +682,12 @@ std::ostream &operator<<(std::ostream &os, const Location &location) {
         print_parent_info(os, location);
     if (!location.sublocations_.empty())
         print_sublocations(os, location);
+    if (!location.proxy_pass_.empty())
+        os << location.full_address_ << ":\tproxy_pass: " <<
+           location.proxy_pass_ << std::endl;
     if (!location.cgi_address_.empty())
         os << location.full_address_ << ":\tcgi_address: " <<
-        location.cgi_address_ << std::endl;
+           location.cgi_address_ << std::endl;
     return os;
 }
 

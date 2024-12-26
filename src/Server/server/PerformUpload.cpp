@@ -56,11 +56,12 @@ void    prepare_buffer(v_char &body, char *buffer, const ClientRequest &request,
         body.erase(body.begin(), body.begin() +
                     request.GetCurlMetadataLength(delimiter));
         if (!body.empty()) {
-            // it is first iteration after metadata processing, and body_ might contain
-            // data that was accidentally red. Now we copy it to buffer
+            // It's the first iteration after metadata processing,
+            // and body_ might contain data that was accidentally red.
+            // Now copy it to buffer
             std::copy(body.begin(), body.end(), buffer);
         }
-};
+}
 
 int Server::PerformUpload(const ClientRequest &request, int socket, int file_fd,
                           const std::string &delimiter) const {
@@ -93,12 +94,12 @@ int Server::PerformUpload(const ClientRequest &request, int socket, int file_fd,
 
 void Server::NoDataAvailable(ssize_t bytes_read) const {
     if (bytes_read == 0) {
-        Log("recv returned 0 while reading file contents.");
+        Log("recv returned 0 while reading body.");
         throw ZeroReadUpload();
     } else {
         // errno == EWOULDBLOCK || errno == EAGAIN
         Log("recv returned -1 with EWOULDBLOCK || EAGAIN set while reading "
-            "file contents. We'll try later.");
+            "body. We'll try later.");
         throw EwouldblockEagainUpload();
     }
 }

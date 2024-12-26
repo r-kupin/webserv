@@ -95,7 +95,7 @@ void        ServerConfiguration::ProcessDirectives(
             } else if (MarkDefined("error_page", err, directives[i])) {
                 GetRoot().AddErrorPages(directives[i]);
             } else if (UMarkDefined("upload_store", uploads, directives[i])) {
-                GetRoot().SetUploadsDirectory(directives[i]);
+                GetRoot().HandleUploads(directives[i]);
             }
         }
     } catch (const Location::LocationException &) {
@@ -238,7 +238,7 @@ ServerConfiguration &ServerConfiguration::operator=(
 
 std::ostream &operator<<(std::ostream &os, const ServerConfiguration &config) {
     os << "server names: " << "\n";
-    for (s_str ::const_iterator it = config.server_names_.begin();
+    for (s_str::const_iterator it = config.server_names_.begin();
          it != config.server_names_.end(); ++it) {
         os << "\t" << *it << std::endl;
     }

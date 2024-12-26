@@ -81,7 +81,7 @@ void ServerManager::IncomingEvent(int socket_fd, uint32_t event) {
 void ServerManager::CloseConnections(bool close_all) {
 	long time_right_now = Utils::Get().TimeNow();
     std::string msg = close_all ? "Server stopped" : "Connection timed out";
-    Log("No events reported: closing expired connections");
+//    Log("No events reported: closing expired connections");
 	for (size_t i = 0; i < connections_.size(); i++) {
 		if (connections_[i].IsOpen()) {
 			long timeout = FindServer(connections_[i]).GetConnectionTimeout();

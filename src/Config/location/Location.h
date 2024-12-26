@@ -56,6 +56,8 @@ struct Location {
     bool                    ghost_;
 //-------------------fastcgi related
     std::string             cgi_address_;
+//-------------------proxy related
+    std::string             proxy_pass_;
 
     Location();
     Location(bool ghost, const std::string &address);
@@ -97,9 +99,10 @@ struct Location {
     void                HandleRoot(const v_str &directive);
     void                HandleClientMaxBodySize(const v_str &directive);
     void                HandleAutoindex(const v_str &directive);
+    void                HandleProxy(const v_str &directive);
     void                HandleCGI(const v_str &directive);
     void                AddErrorPages(const v_str &directive);
-    void                SetUploadsDirectory(const v_str &directive);
+    void                HandleUploads(const v_str &directive);
 //-------------------setup subcontexts handlers---------------------------------
     void                HandleLimitExcept(const Node &node);
     void                UpdateSublocations();

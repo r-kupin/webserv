@@ -42,39 +42,45 @@ Location Server::ProcessRequest(Connection &connection) const {
 		// return redirection rule isn't set
 		if (!found->uploads_path_.empty()) {
 			HandleUpload(request, connection.connection_socket_, found, synth);
+		} else if (!found->proxy_pass_.empty()) {
+            HandleProxy(connection, found, synth, res.leftower_address_);
 		} else if (!found->cgi_address_.empty()) {
-			HandleCGI(connection, found, synth, res.leftower_address_);
-		} else {
+            HandleCGI(connection, found, synth, res.leftower_address_);
+        } else {
 			HandleStatic(request, res, found->root_ + res.leftower_address_, synth);
 		}
 	}
 	return synth;
 }
 
-Location &Server::HandleCGI(Connection &connection, const l_loc_c_it &found, Location &synth, const std::string &path_info) const {
-	std::string address = found->cgi_address_;
-	if (found->cgi_address_[0] != '/')
-		address = found->root_ + "/" + found->cgi_address_;
-	if (Utils::CheckFilesystem(address) == COMM_FILE &&
-                                        !connection.waiting_for_cgi_) {
+Location &Server::HandleProxy(Connection &connection, const l_loc_c_it &found,
+                              Location &synth, const std::string &path_info) const {
+    return synth;
+}
+
+Location &Server::HandleCGI(Connection &connection, const l_loc_c_it &found,
+                            Location &synth, const std::string &path_info) const {
+    std::string address = found->cgi_address_;
+    if (found->cgi_address_[0] != '/')
+        address = found->root_ + "/" + found->cgi_address_;
+    if (Utils::CheckFilesystem(address) == COMM_FILE &&
+        !connection.waiting_for_cgi_) {
         if (!ForkCGI(connection, address, path_info)) {
             synth.SetReturnCode(FAILED_CGI);
             synth.cgi_address_.clear();
         }
-	} else {
-		Log("cgi_address \"" + address + "\" doesn't exists or is not a file");
-		synth.SetReturnCode(NOT_FOUND);
-	}
-	return synth;
+    } else {
+        Log("cgi_address \"" + address + "\" doesn't exists or is not a file");
+        synth.SetReturnCode(NOT_FOUND);
+    }
+    return synth;
 }
 
 void Server::HandleStatic(const ClientRequest &request, const Srch_c_Res &res,
 						  const std::string &address, Location &synth) const {
-	// It seems like there is no reason to even read the body because it's
-	// not clear how should static file handle it ?
 	int fs_status = Utils::CheckFilesystem(address);
 	if (fs_status == ELSE) {
-		// something exist on specified address, but it is neither a file nor a
+		// something exists on specified address, but it's neither a file nor a
 		// directory
 		Log(address + " is neither a file nor a directory.. "
 					  "I don't know what to do with it..");

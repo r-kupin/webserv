@@ -127,7 +127,7 @@ v_str &ClientRequest::ReadFromSocket(int socket, int buffer_size) {
             }
         }
     }
-    throw Stopped(); // cant use ThrowException() here...
+    throw Stopped(); // cant use ThrowException() here
 }
 
 void ClientRequest::NothingToRead(int bytes_read) const {

@@ -29,8 +29,6 @@
 			contents.
 */
 
-// Include necessary headers and declarations for input/output operations, assertions,
-// custom exceptions for configuration errors, and the server management logic.
 #include <iostream>
 #include <cassert>
 
@@ -54,9 +52,10 @@ Config try_open_default_config() {
 }
 
 // Tries to open a configuration file based on command line arguments.
-// If a custom config is provided and it fails to load due to not being found or syntax errors,
-// attempts to load the default configuration as a fallback.
-// This ensures the server has some configuration to run with, either custom or default.
+// If a custom config is provided, and it fails to load due to not being found
+// or syntax errors, attempts to load the default configuration as a fallback.
+// This ensures the server has some configuration to run with,
+// either custom or default.
 Config try_open_configs(int ac, char **av) {
 	if (ac == 2) {
 		try {
@@ -79,7 +78,8 @@ Config try_open_configs(int ac, char **av) {
 // The main function where execution begins.
 // Asserts that the program is called with the correct number of arguments.
 // Attempts to load the server configuration using `try_open_configs`.
-// If successful, initializes the server with the loaded configuration and starts it.
+// If successful, initialize the server with the loaded configuration and
+// start it.
 // If any configuration related exception is caught, reports failure and exits.
 int main(int ac, char** av) {
 	assert(ac < 3 && "webserv accepts only one argument, "
