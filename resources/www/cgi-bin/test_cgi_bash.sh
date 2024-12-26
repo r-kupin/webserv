@@ -2,6 +2,7 @@
 data=""
 while IFS= read -r -n1 -d '' char; do
     data="$data$char"
+    echo "$char" >> out
 done
 data_size=$(echo -n "$data" | wc -c)
 

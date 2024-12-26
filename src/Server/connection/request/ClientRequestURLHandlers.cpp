@@ -15,7 +15,7 @@ void ClientRequest::CheckURL(const std::string &url) {
 std::string ClientRequest::ExtractLastAddrStep(const std::string& address) {
     unsigned long separator = address.find_last_of('/');
     if (separator == std::string::npos) {
-        ThrowException("No last \\ character (wtf?)", "BadURL");
+        ThrowException("No last / character (wtf?)", "BadURL");
     }
     return (address.substr(separator));
 }

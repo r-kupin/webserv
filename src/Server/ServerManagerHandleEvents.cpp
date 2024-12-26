@@ -24,7 +24,7 @@
  * is still incomplete and therefore response weren't yet sent.
  */
 void ServerManager::HandleEventsOnExistingConnection(int client_socket) {
-    CheckCGIState(client_socket);
+//    CheckCGIState(client_socket);
     Connection		&connection = connections_[client_socket];
     while (is_running_) {
         // some data is (still) present on this fd, if not a cgi connection
@@ -33,7 +33,7 @@ void ServerManager::HandleEventsOnExistingConnection(int client_socket) {
 				 return;
 		}
 		if (connection.url_headers_done_ && !connection.body_done_) {
-			if (!ProcessBody(connection))
+			if (connection.waiting_for_cgi_ || !ProcessBody(connection))
 				 return;
 		}
 		if (connection.body_done_) {
@@ -90,13 +90,17 @@ bool ServerManager::ProcessBody(Connection &connection) {
 	try {
         const Server &server = FindServer(connection);
         connection.location_ = server.ProcessRequest(connection);
-        if (!connection.location_.cgi_address_.empty()) {
-            std::cout << "cgi" << std::endl;
-            // CGI-generated responses bypass "Respond()" mechanism
+//        if (!connection.location_.cgi_address_.empty()) {
+//            std::cout << "cgi" << std::endl;
+//            // CGI-generated responses bypass "Respond()" mechanism
+//            return false;
+//        }
+        if (connection.location_.cgi_address_.empty())
+            connection.body_done_ = true;
+        else {
             return false;
         }
 		Log("Request processed");
-		connection.body_done_ = true;
 	} catch (const ZeroRead &) {
 		CloseConnectionWithLogMessage(connection.connection_socket_,
 									  "Client closed connection while we were "
