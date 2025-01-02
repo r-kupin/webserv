@@ -23,17 +23,21 @@
  * lose data if on the stage of finishing of the data request being processed
  * is still incomplete and therefore response weren't yet sent.
  */
-void ServerManager::HandleEventsOnExistingConnection(int client_socket) {
-//    CheckCGIState(client_socket);
+void ServerManager::HandleEventsOnExistingConnection(int socket) {
+    int client_socket = socket;
+    if (cgifd_to_cl_sock_.find(socket) != cgifd_to_cl_sock_.end())
+        client_socket = cgifd_to_cl_sock_.find(socket) -> second;
+
     Connection		&connection = connections_[client_socket];
+
+    connection.event_reported_on_ = socket;
     while (is_running_) {
-        // some data is (still) present on this fd, if not a cgi connection
 		if (!connection.url_headers_done_) {
 			if (!ProcessHeaders(connection))
 				 return;
 		}
 		if (connection.url_headers_done_ && !connection.body_done_) {
-			if (connection.waiting_for_cgi_ || !ProcessBody(connection))
+			if (!ProcessBody(connection))
 				 return;
 		}
 		if (connection.body_done_) {
@@ -89,12 +93,10 @@ bool ServerManager::ProcessHeaders(Connection &connection) {
 bool ServerManager::ProcessBody(Connection &connection) {
 	try {
         const Server &server = FindServer(connection);
+
         connection.location_ = server.ProcessRequest(connection);
-//        if (!connection.location_.cgi_address_.empty()) {
-//            std::cout << "cgi" << std::endl;
-//            // CGI-generated responses bypass "Respond()" mechanism
-//            return false;
-//        }
+
+        // done if CGI is marked as done I guess ??
         if (connection.location_.cgi_address_.empty())
             connection.body_done_ = true;
         else {
@@ -112,7 +114,7 @@ bool ServerManager::ProcessBody(Connection &connection) {
 									  "uploading file");
 		return false;
 	} catch (const EwouldblockEagain &) {
-		// socket is still active, but no data is available.
+		// the socket is still active, but no data is available.
 		Log("Read all available data, but request is incomplete. "
 			"We'll come back later. Maybe.");
 		return false;

@@ -20,11 +20,14 @@ Connection::Connection(v_c_b &is_running, int &active_cgis)
   open_time_(Utils::Get().TimeNow()),
   connection_socket_(0),
   server_listening_socket_(0),
+  event_reported_on_(-1),
   request_(is_running),
   cgi_stdin_fd_(0),
   cgi_stdout_fd_(0),
   active_cgis_(active_cgis),
-  cgi_pid_(-1) {}
+  cgi_pid_(-1),
+  cgi_is_waiting_for_more_(false),
+  cgi_remaining_body_length_to_recv_(0) {}
 
 Connection::Connection(v_c_b &is_running, int connection_socket, int server_socket, int &active_cgis)
 : url_headers_done_(false),
@@ -33,11 +36,14 @@ Connection::Connection(v_c_b &is_running, int connection_socket, int server_sock
   open_time_(Utils::Get().TimeNow()),
   connection_socket_(connection_socket),
   server_listening_socket_(server_socket),
+  event_reported_on_(-1),
   request_(is_running),
   cgi_stdin_fd_(0),
   cgi_stdout_fd_(0),
   active_cgis_(active_cgis),
-  cgi_pid_(-1) {}
+  cgi_pid_(-1),
+  cgi_is_waiting_for_more_(false),
+  cgi_remaining_body_length_to_recv_(0) {}
 
 // Copy constructor
 Connection::Connection(const Connection &other)
@@ -48,12 +54,15 @@ Connection::Connection(const Connection &other)
   connection_socket_(other.connection_socket_),
   server_listening_socket_(other.server_listening_socket_),
   address_(other.address_),
+  event_reported_on_(other.event_reported_on_),
   request_(other.request_),
   location_(other.location_),
   cgi_stdin_fd_(other.cgi_stdin_fd_),
   cgi_stdout_fd_(other.cgi_stdout_fd_),
   active_cgis_(other.active_cgis_),
-  cgi_pid_(other.cgi_pid_) {}
+  cgi_pid_(other.cgi_pid_),
+  cgi_is_waiting_for_more_(false),
+  cgi_remaining_body_length_to_recv_(other.cgi_remaining_body_length_to_recv_) {}
 
 // Assignement operator
 Connection &Connection::operator=(const Connection &other) {
@@ -66,15 +75,15 @@ Connection &Connection::operator=(const Connection &other) {
     connection_socket_ = other.connection_socket_;
     server_listening_socket_ = other.server_listening_socket_;
     address_ = other.address_;
+    event_reported_on_ = other.event_reported_on_;
     request_ = other.request_;
     location_ = other.location_;
     cgi_stdin_fd_ = other.cgi_stdin_fd_;
     cgi_stdout_fd_ = other.cgi_stdout_fd_;
     active_cgis_ = other.active_cgis_;
-    cgi_input_buffer_ = other.cgi_input_buffer_;
-    cgi_output_buffer_ = other.cgi_output_buffer_;
-    to_send_buffer_ = other.to_send_buffer_;
     cgi_pid_ = other.cgi_pid_;
+    cgi_is_waiting_for_more_ = other.cgi_is_waiting_for_more_;
+    cgi_remaining_body_length_to_recv_ = other.cgi_remaining_body_length_to_recv_;
 	return *this;
 }
 

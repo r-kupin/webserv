@@ -16,7 +16,8 @@
 #include <algorithm>
 #include "Server.h"
 
-bool Server::ForkCGI(Connection &connection, const std::string &address, const std::string &path_info) const {
+bool Server::ForkCGI(Connection &connection, const std::string &address,
+                     const std::string &path_info) const {
 	int pipe_stdin[2];			// Pipe to write in CGI stdin
 	int pipe_stdout[2];			// Pipe to read from CGI stdout
 	if (pipe(pipe_stdout) == -1 || pipe(pipe_stdin) == -1) {
@@ -100,52 +101,122 @@ int Server::HandleCGIinput(Connection &connection) const {
     return -1;
 }
 
-int Server::HandleCGIoutput(Connection &connection) const {
-    v_char          &what = connection.cgi_output_buffer_;
-    int             where = connection.cgi_stdin_fd_;
-    ClientRequest   &request = connection.request_;
+size_t copy_raw_request_and_body_to_buffer(v_char &what,
+                                           const ClientRequest &request) {
+    for (v_str_c_it it = request.GetRawRequest().begin();
+            it != request.GetRawRequest().end(); ++it) {
+        v_char tmp(it->begin(), it->end());
+        what.insert(what.end(), tmp.begin(), tmp.begin() + tmp.size());
+        what.push_back('\n');
+    }
 
-    if (what.empty()) {
-        for (v_str_c_it it = request.GetRawRequest().begin();
-             it != request.GetRawRequest().end(); ++it) {
-            v_char tmp(it->begin(), it->end());
-            what.insert(what.end(), tmp.begin(), tmp.begin() + tmp.size());
-            what.push_back('\n');
-        }
-        if (request.HasHeader("Content-Length") &&
-            Utils::StringToULong(request.GetHeaderValue("Content-Length")) > 0L) {
+    if (request.HasHeader("Content-Length")) {
+        size_t body_size = Utils::StringToULong(request.GetHeaderValue("Content-Length"));
+        if (body_size > 0) {
             what.push_back('\n');
             const v_char &body = request.GetBody();
-            what.insert(what.end(),
-                        body.begin() + 2,
-                        body.begin() + body.size());
+            what.insert(what.end(), body.begin() + 2, body.begin() + body.size());
+            return body_size - (body.size() - 2);
         }
     }
-    while (is_running_ && !what.empty() && ProbeWriteToCGI(what, where)) {
+    return 0;
+}
+
+bool  probe_write_cgi(v_char &what, int where) {
+    ssize_t res = write(where, what.data(), 1);
+    return res == 1;
+}
+
+int write_to_cgi(v_char &what, int where) {
+    bool cgi_available;
+
+    while (!what.empty() && (cgi_available = probe_write_cgi(what, where))) {
         ssize_t bytes_written = write(where, what.data() + 1, what.size() - 1);
         std::cout << "written to CGI: " << bytes_written << std::endl;
         if (bytes_written < 0) {
+            // CGI isn't ready to accept more data, wait for EPOLL_IN event
             return NOT_ALL_DATA_WRITTEN_TO_CGI;
         } else if (bytes_written == 0) {
+            // CGI is done and would accept nothing more
             return CGI_CLOSED_INPUT_FD;
         } else {
             what.erase(what.begin(), what.begin() + bytes_written + 1);
         }
     }
+    if (!cgi_available)
+        return CGI_CLOSED_INPUT_FD;
+    if (what.empty()) // buffer is empty, need to recv for more
+        return NOTHING_TO_SEND_AT_THIS_POINT;
+
+    // todo remove
+    is_running_ = false;
+    return -1;
+}
+
+int forward_client_input_to_cgi(Connection &connection) {
     char    buffer[FILE_BUFFER_SIZE];
-    ssize_t bytes_read, bytes_written = 0;
+    ssize_t bytes_read, bytes_written;
+    
+    int cgi_socket = connection.cgi_stdin_fd_;
+    int client_socket = connection.connection_socket_;
+    v_char &save_buffer = connection.cgi_output_buffer_;
+    size_t left_to_read = connection.cgi_remaining_body_length_to_recv_;
+    size_t buffer_size = static_cast<size_t>(FILE_BUFFER_SIZE);
+
     do {
-        bytes_read = recv(connection.connection_socket_, buffer,
-                                  static_cast<size_t>(FILE_BUFFER_SIZE), 0);
+        bytes_read = recv(client_socket, buffer,
+                          std::min(buffer_size, left_to_read), 0);
+        std::cout << "read from request: " << bytes_read << std::endl;
         if (bytes_read > 0) {
-            bytes_written = write(where, buffer, bytes_read);
+            ssize_t bytes_to_save = bytes_read;
+            left_to_read -= bytes_read;
+            std::cout << "left to read: " << left_to_read << std::endl;
+
+            bytes_written = write(cgi_socket, buffer, bytes_read);
+            std::cout << "written to CGI: " << bytes_written << std::endl;
             if (bytes_written == -1) {
-                Log("Write to file failed");
+                std::copy(buffer, buffer + bytes_read, save_buffer.end());
                 return NOT_ALL_DATA_WRITTEN_TO_CGI;
+            } else {
+                bytes_to_save -= bytes_written;
+                if (bytes_to_save > 0) {
+                    std::copy(buffer + bytes_written,
+                              // buffer + bytes_to_save ??
+                              buffer + bytes_read, save_buffer.end());
+                    return NOT_ALL_DATA_WRITTEN_TO_CGI;
+                }
             }
+        } else if (bytes_read == 0 || left_to_read == 0) {
+            return ALL_DATA_SENT_TO_CGI;
+        } else {
+            return ALL_AVAILABLE_DATA_SENT;
         }
-    }  while (is_running_ && bytes_read > 0 && bytes_written > 0);
-    return ALL_DATA_SENT_TO_CGI;
+    } while (is_running_ && bytes_written > 0);
+    // todo remove
+    is_running_ = false;
+    return -1;
+}
+
+int Server::HandleCGIoutput(Connection &connection) const {
+    v_char          &what = connection.cgi_output_buffer_;
+    int             cgi_sock = connection.cgi_stdin_fd_;
+    ClientRequest   &request = connection.request_;
+
+
+    if (what.empty() && !connection.cgi_is_waiting_for_more_) {
+        // The first CGI input request event, copy raw request and body
+        connection.cgi_remaining_body_length_to_recv_ =
+                copy_raw_request_and_body_to_buffer(what, request);
+    }
+
+    int status = write_to_cgi(what, cgi_sock);
+    if (status == NOT_ALL_DATA_WRITTEN_TO_CGI || status == CGI_CLOSED_INPUT_FD)
+        return status;
+
+    if (connection.cgi_remaining_body_length_to_recv_ > 0)
+        return forward_client_input_to_cgi(connection);
+    else
+        return ALL_DATA_SENT_TO_CGI;
 }
 
 void Server::ChildCGI(const Connection &connection, const std::string &address,

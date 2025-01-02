@@ -86,11 +86,14 @@ void ServerManager::HandleCGIEvent(int cgi_fd) {
 	} else if (connection.cgi_stdin_fd_ == cgi_fd) {
         // writing to cgi
 		int status = server.HandleCGIoutput(connection);
+
 		if (status == NOT_ALL_DATA_WRITTEN_TO_CGI) {
+            connection.cgi_is_waiting_for_more_ = true;
 			return;
 		} else if (status == CGI_CLOSED_INPUT_FD) {
             ThrowException("CGI_CLOSED_INPUT_FD");
 		} else if (status == ALL_DATA_SENT_TO_CGI) {
+            Log("All data sent to CGI");
             CloseCGIfd(connection.cgi_stdin_fd_);
             connection.cgi_stdin_fd_ = -1;
 		}

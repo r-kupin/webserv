@@ -143,7 +143,6 @@ protected:
 										 const int *pipe_stdin,
 										 const int *pipe_stdout,
 										 const std::string &path_info) const;
-    bool                        ProbeWriteToCGI(const v_char &what, int i) const;
 //-------------------proxy related----------------------------------------------
     Location                    &HandleProxy(Connection &connection,
                                              const l_loc_c_it &found,

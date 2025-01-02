@@ -63,13 +63,14 @@ void    ServerManager::EventLoop() {
 }
 
 void ServerManager::IncomingEvent(int socket_fd, uint32_t event) {
-	if (IsListeningSocketFd(socket_fd)) {
+    if (IsListeningSocketFd(socket_fd)) {
 		AcceptNewConnection(socket_fd);
-	} else if (event & EPOLLIN && event & EPOLLOUT) {
+	} else if ((event & EPOLLIN && event & EPOLLOUT) ||
+            ((cgifd_to_cl_sock_.find(socket_fd) != cgifd_to_cl_sock_.end()))) {
 		HandleEventsOnExistingConnection(socket_fd);
-	} else if (cgifd_to_cl_sock_.find(socket_fd) != cgifd_to_cl_sock_.end()) {
+	} /*else if (cgifd_to_cl_sock_.find(socket_fd) != cgifd_to_cl_sock_.end()) {
 		HandleCGIEvent(socket_fd);
-	}
+	}*/
 }
 
 /**

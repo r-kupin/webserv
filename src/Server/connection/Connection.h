@@ -20,7 +20,10 @@
 struct Connection {
 	// Existing constructors
 	Connection(v_c_b &is_running, int &active_cgis);
-	Connection(v_c_b &is_running, int connection_socket, int server_socket, int &active_cgis);
+	Connection(v_c_b &is_running,
+               int connection_socket,
+               int server_socket,
+               int &active_cgis);
 	Connection(const Connection &other);
 
 	// Assignement operator
@@ -41,6 +44,7 @@ struct Connection {
 	int                 connection_socket_;
 	int                 server_listening_socket_;
 	std::string         address_;
+    int                 event_reported_on_;
 
 	// Existing members
 	ClientRequest       request_;
@@ -51,9 +55,11 @@ struct Connection {
 	int                 &active_cgis_;
 	v_char              cgi_input_buffer_;
 	v_char              cgi_output_buffer_;
-    v_char              to_send_buffer_;
-
     int                 cgi_pid_;
+    bool                cgi_is_waiting_for_more_;
+    size_t              cgi_remaining_body_length_to_recv_;
+
+    v_char              to_send_buffer_;
 };
 
 #endif //WEBSERV_CONNECTION_H

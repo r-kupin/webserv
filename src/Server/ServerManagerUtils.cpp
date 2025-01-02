@@ -84,7 +84,7 @@ void ServerManager::PrintEventInfo(int events, int fd, int i) {
 
     std::cout << "\n== events " << epoll_events_count_ <<
     " == connections " << epoll_connection_count_ <<
-    " == requests  " << requests_made_ << "\n";
+    " == requests " << requests_made_ << "\n";
 
     if (cgifd_to_cl_sock_.find(fd) != cgifd_to_cl_sock_.end()) {
         int sock = connections_[cgifd_to_cl_sock_[fd]].connection_socket_;

@@ -52,15 +52,15 @@ int Server::Upload(ClientRequest &request, const std::string &filename,
 
 void    prepare_buffer(v_char &body, char *buffer, const ClientRequest &request,
                        const std::string &delimiter) {
-        // remove metadata
-        body.erase(body.begin(), body.begin() +
-                    request.GetCurlMetadataLength(delimiter));
-        if (!body.empty()) {
-            // It's the first iteration after metadata processing,
-            // and body_ might contain data that was accidentally red.
-            // Now copy it to buffer
-            std::copy(body.begin(), body.end(), buffer);
-        }
+    // remove metadata
+    body.erase(body.begin(), body.begin() +
+    request.GetCurlMetadataLength(delimiter));
+    if (!body.empty()) {
+        // It's the first iteration after metadata processing,
+        // and body_ might contain data that was accidentally red.
+        // Now copy it to buffer
+        std::copy(body.begin(), body.end(), buffer);
+    }
 }
 
 int Server::PerformUpload(const ClientRequest &request, int socket, int file_fd,

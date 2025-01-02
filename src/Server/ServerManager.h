@@ -22,6 +22,8 @@
 #define NOT_ALL_DATA_READ_FROM_CGI 3
 #define CLIENT_CLOSED_CONNECTION_WHILE_CGI_SENDS_DATA 4
 #define ALL_READ_ALL_SENT 5
+#define NOTHING_TO_SEND_AT_THIS_POINT 6
+#define ALL_AVAILABLE_DATA_SENT 7
 
 #define CONNECTIONS 2048
 
@@ -62,7 +64,7 @@ class ServerManagerException : public std::exception {};
     bool            IsRealError(int fd);
     void            IncomingEvent(int socket_fd, uint32_t event);
     void            AcceptNewConnection(int server_socket);
-    void            HandleEventsOnExistingConnection(int client_socket);
+    void            HandleEventsOnExistingConnection(int socket);
     void            Respond500(Connection &connection);
 //-------------------handle-----------------------------------------------------
 	const Server    &FindServer(const Connection &connection) const;

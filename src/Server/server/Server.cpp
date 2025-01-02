@@ -88,7 +88,3 @@ bool Server::HasServerName(const std::string &server_name) const {
             config_.GetServerNames().end();
 }
 
-bool Server::ProbeWriteToCGI(const v_char &what, int where) const {
-    ssize_t res = write(where, what.data(), 1);
-    return res == 1;
-}

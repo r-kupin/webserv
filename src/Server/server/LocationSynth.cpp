@@ -61,17 +61,32 @@ Location &Server::HandleProxy(Connection &connection, const l_loc_c_it &found,
 Location &Server::HandleCGI(Connection &connection, const l_loc_c_it &found,
                             Location &synth, const std::string &path_info) const {
     std::string address = found->cgi_address_;
-    if (found->cgi_address_[0] != '/')
-        address = found->root_ + "/" + found->cgi_address_;
-    if (Utils::CheckFilesystem(address) == COMM_FILE &&
-        !connection.waiting_for_cgi_) {
-        if (!ForkCGI(connection, address, path_info)) {
-            synth.SetReturnCode(FAILED_CGI);
-            synth.cgi_address_.clear();
+
+    if (!connection.waiting_for_cgi_) { // The process needs to be started
+        if (found->cgi_address_[0] != '/')
+            address = found->root_ + "/" + found->cgi_address_;
+        if (Utils::CheckFilesystem(address) == COMM_FILE) {
+            if (!ForkCGI(connection, address, path_info)) {
+                // process launch failed
+                synth.SetReturnCode(FAILED_CGI);
+                synth.cgi_address_.clear();
+            }
+            // The process is started.
+            // Write client's input when epoll event is reported.
+        } else {
+            Log("cgi_address \"" + address + "\" doesn't exists or is not a file");
+            synth.SetReturnCode(NOT_FOUND);
         }
-    } else {
-        Log("cgi_address \"" + address + "\" doesn't exists or is not a file");
-        synth.SetReturnCode(NOT_FOUND);
+    } else { // CGI process is running and event reported from it or client
+        int reported_socket = connection.event_reported_on_;
+        // cgi_stdin_fd_ reports first, as CGI program tries to read from stdin
+        if (reported_socket == connection.cgi_stdin_fd_ ||
+            reported_socket == connection.cgi_stdout_fd_) {
+            sm_.HandleCGIEvent(reported_socket);
+        } else if ( reported_socket == connection.connection_socket_) {
+            // If a client reports - it has additional data to provide to CGI
+            sm_.HandleCGIEvent(connection.cgi_stdin_fd_);
+        }
     }
     return synth;
 }
