@@ -75,27 +75,23 @@ int Server::HandleCGIinput(Connection &connection) const {
                     std::cout << "sigpipe true" << std::endl;
                     sigpipe_ = false;
                     return CLIENT_CLOSED_CONNECTION_WHILE_CGI_SENDS_DATA;
-                } else {
-                    std::cout << "sigpipe false" << std::endl;
-                    return CLIENT_CLOSED_CONNECTION_WHILE_CGI_SENDS_DATA;
                 }
-            } else {
-                connection.cgi_input_buffer_.erase(
-                        connection.cgi_input_buffer_.begin(),
-                        connection.cgi_input_buffer_.begin() + sent);
+                std::cout << "sigpipe false" << std::endl;
+                return CLIENT_CLOSED_CONNECTION_WHILE_CGI_SENDS_DATA;
             }
+            connection.cgi_input_buffer_.erase(
+                    connection.cgi_input_buffer_.begin(),
+                    connection.cgi_input_buffer_.begin() + sent);
         }
 		ssize_t bytes_read = read(connection.cgi_stdout_fd_, buffer,
                                   FILE_BUFFER_SIZE - 1);
         std::cout << "read: " << bytes_read << std::endl;
-        if (bytes_read < 0) {
+        if (bytes_read < 0)
             return NOT_ALL_DATA_READ_FROM_CGI;
-        } else if (bytes_read == 0 ) {
+	    if (bytes_read == 0 )
             return ALL_READ_ALL_SENT;
-        } else {
-			connection.cgi_input_buffer_.insert(connection.cgi_input_buffer_.end(),
-                                                buffer, buffer + bytes_read);
-        }
+        connection.cgi_input_buffer_.insert(
+            connection.cgi_input_buffer_.end(),buffer, buffer + bytes_read);
     }
     // server stopped
     return -1;
@@ -133,15 +129,11 @@ int write_to_cgi(v_char &what, int where) {
     while (!what.empty() && (cgi_available = probe_write_cgi(what, where))) {
         ssize_t bytes_written = write(where, what.data() + 1, what.size() - 1);
         std::cout << "written to CGI: " << bytes_written << std::endl;
-        if (bytes_written < 0) {
-            // CGI isn't ready to accept more data, wait for EPOLL_IN event
+        if (bytes_written < 0) // CGI isn't ready to accept more data, wait for EPOLL_IN event
             return NOT_ALL_DATA_WRITTEN_TO_CGI;
-        } else if (bytes_written == 0) {
-            // CGI is done and would accept nothing more
+        if (bytes_written == 0) // CGI is done and would accept nothing more
             return CGI_CLOSED_INPUT_FD;
-        } else {
-            what.erase(what.begin(), what.begin() + bytes_written + 1);
-        }
+        what.erase(what.begin(), what.begin() + bytes_written + 1);
     }
     if (!cgi_available)
         return CGI_CLOSED_INPUT_FD;
@@ -177,14 +169,13 @@ int forward_client_input_to_cgi(Connection &connection) {
             if (bytes_written == -1) {
                 std::copy(buffer, buffer + bytes_read, save_buffer.end());
                 return NOT_ALL_DATA_WRITTEN_TO_CGI;
-            } else {
-                bytes_to_save -= bytes_written;
-                if (bytes_to_save > 0) {
-                    std::copy(buffer + bytes_written,
-                              // buffer + bytes_to_save ??
-                              buffer + bytes_read, save_buffer.end());
-                    return NOT_ALL_DATA_WRITTEN_TO_CGI;
-                }
+            }
+            bytes_to_save -= bytes_written;
+            if (bytes_to_save > 0) {
+                std::copy(buffer + bytes_written,
+                          // buffer + bytes_to_save ??
+                          buffer + bytes_read, save_buffer.end());
+                return NOT_ALL_DATA_WRITTEN_TO_CGI;
             }
         } else if (bytes_read == 0 || left_to_read == 0) {
             return ALL_DATA_SENT_TO_CGI;
@@ -215,8 +206,7 @@ int Server::HandleCGIoutput(Connection &connection) const {
 
     if (connection.cgi_remaining_body_length_to_recv_ > 0)
         return forward_client_input_to_cgi(connection);
-    else
-        return ALL_DATA_SENT_TO_CGI;
+    return ALL_DATA_SENT_TO_CGI;
 }
 
 void Server::ChildCGI(const Connection &connection, const std::string &address,

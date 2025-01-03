@@ -73,7 +73,7 @@ Server also can predefine root location with optional directives:
 - *[error_page](#error_page)*
 - *[client_max_body_size](#client_max_body_size)* (unique)
 - *[upload_store](#upload_store)* (unique)
-- [autoindex](#autoindex) (unique)
+- *[autoindex](#autoindex)* (unique)
 
 Inside server context multiple **location** sub-contexts can be defined, to handle specific requests.
 ```nginx
@@ -363,14 +363,14 @@ Main class, storing configurations for all servers is `Config`. All its methods 
 ### ServerConfiguration
 Particular config, the backbone of each server. Contains server-level data, such as *server_name*, *port* and the root of the tree of `Locations`.
 `ServerConfiguration`'s functionality is narrowed to function
-```cpp
+```c++
 LocConstSearchResult    FindConstLocation(const std::string &address) const;
 ```
 
 that searches the locations tree for a requested location, and returns a `LocSearchResult`, that contains iterator to the closest found location, as well as some additional info.
 ### Location
 Stores data about all [locations](#location) mentioned in config:
-```cpp
+```c++
 	std::set<ErrPage>       error_pages_;  
 	l_loc                   sublocations_;  
 //-------------------index related  
@@ -459,7 +459,7 @@ In other words, `EPOLLONESHOT` controls under what conditions a file descriptor 
 - With edge-triggered mode, EPOLLONESHOT means the file descriptor is deactivated until rearmed.
 - With level-triggered mode, EPOLLONESHOT means the file descriptor remains active, but epoll_wait() will not report further events until the current event condition changes.
 
-```cpp
+```c++
 // server.cc
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -946,7 +946,7 @@ In order to make real nginx store uploaded files, the most intuitive way I found
 4. Use a web client to upload a file. Here's one of the simplest ways: `curl -v -F "file=@file_name" http://server_name:port/upload/ `
 
 As described at module's page:
--  [upload_pass](https://www.nginx.com/resources/wiki/modules/upload/#upload-pass "Permalink to this headline"): specifies location to pass request body to. File fields will be stripped and replaced by fields, containig necessary information to handle uploaded files.
+- [upload_pass](https://www.nginx.com/resources/wiki/modules/upload/#upload-pass "Permalink to this headline"): specifies location to pass request body to. File fields will be stripped and replaced by fields, containig necessary information to handle uploaded files.
 - [upload_store](https://www.nginx.com/resources/wiki/modules/upload/#upload-store "Permalink to this headline"): specifies a directory to which output files will be saved to. The directory could be hashed. In this case all subdirectories should exist before starting NGINX.
 
 Important notes:

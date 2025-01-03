@@ -74,11 +74,8 @@ void ServerManager::HandleCGIEvent(int cgi_fd) {
 	if (connection.cgi_stdout_fd_ == cgi_fd) {
         // reading from cgi
 		int status = server.HandleCGIinput(connection);
-		if (status == CLIENT_CLOSED_CONNECTION_WHILE_CGI_SENDS_DATA) {
-            return;
-		} else if (status == NOT_ALL_DATA_READ_FROM_CGI) {
-			return;
-		} else if (status == ALL_READ_ALL_SENT) {
+
+		if (status == ALL_READ_ALL_SENT) {
             DetachCGI(connection);
             CloseConnectionWithLogMessage(connection.connection_socket_,
                                           "CGI transmission ended");
@@ -89,7 +86,6 @@ void ServerManager::HandleCGIEvent(int cgi_fd) {
 
 		if (status == NOT_ALL_DATA_WRITTEN_TO_CGI) {
             connection.cgi_is_waiting_for_more_ = true;
-			return;
 		} else if (status == CGI_CLOSED_INPUT_FD) {
             ThrowException("CGI_CLOSED_INPUT_FD");
 		} else if (status == ALL_DATA_SENT_TO_CGI) {
