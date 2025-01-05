@@ -42,12 +42,12 @@
 	- Define an HTTP redirection. ([return](#return))
 	- Define a directory or a file from where the file should be searched. ([root](#root))
 	- Set a default file to answer if the request is a directory ([index](#index)).
-	- CGI ([proxy_pass](#proxy_pass))
+	- CGI ([cgi_address](#cgi_address))
 	- Make the route able to accept uploaded files and configure where they should be saved. ([upload_store](#upload_store))
 	- Turn on or off directory listing. ([autoindex](#autoindex))
     
 # Config
-Like `nginx.conf` but with less functional supported. This project follows the philosophy of forward compatibility—meaning that all valid configs for WebServ will be also valid for NGINX and will work in the exact same way *EXCEPT* for the [upload_store](#upload_store) directive. More on that in the dedicated section.
+Like `nginx.conf` but with less functional supported. This project follows the philosophy of forward compatibility—meaning that all valid configs for WebServ will be also valid for NGINX and will work in the exact same way *EXCEPT* for the [upload_store](#upload_store) and [cgi_address](#cgi_address) directives. More on that in the dedicated section.
 Feel free to consult the test configs provided in `test/test_resources`. 
 ## Config structure
 Config consists of **contexts** and **directives**.
@@ -76,7 +76,7 @@ Server also can predefine root location with optional directives:
 - *[autoindex](#autoindex)* (unique)
 
 Inside server context multiple **location** sub-contexts can be defined, to handle specific requests.
-```nginx
+```nginx configuration
 server {
 	listen 4281;  
 	server_name localhost;  
@@ -90,14 +90,14 @@ server {
 Location sets configuration depending on a request URI. 
 Locations can be defined inside of the server or parent location context (nested locations). The Server matches the request URI against all defined locations, and then assigns handling to the location with the closest matching *address*.
 Location context should be defined with a single argument, which is *address*.
-```nginx
+```nginx configuration
 location address {
 	...
 }
 ```
 
 The *address* - is the absolute path from the **root** location, there are no relative paths. It means, that if location *"loc_n"* should be placed inside location *"/loc_1"* - the address should be defined as follows: *"/loc_1/loc_n"*, regardless of whether the super-context is *location /loc_1*, *location /* or *server*:
-```nginx
+```nginx configuration
 # OK
 location / {
 	location /loc_1 {
@@ -113,7 +113,7 @@ location /loc_1/loc_3 {
 ```
 
 But it can't be defined in any context, a part of the mentioned above:
-```nginx
+```nginx configuration
 # NOT OK
 location / {
 	location /loc_1 {
@@ -127,7 +127,7 @@ location / {
 ```
 
 Redefinition of locations is possible:
-```nginx
+```nginx configuration
 # OK
 location / {
 	location / {
@@ -148,7 +148,7 @@ location /loc_1 {
 ```
 
 However, one super-location/server can't contain multiple sub-locations with the same addresses:
- ```nginx
+ ```nginx configuration
 # NOT OK
 location / {
 	
@@ -163,7 +163,7 @@ location / {
 ```
 
 Locations also can be mentioned, but not defined explicitly:
-```nginx
+```nginx configuration
 # OK
 server {
 	listen 4281;  
@@ -194,7 +194,7 @@ Locations can also contain sub-contexts:
 - nested location
 #### Limit_except
 Limits access to location. Defined only inside a location with one or more *HTTP* methods:
-```nginx
+```nginx configuration
 limit_except METHOD {
 	...
 }
@@ -209,7 +209,7 @@ Depending on the intention of prohibiting or allowing access.
 Limit_except can't have any sub-contexts.
 ### Directives
 Directive is a single-line instruction defined in the following way:
-```nginx
+```nginx configuration
 directive [ ARG1 ] [ ARG... ];
 ```
 
@@ -223,7 +223,7 @@ Accepts one number, which is a timeout during which server keeps connection open
 #### Location-level directives
 ##### root
 Can have only one arg, which is a path for a location, or server's root directory. For example:
-```nginx
+```nginx configuration
 server {
 	...
 	root /var/www; # absolute path
@@ -253,7 +253,7 @@ Should have only one arg, which is a path to the uploads' directory.
 Set's path to upload directory. When the location containing this directive handles POST request, it creates a file in specified directory, and writes the request's body to it. The name of the file being created is it's number: first is `1`, second is `2`, etc. If File already exists or it's not possible to create it - server returns 503
 ##### index
 May have multiple args that define files that will be used as an index - meaning - shown when location get's accessed by address, following with `/`. Files are checked in the specified order - left to right. The last element of the list can be a file with an absolute path - meaning, path not from the current location's root - but from **root**-location's root.
-```nginx
+```nginx configuration
 index index_X.html index_1.html index_2.html;
 ```
 
@@ -264,7 +264,7 @@ Indexes are checked in the following order:
 3. 
 ###### not defined in current location, but in parent location
 Check parent location in the same way, except parent *index filenames* specified in *parent* are expected to be located at the *current location's root*:
-```nginx
+```nginx configuration
 server {  
 	...
 	root www;
@@ -288,7 +288,7 @@ server {
 
 ###### no definition up to the root
 Default index `index.html` is being checked 
-```nginx
+```nginx configuration
 server {  
 	...
 	root www; # webserv
@@ -309,9 +309,26 @@ server {
 }
 ```
 
+##### cgi_address
+Directive, that specifies the executable file that should process request.
+```nginx configuration
+	location /cgi-bin {
+	    cgi_address test_cgi_bash.sh;
+	}
+```
+Works in a following way:
+1. On request to the location, containing `cgi_address` directive, server executes specified file in a separate process. It is expected that the executable will :
+   1. Acquire data by reading it from `stdin` and provide output by writing it to the `stdout`
+   2. Read all data until EOF and only then will write it's output 
+2. Client's request in a raw form transferred to the CGI process.
+3. All input of the CGI process transferred to the client directly, as soon as server process reads it.
+
+On receiving of the request, server only parses it's headers, in order to determine the server and location. The response generated by the CGI script is not getting processed at all and provided as-is.
+All interactions with CGI process are async, meaning the server only writes to CGI when it tries to read and only reads when CGI process writes.   
+
 ##### return
 Directive, responsible for redirection. Stops processing request and returns the specified code to a client. Should have one or two args.
-```nginx
+```nginx configuration
 location /redirect_no_code {  
     return /target_location;  
 }
@@ -339,7 +356,7 @@ Similar to *index* - it is possible to define custom error pages for each locati
 Error_page directive expects one or more `error code`(s) followed by a `filename` of the error page, that should be sent to the client in case if one of the specified errors will happen.
 In case, if error page is not defined, or defined file doesn't exist - webserv would *auto generate default error page automatically*.
 Example:
-```nginx
+```nginx configuration
 error_page 403 404 /error.html;
 ```
 
@@ -930,7 +947,7 @@ In order to make real nginx store uploaded files, the most intuitive way I found
 1. Download [**nginx-upload-module**](https://www.nginx.com/resources/wiki/modules/upload/) from the official [github page](https://github.com/vkholodkov/nginx-upload-module/tree/master).
 2. Add it to installed server following [this guide](https://www.nginx.com/blog/compiling-dynamic-modules-nginx-plus/).
 3. Launch server with test configuration.
-	```nginx
+	```nginx configuration
 	server {
 		# specify server name, port, root
 		location /upload {
