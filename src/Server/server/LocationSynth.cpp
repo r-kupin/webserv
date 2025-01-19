@@ -55,6 +55,9 @@ Location Server::ProcessRequest(Connection &connection) const {
 
 Location &Server::HandleProxy(Connection &connection, const l_loc_c_it &found,
                               Location &synth, const std::string &path_info) const {
+	(void) connection;
+	(void) found;
+	(void) path_info;
     return synth;
 }
 

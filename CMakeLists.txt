@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.23.2)
 project(webserv)
 project(webserv_lib)
 
-add_compile_options(-gdwarf-4 -O0 -fno-limit-debug-info  #[[-Wall -Wextra -Werror]])
+add_compile_options(-gdwarf-4 -O0 -fno-limit-debug-info  -Wall -Wextra -Werror -Wno-vla-extension)
 set(CMAKE_CXX_STANDARD 98)
 
 add_executable(webserv src/main.cpp
